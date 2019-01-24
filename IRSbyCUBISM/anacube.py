@@ -1,16 +1,20 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 """
 anacube.py is a simple routine dedicated to extracting spectra from cubes built by CUBISM 
 for further analysis such as cube quality estimation by inspecting spatial flux distribution. 
 It has a twin version anacube_dual.py where the comparison of two cubes are possible.
 
-
-Comment fluxdist function, line 211, if you only want to view spectrum.
-
+Comment fluxdist function, line ?, if you only want to view spectrum.
+Change fluxdist input "wvlnum" where "all_wvl" option means taking all wavelengths into acount.
 Modify filename and parameters at the beginning of MAIN procedure.
 
+Flux distribution not available for "circle" mode.
 Uncertainty is not yet available to be added to spectrum.
 """
 
+import os, sys
 from astropy.io import fits
 from astropy import units as u
 from astropy import wcs
@@ -37,7 +41,7 @@ def mapview(lx, ly, wvl, data, wvlnum, patch):
 	--- OUTPUT ---
 	fig1         current figure
 	"""
-	fig1 = plt.figure("map", figsize=(10,10))
+	fig1 = plt.figure("map", figsize=(10,8))
 	cnorm = None # Linear
 #	cnorm = colors.PowerNorm(gamma=0.5) # Square root
 #	cnorm = colors.SymLogNorm(linthresh=1., linscale=1., clip=False) # Logarithmic
@@ -84,18 +88,21 @@ def specview(wvl, data, unc):
 	ax2.legend(loc='upper left')
 #	fig2.savefig('spectrum.png')
 
-def fluxlist(wvl, data, wvlnum):
+def fluxdist(wvl, data, wvlnum):
 	"""
 	plot flux distribution for pixels in the box
 
 	--- INPUT ---
 	wvl          wavelength
 	data         square
-	wvlnum       number of cube slice, int type
 	"""
 	fig3 = plt.figure("box flux distribution")
 	ax3 = plt.subplot()
-	data1 = data[wvlnum,:,:].reshape(-1)
+	if wvlnum=="all_wvl":
+		data1 = data[:,:,:].reshape(-1)
+	else:
+		data1 = data[wvlnum,:,:].reshape(-1)
+	bins_med = np.nanmedian(data1)
 	num, bins, patches = ax3.hist(data1, bins=int(np.size(data1)),
 		alpha=.3, lw=.5, edgecolor='w', color='c')
 	bins_c = []
@@ -109,19 +116,23 @@ def fluxlist(wvl, data, wvlnum):
 	g = fit_g(g_init, bins_c, num)
 	numsum = 0
 	for j in range(np.size(num)):
-		if (bins_c[j]>g.mean-g.stddev and bins_c[j]<g.mean+g.stddev):
+		if (bins_c[j]>bins_med-3.*g.stddev and bins_c[j]<bins_med+3.*g.stddev):
 			numsum += num[j]
 	sig1 = float(numsum / np.nansum(num))
 	print("box flux mean: ", g.mean*1.)
-	print("1-sigma percentage: {:.0%}".format(sig1))
+	print("box flux median: ", bins_med)
+	print("3-sigma from median percentage: {:.2%}".format(sig1))
 	ax3.plot(bins_c, g(bins_c), c='r')
-	ax3.axvline(g.mean, c='k', ls='-.', 
-		label="mean: {:.2}".format(g.mean*1.))
-	ax3.axvline(g.mean-g.stddev, c='b', ls=':', 
-		label="1-sigma ratio: {:.0%}".format(sig1))
-	ax3.axvline(g.mean+g.stddev, c='b', ls=':')
+	ax3.axvline(bins_med, c='k', ls='-.', 
+		label="median: {:.2}".format(bins_med))
+	ax3.axvline(bins_med-3.*g.stddev, c='b', ls=':', 
+		label="3-sigma from median ratio: {:.2%}".format(sig1))
+	ax3.axvline(bins_med+3.*g.stddev, c='b', ls=':')
 
-	ax3.set_title("Flux distribution at {} micron".format(wvl[wvlnum]))
+	if wvlnum=="all_wvl":
+		ax3.set_title("Flux distribution")
+	else:
+		ax3.set_title("Flux distribution at {} micron".format(wvl[wvlnum]))
 	ax3.set_xlabel(r'$F_{\nu} (MJy)$')
 	ax3.set_ylabel("Number of pixels")
 	ax3.legend(loc='upper right')
@@ -209,7 +220,7 @@ while True:
 			data1 = data[:, yb:yt, xb:xt]
 			## view spectrum
 			specview(wvl, data1, 0.) #unc_wvl)
-			fluxlist(wvl, data1, wvlnum)
+			fluxdist(wvl, data1, "all_wvl")
 		elif b0=="2":
 			print("circle centered at ({0}, {1})".format(x0, y0))
 			## add patch onto map
