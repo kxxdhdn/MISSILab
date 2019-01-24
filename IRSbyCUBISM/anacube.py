@@ -10,7 +10,7 @@ Comment fluxdist function, line ?, if you only want to view spectrum.
 Change fluxdist input "wvlnum" where "all_wvl" option means taking all wavelengths into acount.
 Modify filename and parameters at the beginning of MAIN procedure.
 
-Flux distribution not available for "circle" mode.
+Only specview function available for "circle" mode.
 Uncertainty is not yet available to be added to spectrum.
 """
 
@@ -83,7 +83,7 @@ def specview(wvl, data, unc):
 		c='k', ls='-', lw=.5, ecolor='r', elinewidth=1., label="IRS data")
 	ax2.set_title("Spectrum")
 	ax2.set_xlabel('Wavelength (micron)')
-	ax2.set_ylabel(r'$F_{\nu} (MJy)$')
+	ax2.set_ylabel(r'$F_{\nu} (MJy/sr)$')
 #	ax2.set_yscale('log', nonposy='clip')
 	ax2.legend(loc='upper left')
 #	fig2.savefig('spectrum.png')
@@ -104,30 +104,25 @@ def fluxdist(wvl, data, wvlnum):
 		data1 = data[wvlnum,:,:].reshape(-1)
 	bins_med = np.nanmedian(data1)
 	num, bins, patches = ax3.hist(data1, bins=int(np.size(data1)),
-		alpha=.3, lw=.5, edgecolor='w', color='c')
+		alpha=1., lw=.5, edgecolor='w', color='c')
 	bins_c = []
 	for i in range(np.size(bins)-1):
 		bins_c.append((bins[i]+bins[i+1])/2.)
 	bins_c = np.array(bins_c)
 
-	## Fit the data using a Gaussian
-	g_init = models.Gaussian1D(amplitude=1., mean=0, stddev=1.)
-	fit_g = fitting.LevMarLSQFitter()
-	g = fit_g(g_init, bins_c, num)
+	## No fit histogram
 	numsum = 0
 	for j in range(np.size(num)):
-		if (bins_c[j]>bins_med-3.*g.stddev and bins_c[j]<bins_med+3.*g.stddev):
+		if (bins_c[j]>bins_med-2. and bins_c[j]<bins_med+2.):
 			numsum += num[j]
-	sig1 = float(numsum / np.nansum(num))
-	print("box flux mean: ", g.mean*1.)
+	sig3 = float(numsum / np.nansum(num))
 	print("box flux median: ", bins_med)
-	print("3-sigma from median percentage: {:.2%}".format(sig1))
-	ax3.plot(bins_c, g(bins_c), c='r')
+	print("2 MJy/sr from median ratio: {:.1%}".format(sig3))
 	ax3.axvline(bins_med, c='k', ls='-.', 
 		label="median: {:.2}".format(bins_med))
-	ax3.axvline(bins_med-3.*g.stddev, c='b', ls=':', 
-		label="3-sigma from median ratio: {:.2%}".format(sig1))
-	ax3.axvline(bins_med+3.*g.stddev, c='b', ls=':')
+	ax3.axvline(bins_med-2., c='b', ls=':', 
+		label="2 MJy/sr from median ratio: {:.1%}".format(sig3))
+	ax3.axvline(bins_med+2., c='b', ls=':')
 
 	if wvlnum=="all_wvl":
 		ax3.set_title("Flux distribution")
@@ -136,6 +131,34 @@ def fluxdist(wvl, data, wvlnum):
 	ax3.set_xlabel(r'$F_{\nu} (MJy)$')
 	ax3.set_ylabel("Number of pixels")
 	ax3.legend(loc='upper right')
+"""
+	## Fit the histogram using a Gaussian
+	g_init = models.Gaussian1D(amplitude=1., mean=0, stddev=1.)
+	fit_g = fitting.LevMarLSQFitter()
+	g = fit_g(g_init, bins_c, num)
+	numsum = 0
+	for j in range(np.size(num)):
+		if (bins_c[j]>bins_med-3.*g.stddev and bins_c[j]<bins_med+3.*g.stddev):
+			numsum += num[j]
+	sig3 = float(numsum / np.nansum(num))
+	print("box flux mean: ", g.mean*1.)
+	print("box flux median: ", bins_med)
+	print("3-sigma from median percentage: {:.2%}".format(sig3))
+	ax3.plot(bins_c, g(bins_c), c='r')
+	ax3.axvline(bins_med, c='k', ls='-.', 
+		label="median: {:.2}".format(bins_med))
+	ax3.axvline(bins_med-3.*g.stddev, c='b', ls=':', 
+		label="3-sigma from median ratio: {:.2%}".format(sig3))
+	ax3.axvline(bins_med+3.*g.stddev, c='b', ls=':')
+
+	if wvlnum=="all_wvl":
+		ax3.set_title("Flux distribution")
+	else:
+		ax3.set_title("Flux distribution at {} micron".format(wvl[wvlnum]))
+	ax3.set_xlabel(r'$F_{\nu} (MJy/sr)$')
+	ax3.set_ylabel("Number of pixels")
+	ax3.legend(loc='upper right')
+"""
 
 def calunc(wvl, data, unc):
 	"""
@@ -158,8 +181,8 @@ def calunc(wvl, data, unc):
 filename = 'n66north_SL2_cube'
 uncname = 'n66north_SL2_cube_unc'
 ## select fixed rectangle: lower left (x1, y1) & upper right (x2, y2)
-xmin, xmax = 90, 120
-ymin, ymax = 70, 100
+xmin, xmax = 51, 93
+ymin, ymax = 75, 80
 
 with fits.open(filename+'.fits') as hdul:
 	data = hdul[0].data
@@ -253,7 +276,7 @@ while True:
 				c='k', ls='-', lw=.5, ecolor='r', elinewidth=1., label="IRS data")
 			ax2.set_title("Spectrum")
 			ax2.set_xlabel('Wavelength (micron)')
-			ax2.set_ylabel(r'$F_{\nu} (MJy)$')
+			ax2.set_ylabel(r'$F_{\nu} (MJy/sr)$')
 #			ax2.set_yscale('log', nonposy='clip')
 			ax2.legend(loc='upper left')
 
