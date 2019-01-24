@@ -6,12 +6,11 @@ anacube.py is a simple routine dedicated to extracting spectra from cubes built 
 for further analysis such as cube quality estimation by inspecting spatial flux distribution. 
 It has a twin version anacube_dual.py where the comparison of two cubes are possible.
 
-
 Comment fluxdist function, line ?, if you only want to view spectrum.
 Change fluxdist input "wvlnum" where "all_wvl" option means taking all wavelengths into acount.
-
 Modify filename and parameters at the beginning of MAIN procedure.
 
+Flux distribution not available for "circle" mode.
 Uncertainty is not yet available to be added to spectrum.
 """
 
@@ -103,6 +102,7 @@ def fluxdist(wvl, data, wvlnum):
 		data1 = data[:,:,:].reshape(-1)
 	else:
 		data1 = data[wvlnum,:,:].reshape(-1)
+	bins_med = np.nanmedian(data1)
 	num, bins, patches = ax3.hist(data1, bins=int(np.size(data1)),
 		alpha=.3, lw=.5, edgecolor='w', color='c')
 	bins_c = []
@@ -116,18 +116,18 @@ def fluxdist(wvl, data, wvlnum):
 	g = fit_g(g_init, bins_c, num)
 	numsum = 0
 	for j in range(np.size(num)):
-		if (bins_c[j]>median-g.stddev and bins_c[j]<g.mean+g.stddev):
+		if (bins_c[j]>bins_med-3.*g.stddev and bins_c[j]<bins_med+3.*g.stddev):
 			numsum += num[j]
 	sig1 = float(numsum / np.nansum(num))
 	print("box flux mean: ", g.mean*1.)
-	print("box flux median: ", )
-	print("5-sigma from the median percentage: {:.0%}".format(sig1))
+	print("box flux median: ", bins_med)
+	print("3-sigma from median percentage: {:.2%}".format(sig1))
 	ax3.plot(bins_c, g(bins_c), c='r')
-	ax3.axvline(g.mean, c='k', ls='-.', 
-		label="mean: {:.2}".format(g.mean*1.))
-	ax3.axvline(g.mean-g.stddev, c='b', ls=':', 
-		label="1-sigma ratio: {:.0%}".format(sig1))
-	ax3.axvline(g.mean+g.stddev, c='b', ls=':')
+	ax3.axvline(bins_med, c='k', ls='-.', 
+		label="median: {:.2}".format(bins_med))
+	ax3.axvline(bins_med-3.*g.stddev, c='b', ls=':', 
+		label="3-sigma from median ratio: {:.2%}".format(sig1))
+	ax3.axvline(bins_med+3.*g.stddev, c='b', ls=':')
 
 	if wvlnum=="all_wvl":
 		ax3.set_title("Flux distribution")
