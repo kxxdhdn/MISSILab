@@ -14,7 +14,7 @@ Only specview function available for "circle" mode.
 Uncertainty is not yet available to be added to spectrum.
 """
 
-import os, sys
+#import os, sys
 from astropy.io import fits
 from astropy import units as u
 from astropy import wcs
