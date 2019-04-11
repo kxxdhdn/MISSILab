@@ -44,6 +44,18 @@ def bimapview(lx, ly, wvl, data, data0, wvlnum, patch):
 	ax11.set_title("dh")
 	ax11.set_xlabel("x")
 	ax11.set_ylabel("y")
+	if np.size(patch)==4:
+		## add rectangle patch
+		plt.gca().add_patch(plt.Rectangle(
+			(patch[0], patch[1]), # (xmin, ymin)
+			patch[2]-patch[0], patch[3]-patch[1], # width, height
+    		edgecolor='red', linestyle='-', fill=False))
+	elif np.size(patch)==3:
+		## add circle patch
+		plt.gca().add_patch(plt.Circle(
+			(patch[0], patch[1]), # (x0, y0)
+			patch[2], # radius
+    		edgecolor='red', linestyle='-', fill=False))
 	# ----- ref cube -----
 	ax12 = plt.subplot(122)
 	pcm = ax12.pcolormesh(x, y, data0[wvlnum,:,:], norm=cnorm, cmap='rainbow')
@@ -66,7 +78,7 @@ def bimapview(lx, ly, wvl, data, data0, wvlnum, patch):
 
 	return fig1
 
-def bispecview(wvl, data1, data2, wfilt, Fnu_filt): # manque wfilt_unc
+def bispecview(wvl, data1, data2, wfilt, filt_width, Fnu_filt):
 	"""
 	extract spectrum at chosen square
 
@@ -82,10 +94,10 @@ def bispecview(wvl, data1, data2, wfilt, Fnu_filt): # manque wfilt_unc
 	ax2.errorbar(wvl, np.nansum(data2, axis=1), 0.,
 		c='b', ls='-', lw=.5, ecolor='r', elinewidth=1., label="ref")
 	## add inter-calibration
-	ax2.errorbar(wfilt, Fnu_filt, #xerr=wfilt_unc,
-		fmt='o', c='g', ecolor='g', elinewidth=.5, label="photometry")
+	ax2.errorbar(wfilt, Fnu_filt, xerr=filt_width,
+		fmt='o', capsize=5, c='g', ecolor='g', elinewidth=.5, label="photometry")
 	ax2.set_title("Spectra")
-	ax2.set_xlabel('Wavelength (micron)')
+	ax2.set_xlabel('Wavelength (microns)')
 	ax2.set_ylabel(r'$F_{\nu} (MJy/sr)$')
 #	ax2.set_yscale('log', nonposy='clip')
 	ax2.legend(loc='upper left')
@@ -124,12 +136,12 @@ def cal_res(wvl, data1, data2, trim):
 			print("Need to review {:.5} micron slice".format(wvl[k]))
 	print(badv)
 	## res_std (par rapport a wvl)
-	res_std = rms(res)
+	res_std = np.std(res, ddof = 0)
 	## plot res - wvl
 	fig3 = plt.figure("Residual Distribution")
 	ax3 = plt.subplot()
 	ax3.plot(wvl, res, 'k-', lw=.5, label="std_dev = {:.2%}".format(res_std))
-	ax3.set_xlabel('Wavelength (micron)')
+	ax3.set_xlabel('Wavelength (microns)')
 	ax3.set_ylabel('Residual')
 #	ax3.set_xscale('log', nonposy='clip')
 	ax3.legend(loc='upper right')
@@ -152,8 +164,11 @@ def rms(a):
 """
 ------------------------------ MAIN ------------------------------
 """
-filename = './n66_LL/n66_LL1_cube'
-filename0 = './n66_LL/1_LL1_cube' 
+path = './n66_LL/'
+filename = 'n66_LL1_cube'
+filename0 = '1_LL1_cube' 
+calib_path = '/Users/dhu/data/mosaic/SMC/'
+calib_file = 'mips024'
 #filename0 = filename # set 2 filenames the same if no need to compare cubes
 ## select fixed rectangle: lower left (x1, y1) & upper right (x2, y2)
 #xmin, xmax = 50, 70
@@ -161,7 +176,7 @@ filename0 = './n66_LL/1_LL1_cube'
 xmin, xmax = 52, 54
 ymin, ymax = 67, 69
 
-with fits.open(filename+'.fits') as hdul:
+with fits.open(path+filename+'.fits') as hdul:
 	data = hdul[0].data
 	hdr = hdul[0].header
 	NAXIS1 = hdr['NAXIS1']
@@ -169,8 +184,10 @@ with fits.open(filename+'.fits') as hdul:
 	NAXIS3 = hdr['NAXIS3']
 	wvl = hdul[1].data[0][0][:,0]
 #	wvl = hdul[1].data # for rewitten header
-hdul0 = fits.open(filename0+'.fits')
+hdul0 = fits.open(path+filename0+'.fits')
 data0 = hdul0[0].data
+hdul_c = fits.open(calib_path+calib_file+'.fits')
+dcalib = hdul_c[0].data
 
 while True:
 	b1 = input("(Re)Analyse? (0 - yes / else - no) ") # keyboard input 1
@@ -258,7 +275,7 @@ while True:
 		flux0 = np.nansum(data1, axis=1).reshape((NAXIS3,1,1))
 		wcen, Fnu_filt = calib(wvl, flux0, ["MIPS1"])
 		print("d", wcen, Fnu_filt)
-		bispecview(wvl, data1, data2, wcen[0], Fnu_filt[0,0,0])
+		bispecview(wvl, data1, data2, wcen[0], 3.2, Fnu_filt[0,0,0])
 		## compare two cubes [comment the following if not compare]
 		res = cal_res(wvl, data1, data2, .5)
 

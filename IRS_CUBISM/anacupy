@@ -178,13 +178,14 @@ def calunc(wvl, data, unc):
 """
 ------------------------------ MAIN ------------------------------
 """
-filename = './n66_LL/n66_LL1_cube'
-uncname = './n66_LL/n66_LL1_cube'
+path = './n66_LL/'
+filename = 'n66_LL1_cube'
+uncname = 'n66_LL1_cube'
 ## select fixed rectangle: lower left (x1, y1) & upper right (x2, y2)
 xmin, xmax = 42, 54
 ymin, ymax = 57, 70
 
-with fits.open(filename+'.fits') as hdul:
+with fits.open(path+filename+'.fits') as hdul:
 	data = hdul[0].data
 	hdr = hdul[0].header
 	NAXIS1 = hdr['NAXIS1']
@@ -192,7 +193,7 @@ with fits.open(filename+'.fits') as hdul:
 	NAXIS3 = hdr['NAXIS3']
 	wvl = hdul[1].data[0][0][:,0]
 #	wvl = hdul[1].data # for rewitten header
-hdulunc = fits.open(uncname+'.fits')
+hdulunc = fits.open(path+uncname+'.fits')
 unc = hdulunc[0].data
 
 while True:
