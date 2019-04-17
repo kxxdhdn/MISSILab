@@ -1,0 +1,62 @@
+* means this module has been called by module of the same level (so that it can no more call another module in the same level).
+
+ACCOMPLI : 
+kernels
+	gen_kern
+utils
+	rwhdf5.py
+		read_hdf5
+		write_hdf5
+	rwcsv.py
+		read_csv
+		write_csv
+	rwfits.py
+		read_fits
+		build_wcs
+		write_fits
+	myfunc.py
+		fclean
+		hprint
+		deg2world
+		gaussian
+		gaussian2D
+		rms
+		nanrms
+		std
+	mymode.py
+		blockPrint
+**impro.py
+	crop
+	cubislice
+	rpj
+*smooth.py
+	crop3D [import **impro]
+	choker
+	do_conv
+calipy.py
+	synthetic_photometry
+
+
+EN COURS : 
+mapping.py
+
+
+A ECRIRE : 
+
+
+EXECUTABLE : 
+test
+main
+
+
+EXTERIEUR : 
+Fortran
+	synthetic_photometry
+IDL
+	conv.pro
+	con_prog.pro (to modify along with smooth.py)
+	convolve_image.pro (to modify along with smooth.py)
+	run_fit.pro
+	fit.pro
+	run_ana.pro
+	ana.pro

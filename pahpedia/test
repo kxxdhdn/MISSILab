@@ -1,0 +1,32 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+
+MAIN tests
+
+"""
+
+import numpy as np
+from utils.myclass import blockPrint
+from utils.myfunc import hprint#, tprint
+
+## initialize
+a=1
+if a==True and isinstance(a, int):
+	print("Is Python not self-consist? ")
+	if isinstance(True, bool) and isinstance(a, bool):
+		print("You are wrong.")
+	else:
+		print("Shut up! ")
+
+## myclass
+with blockPrint():
+	print("Coucou", 123)
+print("Loulou", 123)
+
+## myfunc test
+hprint(0, "Doudou", 123)
+hprint(1, "Fake_Doudou", 123)
+#tprint("Caca", "Pipi", nopr=False)
+

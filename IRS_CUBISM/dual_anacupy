@@ -136,7 +136,7 @@ def cal_res(wvl, data1, data2, trim):
 			print("Need to review {:.5} micron slice".format(wvl[k]))
 	print(badv)
 	## res_std (par rapport a wvl)
-	res_std = np.std(res, ddof = 0)
+	res_std = rms(res)
 	## plot res - wvl
 	fig3 = plt.figure("Residual Distribution")
 	ax3 = plt.subplot()

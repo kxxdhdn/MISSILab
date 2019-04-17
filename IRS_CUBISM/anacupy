@@ -131,7 +131,7 @@ def fluxdist(wvl, data, wvlnum):
 	ax3.set_xlabel(r'$F_{\nu} (MJy)$')
 	ax3.set_ylabel("Number of pixels")
 	ax3.legend(loc='upper right')
-"""
+	"""
 	## Fit the histogram using a Gaussian
 	g_init = models.Gaussian1D(amplitude=1., mean=0, stddev=1.)
 	fit_g = fitting.LevMarLSQFitter()
@@ -158,7 +158,7 @@ def fluxdist(wvl, data, wvlnum):
 	ax3.set_xlabel(r'$F_{\nu} (MJy/sr)$')
 	ax3.set_ylabel("Number of pixels")
 	ax3.legend(loc='upper right')
-"""
+	"""
 
 def calunc(wvl, data, unc):
 	"""
