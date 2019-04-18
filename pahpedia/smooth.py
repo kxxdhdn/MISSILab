@@ -7,13 +7,10 @@ PSF homogeneisation
 
 """
 
-#import sys
-#sys.path.append('..')
-#print(sys.path)
 import numpy as np
 import subprocess as SP
 from kernels.gen_kern import kern
-from impro import crop, cubislice
+from utils.impro import crop, cubislice
 from utils.rwcsv import write_csv
 
 psf = [1., 1.5, 2., 2.5, 3., 3.5, 4., 4.5, 5., 5.5, 6., 6.5, 7., 7.5, 8., 8.5, 9., 9.5, 10.]

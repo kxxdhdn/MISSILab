@@ -3,7 +3,7 @@
 
 """
 
-2D (re)projection
+matplotlib applications
 
 """
 

@@ -9,7 +9,7 @@ My library of math functions
 
 import numpy as np
 import subprocess as SP
-from .myclass import blockPrint
+from myclass import blockPrint
 
 def fclean(filIN):
 	"""

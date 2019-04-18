@@ -6,6 +6,12 @@
 MAIN tests
 
 """
+# if __name__=="__main__":
+# 	import sys
+# 	sys.path.append('kernels')
+# 	sys.path.append('utils')
+# 	print(sys.path)
+# or add path in __init__.py
 
 import numpy as np
 from utils.myclass import blockPrint

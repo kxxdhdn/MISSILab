@@ -10,8 +10,8 @@ PSF homogeneisation
 import numpy as np
 import math
 from reproject import reproject_interp
-from utils.rwfits import *
-from utils.myfunc import hprint
+from rwfits import *
+from myfunc import hprint
 
 def rpj(filIN, filOUT, REFile):
 
@@ -84,16 +84,17 @@ if __name__ == "__main__":
 	## in situ test
 	import matplotlib as mpl
 	import matplotlib.pyplot as plt
-	from utils.myfunc import deg2world
+	from myfunc import deg2world
 
 	ref_path = '/Users/dhu/data/mosaic/SMC/'
-	data_path = 'test_examples/'
-	out_path = 'data/slices/'
+	data_path = '../test_examples/'
+	out_path = '../data/slices/'
+	conv_path = '../data/convolved/'
+	rpj_path = '../data/reprojection/'
+	
 	ref_filename = 'mips024'
 	data_filename = 'n66_LL1_cube'
 	out_ref = '_ref_'+ref_filename
-	conv_path = 'data/convolved/'
-	rpj_path = 'data/reprojection/'
 
 	ra, dec = deg2world(0., 59., 3.5623, -72., 10., 33.972)
 	d_ra, d_dec = 1./30., 1./30.

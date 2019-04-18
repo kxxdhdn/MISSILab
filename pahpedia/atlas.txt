@@ -25,20 +25,23 @@ utils
 		std
 	mymode.py
 		blockPrint
-**impro.py
-	crop
-	cubislice
-	rpj
-*smooth.py
+	calipy.py
+		synthetic_photometry
+	impro.py
+		crop
+		cubislice
+		rpj
+
+smooth.py
 	crop3D [import **impro]
 	choker
 	do_conv
-calipy.py
-	synthetic_photometry
+
 
 
 EN COURS : 
-mapping.py
+utils
+	mapping.py
 
 
 A ECRIRE : 

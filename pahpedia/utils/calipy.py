@@ -10,8 +10,8 @@ SYNTHETIC PHOTOMETRY
 import numpy as np
 import matplotlib.pyplot as plt
 import subprocess as SP
-from utils.rwfits import read_fits
-from utils.rwhdf5 import *
+from rwfits import read_fits
+from rwhdf5 import *
 
 def synthetic_photometry(w_spec, Fnu_spec0, filt_UTF8):
 
@@ -45,8 +45,9 @@ def synthetic_photometry(w_spec, Fnu_spec0, filt_UTF8):
 """
 if __name__ == "__main__":
 	
-	path = './test_examples/'
+	path = '../test_examples/'
 	filename = 'n66_LL1_cube'
+
 	## select fixed rectangle: lower left (xb, yb) & upper right (xt, yt)
 	xb, xt = 32, 44
 	yb, yt = 47, 60
