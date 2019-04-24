@@ -39,11 +39,11 @@ def tprint(*content, **kwargs):
 		else:
 			print([c for c in content])
 """
-def deg2world(h, m, s, dd, mm, ss):
+def celest2deg(h, m, s, dd, mm, ss):
 	"""
 	Degree to world coord conversion
 	"""
-	ra = (h + m/60. + s/3600.) * 360. / 24.
+	ra = (h + m/60. + s/3600.) * 360./24.
 	if dd>0:
 		dec = dd + mm/60. + ss/3600.
 	else:
@@ -135,4 +135,4 @@ if __name__ == "__main__":
 	ax.scatter(x, x, g2, s=.5)
 	#plt.show()
 
-	print("degree=",deg2world(0, 58, 48, 279, 40, 8))
+	print("degree=",celest2deg(0, 58, 48, -179, 40, 8))

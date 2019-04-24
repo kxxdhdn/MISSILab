@@ -36,6 +36,8 @@ if __name__ == "__main__":
 	path = '../test_examples/'
 	filename = 'write_test'
 
+	print(read_csv(path+filename))
+	exit()
 	a = np.arange(2)
 	a = [a]*10
 	a = np.array(a)

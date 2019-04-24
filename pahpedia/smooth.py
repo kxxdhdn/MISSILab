@@ -10,10 +10,10 @@ PSF homogeneisation
 import numpy as np
 import subprocess as SP
 from kernels.gen_kern import kern
-from utils.impro import crop, cubislice
+from utils.impro import *
 from utils.rwcsv import write_csv
 
-psf = [1., 1.5, 2., 2.5, 3., 3.5, 4., 4.5, 5., 5.5, 6., 6.5, 7., 7.5, 8., 8.5, 9., 9.5, 10.]
+psf = [1., 1.5, 2., 2.5, 3., 3.5, 4., 4.5, 5., 5.5, 6., 6.5, 7.]
 
 def crop3D(filIN, filOUT, centre, size, nopr=True):
 
@@ -24,8 +24,8 @@ def crop3D(filIN, filOUT, centre, size, nopr=True):
 		SList.append(filOUT+'_'+'0'*(4-len(str(k)))+str(k)+'_')
 	## crop slices
 	cube=[]
-	for slOUT in SList:
-		cube.append(crop(slOUT, slOUT, centre, size, nopr))
+	for SLout in SList:
+		cube.append(crop(SLout, SLout, centre, size, nopr))
 	cube = np.array(cube)
 
 	return cube, wvl, SList
@@ -56,7 +56,7 @@ def choker(SList, wvl):
 		#print(psf[j])
 		if (flag==0):
 			print('Error: need bigger PSF! (In this case IndexError will appear first at psf[j+1])')
-		ker_name = 'Kernel_HiRes_Gauss_0' + str(psf[j]) + '_to_Gauss_06.0'
+		ker_name = 'Kernel_HiRes_Gauss_0' + str(psf[j]) + '_to_MIPS_24'
 		im_name = SList[k]
 		kern_k = [im_name, ker_name]
 		kerl.append(kern_k) # kerl-----im, kern
@@ -76,17 +76,25 @@ def do_conv():
 if __name__ == "__main__":
 
 	## in situ test
-	from utils.myfunc import deg2world, fclean
+	from astropy import units as u
+	import matplotlib.pyplot as plt
+	from utils.myfunc import celest2deg, fclean
+	from utils.mapping import *
 
+	ref_path = '/Users/dhu/data/mosaic/SMC/'
 	data_path = 'test_examples/'
 	out_path = 'data/convolved/'
-	data_filename = 'n66_LL1_cube'
+	rpj_path = 'data/reprojection/'
 
-	ra, dec = deg2world(0., 59., 3.5623, -72., 10., 33.972)
-	d_ra, d_dec = 1./30., 1./30.
+	data_filename = 'n66_LL1_cube'
+	ref_filename = 'mips024'
+	out_ref = '_ref_'+ref_filename
+
+	ra, dec = celest2deg(0., 59., 3.5623, -72., 10., 33.972)
+	dx, dy = 34, 40
 	
 	## 3D cube cropping
-	cube, wvl, SList = crop3D(data_path+data_filename, out_path+data_filename, [ra, dec], [d_ra, d_dec])
+	cube, wvl, SList = crop3D(data_path+data_filename, out_path+data_filename, (dec, ra), (dy, dx))
 	print("Cropped cube size: ", cube.shape)
 
 	choker(SList, wvl)
@@ -95,3 +103,18 @@ if __name__ == "__main__":
 
 	fclean('data/convolved/*_.fits')
 #	fclean('data/convolved/*conv.fits')
+	
+	## mips data
+	ref = crop(ref_path+ref_filename, data_path+out_ref, \
+		(dec, ra), (dy, dx), nopr=0)
+	print("Cropped ref size: ", ref.shape)
+	## unit conversion
+	# FLUXCONV = 0.000145730
+	# ref = ref / FLUXCONV
+
+	ref = rpj(data_path+out_ref, rpj_path+out_ref, SList[10]+'conv', (dy, dx))[0]
+	
+	data, ft, w = rpj(SList[10]+'conv', rpj_path+data_filename, SList[10]+'conv', (dy, dx))
+	multimview([data, ref, ft], w, (1,3), figsize=(12,5))
+
+	plt.show()

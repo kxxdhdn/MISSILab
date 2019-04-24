@@ -15,7 +15,46 @@ MAIN tests
 
 import numpy as np
 from utils.myclass import blockPrint
-from utils.myfunc import hprint#, tprint
+from utils.myfunc import celest2deg, hprint#, tprint
+from utils.rwfits import *
+from utils.impro import *
+
+ref_path = '/Users/dhu/data/mosaic/SMC/'
+data_path = 'test_examples/'
+out_path = 'data/convolved/'
+rpj_path = 'data/reprojection/'
+
+data_filename = 'n66_LL1_cube'
+ref_filename = 'mips024'
+out_ref = '_ref_'+ref_filename
+
+ref, ft, w = rpj(data_path+out_ref, rpj_path+out_ref, data_path+data_filename, (dy, dx))
+
+cube, wvl, hdr = read_fits(data_path+data_filename, True, 1)
+
+wcen, data[y,x], sig = synthetic_photometry(wvl, cube[:,59,43].reshape(-1,1,1), ['MIPS1'])
+
+
+
+
+"""
+## celest2deg conversion test
+ra0, dec0 = celest2deg(0., 58., 0., -72., 11., 0.)
+ra, dec = celest2deg(0., 59., 0., -72., 10., 0.)
+d_ra0, d_dec0 = ra-ra0, dec-dec0
+d_ra, d_dec = celest2deg(0., 1., 0., 0., 1., 0.)
+print("d_ra0, d_dec0", d_ra0, d_dec0)
+print("d_ra, d_dec", d_ra, d_dec)
+
+## 
+data, old = read_fits(path+filename, False)
+print(old)
+w, hdr = WCSextract(path+filename)
+hdr['PC1_1'], hdr['PC1_2'] = 1., 0.
+hdr['PC2_1'], hdr['PC2_2'] = 0., 1.
+comment="hdr modification test"
+write_fits(path+filename+"_test", data[:10,:20],None,hdr,comment)
+print(hdr)
 
 ## initialize
 a=1
@@ -35,4 +74,4 @@ print("Loulou", 123)
 hprint(0, "Doudou", 123)
 hprint(1, "Fake_Doudou", 123)
 #tprint("Caca", "Pipi", nopr=False)
-
+"""

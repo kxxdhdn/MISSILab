@@ -12,7 +12,7 @@ utils
 		write_csv
 	rwfits.py
 		read_fits
-		build_wcs
+		WCSextract
 		write_fits
 	myfunc.py
 		fclean
@@ -25,12 +25,12 @@ utils
 		std
 	mymode.py
 		blockPrint
-	calipy.py
+	synthetic_photometry.py
 		synthetic_photometry
 	impro.py
+		rpj
 		crop
 		cubislice
-		rpj
 
 smooth.py
 	crop3D [import **impro]
@@ -42,6 +42,8 @@ smooth.py
 EN COURS : 
 utils
 	mapping.py
+		specview
+		multimview
 
 
 A ECRIRE : 
@@ -50,6 +52,7 @@ A ECRIRE :
 EXECUTABLE : 
 test
 main
+calipy
 
 
 EXTERIEUR : 

@@ -35,34 +35,25 @@ def read_fits(filename, is3d=True, wvl_mod=0, data_on=True):
 			else:
 				return hdr
 
-def build_wcs(filename, is3d=False):
+def WCSextract(filename):
 
-	## create a new WCS object
-	w = WCS(naxis=2)
+	hdr = fits.open(filename+'.fits')[0].header
 
-	if is3d==True:
-		hdul = fits.open(filename+'.fits')
-		data = hdul[0].data
-		hdr = hdul[0].header
-		w.wcs.ctype = [hdr['CTYPE1'], hdr['CTYPE2']]
-		w.wcs.crpix = [hdr['CRPIX1'], hdr['CRPIX2']]
-		w.wcs.crval = [hdr['CRVAL1'], hdr['CRVAL2']]
-		w.wcs.cdelt = [hdr['CDELT1'], hdr['CDELT2']]
-		if w.wcs.has_pc:
-			w.wcs.pc = [[hdr['PC1_1'], hdr['PC1_2']], [hdr['PC2_1'], hdr['PC2_2']]]
-	else:
-		w = WCS(filename+'.fits')
+	hdr0 = hdr.copy()
+	if hdr['NAXIS']==3:
+		for kw in hdr0.keys():
+			if '3' in kw:
+				del hdr[kw]
+		hdr['COMMENT'] = "This header is adapted to 2D WCS extraction need. "
+	
+	w = WCS(hdr, naxis=2)
 
-	new_hdr = w.to_header()
+	return w, hdr
 
-	return w, new_hdr
+def write_fits(filename, data, wvl, hdr, **hdrl):
 
-def write_fits(filename, data, wvl, hdr, comment, **hdrl):
-
-#	hdr = fits.Header()
 	for key, value in hdrl.items():
 		hdr[key] = value
-	hdr['COMMENT'] = comment
 	primary_hdu = fits.PrimaryHDU(header=hdr, data=data)
 	hdul = fits.HDUList(primary_hdu)
 	## add table
@@ -85,18 +76,19 @@ if __name__ == "__main__":
 	data, wvl, hdr = read_fits(path+filename, True, 1)
 	"""
 	print(data, wvl, hdr)
-	w, new_hdr = build_wcs(path+filename, True)
+	w, new_hdr = WCSextract(path+filename)
 	print(w)
-	write_fits(path+writename, data, wvl, hdr, "This is a write test", \
-		NAXIS3=hdr['NAXIS3'])
+	write_fits(path+writename, data, wvl, hdr, \
+		COMMENT="This is a write test", NAXIS3=hdr['NAXIS3'])
 	data_, wvl_, new_hdr = read_fits(path+writename)
 	print(data_, wvl_, new_hdr)
 	"""
 	## 2D write
-	w, new_hdr = build_wcs(path+filename, True)
-#	print(w)
-	write_fits(path+writename, data[0,:,:], None, new_hdr, "This is a 2D write test", \
+	w, new_hdr = WCSextract(path+filename)
+	# print(w)
+	write_fits(path+writename, data[0,:,:], None, new_hdr, \
+		COMMENT="This is a 2D write test", \
 		BUNIT=hdr['BUNIT'], EQUINOX=hdr['EQUINOX'])
 	data_, new_hdr = read_fits(path+writename, False)
-#	print(data_, new_hdr)
-	print(new_hdr)
+	# print(data_, new_hdr)
+	# print(new_hdr)
