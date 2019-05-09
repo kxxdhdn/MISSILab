@@ -1,0 +1,215 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+
+matplotlib applications
+
+"""
+
+import numpy as np
+import matplotlib.pyplot as plt
+from utils.myfunc import fclean
+from utils.rwfits import *
+from utils.rwcsv import *
+from utils.synthetic_photometry import *
+from utils.impro import *
+from utils.mapping import *
+from utils.mc import calunc
+from smooth import choker, do_conv
+
+data_path = 'data/n76/'
+data_filename = 'n76_LL1'
+unc_filename = data_filename+'_unc'
+out_path = data_path+'convolved/'
+rpj_path = data_path+'reprojection/'
+
+ph_path = '/Users/dhu/data/mosaic/SMC/'
+ph_filename = 'mips024'
+# ph_filename = 'irac_c3'
+out_ph = data_filename+'_'+ph_filename
+
+N_mc = 1
+
+## uncertainty adjustment factor for SL2, SL1, LL2, LL1 (IRS Handbook P.175)
+IRSunc = [.011, .011, .016, .15]
+## calibration uncertainty for 24, 70, 160 microns (MIPS Handbook P.79)
+MIPSunc = [.04, .07, .12]
+## calibration uncertainty for 3.6, 4.5, 5.8, 8.0 microns (IRAC Handbook P.36)
+IRACunc = [.03, .03, .03, .03]
+
+## mips024 SMC mosaic background [xmin, xmax, ymin, ymax]
+c = [1565, 1605, 2042, 2082]
+## irac3 SMC bg
+# c = [6600, 6650, 4700, 4750]
+## mips m82 bg
+# c = [900, 1000, 800, 900]
+## irac3 m82 bg
+# c = [400, 450, 400, 450]
+
+## 3D cube slicing
+wvl, hdr = cubislice(data_path+data_filename, out_path+data_filename, None, '_')
+SList = []
+NAXIS3 = np.size(wvl)
+for k in range(NAXIS3):
+	SList.append(out_path+data_filename+'_'+'0'*(4-len(str(k)))+str(k)+'_')
+
+## smooth
+choker(SList, wvl)
+do_conv()
+fclean(data_path+'convolved/*_.fits')
+
+## rebuild convolved cube
+cube = []
+for SLout in SList:
+	cubi = read_fits(SLout+'conv', False)[0]
+	# cubi = read_fits(SLout, False)[0]
+	cube.append(cubi)
+cube = np.array(cube)
+# fclean(data_path+'convolved/*_conv.fits')
+
+## photometry data
+NAXIS1 = hdr['NAXIS1']
+NAXIS2 = hdr['NAXIS2']
+dx, dy = NAXIS1*3, NAXIS2*3
+ra, dec = hdr['CRVAL1'], hdr['CRVAL2']
+crop(ph_path+ph_filename, data_path+out_ph, \
+	(ra, dec), (dx, dy))
+## [Alternative] hextract crop
+# hextract(ph_path+ph_filename, data_path+out_ph, \
+	# 9250, 10750, 5500, 7000)
+# mSubimage(infile=ph_path+ph_filename+'.fits', outfile=data_path+out_ph+'.fits', ra=ra, dec=dec, xsize=dx, ysize=dy, mode=1)
+
+## mips024 -> irsll1 reprojection
+photometry, ft, w = rpj(data_path+out_ph, rpj_path+out_ph, data_path+data_filename, (dy, dx))
+## [Alternative] SWarp reprojection
+# photometry, w = swarpj(data_path+out_ph, rpj_path+out_ph, data_path+data_filename)
+## [Alternative] Montage reprojection
+# rnt=mImgtbl(data_path, rpj_path+'ph.tbl')
+# print(rnt)
+# exit()
+# rnt=mMakeHdr(rpj_path+'ph.tbl', rpj_path+'ph.hdr')
+# rnt=mProjectPP(input_file=data_path+out_ph+'.fits', output_file=rpj_path+out_ph+'.fits', template_file='ph.hdr')
+# print(rnt)
+# exit()
+# photometry = read_fits(rpj_path+out_ph, False)[0]
+# w = WCSextract(data_path+data_filename)[0]
+
+## inter-calib
+Fnu_filt = []
+Unc_filt = []
+Fnu_ph = []
+Unc_ph = []
+abpts = []
+## do synthetic photometry
+cube_m = np.zeros((NAXIS3+1)*NAXIS2*NAXIS1).reshape((NAXIS3+1), NAXIS2, NAXIS1)
+## correction of the interpolation (at the beginning of spectra)
+wvl_m = [wvl[0]-3.]
+wvl_m.extend(wvl)
+wvl_m = np.array(wvl_m)
+cube_m[1:,:,:] = np.copy(cube)
+wcen, data0, sig = synthetic_photometry(wvl_m, cube_m, ['MIPS1'])
+# wcen, data0, sig = synthetic_photometry(wvl_m, cube_m, ['IRAC3'])
+
+## save data
+write_fits(rpj_path+data_filename+'_calib', data0, hdr)
+
+"""
+----------------------------------------
+Uncertainty propagation by Monte-Carlo
+----------------------------------------
+
+"""
+data_mc = []
+b0 = input("(Re)do Monte-Carlo? [y/n] ")
+for i in range(N_mc):
+	if b0=='y':
+		## 3D cube slicing with uncertainty added
+		cubislice(data_path+data_filename, out_path+data_filename, data_path+unc_filename, '_')
+
+		## smooth
+		choker(SList, wvl)
+		do_conv()
+		fclean(data_path+'convolved/*_.fits')
+
+		## rebuild convolved cube
+		cube = []
+		for SLout in SList:
+			cubi = read_fits(SLout+'conv', False)[0]
+			# cubi = read_fits(SLout, False)[0]
+			cube.append(cubi)
+		cube = np.array(cube)
+
+		## inter-calib
+		cube_m = np.zeros((NAXIS3+1)*NAXIS2*NAXIS1).reshape((NAXIS3+1), NAXIS2, NAXIS1)
+		## do synthetic photometry
+		cube_m[1:,:,:] = np.copy(cube)
+		data = synthetic_photometry(wvl_m, cube_m, ['MIPS1'])[1]
+		# data = synthetic_photometry(wvl_m, cube_m, ['IRAC3'])[1]
+		## save data
+		write_fits(rpj_path+data_filename+'_calib_'+'0'*(4-len(str(i)))+str(i), data, hdr)
+		
+		## ieme iteration finished
+		print("----------------{}----------------".format(i+1))
+	else:
+		data = read_fits(rpj_path+data_filename+'_calib_'+'0'*(4-len(str(i)))+str(i), False)[0]
+	data_mc.append(data)
+data_mc = np.array(data_mc)
+FILTerr = calunc(data_mc, [NAXIS1, NAXIS2])
+
+fclean(data_path+'convolved/*_conv.fits')
+# fclean(data_path+'reprojection/*.fits')
+
+"""
+----------------------------------------
+Uncertainty extraction from background
+----------------------------------------
+
+"""
+PHbg = read_fits(ph_path+ph_filename, False)[0]
+e = []
+for a in PHbg[c[2]:c[3],c[0]:c[1]]:
+	e.append(a)
+PHerr = np.nanstd(e)
+print("PHerr = ", PHerr)
+
+## [unc cube comparison] SMC N66 bg & center
+# c66 = [15, 30, 12, 27]
+# cen66 = [23, 20]
+# FILTfond = read_fits(data_path+data_filename, True, 1)[0]
+# e66 = []
+# for k in range(NAXIS3):
+# 	for a66 in FILTfond[k,c66[2]:c66[3],c66[0]:c66[1]]:
+# 		e66.append(a66)
+# 	err66 = np.nanstd(e66)
+# 	for x in range(NAXIS1):
+# 		for y in range(NAXIS2):
+# 			cube[k,y,x] = err66
+# write_fits(data_path+unc_filename+"_", cube, hdr, wvl=wvl)
+# print("FILTerr = ", FILTerr[cen66[1], cen66[0]])
+
+# reprojection mask & correlation linearity check
+for x in range(NAXIS1):
+	for y in range(NAXIS2):
+		if ft[y,x]!=0:# and photometry[y,x]!=np.nan:
+			Fnu_filt.append(data0[y,x])
+			Unc_filt.append(np.sqrt(FILTerr[y,x]**2 + (data0[y,x]*IRSunc[3])**2))
+			Fnu_ph.append(photometry[y,x])
+			Unc_ph.append(np.sqrt(PHerr**2 + (photometry[y,x]*MIPSunc[0])**2))
+			# Unc_ph.append(np.sqrt(PHerr**2 + (photometry[y,x]*IRACunc[0])**2))
+			if data0[y,x]/photometry[y,x]>2. or photometry[y,x]/data0[y,x]>2.:
+				abpts.append([x,y])
+		## mask data according to reprojection footprint
+		else:
+			data0[y,x]=np.nan
+
+## print pixels that are beyond linearity
+# print("aberrant pixels: ", abpts)
+print("aberrant pix nb: ", np.array(abpts).shape)
+
+calibview(Fnu_ph, Fnu_filt, yerr=Unc_filt, xerr=Unc_ph, fe=2., \
+	savename='figures/calib/'+data_filename+'_calib.png')
+multimview([data0, photometry], w, (1,2), add_pts=abpts, figsize=(12,6), rot=1, \
+	savename='figures/calib/'+data_filename+'_field.png')
+
+plt.show()

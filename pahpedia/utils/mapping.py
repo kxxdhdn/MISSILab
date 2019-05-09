@@ -16,11 +16,16 @@ norm = mpl.colors.Normalize(vmin=0, vmax=1)
 COList = ['k', 'b', 'c']
 LABEList = ["Spec1", "Spec2", "Spec3"]
 
-def calibview(ref, data, yerr, xerr, figsize=None):
+def calibview(ref, data, yerr, xerr, fe, figsize=None, \
+	savename='calib.png'):
 	
 	fig, ax = plt.subplots(figsize=figsize)
 
-	ax.plot(np.arange(0,1000,1.), c='grey')
+	fx = np.arange(0,1000,1.)
+	f1 = fx * fe
+	f2 = fx / fe
+	ax.plot(fx, c='grey')
+	ax.fill_between(fx, f1, f2, facecolor='grey', alpha=.2)
 	ax.errorbar(ref, data, yerr=yerr, xerr=xerr, \
 		fmt='.', markeredgewidth=.01, capsize=2., c='k', ecolor='r', elinewidth=.5, ls=None)
 	ax.set_xlabel("MIPS1 (MJy/sr)")
@@ -30,7 +35,10 @@ def calibview(ref, data, yerr, xerr, figsize=None):
 	# ax.set_xlim(0, 1e3)
 	# ax.set_ylim(0, 1e3)
 
-def specview(wvl, Ldata, wfilt=None, Fnu=None, filt_width=None, figsize=None):
+	fig.savefig(savename)
+
+def specview(wvl, Ldata, wfilt=None, Fnu=None, filt_width=None, figsize=None, \
+	savename='spectrum.png'):
 
 	fig, ax = plt.subplots(figsize=figsize)
 
@@ -50,11 +58,12 @@ def specview(wvl, Ldata, wfilt=None, Fnu=None, filt_width=None, figsize=None):
 	ax.set_ylabel(r'$F_{\nu} (MJy/sr)$')
 	# ax.set_yscale('log', nonposy='clip')
 	ax.legend(loc='upper left')
-	# fig.savefig('spectrum.png')
+	
+	# fig.savefig(savename)
 
-def multimview(Larray, w, figshape, abpoints, figsize=None, rot=False, \
+def multimview(Larray, w, figshape, add_pts=[], figsize=None, rot=False, \
 	lon_ticksp=1.5 * u.arcmin, lat_ticksp=.5 * u.arcmin, \
-	cmap=cmap, norm=norm):
+	cmap=cmap, norm=norm, savename='Image'):
 	
 	fig, axes = plt.subplots(nrows=figshape[0], ncols=figshape[1], figsize=figsize, \
 		subplot_kw=dict(projection=w, sharex=True, sharey=True))
@@ -76,11 +85,12 @@ def multimview(Larray, w, figshape, abpoints, figsize=None, rot=False, \
 		if rot==False:
 			lat.set_ticks_position('lr')
 			lon.set_ticks_position('tb')
-			lat.set_ticklabel_position('l')
-			lat.set_axislabel_position('l')
-			lon.set_ticklabel_position('t')
-			lon.set_axislabel_position('t')
-			if i==figshape[0]*figshape[1]-1:
+			if i==0:
+				lat.set_ticklabel_position('l')
+				lat.set_axislabel_position('l')
+				lon.set_ticklabel_position('t')
+				lon.set_axislabel_position('t')
+			else:
 				lat.set_ticklabel_position('r')
 				lat.set_axislabel_position('r')
 				lon.set_ticklabel_position('b')
@@ -88,16 +98,18 @@ def multimview(Larray, w, figshape, abpoints, figsize=None, rot=False, \
 		else:
 			lat.set_ticks_position('tb')
 			lon.set_ticks_position('lr')
-			lat.set_ticklabel_position('t')
-			lat.set_axislabel_position('t')
-			lon.set_ticklabel_position('l')
-			lon.set_axislabel_position('l')
-			if i==figshape[0]*figshape[1]-1:
+			if i==0:
+				lat.set_ticklabel_position('t')
+				lat.set_axislabel_position('t')
+				lon.set_ticklabel_position('l')
+				lon.set_axislabel_position('l')
+			else:
 				lat.set_ticklabel_position('b')
 				lat.set_axislabel_position('b')
 				lon.set_ticklabel_position('r')
 				lon.set_axislabel_position('r')
-		if i==0 or figshape[0]*figshape[1]-1:
+
+		if i==0 or i==figshape[0]*figshape[1]-1:
 			lon.set_axislabel('RA', minpad=.5*3)
 			lat.set_axislabel('DEC', minpad=1.*3)
 		else:
@@ -106,11 +118,11 @@ def multimview(Larray, w, figshape, abpoints, figsize=None, rot=False, \
 			lat.set_ticklabel_visible(False)
 		## plot
 		pcm = ax.imshow(Larray[i], origin='lower', cmap=cmap)
-		for pts in abpoints:
+		for pts in add_pts:
 			plt.gca()
 			plt.plot(pts[0], pts[1], marker='*', c='r')
 
-	fig.subplots_adjust(bottom=0.1, top=0.9, left=0.1, right=0.85,
+	fig.subplots_adjust(bottom=0.1, top=0.9, left=0.1, right=0.75,
                     wspace=0.02, hspace=0.02)
 
 	## add an axes, lower left corner in [0.83, 0.1] measured in figure coordinate with axes width 0.02 and height 0.8
@@ -120,6 +132,8 @@ def multimview(Larray, w, figshape, abpoints, figsize=None, rot=False, \
 	# cbar.set_ticks(np.arange(0, 1.1, 0.1))
 	# cbar.set_ticklabels(['low', 'medium', 'high'])
 
+	fig.savefig(savename)
+
 """
 ------------------------------ MAIN (test) ------------------------------
 """
@@ -128,7 +142,7 @@ if __name__ == "__main__":
 	import numpy as np
 	from rwfits import *
 
-	w = WCSextract('../test_examples/n66_LL1_cube', True)[0]
+	w = WCSextract('../test_examples/n66_LL1_cube')[0]
 	multimview(np.array([np.random.random((16,16))]*3), w, (1,3), \
 		figsize=(12,8), rot=True, \
 		lon_ticksp=.8 * u.arcmin, lat_ticksp=.3 * u.arcmin)

@@ -13,105 +13,119 @@ import matplotlib.pyplot as plt
 from utils.myfunc import celest2deg, fclean
 from utils.rwfits import *
 from utils.rwcsv import *
-from utils.synthetic_photometry import *
 from utils.impro import *
 from utils.mapping import *
-from smooth import *
+from utils.mc import calunc
+from smooth import crop3D, choker, do_conv
 
-ref_path = '/Users/dhu/data/mosaic/SMC/'
-data_path = 'test_examples/'
-out_path = 'data/convolved/'
-rpj_path = 'data/reprojection/'
+chnl = ['SL2', 'SL1', 'LL2', 'LL1']
 
-data_filename = 'n66_LL1_cube'
-ref_filename = 'mips024'
-out_ref = '_ref_'+ref_filename
+data_path = 'data/m82/'
+out_path = data_path+'convolved/'
+rpj_path = data_path+'reprojection/'
+ref_file = 'data/m82/m82_SL2'
 
-## 3D cube slicing
-wvl = cubislice(data_path+data_filename, out_path+data_filename, '_')
-SList = []
-for k in range(np.size(wvl)):
-	SList.append(out_path+data_filename+'_'+'0'*(4-len(str(k)))+str(k)+'_')
+N_mc = 1
 
-## smooth
-# choker(SList, wvl)
-# do_conv()
-fclean('data/convolved/*_.fits')
+## read reprojection reference
+hdREF = read_fits(ref_file, wvl_mod=1)[1]
+dx = hdREF['NAXIS1']
+dy = hdREF['NAXIS2']
 
-## rebuild convolved cube
-cube = []
-for SLout in SList:
-	cubi, hdr = read_fits(SLout+'conv', False)
-	cube.append(cubi)
-cube = np.array(cube)
+wvl0 = []
+cube0 = []
+unc0 = []
+for i, c in enumerate(chnl):
+	
+	data_filename = 'm82_'+c
+	unc_filename = data_filename+'_unc'
 
-## mips data
-NAXIS1 = hdr['NAXIS1']
-NAXIS2 = hdr['NAXIS2']
-dx, dy = 2*NAXIS1, 2*NAXIS2
-ra, dec = hdr['CRVAL1'], hdr['CRVAL2']
-ref = crop(ref_path+ref_filename, data_path+out_ref, \
-	(dec, ra), (dy, dx), nopr=0)
-print("Cropped ref size: ", ref.shape)
-## unit conversion
-# FLUXCONV = 0.000145730
-# ref = ref / FLUXCONV
+	ra, dec = celest2deg(9., 55., 52.5, 69., 40., 47.)
+	dx, dy = 50, 50
+	SList, wvl, hdr = crop3D(data_path+data_filename, out_path+data_filename, \
+		None, (ra, dec), (dx, dy))[1:4]
+	NAXIS1 = hdr['NAXIS1']
+	NAXIS2 = hdr['NAXIS2']
+	NAXIS3 = np.size(wvl)
 
-## mips024 -> irsll1 reprojection
-ref, ft, w = rpj(data_path+out_ref, rpj_path+out_ref, out_path+data_filename+'_0010_conv', (dy, dx))
-## (Alternative) irsll1 -> mips024
-# k = 10
-# data, ft, w = rpj(SList[k]+'conv', rpj_path+data_filename, SList[10]+'conv', (dy, dx))
+	## smooth
+	choker(SList, wvl)
+	do_conv()
 
-"""
-## inter-calib
-data = np.arange(0, NAXIS2*NAXIS1, 1.).reshape(NAXIS2, NAXIS1)
-Fnu_filt = []
-Fnu_ref = []
-Fnu_pair = []
-abpoints = []
-for x in range(NAXIS1):
-	for y in range(NAXIS2):
-		## correction of spectral interpolation
-		wvl_m = [wvl[0]-3.]
-		wvl_m.extend(wvl)
-		cube_m = [0.]
-		cube_m.extend(cube[:,y,x])
-		wcen, data[y,x], sig = synthetic_photometry(wvl_m, np.array(cube_m).reshape(-1,1,1), ['MIPS1'])
-		if ref[y,x]!=0:
-			Fnu_filt.append(data[y,x])
-			Fnu_ref.append(ref[y,x])
-			Fnu_pair.append([ref[y,x], data[y,x]])
-			if data[y,x]/ref[y,x]>2:
-				abpoints.append([x, y])
-		## mask data according to reprojection footprint
+	## rebuild convolved cube
+	data3d = []
+	for SLout in SList:
+		data = read_fits(SLout+'conv', False)[0]
+		data3d.append(data)
+	data3d = np.array(data3da)
+	write_fits(out_path+data_filename+'_conv', data3d, hdr, wvl=wvl)
+
+	## reprojection
+	cube = []
+	for k in range(NAXIS3):
+		reproj, ft, w = rpj(out_path+data_filename+'_conv', \
+			rpj_path+data_filename, ref_file, (dy, dx), write=0)
+		cube.append(reproj)
+	cube = np.array(cube)
+
+	"""
+	----------------------------------------
+	Uncertainty propagation by Monte-Carlo
+	----------------------------------------
+
+	"""
+	hypercube=[]
+	b0 = input("(Re)do Monte-Carlo? [y/n] ")
+	for j in range(N_mc):
+		if b0=='y':
+			crop3D(data_path+data_filename, out_path+data_filename, \
+				data_path+unc_filename, (ra, dec), (dx, dy))
+			
+			## smooth
+			choker(SList, wvl)
+			do_conv()
+			
+			## ieme iteration finished
+			print("----------------{}----------------".format(j+1))
+
+		## rebuild convolved cube
+		data3d = []
+		for SLout in SList:
+			data = read_fits(SLout+'conv', False)[0]
+			data3d.append(data)
+		data3d = np.array(data3d)
+		write_fits(out_path+data_filename+'_conv_'+str(j), data3d, hdr, wvl)
+
+		## reprojection
+		cubi = []
+		for k in range(NAXIS3):
+			reproj, ft, w = rpj(out_path+data_filename+'_conv', \
+				rpj_path+data_filename, ref_file, (dy, dx), write=0)
+			cubi.append(reproj)
+		cubi = np.array(cubi)
+
+		## append hypercube
+		hypercube.append(cubi)
+	hypercube = np.array(hypercube)
+
+	## calculate MC uncertainty
+	unc = calunc(hypercube, [NAXIS1, NAXIS2, NAXIS3])
+
+	fclean(data_path+'convolved/*.fits')
+
+	## extend wvl
+	for k, lam in enumerate(wvl):
+		if wvl0[-1]>lam:
+			del wvl0[-1], cube0[-1,:,:], unc0[-1,:,:]
 		else:
-			data[y,x]=np.nan
-## save data
-write_fits(rpj_path+data_filename+'_calib', data, None, hdr)
-write_csv('calib_data', ["Fnu_ref", "Fnu_filt"], Fnu_pair)
-"""
-data = read_fits(rpj_path+data_filename+'_calib', False)[0]
-Fnu_filt = []
-Fnu_ref = []
-Fnu_pair = []
-abpoints = []
-for x in range(NAXIS1):
-	for y in range(NAXIS2):
-		if ft[y,x]!=0:
-			Fnu_filt.append(data[y,x])
-			Fnu_ref.append(ref[y,x])
-			Fnu_pair.append([ref[y,x], data[y,x]])
-			if data[y,x]/ref[y,x]>3:
-				abpoints.append([x, y])
-		## mask data according to reprojection footprint
-		else:
-			data[y,x]=np.nan
-print(abpoints)
+			wvl0.extend(wvl[k+1:])
+			cube0.extend(cube[k+1:,:,:])
+			unc0.extend(unc[k+1:,:,:])
+			wvl0 = np.array(wvl0)
+			cube0 = np.array(cube0)
+			unc0 = np.array(unc0)
+			print("{} edge wvl deleted.".format(k*2))
+			break
 
-for i, pts in enumerate(abpoints):
-	specview(wvl, [cube[:,pts[1],pts[0]]], 23.675, [data[pts[1],pts[0]], ref[pts[1], pts[0]]], 3.2)
-calibview(Fnu_ref, Fnu_filt, 0.04, 0)
-multimview([data, ref, ft], w, (1,2), abpoints, figsize=(12,6), rot=1)
 
-plt.show()
+

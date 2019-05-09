@@ -15,20 +15,24 @@ from utils.rwcsv import write_csv
 
 psf = [1., 1.5, 2., 2.5, 3., 3.5, 4., 4.5, 5., 5.5, 6., 6.5, 7.]
 
-def crop3D(filIN, filOUT, centre, size, nopr=True):
+def crop3D(filIN, filOUT, uncIN, cen, size):
 
 	## slice cube
-	wvl = cubislice(filIN, filOUT, '_')
+	if uncIN!=None:
+		wvl, hdr = cubislice(filIN, filOUT, uncIN, '_')
+	else:
+		wvl, hdr = cubislice(filIN, filOUT, None, '_')
+
 	SList = []
 	for k in range(np.size(wvl)):
 		SList.append(filOUT+'_'+'0'*(4-len(str(k)))+str(k)+'_')
 	## crop slices
 	cube=[]
 	for SLout in SList:
-		cube.append(crop(SLout, SLout, centre, size, nopr))
+		cube.append(crop(SLout, SLout, cen, size))
 	cube = np.array(cube)
 
-	return cube, wvl, SList
+	return cube, SList, wvl, hdr
 
 def choker(SList, wvl):
 
@@ -82,11 +86,11 @@ if __name__ == "__main__":
 	from utils.mapping import *
 
 	ref_path = '/Users/dhu/data/mosaic/SMC/'
-	data_path = 'test_examples/'
-	out_path = 'data/convolved/'
-	rpj_path = 'data/reprojection/'
+	data_path = 'data/n66/'
+	out_path = 'data/n66/slices/'
+	rpj_path = 'data/n66/reprojection/'
 
-	data_filename = 'n66_LL1_cube'
+	data_filename = 'n66_LL1'
 	ref_filename = 'mips024'
 	out_ref = '_ref_'+ref_filename
 
@@ -94,7 +98,8 @@ if __name__ == "__main__":
 	dx, dy = 34, 40
 	
 	## 3D cube cropping
-	cube, wvl, SList = crop3D(data_path+data_filename, out_path+data_filename, (dec, ra), (dy, dx))
+	cube, SList, wvl, hdr = crop3D(data_path+data_filename, out_path+data_filename, None, \
+		(ra, dec), (dx, dy))
 	print("Cropped cube size: ", cube.shape)
 
 	choker(SList, wvl)
@@ -105,8 +110,8 @@ if __name__ == "__main__":
 #	fclean('data/convolved/*conv.fits')
 	
 	## mips data
-	ref = crop(ref_path+ref_filename, data_path+out_ref, \
-		(dec, ra), (dy, dx), nopr=0)
+	crop(ref_path+ref_filename, data_path+out_ref, \
+		(ra, dec), (dx, dy))
 	print("Cropped ref size: ", ref.shape)
 	## unit conversion
 	# FLUXCONV = 0.000145730

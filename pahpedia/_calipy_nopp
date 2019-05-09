@@ -1,0 +1,124 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+
+matplotlib applications
+
+"""
+
+from astropy import units as u
+import numpy as np
+import matplotlib.pyplot as plt
+from utils.myfunc import celest2deg, fclean
+from utils.rwfits import *
+from utils.rwcsv import *
+from utils.synthetic_photometry import *
+from utils.impro import *
+from utils.mapping import *
+from smooth import *
+
+ref_path = '/Users/dhu/data/mosaic/SMC/'
+data_path = 'test_examples/'
+out_path = 'data/convolved/'
+rpj_path = 'data/reprojection/'
+
+data_filename = 'n66_LL1_cube'
+ref_filename = 'mips024'
+out_ref = data_filename+'_'+ref_filename
+
+## 3D cube slicing
+wvl = cubislice(data_path+data_filename, out_path+data_filename, '_')
+SList = []
+NAXIS3 = np.size(wvl)
+for k in range(NAXIS3):
+	SList.append(out_path+data_filename+'_'+'0'*(4-len(str(k)))+str(k)+'_')
+
+## smooth
+choker(SList, wvl)
+do_conv()
+fclean('data/convolved/*_.fits')
+
+## rebuild convolved cube
+cube = []
+for SLout in SList:
+	cubi, hdr = read_fits(SLout+'conv', False)
+	cube.append(cubi)
+cube = np.array(cube)
+
+## mips data
+NAXIS1 = hdr['NAXIS1']
+NAXIS2 = hdr['NAXIS2']
+dx, dy = NAXIS1, NAXIS2
+ra, dec = hdr['CRVAL1'], hdr['CRVAL2']
+ref = crop(ref_path+ref_filename, data_path+out_ref, \
+	(dec, ra), (dy, dx), nopr=0)
+print("Cropped ref size: ", ref.shape)
+## unit conversion
+# FLUXCONV = 0.000145730
+# ref = ref / FLUXCONV
+
+## mips024 -> irsll1 reprojection
+ref, ft, w = rpj(data_path+out_ref, rpj_path+out_ref, data_path+data_filename, (dy, dx))
+## (Alternative) irsll1 -> mips024
+# k = 10
+# data, ft, w = rpj(SList[k]+'conv', rpj_path+data_filename, SList[10]+'conv', (dy, dx))
+
+fclean('data/convolved/*_conv.fits')
+
+## inter-calib
+Fnu_filt = []
+Fnu_ref = []
+Fnu_pair = []
+abpoints = []
+b0 = input("(Re)do synthetic photometry? [y/n] ")
+if b0=='y':
+	## do synthetic photometry
+	cube_m = np.zeros((NAXIS3+1)*NAXIS2*NAXIS1).reshape((NAXIS3+1), NAXIS2, NAXIS1)
+	## correction of the interpolation (at the beginning of spectra)
+	wvl_m = [wvl[0]-3.]
+	wvl_m.extend(wvl)
+	wvl_m = np.array(wvl_m)
+	cube_m[1:,:,:] = np.copy(cube)
+	wcen, data, sig = synthetic_photometry(wvl_m, cube_m, ['MIPS1'])
+	## reprojection mask & correlation linearity check
+	for x in range(NAXIS1):
+		for y in range(NAXIS2):
+			if ft[y,x]!=0:
+				Fnu_filt.append(data[y,x])
+				Fnu_ref.append(ref[y,x])
+				Fnu_pair.append([ref[y,x], data[y,x]])
+				if data[y,x]/ref[y,x]>2 or data[y,x]/ref[y,x]<.5:
+					abpoints.append([x,y])
+			## mask data according to reprojection footprint
+			else:
+				data[y,x]=np.nan
+	## save data
+	write_fits(rpj_path+data_filename+'_calib', data, None, hdr)
+	# write_csv('calib_data', ["Fnu_ref", "Fnu_filt"], Fnu_pair)
+else:
+	## just read synthetic photometry result
+	b1 = input("Integrate flux in the square of length: ")
+	b1 = int(b1)
+	data = read_fits(rpj_path+data_filename+'_calib', False)[0]
+	for x in range(NAXIS1-b1):
+		for y in range(NAXIS2-b1):
+			if ft[y,x]!=0:
+				Fnu_filt.append(np.sum(data[y:y+b1,x:x+b1]))
+				Fnu_ref.append(np.sum(ref[y:y+b1,x:x+b1]))
+				Fnu_pair.append([np.sum(ref[y:y+b1,x:x+b1]), np.sum(data[y:y+b1,x:x+b1])])
+				if np.sum(data[y:y+b1,x:x+b1])/np.sum(ref[y:y+b1,x:x+b1])>2 or np.sum(data[y:y+b1,x:x+b1])/np.sum(ref[y:y+b1,x:x+b1])<.5:
+					abpoints.append([x,y])
+			## mask data according to reprojection footprint
+			else:
+				data[y,x]=np.nan
+print(abpoints)
+print(np.array(abpoints).shape)
+
+## view spectra of aberrant points
+# for i, pts in enumerate(abpoints):
+	# specview(wvl, [cube[:,pts[1],pts[0]]], 23.675, [data[pts[1],pts[0]], ref[pts[1], pts[0]]], 3.2)
+calibview(Fnu_ref, Fnu_filt, 0, 0)
+multimview([data, ref, ft], w, (1,2), abpoints, figsize=(12,6), rot=1)
+
+plt.show()

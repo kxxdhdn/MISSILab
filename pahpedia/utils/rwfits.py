@@ -11,7 +11,7 @@ from astropy.io import fits
 from astropy.wcs import WCS
 import numpy as np
 
-def read_fits(filename, is3d=True, wvl_mod=0, data_on=True):
+def read_fits(filename, is3d=True, wvl_mod=0):
 
 	with fits.open(filename+'.fits') as hdul:
 		## read header
@@ -23,34 +23,32 @@ def read_fits(filename, is3d=True, wvl_mod=0, data_on=True):
 				wvl = hdul[1].data # rewitten header
 			else:
 				wvl = hdul[1].data[0][0][:,0] # CUBISM witten
-			if data_on==True:
-				data = hdul[0].data
-				return data, wvl, hdr
-			else:
-				return wvl, hdr
+			data = hdul[0].data
+
+			return data, wvl, hdr
+		
 		else: # 2D
-			if data_on==True:
-				data = hdul[0].data
-				return data, hdr
-			else:
-				return hdr
+			data = hdul[0].data
+
+			return data, hdr
 
 def WCSextract(filename):
 
-	hdr = fits.open(filename+'.fits')[0].header
+	hdr0 = fits.open(filename+'.fits')[0].header
 
-	hdr0 = hdr.copy()
+	hdr = hdr0.copy()
 	if hdr['NAXIS']==3:
 		for kw in hdr0.keys():
 			if '3' in kw:
 				del hdr[kw]
+		hdr['NAXIS'] = 2
 		hdr['COMMENT'] = "This header is adapted to 2D WCS extraction need. "
 	
 	w = WCS(hdr, naxis=2)
 
 	return w, hdr
 
-def write_fits(filename, data, wvl, hdr, **hdrl):
+def write_fits(filename, data, hdr, wvl=None, **hdrl):
 
 	for key, value in hdrl.items():
 		hdr[key] = value
@@ -60,7 +58,7 @@ def write_fits(filename, data, wvl, hdr, **hdrl):
 	if wvl is not None:
 		hdu = fits.ImageHDU(data=wvl, name="Wavelength (microns)")
 		hdul.append(hdu)
-
+	
 	hdul.writeto(filename+'.fits', overwrite=True)
 
 """
@@ -70,7 +68,7 @@ if __name__ == "__main__":
 
 	## in situ test
 	path = '../test_examples/'
-	filename = 'n66_LL1_cube'
+	filename = 'dh_SL2_cube'
 	writename = 'write_test'
 
 	data, wvl, hdr = read_fits(path+filename, True, 1)
@@ -78,7 +76,7 @@ if __name__ == "__main__":
 	print(data, wvl, hdr)
 	w, new_hdr = WCSextract(path+filename)
 	print(w)
-	write_fits(path+writename, data, wvl, hdr, \
+	write_fits(path+writename, data, hdr, wvl=wvl, \
 		COMMENT="This is a write test", NAXIS3=hdr['NAXIS3'])
 	data_, wvl_, new_hdr = read_fits(path+writename)
 	print(data_, wvl_, new_hdr)
@@ -86,7 +84,7 @@ if __name__ == "__main__":
 	## 2D write
 	w, new_hdr = WCSextract(path+filename)
 	# print(w)
-	write_fits(path+writename, data[0,:,:], None, new_hdr, \
+	write_fits(path+writename, data[0,:,:], new_hdr, \
 		COMMENT="This is a 2D write test", \
 		BUNIT=hdr['BUNIT'], EQUINOX=hdr['EQUINOX'])
 	data_, new_hdr = read_fits(path+writename, False)

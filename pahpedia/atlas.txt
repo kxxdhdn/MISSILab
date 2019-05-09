@@ -23,15 +23,22 @@ utils
 		rms
 		nanrms
 		std
-	mymode.py
+	myclass.py
 		blockPrint
 	synthetic_photometry.py
 		synthetic_photometry
 	impro.py
+		swarpj
 		rpj
+		hextract
 		crop
+		cubislunc
 		cubislice
-
+	mapping.py
+		specview
+		multimview
+	mc.py
+		calunc
 smooth.py
 	crop3D [import **impro]
 	choker
@@ -42,8 +49,8 @@ smooth.py
 EN COURS : 
 utils
 	mapping.py
-		specview
-		multimview
+		imark
+
 
 
 A ECRIRE : 
