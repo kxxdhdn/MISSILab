@@ -9,7 +9,13 @@ Read & write .fits file
 
 from astropy.io import fits
 from astropy.wcs import WCS
+from astropy.utils.data import get_pkg_data_filename
 import numpy as np
+
+global hdGAL, gal
+galactic_center = get_pkg_data_filename('galactic_center/gc_msx_e.fits')
+hdGAL = fits.open(galactic_center)[0].header
+gal = WCS(hdGAL)
 
 def read_fits(filename, is3d=True, wvl_mod=0):
 
@@ -58,7 +64,7 @@ def write_fits(filename, data, hdr, wvl=None, **hdrl):
 	if wvl is not None:
 		hdu = fits.ImageHDU(data=wvl, name="Wavelength (microns)")
 		hdul.append(hdu)
-	
+
 	hdul.writeto(filename+'.fits', overwrite=True)
 
 """
@@ -68,25 +74,27 @@ if __name__ == "__main__":
 
 	## in situ test
 	path = '../test_examples/'
-	filename = 'dh_SL2_cube'
+	filename = 'm82_SL2'
+	# filename = 'n66_LL1'
 	writename = 'write_test'
 
 	data, wvl, hdr = read_fits(path+filename, True, 1)
-	"""
-	print(data, wvl, hdr)
-	w, new_hdr = WCSextract(path+filename)
-	print(w)
+
+	# print(data, wvl, hdr)
+	# w, new_hdr = WCSextract(path+filename)
+	# print(w)
+	print("-------------")
 	write_fits(path+writename, data, hdr, wvl=wvl, \
-		COMMENT="This is a write test", NAXIS3=hdr['NAXIS3'])
-	data_, wvl_, new_hdr = read_fits(path+writename)
-	print(data_, wvl_, new_hdr)
+		COMMENT="This is a write test", EQUINOX='test')
+	# data_, wvl_, new_hdr = read_fits(path+writename)
+	# print(data_, wvl_, new_hdr)
 	"""
 	## 2D write
 	w, new_hdr = WCSextract(path+filename)
-	# print(w)
 	write_fits(path+writename, data[0,:,:], new_hdr, \
 		COMMENT="This is a 2D write test", \
-		BUNIT=hdr['BUNIT'], EQUINOX=hdr['EQUINOX'])
+		BUNIT=hdr['BUNIT'], EQUINOX='test')
 	data_, new_hdr = read_fits(path+writename, False)
 	# print(data_, new_hdr)
 	# print(new_hdr)
+	"""

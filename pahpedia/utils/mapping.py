@@ -8,28 +8,117 @@ matplotlib applications
 """
 from astropy import units as u
 import numpy as np
+from scipy import optimize
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+from myfunc import f_lin, f_lin0
+from rwfits import *
 
 cmap = mpl.cm.viridis
 norm = mpl.colors.Normalize(vmin=0, vmax=1)
-COList = ['k', 'b', 'c']
+COList = ['k', 'b', 'g', 'm', 'y', 'c']
 LABEList = ["Spec1", "Spec2", "Spec3"]
 
-def calibview(ref, data, yerr, xerr, fe, figsize=None, \
+def correview(Rx, Ry, yerr, xerr, source=None, threshold=None, \
+	title="Correlation", xlabel="x", ylabel="y", figsize=None, \
+	savename='correlation.png'):
+	
+	fig, ax = plt.subplots(figsize=figsize)
+	
+	x = np.arange(0,10,.01)
+
+	if source==None:
+		source = [input("Input source name: ")]
+
+	for i, s in enumerate(source):
+
+		## linear fit
+		fx = Rx[i].ravel()
+		fy = Ry[i].ravel()
+		valid = ~(np.isnan(fx) | np.isnan(fy))
+		popt, pcov = optimize.curve_fit(f_lin, fx[valid], fy[valid])
+		# print("popt = ", popt)
+		perr = np.sqrt(np.diag(pcov))
+		# print("perr = ", perr)
+
+		## draw nstd-sigma intervals
+		nstd = threshold
+		popt1 = popt + nstd * perr
+		popt2 = popt - nstd * perr
+		f1 = f_lin(x, *popt1)
+		f2 = f_lin(x, *popt2)
+		# ax.fill_between(x, f1, f2, facecolor='grey', alpha=.25, \
+			# label="{}-sigma intervals".format(threshold))
+		ax.errorbar(x, f_lin(x, *popt), \
+			c=COList[i], lw=0.5, ecolor='grey', \
+			label="{}: Y = {:.2f} * X + {:.2f}".format(s, *popt))
+		if s=='M82':
+			ax.errorbar(fx, fy, None, None, \
+			fmt='.', markeredgewidth=.01, capsize=2., \
+			c=COList[i], ecolor=COList[i], elinewidth=.5, ls=None, \
+			label=s)
+		## scatter
+		else:
+			ax.errorbar(fx, fy, yerr[i].ravel(), xerr[i].ravel(), \
+			fmt='.', markeredgewidth=.01, capsize=2., \
+			c=COList[i], ecolor=COList[i], elinewidth=.5, ls=None, \
+			label=s)
+
+	ax.set_title(title)
+	ax.set_xlabel(xlabel)
+	ax.set_ylabel(ylabel)
+	ax.set_xscale('log', nonposx='clip')
+	ax.set_yscale('log', nonposy='clip')
+	ax.set_xlim(.1, 3.)
+	ax.set_ylim(.6, 10.)
+	ax.legend(loc='upper left')
+
+	fig.savefig(savename)
+
+def calibview(ref, data, yerr, xerr, threshold, \
+	xlabel="x", ylabel="y", figsize=None, \
 	savename='calib.png'):
 	
 	fig, ax = plt.subplots(figsize=figsize)
 
+	## y = x
 	fx = np.arange(0,1000,1.)
-	f1 = fx * fe
-	f2 = fx / fe
+	f1 = fx * threshold
+	f2 = fx / threshold
 	ax.plot(fx, c='grey')
-	ax.fill_between(fx, f1, f2, facecolor='grey', alpha=.2)
+	ax.fill_between(fx, f1, f2, facecolor='grey', alpha=.25)
+	
+	## linear fit
+	ref = np.array(ref)
+	data = np.array(data)
+	ref.reshape((-1,))
+	data.reshape((-1,))
+	valid = ~(np.isnan(ref) | np.isnan(data))
+	popt, pcov = optimize.curve_fit(f_lin0, ref[valid], data[valid])
+	print("popt = ", popt)
+	# perr = np.sqrt(np.diag(pcov))
+	# print(perr)
+	# ax.errorbar(fx, f_lin0(fx, *popt), yerr=perr[1], c='white', lw=0.5, ecolor='cyan')
+	ax.errorbar(fx, f_lin0(fx, *popt), c='b', lw=0.5, ecolor='cyan')
+	factor = 1. / popt[0]
+	print("inter-calibration factor (fit) = ", factor)
+	
+	## (alternative) mean
+	r = []
+	for i, d in enumerate(data):
+		if d!=0 and ref[i]!=0 and np.isnan(d)==0 and np.isnan(ref[i])==0:
+			p = ref[i]/d
+			if p>.5 and p<2.:
+				r.append(p)
+	factor2 = np.mean(r)
+	print("inter-calibration factor (mean) = ", factor2)
+
+	## scatter
 	ax.errorbar(ref, data, yerr=yerr, xerr=xerr, \
 		fmt='.', markeredgewidth=.01, capsize=2., c='k', ecolor='r', elinewidth=.5, ls=None)
-	ax.set_xlabel("MIPS1 (MJy/sr)")
-	ax.set_ylabel("IRS LL1 (MJy/sr)")
+
+	ax.set_xlabel(xlabel)
+	ax.set_ylabel(ylabel)
 	ax.set_xscale('log', nonposx='clip')
 	ax.set_yscale('log', nonposy='clip')
 	# ax.set_xlim(0, 1e3)
@@ -37,15 +126,22 @@ def calibview(ref, data, yerr, xerr, fe, figsize=None, \
 
 	fig.savefig(savename)
 
-def specview(wvl, Ldata, wfilt=None, Fnu=None, filt_width=None, figsize=None, \
+	return factor
+
+def specview(wvl, Lintensity, Lerr=None, \
+	wfilt=None, Fnu=None, filt_width=None, figsize=None, \
 	savename='spectrum.png'):
 
 	fig, ax = plt.subplots(figsize=figsize)
 
-	for i, data in enumerate(Ldata):
-		ax.errorbar(wvl, data, \
-			c=COList[i], ls='-', lw=.5, ecolor='r', elinewidth=1., label=LABEList[i])
-			# c=COList[i], ls=None, fmt='.', lw=.5, ecolor='r', elinewidth=1., label=LABEList[i])
+	for i, data in enumerate(Lintensity):
+		if Lerr==None:
+			ax.errorbar(wvl, data, yerr=None, \
+				c=COList[i], ls='-', lw=.5, ecolor='r', elinewidth=1., label=LABEList[i])
+		else:
+			ax.errorbar(wvl, data, yerr=Lerr[i], \
+				c=COList[i], ls='-', lw=.5, ecolor='r', elinewidth=1., label=LABEList[i])
+				# c=COList[i], ls=None, fmt='.', lw=.5, ecolor='r', elinewidth=1., label=LABEList[i])
 		## add inter-calib
 		if wfilt!=None:
 			photometry = ["IRS/MIPS1", "MIPS1"]
@@ -59,16 +155,19 @@ def specview(wvl, Ldata, wfilt=None, Fnu=None, filt_width=None, figsize=None, \
 	# ax.set_yscale('log', nonposy='clip')
 	ax.legend(loc='upper left')
 	
-	# fig.savefig(savename)
+	fig.savefig(savename)
 
-def multimview(Larray, w, figshape, add_pts=[], figsize=None, rot=False, \
+def imview(Larray, figshape=(1,1), w=gal, add_pts=[], figsize=None, rot=False, \
 	lon_ticksp=1.5 * u.arcmin, lat_ticksp=.5 * u.arcmin, \
 	cmap=cmap, norm=norm, savename='Image'):
 	
 	fig, axes = plt.subplots(nrows=figshape[0], ncols=figshape[1], figsize=figsize, \
 		subplot_kw=dict(projection=w, sharex=True, sharey=True))
-
-	for i, ax in enumerate(axes.flatten()):
+	if figshape==(1,1):
+		flaxes = [axes]
+	else:
+		flaxes = axes.flatten()
+	for i, ax in enumerate(flaxes):
 		## define axis
 		# ax.set_axis_off()
 		## set grid
@@ -142,9 +241,11 @@ if __name__ == "__main__":
 	import numpy as np
 	from rwfits import *
 
-	w = WCSextract('../test_examples/n66_LL1_cube')[0]
-	multimview(np.array([np.random.random((16,16))]*3), w, (1,3), \
-		figsize=(12,8), rot=True, \
+	# multimview(np.array([np.random.random((16,16))]*6), \
+	# 	figshape=(2,3), figsize=(12,8), rot=True, \
+	# 	lon_ticksp=.8 * u.arcmin, lat_ticksp=.3 * u.arcmin)
+	imview(np.array([np.random.random((16,16))]*3), \
+		figshape=(1,3), figsize=(12,8), rot=True, \
 		lon_ticksp=.8 * u.arcmin, lat_ticksp=.3 * u.arcmin)
 
 	plt.show()

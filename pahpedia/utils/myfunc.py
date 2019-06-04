@@ -8,6 +8,7 @@ My library of math functions
 """
 
 import numpy as np
+import math
 import subprocess as SP
 from myclass import blockPrint
 
@@ -39,6 +40,26 @@ def tprint(*content, **kwargs):
 		else:
 			print([c for c in content])
 """
+def pix2sr(X, CDELT):
+	"""
+	X pixel = Y sr
+	"""
+	PFOV = 3600 * abs(CDELT)
+	
+	return X * (PFOV * 2. * math.pi / (360. * 3600.))**2.
+
+def sr2arcsec2(X):
+	"""
+	X sr = Y arcsec^2
+	"""
+	return X * (360. * 3600. / (2. * math.pi))**2.
+
+def rad2arcsec(X):
+	"""
+	X rad = Y arcsec
+	"""
+	return X * 360. * 3600. / (2. * math.pi)
+
 def celest2deg(h, m, s, dd, mm, ss):
 	"""
 	Degree to world coord conversion
@@ -50,6 +71,24 @@ def celest2deg(h, m, s, dd, mm, ss):
 		dec = -(-dd + mm/60. + ss/3600.)
 
 	return ra, dec
+
+def f_lin(x, A, B):
+	"""
+	Y = A * x + B
+	"""
+	return A * x + B
+
+def f_lin1(x, A):
+	"""
+	Y = x + B
+	"""
+	return x + B
+
+def f_lin0(x, A):
+	"""
+	Y = A * x
+	"""
+	return A * x
 
 def gaussian(x, mu, sigma):
 	"""

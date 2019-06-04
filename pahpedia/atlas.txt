@@ -28,6 +28,7 @@ utils
 	synthetic_photometry.py
 		synthetic_photometry
 	impro.py
+		specorrect
 		swarpj
 		rpj
 		hextract
@@ -35,12 +36,15 @@ utils
 		cubislunc
 		cubislice
 	mapping.py
+		correview
+		calibview
 		specview
-		multimview
+		imview
 	mc.py
 		calunc
 smooth.py
 	crop3D [import **impro]
+	marker
 	choker
 	do_conv
 

@@ -4,7 +4,7 @@
 import numpy as np
 from utils.rwfits import *
 
-def calunc(data, NAXIS, filOUT=None, hdul=None):
+def calunc(data, NAXIS, filOUT=None, hdr=None, wvl=None):
 	
 	## detect dimension
 	dim = np.size(NAXIS)
@@ -25,6 +25,7 @@ def calunc(data, NAXIS, filOUT=None, hdul=None):
 					err[k,j,i] = np.nanstd(data[:,k,j,i], ddof=1)
 
 	if filOUT!=None:
-		write_fits(filOUT, data=hdul[0], hdr=hdul[2], wvl=hdul[1])
+		comment = "Monte-Carlo propagated uncertainty file."
+		write_fits(filOUT, data=err, hdr=hdr, wvl=wvl, COMMENT=comment)
 	
 	return err

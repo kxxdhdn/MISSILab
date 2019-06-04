@@ -1,7 +1,10 @@
-Fnu = MRDFITS("../../data/m82/reprojection/m82_reproj_0.fits",0,hdr)
-RESTORE, "fit_cube_0.xdr"
+source = "M82_O"
+data_path = "../data/"+source+"/output/"
+fit_path = "../fitting/"+source+"/"
+Fnu = MRDFITS(data_path+source+"_0.fits",0,hdr)
+RESTORE, fit_path+"fit_cube_0.xdr"
 
-Nmc = 10
+Nmc = 5
 cube62 = DBLARR(Nx,Ny,Nmc)
 cube77 = DBLARR(Nx,Ny,Nmc)
 cube86 = DBLARR(Nx,Ny,Nmc)
@@ -11,9 +14,9 @@ cube170 = DBLARR(Nx,Ny,Nmc)
 
 for i =0,Nmc do begin
 	;; Sum up sub-components
-	RESTORE, "fit_cube_"+PRING(i)+".xdr" ;; loads the fit results
-	parstr.Iline *= !MKS.Jy ;; conversion [Jy.Hz] --> [W/m2]
-	parstr.Iband *= !MKS.Jy ;; conversion [Jy.Hz] --> [W/m2]
+	RESTORE, fit_path+"fit_cube_"+PRING(i)+".xdr" ;; loads the fit results
+	parstr.Iline *= !MKS.Jy ;; conversion [MJy.Hz/sr] --> [MW/m2/sr]
+	parstr.Iband *= !MKS.Jy ;; conversion [MJy.Hz/sr] --> [MW/m2/sr]
 	I62 = parstr.Iband[WHERE(bands.label EQ "Main 6.2 (1)")] $
 		+ parstr.Iband[WHERE(bands.label EQ "Main 6.2 (2)")]
 	I77 = parstr.Iband[WHERE(bands.label EQ "Main 7.7 (1)")] $
@@ -36,12 +39,12 @@ for i =0,Nmc do begin
 	SXADDPAR, hdr0, "COMMENT", "Fitted band intensity, in MW/m2/sr"
 
 	;; Write fits files of the main features
-	MWRFITS, REFORM(I62), "Intensity/I62/I62_"+PRING(i)+".fits", hdr0, /CREATE
-	MWRFITS, REFORM(I77), "Intensity/I77/I77_"+PRING(i)+".fits", hdr0, /CREATE
-	MWRFITS, REFORM(I86), "Intensity/I86/I86_"+PRING(i)+".fits", hdr0, /CREATE
-	MWRFITS, REFORM(I112), "Intensity/I112/I112_"+PRING(i)+".fits", hdr0, /CREATE
-	MWRFITS, REFORM(I127), "Intensity/I127/I127_"+PRING(i)+".fits", hdr0, /CREATE
-	MWRFITS, REFORM(I170), "Intensity/I170/I170_"+PRING(i)+".fits", hdr0, /CREATE
+	MWRFITS, REFORM(I62), fit_path+"Intensities/I62/I62_"+PRING(i)+".fits", hdr0, /CREATE
+	MWRFITS, REFORM(I77), fit_path+"Intensities/I77/I77_"+PRING(i)+".fits", hdr0, /CREATE
+	MWRFITS, REFORM(I86), fit_path+"Intensities/I86/I86_"+PRING(i)+".fits", hdr0, /CREATE
+	MWRFITS, REFORM(I112), fit_path+"Intensities/I112/I112_"+PRING(i)+".fits", hdr0, /CREATE
+	MWRFITS, REFORM(I127), fit_path+"Intensities/I127/I127_"+PRING(i)+".fits", hdr0, /CREATE
+	MWRFITS, REFORM(I170), fit_path+"Intensities/I170/I170_"+PRING(i)+".fits", hdr0, /CREATE
 endfor
 
 end

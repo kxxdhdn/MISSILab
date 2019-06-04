@@ -16,6 +16,16 @@ from rwfits import *
 
 mu, sigma = 0, 1.
 
+def specorrect(filIN, filOUT, factor, wmin, wmax, wmod=0):
+	
+	im, wvl, hdr = read_fits(filIN)
+	for k, lam in enumerate(wvl):
+		if lam>wmin and lam<wmax:
+			im[k,:,:] *= factor
+	write_fits(filOUT, im, hdr, wvl)
+
+	return im
+
 def swarpj(filIN, filOUT, REFile):
 
 	w, hdr = WCSextract(REFile)
@@ -38,15 +48,14 @@ def swarpj(filIN, filOUT, REFile):
 
 	return data, w
 
-def rpj(filIN, filOUT, REFile, size, write=True):
+def rpj(filIN, filOUT, hdREF, write=True):
 
-	w, hdr = WCSextract(REFile)
-	data, footprint = reproject_interp(filIN+'.fits', w, shape_out=size)
+	data, footprint = reproject_interp(filIN+'.fits', hdREF)
 	comment = "Reprojected image."
 	if write==True:
-		write_fits(filOUT, data, hdr, COMMENT=comment)
+		write_fits(filOUT, data, hdREF, COMMENT=comment)
 
-	return data, footprint, w
+	return data, footprint
 
 def hextract(filIN, filOUT, x0, x1, y0, y1):
 	
@@ -82,8 +91,8 @@ def crop(filIN, filOUT, cen, size):
 	## lowerleft origin
 	xl = math.floor(xc - size[0]/2.)
 	yl = math.floor(yc - size[1]/2.)
-	xr = xl + size[0] + 1 # python array truncation convention
-	yr = yl + size[1] + 1
+	xr = xl + size[0]
+	yr = yl + size[1]
 	if not (xl>=0 and xr<=NAXIS1 and yl>=0 and yr<=NAXIS2):
 		print("Error: crop region overpassed image border! ")
 		exit()
@@ -97,26 +106,37 @@ def crop(filIN, filOUT, cen, size):
 
 	return data[yl:yr, xl:xr]
 
-def cubislice(filIN, filOUT, uncIN, *suffix):
+def cubislice(filIN, filOUT, uncIN=None, filOFF=None, wmod=0, *suffix):
 
 	## read input.fits
-	data, wvl = read_fits(filIN, True, 1)[0:2]
+	im, wvl = read_fits(filIN, True, wmod)[0:2]
 	hdr = WCSextract(filIN)[1]
+
 	if uncIN!=None:
 		unc = read_fits(uncIN)[0]
 		NAXIS1 = hdr['NAXIS1']
 		NAXIS2 = hdr['NAXIS2']
+
+	if filOFF!=None:
+		back = read_fits(filOFF, True, wmod)[0]
+		off = np.nanmean(back, axis=(1,2))
+
 	for k in range(np.size(wvl)):
+
 		if uncIN!=None:
 			theta = np.random.normal(mu, sigma, NAXIS1*NAXIS2).reshape(NAXIS2, NAXIS1)
-			data[k,:,:] = data[k,:,:] + theta * unc[k,:,:]
+			im[k,:,:] = im[k,:,:] + theta * unc[k,:,:]
 		## output filename list
 		filSL = filOUT+'_'+'0'*(4-len(str(k)))+str(k)
+
+		if filOFF!=None:
+			im[k,:,:] += -off[k]
+
 		for s in suffix:
 			filSL = filSL+s
 		
 		# comment = "NO.{} image sliced from {}".format(k, filIN)
-		write_fits(filSL, data[k,:,:], hdr, wvl=wvl)
+		write_fits(filSL, im[k,:,:], hdr)
 
 	return wvl, hdr
 """
@@ -131,28 +151,29 @@ if __name__ == "__main__":
 	from mapping import *
 
 	ref_path = '/Users/dhu/data/mosaic/SMC/'
-	data_path = '../data/n76/'
-	out_path = '../data/n76/slices/'
-	conv_path = '../data/n76/convolved/'
-	rpj_path = '../data/n76/reprojection/'
+	data_path = '../test_examples/'
+	out_path = '../test_examples/slices/'
 	
 	ref_filename = 'mips024'
-	data_filename = 'n76_LL1'
+	data_filename = 'n66_LL1'
 	out_ref = '_ref_'+ref_filename
 
 	ra, dec = celest2deg(0., 59., 3.5623, -72., 10., 33.972)
 	dx, dy = 34, 40
 
 	ref = crop(ref_path+ref_filename, data_path+out_ref, \
-		(dec, ra), (dy, dx))
+		(ra, dec), (dx, dy))
 	print("Cropped image size: ", ref.shape)
+
+	hdr = read_fits(data_path+out_ref, False)[1]
 	
 	## 3D cube cropping
 	## slice cube
-	wvl = cubislice(data_path+data_filename, out_path+data_filename)
+	wvl = cubislice(data_path+data_filename, out_path+data_filename, None, None, 1)
 	## reprojection
-	data_nocrop = rpj(out_path+'n66_LL1_cube_0010', rpj_path+'n66_LL1_cube_0010_nocrop', data_path+out_ref, (dy, dx))[0]
-
+	data_nocrop = rpj(out_path+'n66_LL1_0010', data_path+'n66_LL1_cube_0010_nocrop', hdr)[0]
+	exit()
+	
 	filSL = []
 	for k in range(np.size(wvl)):
 		filSL.append(data_filename+'_'+'0'*(4-len(str(k)))+str(k))
@@ -164,14 +185,10 @@ if __name__ == "__main__":
 	print("Cropped cube size: ", cube.shape)
 
 	## reprojection
-	data, ft, w = rpj(out_path+'n66_LL1_cube_0010', rpj_path+'n66_LL1_cube_0010', data_path+out_ref, (dy, dx))
-	# print("w", w)
-	# print("wref", WCSextract(ref_path+ref_filename)[0])
-	# print("w0", WCSextract(data_path+data_filename)[0])
-	# print("w10", WCSextract(out_path+'n66_LL1_cube_0010')[0])
+	data, ft = rpj(out_path+'n66_LL1_0010', data_path+'n66_LL1_0010', hdr)
 	
 	## crop match test
-	multimview([ref, data, data-ref, data-data_nocrop], w, (1,4), figsize=(15,5))
+	imview([ref, data, data-ref, data-data_nocrop], figshape=(1,4), figsize=(15,5))
 	# imview([data, data], w, (1,2), figsize=(12,5))
 	# imview([data - data_nocrop, data, data_nocrop], w, (1,3), figsize=(12,5))
 

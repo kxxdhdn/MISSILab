@@ -37,12 +37,11 @@ for k in range(NAXIS3):
 ## smooth
 choker(SList, wvl)
 do_conv()
-fclean('data/convolved/*_.fits')
 
 ## rebuild convolved cube
 cube = []
 for SLout in SList:
-	cubi, hdr = read_fits(SLout+'conv', False)
+	cubi, hdr = read_fits(SLout+'_conv', False)
 	cube.append(cubi)
 cube = np.array(cube)
 
@@ -54,17 +53,14 @@ ra, dec = hdr['CRVAL1'], hdr['CRVAL2']
 ref = crop(ref_path+ref_filename, data_path+out_ref, \
 	(dec, ra), (dy, dx), nopr=0)
 print("Cropped ref size: ", ref.shape)
-## unit conversion
-# FLUXCONV = 0.000145730
-# ref = ref / FLUXCONV
 
 ## mips024 -> irsll1 reprojection
 ref, ft, w = rpj(data_path+out_ref, rpj_path+out_ref, data_path+data_filename, (dy, dx))
 ## (Alternative) irsll1 -> mips024
 # k = 10
-# data, ft, w = rpj(SList[k]+'conv', rpj_path+data_filename, SList[10]+'conv', (dy, dx))
+# data, ft, w = rpj(SList[k]+'_conv', rpj_path+data_filename, SList[10]+'conv', (dy, dx))
 
-fclean('data/convolved/*_conv.fits')
+fclean('data/convolved/*.fits')
 
 ## inter-calib
 Fnu_filt = []

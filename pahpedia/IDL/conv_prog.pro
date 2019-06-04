@@ -13,7 +13,7 @@ FOR I=0,N-1 DO BEGIN
 	kern = MRDFITS("../kernels/" + kern_file[I] + ".fits",0,hdrkern)
 	do_the_convolution,im,hdr,kern,hdrkern,imconv,hdrconv,$
     	               result_kernel_image,result_kernel_header,do_we_write
-	MWRFITS, imconv, "../"+ im_file[I] + "conv.fits", hdrconv, /CREATE
+	MWRFITS, imconv, "../"+ im_file[I] + "_conv.fits", hdrconv, /CREATE
 ENDFOR
 
 END

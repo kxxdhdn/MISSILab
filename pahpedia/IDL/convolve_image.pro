@@ -437,7 +437,7 @@ if do_we_write eq 1 then print,' '
 do_the_convolution,image,header,kernel_image,kernel_header,$
                    result_image,result_header,result_kernel_image,result_kernel_header,do_we_write
 
-fits_write,convolutions_path+Filename+'conv.fits',result_image,result_header 
+fits_write,convolutions_path+Filename+'_conv.fits',result_image,result_header 
 if do_we_save_the_kernel eq 1 then fits_write,convolutions_path+Filename+'_kernel.fits',result_kernel_image,result_kernel_header
 
 if do_we_write eq 1 then print,'The image was convolved and saved successfully' 
