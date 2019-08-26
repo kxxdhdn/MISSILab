@@ -99,7 +99,8 @@ def calibview(ref, data, yerr, xerr, threshold, \
 	# perr = np.sqrt(np.diag(pcov))
 	# print(perr)
 	# ax.errorbar(fx, f_lin0(fx, *popt), yerr=perr[1], c='white', lw=0.5, ecolor='cyan')
-	ax.errorbar(fx, f_lin0(fx, *popt), c='b', lw=0.5, ecolor='cyan')
+	ax.errorbar(fx, f_lin0(fx, *popt), c='b', lw=0.5, ecolor='cyan', \
+		label="Y = {:.2f} * X".format(popt[0]))
 	factor = 1. / popt[0]
 	print("inter-calibration factor (fit) = ", factor)
 	
@@ -121,8 +122,9 @@ def calibview(ref, data, yerr, xerr, threshold, \
 	ax.set_ylabel(ylabel)
 	ax.set_xscale('log', nonposx='clip')
 	ax.set_yscale('log', nonposy='clip')
-	# ax.set_xlim(0, 1e3)
-	# ax.set_ylim(0, 1e3)
+	ax.set_xlim(0, 1e2)
+	ax.set_ylim(0, 1e2)
+	ax.legend(loc='upperleft')
 
 	fig.savefig(savename)
 
