@@ -11,7 +11,7 @@ import numpy as np
 
 from .sinout import write_fits
 
-def calunc(arr, NAXIS, filOUT=None, hdr=None, wave=None):
+def calunc(arr, axis=0, filOUT=None, hdr=None, wave=None):
 	'''
 	Calculate uncertainties
 	
@@ -24,8 +24,11 @@ def calunc(arr, NAXIS, filOUT=None, hdr=None, wave=None):
 	--- OUTPUT ---
 	err         one dim less than arr
 	'''
-	## detect dimension
-	dim = np.size(NAXIS)
+	## Detect dimension
+	##------------------
+	dim = np.size(arr.shape)
+	if axis==0:
+		err = np
 	if dim==1:
 		err = np.full(NAXIS[0], np.nan)
 		for i in range(NAXIS[0]):

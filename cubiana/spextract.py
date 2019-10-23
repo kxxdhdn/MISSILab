@@ -39,7 +39,7 @@ if not os.path.exists(path_tmp):
 	os.makedirs(path_tmp)
 path_test = '/Users/dhu/data/pahpedia/tests/' ###
 path_ker = '/Users/dhu/data/kernels/' ###
-path_out = path_data+'output/' #-#-#-
+path_out = path_data+'output/' ###vvv See also
 if not os.path.exists(path_out):
 	os.makedirs(path_out)
 
@@ -191,23 +191,25 @@ else:
 	## Time offset
 	t1 = time.time()
 
+	cube0, wavALL = read_fits(file_all+'_0')[1:3]
+	
 	if b2=='y':
 		hypercube=[]
 		Nmc += 1
 		for j in range(Nmc):
 			if j==0:
-				cube0, wavALL = read_fits(file_all+'_0')[1:3]
-				NAXIS3 = np.size(wavALL)
 			else:
 				cube = read_fits(file_all+'_'+str(j))[1]
 				hypercube.append(cube)
 		
 		hypercube = np.array(hypercube)
+		print('>>>>>>>>>>>>>')
+		print("hypercube shape: ", hypercube.shape)
+		print('>>>>>>>>>>>>>')
 		unc = calunc(hypercube, [NAXIS1, NAXIS2, NAXIS3], \
 			file_all+'_unc', hdr, wavALL)
 
 	else:
-		cube0, wavALL = read_fits(file_all+'_0')[1:3]
 		unc = read_fits(file_all+'_unc')[1]
 
 print('\n>>>>>>>>>>>>>>>>>>\n')
