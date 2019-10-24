@@ -9,16 +9,24 @@ Uncertainty propagation with Monte-Carlo method
 
 import numpy as np
 
-from .sinout import write_fits
+## astylo
+from sinout import write_fits
 
-def calunc(arr, axis=0, filOUT=None, hdr=None, wave=None):
+
+class MCerror:
 	'''
-	Calculate uncertainties
+	Monte-Carlo propagated error calculator
+	'''
+	pass
+
+def MunC(arr, axis=0, filOUT=None, hdr=None, wave=None):
+	'''
+	Monte-Carlo propagated uncertainties 
 	
 	--- INPUT ---
 	arr         arr
-	NAXIS       should be coherent with arr shape
-	filOUT      defaut no output fits file
+	axis        axis or axes along which unc is calculated
+	filOUT      Default: no output fits file
 	hdr         fits file header
 	wave        wavelengths if 3D
 	--- OUTPUT ---
@@ -26,24 +34,25 @@ def calunc(arr, axis=0, filOUT=None, hdr=None, wave=None):
 	'''
 	## Detect dimension
 	##------------------
-	dim = np.size(arr.shape)
+	ax = arr.shape
+	NAXIS = np.size(ax)
+	dim = NAXIS - 1
 	if axis==0:
-		err = np
-	if dim==1:
-		err = np.full(NAXIS[0], np.nan)
-		for i in range(NAXIS[0]):
-			err[i] = np.nanstd(arr[:,i], ddof=1)
-	elif dim==2:
-		err = np.full((NAXIS[1], NAXIS[0]), np.nan)
-		for i in range(NAXIS[0]):
-			for j in range(NAXIS[1]):
-				err[j,i] = np.nanstd(arr[:,j,i], ddof=1)
+		if dim==2:
+			err = np.full((ax[1],ax[2]), np.nan)
+			for i in range(ax[2]):
+				for j in range(ax[1]):
+					err[j,i] = np.nanstd(arr[:,j:i], ddof=1)
+		elif dim==3:
+			err = np.full((ax[1],ax[2],ax[3]), np.nan)
+			for i in range(ax[3]):
+				for j in range(ax[2]):
+					for k in range(ax[1]):
+						err[k,j,i] = np.nanstd(arr[:,k,j,i], ddof=1)
+		else:
+			print('ERROR: dimension not supported! ')
 	else:
-		err = np.full((NAXIS[2], NAXIS[1], NAXIS[0]), np.nan)
-		for i in range(NAXIS[0]):
-			for j in range(NAXIS[1]):
-				for k in range(NAXIS[2]):
-					err[k,j,i] = np.nanstd(arr[:,k,j,i], ddof=1)
+		print('ERROR: array format not supported! ')
 
 	if filOUT!=None:
 		comment = "Monte-Carlo propagated uncertainty file."

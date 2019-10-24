@@ -6,11 +6,13 @@ t0 = time.time()
 
 import os
 import numpy as np
+import matplotlib.pyplot as plt
 ## astylo
 from astylo.sinout import read_fits, write_fits, WCSextract, read_ascii
 from astylo.processim import slicube, crop, iconvolve, project
 from astylo.myfunclib import fclean
-from astylo.mc import calunc
+from astylo.mc import MunC
+from astylo.splot import plot2d
 
 ##---------------------------
 ##       Initialisation
@@ -58,12 +60,15 @@ list_ker = path_out+'kernels_'+src ### See also IDL/conv_prog.pro
 ##---------------------------
 
 ## Image
+##-------
 coord = read_ascii(path_root+'data/coord')
 for c in coord:
 	if c[0]==src:
 		ra, dec = float(c[1]), float(c[2])
 dx, dy = 15, 15
+
 ## Kernel
+##--------
 psf = [2.,2.5,3.,3.5,4.,4.5,5.,5.5,6.]
 kernelist = []
 for p in psf:
@@ -133,7 +138,6 @@ if b0=='y':
 				conv = iconvolve(filIN=file_data, filKER=kernelist, \
 					saveKER=list_ker, wmod=wmod, uncIN=file_unc, wmod_unc=wmod, \
 					filTMP=file_slice, filOUT=file_conv)
-
 			
 			conv.do_conv(ipath=path_idl)
 
@@ -146,8 +150,8 @@ if b0=='y':
 			cubi.append(pr.image()) # Here, pr.image is a 3D cube
 		
 		cube = np.concatenate(cubi)
-		NAXIS3 = np.size(wavALL)
 
+		hdr['APERNAME'] = 'SL2+SL1+LL2(ref)'
 		comment = "Homegeneized cube produced by [SPEXTRACT] routine. "
 
 		write_fits(file_all+'_'+str(j), hdr, cube, wave=wavALL, COMMENT=comment)
@@ -166,7 +170,8 @@ if b0=='y':
 			print("---------------- {} ----------------".format(j))
 
 	if b1=='y':
-		## calculate MC uncertainty
+		## Calculate MC uncertainties
+		##----------------------------
 		t2 = time.time()
 
 		hypercube = np.array(hypercube)
@@ -174,7 +179,7 @@ if b0=='y':
 		print("hypercube shape: ", hypercube.shape)
 		print('>>>>>>>>>>>>>')
 
-		unc = calunc(hypercube, [NAXIS1, NAXIS2, NAXIS3], \
+		unc = MunC(hypercube, 0, \
 			file_all+'_unc', hdr, wavALL)
 
 		t_cal_unc = time.time()
@@ -183,7 +188,6 @@ if b0=='y':
 		unc = read_fits(file_all+'_unc')[1]
 	
 	fclean(path_tmp+'*.fits')
-
 
 else:
 	b2 = input("(Re)calculate uncertainty? [y/n] ")
@@ -198,6 +202,7 @@ else:
 		Nmc += 1
 		for j in range(Nmc):
 			if j==0:
+				pass
 			else:
 				cube = read_fits(file_all+'_'+str(j))[1]
 				hypercube.append(cube)
@@ -206,7 +211,8 @@ else:
 		print('>>>>>>>>>>>>>')
 		print("hypercube shape: ", hypercube.shape)
 		print('>>>>>>>>>>>>>')
-		unc = calunc(hypercube, [NAXIS1, NAXIS2, NAXIS3], \
+
+		unc = MunC(hypercube, 0, \
 			file_all+'_unc', hdr, wavALL)
 
 	else:
@@ -215,11 +221,15 @@ else:
 print('\n>>>>>>>>>>>>>>>>>>\n')
 print("Final cube shape: ", unc.shape)
 print('\n>>>>>>>>>>>>>>>>>>\n')
-# for x in range(NAXIS1):
-# 	for y in range(NAXIS2):
-# 		if all(np.isnan(a)==0 for a in cube0[:,y,x]):
-# 			specview(wvl0, [cube0[:,y,x]], [unc[:,y,x]], \
-# 				savename=fig_path+'({}, {}).png'.format(x, y))
+
+
+##---------------------------
+##           plot
+##---------------------------
+
+plot2d(wavALL, cube0[:,8,8], yerr=unc[:,8,8])
+
+plt.show()
 
 t_total = time.time()
 print("****** total_time = {:.0f} seconds ******".format(t_total - t1))

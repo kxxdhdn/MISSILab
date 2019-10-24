@@ -12,42 +12,126 @@ import numpy as np
 from reproject import reproject_interp
 import subprocess as SP
 
-from .sinout import read_fits, write_fits, WCSextract, write_csv
-from .myfunclib import fclean, closest
+## astylo
+from sinout import read_fits, write_fits, WCSextract, write_csv
+from myfunclib import fclean, closest
 
 
-def wclean(filIN, wmod=0, filOUT=None):
-	"""
+def wclean(filIN, wmod=0, cmod='eq', filOUT=None):
+	'''
 	Clean wavelengths
-	"""
+
+	--- INPUT ---
+	filIN       input fits file
+	wmod        wave mode
+	cmod        clean mode (Default: 'eq')
+	filOUT      overwrite fits file (Default: NO)
+	--- OUTPUT ---
+	data        new fits data
+	wave        new fits wave
+	'''
 	hdr, data, wave = read_fits(filIN, wmod=wmod)
+	Nw = len(wave)
+	
+	ind = [] # list of indices of wvl to remove
+	## Detect crossing wvl
+	##---------------------
+	for i in range(Nw-1):
+		if wave[i]>=wave[i+1]: # found wave(i+1), i_max=Nw-2
+			
+			wmin = -1 # lower limit: closest wave smaller than wave[i+1]
+			wmax = 0 # upper limit: closest wave larger than wave[i]
+			
+			for j in range(i+1):
+				dw = wave[i+1] - wave[i-j]
+				if dw>0: # found the closest smaller wave[i-j]
+					wmin = i-j
+					break # only the innermost loop
+			if wmin==-1:
+				print('WARNING: Left side fully covered! ')
+			
+			for j in range(Nw-i-1):
+				dw = wave[i+1+j] - wave[i]
+				if dw>0: # found the closest larger wave[i+1+j]
+					wmax = i+1+j
+					break
+			if wmax==0:
+				print('WARNING: right side fully covered! ')
 
-	ind = []
-	k = 0
-	flag = 0
-	for i in range(np.size(wave)-1):
-		## check if delete wave[i+1]
-		if wave[k]>=wave[i+1]:
-			ind.append(i+1)
-			flag += 1
-			if flag==1:
-				ind.append(k)
-		## if not delete, shift ref wave[k]
-		else:
-			k = i+1
-			flag = 0
-	print('Number of wave to delete: ', np.size(ind))
-	# for i in ind:
-	# 	print(wave[i]+', ')
+			Nw_seg = wmax-wmin-1 # number of crossing wvl in segment
+			wave_seg = [] # a segment (every detect) of wave
+			ind_seg = [] # corresponing segment for sort use
+			for k in range(Nw_seg):
+				wave_seg.append(wave[wmin+1+k])
+				ind_seg.append(wmin+1+k)
+			## index list of sorted wave_seg
+			ilist = sorted(range(len(wave_seg)), key=wave_seg.__getitem__)
+			## index of wave_seg center
+			icen = math.floor((Nw_seg-1)/2)
 
-	data = np.delete(data, ind, axis=0)
-	wave = np.delete(np.array(wave), ind)
-	wave = list(wave)
+			## Visualisation (for test use)
+			##------------------------------
+			# print('wave, i: ', wave[i], i)
+			# print('wave_seg: ', wave_seg)
+			# print('ind_seg: ', ind_seg)
+			# print('ilist: ', ilist)
+			# print('icen: ', icen)
 
+			## Remove all crossing wvl between two channels
+			##----------------------------------------------
+			if cmod=='all': # most conservative but risk having holes
+				pass
+			## Remove (almost) equal wvl (NOT nb of wvl!) for both sides
+			##-----------------------------------------------------------
+			elif cmod=='eq': # (default)
+				## Select ascendant pair closest to segment center
+				for k in range(icen):
+					if ilist[icen]>ilist[0]: # large center
+						if ilist[icen-k]<ilist[0]:
+							for p in range(ilist[icen-k]+1):
+								del ind_seg[0]
+							for q in range(Nw_seg-ilist[icen]):
+								del ind_seg[-1]
+							break
+					else: # small center
+						if ilist[icen+k]>ilist[0]:
+							for p in range(ilist[icen]+1):
+								del ind_seg[0]
+							for q in range(Nw_seg-ilist[icen+k]):
+								del ind_seg[-1]
+							break
+			## Leave 2 closest wvl not crossing
+			##----------------------------------
+			elif cmod=='closest_left':
+				for k in range(ilist[0]):
+					del ind_seg[0]
+			elif cmod=='closest_right':
+				for k in range(Nw_seg-ilist[-1]):
+					del ind_seg[-1]
+			## Others
+			##--------
+			else:
+				print('ERROR: Not supported clean mode! ')
+
+			print('ind_seg (final): ', ind_seg)
+			ind.extend(ind_seg)
+	data_new = np.delete(data, ind, axis=0)
+	wave_new = list(np.delete(np.array(wave), ind))
+
+	## Display clean detail
+	##----------------------
+	print('\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+	print('Number of wavelengths deleted: ', len(ind))
+	for i in ind:
+		print('wave, i: ', wave[i], i)
+	print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n')
+
+	## Overwrite fits file
+	##---------------------
 	if filOUT is not None:
-		write_fits(filOUT, hdr, data, wave)
+		write_fits(filOUT, hdr, data_new, wave_new) # hdr auto changed
 
-	return data, wave
+	return data_new, wave_new
 
 def specorrect(filIN, filOUT=None, \
 	factor=None, zero=None, wmin=None, wmax=None, wmod=0):
@@ -126,7 +210,7 @@ class improve:
 		## 3D cube slicing
 		if self.is3d==True:
 			self.im, self.wvl = read_fits(filIN, wmod=wmod)[1:3]
-			self.NAXIS3 = np.size(self.wvl)
+			self.NAXIS3 = len(self.wvl)
 		else:
 			self.im = read_fits(filIN, wmod=wmod)[1]
 			self.wvl = None
