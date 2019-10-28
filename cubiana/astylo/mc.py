@@ -56,6 +56,6 @@ def MunC(arr, axis=0, filOUT=None, hdr=None, wave=None):
 
 	if filOUT!=None:
 		comment = "Monte-Carlo propagated uncertainty file."
-		write_fits(filOUT, hdr=hdr, data=err, wave=wave, COMMENT=comment)
+		write_fits(filOUT, header=hdr, data=err, wave=wave, COMMENT=comment)
 	
 	return err

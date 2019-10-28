@@ -51,21 +51,21 @@ def read_fits(file, wmod=0):
 
 			return hdr, data
 
-def write_fits(file, hdr, data, wave=None, **hdrl):
+def write_fits(file, header, data, wave=None, **hdrl):
 	'''
 	Write fits file
 
 	--- INPUT ---
 	file        input fits file
-	hdr         header of primary HDU
+	header      header of primary HDU
 	data        data in primary HDU
 	wave        data in table 1 (default: None)
 	--- OUTPUT ---
 	new fits file
 	'''
 	for key, value in hdrl.items():
-		hdr[key] = value
-	primary_hdu = fits.PrimaryHDU(header=hdr, data=data)
+		header[key] = value
+	primary_hdu = fits.PrimaryHDU(header=header, data=data)
 	hdul = fits.HDUList(primary_hdu)
 	## add table
 	if wave is not None:
@@ -81,59 +81,56 @@ def WCSextract(file):
 	--- INPUT ---
 	file        input fits file
 	--- OUTPUT ---
-	hdr         header of primary HDU
+	header      header of primary HDU
 	w           2D WCS
 	is3d        if input data is 3D: True
 	'''
-	hdr0 = fits.open(file+fitsext)[0].header
+	hdr = fits.open(file+fitsext)[0].header
 
-	hdr = hdr0.copy()
-	if hdr['NAXIS']==3:
+	header = hdr.copy()
+	if header['NAXIS']==3:
 		is3d = True
-		for kw in hdr0.keys():
+		for kw in hdr.keys():
 			if '3' in kw:
-				del hdr[kw]
-		hdr['NAXIS'] = 2
-		hdr['COMMENT'] = "This header is adapted to 2D WCS extraction need. "
+				del header[kw]
+		header['NAXIS'] = 2
+		header['COMMENT'] = "This header is adapted to 2D WCS extraction need. "
 	else:
 		is3d = False
 	
-	w = WCS(hdr, naxis=2)
+	w = WCS(header, naxis=2)
 
-	return hdr, w, is3d
+	return header, w, is3d
 
-def read_hdf5(file, *dset_name):
+def read_hdf5(file, *header):
 	'''
 	Read h5 file
 
 	--- INPUT ---
 	file        input h5 file
-	dset_name   labels of data to read
+	header      labels of data to read
 	--- OUTPUT ---
-	dset_data   data
+	dataset     data
 	'''
 	hf = H5.File(file+h5ext, 'r')
-	dset_data = []
-	for name in dset_name:
-		data = hf.get(name)
-		flag = 1
-		if flag==1:
-			data = np.array(data)
-		dset_data.append(data)
+	dataset = []
+	for hdr in header:
+		data = hf.get(hdr)
+		data = np.array(data)
+		dataset.append(data)
 
 	hf.close()
-	data = np.array(data)
 
-	return dset_data
+	return np.array(dataset)
 
-def write_hdf5(data, name, file, append=False):
+def write_hdf5(file, header, data, append=False):
 	'''
 	Write h5 file
 
 	--- INPUT ---
-	data        data
-	name        label of data
 	file        file name of the new h5 file
+	header      label of data (one at a time)
+	data        data
 	append      True if not overwrite (default: False)
 	--- OUTPUT ---
 	new h5 file
@@ -143,7 +140,7 @@ def write_hdf5(data, name, file, append=False):
 	else:
 		hf = H5.File(file+h5ext, 'w')
 	
-	hf.create_dataset(name, data=data)
+	hf.create_dataset(header, data=data)
 
 	hf.flush()
 	hf.close()
@@ -158,51 +155,71 @@ def read_ascii(file):
 	'''
 	f = open(file+ascext, 'r')
 	## f.read() -> str | f.readlines() -> list
-	data =[]
+	dataset =[]
 	for line in f.readlines():
 		line = line.strip()
 		print(line)
 		if line[0]!='#':
 			line = line.split()
-			element = []
+			data = []
 			for vec in line:
-				element.append(vec)
-			data.append(element)
+				data.append(vec)
+			dataset.append(data)
 
 	f.close()
-	data = np.array(data)
+	dataset = np.array(dataset)
 
-	return data
+	return dataset
 
-def read_csv(file):
+def read_csv(file, *header):
 	'''
 	Read csv file
 
 	--- INPUT ---
 	file        input csv file
+	header      labels of data to read
 	--- OUTPUT ---
-	data        data
+	dataset     dataset
 	'''
-	with open(file+csvext, 'r') as csvfile:
-		reader = csv.reader(csvfile)
-		data = []
-		for line in reader:
-			data.append(line)
+	with open(file+csvext, 'r', newline='') as csvfile:
+		reader = csv.DictReader(csvfile)
+		dataset = []
+		for hdr in header:
+			data = []
+			for row in reader:
+				data.append(row[hdr])
+			data = np.array(data)
+			dataset.append(data)
 
-	return np.array(data)
+	return np.array(dataset)
 
-def write_csv(file, header, data):
+def write_csv(file, header, dataset, append=False):
 	'''
 	Read fits file
 
 	--- INPUT ---
-	file        file name of the new csv file
-	header      label of data
-	data        data
+	file        file name of the csv file
+	header      labels of data, list('label1', 'label2', ...)
+	dataset     data, list([d11, d12, ...], [d21, d22, ...], ...)
 	--- OUTPUT ---
 	new csv file
 	'''
-	with open(file+csvext, 'w') as csvfile:
-		writer = csv.writer(csvfile)
-		writer.writerow(header)
-		writer.writerows(data)
+	if append==True:
+		mod = 'a'
+	else:
+		mod = 'w'
+
+	with open(file+csvext, mod, newline='') as csvfile:
+		writer = csv.DictWriter(csvfile, fieldnames=header)
+
+		writer.writeheader()
+
+		for i in range(len(dataset)):
+			## Init dict
+			row = {hdr: [] for hdr in header}
+			data = dataset[i]
+			## Write dict
+			for j in range(len(header)):
+				row[header[j]] = data[j]
+			## Write csv row
+			writer.writerow(row)

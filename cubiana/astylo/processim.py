@@ -13,11 +13,25 @@ from reproject import reproject_interp
 import subprocess as SP
 
 ## astylo
-from sinout import read_fits, write_fits, WCSextract, write_csv
+from sinout import read_fits, write_fits, WCSextract, read_csv, write_csv
 from myfunclib import fclean, closest
 
+def wmask(filIN, filOUT=None):
+	'''
+	Mask wavelengths
 
-def wclean(filIN, wmod=0, cmod='eq', filOUT=None):
+	--- INPUT ---
+	filIN       input fits file 
+	filOUT      overwrite fits file (Default: NO)
+	--- OUTPUT ---
+	data_new    new fits data
+	wave_new    new fits wave
+	'''
+	pass
+
+
+def wclean(filIN, wmod=0, cmod='eq', cfile=None, \
+	filOUT=None, verbose=False):
 	'''
 	Clean wavelengths
 
@@ -25,111 +39,133 @@ def wclean(filIN, wmod=0, cmod='eq', filOUT=None):
 	filIN       input fits file
 	wmod        wave mode
 	cmod        clean mode (Default: 'eq')
+	cfile       input csv file (archived info)
 	filOUT      overwrite fits file (Default: NO)
+	verbose     display wclean info (Default : False)
 	--- OUTPUT ---
-	data        new fits data
-	wave        new fits wave
+	data_new    new fits data
+	wave_new    new fits wave
 	'''
 	hdr, data, wave = read_fits(filIN, wmod=wmod)
 	Nw = len(wave)
 	
 	ind = [] # list of indices of wvl to remove
-	## Detect crossing wvl
-	##---------------------
-	for i in range(Nw-1):
-		if wave[i]>=wave[i+1]: # found wave(i+1), i_max=Nw-2
-			
-			wmin = -1 # lower limit: closest wave smaller than wave[i+1]
-			wmax = 0 # upper limit: closest wave larger than wave[i]
-			
-			for j in range(i+1):
-				dw = wave[i+1] - wave[i-j]
-				if dw>0: # found the closest smaller wave[i-j]
-					wmin = i-j
-					break # only the innermost loop
-			if wmin==-1:
-				print('WARNING: Left side fully covered! ')
-			
-			for j in range(Nw-i-1):
-				dw = wave[i+1+j] - wave[i]
-				if dw>0: # found the closest larger wave[i+1+j]
-					wmax = i+1+j
-					break
-			if wmax==0:
-				print('WARNING: right side fully covered! ')
+	if cfile is not None:
+		indarxiv = read_csv(cfile, 'Ind')[0]
+		ind = []
+		for i in indarxiv:
+			ind.append(int(i))
+	else:
+		## Detect crossing wvl
+		##---------------------
+		for i in range(Nw-1):
+			if wave[i]>=wave[i+1]: # found wave(i+1), i_max=Nw-2
+				
+				wmin = -1 # lower limit: closest wave smaller than wave[i+1]
+				wmax = 0 # upper limit: closest wave larger than wave[i]
+				
+				for j in range(i+1):
+					dw = wave[i+1] - wave[i-j]
+					if dw>0: # found the closest smaller wave[i-j]
+						wmin = i-j
+						break # only the innermost loop
+				if wmin==-1:
+					print('WARNING: Left side fully covered! ')
+				
+				for j in range(Nw-i-1):
+					dw = wave[i+1+j] - wave[i]
+					if dw>0: # found the closest larger wave[i+1+j]
+						wmax = i+1+j
+						break
+				if wmax==0:
+					print('WARNING: right side fully covered! ')
 
-			Nw_seg = wmax-wmin-1 # number of crossing wvl in segment
-			wave_seg = [] # a segment (every detect) of wave
-			ind_seg = [] # corresponing segment for sort use
-			for k in range(Nw_seg):
-				wave_seg.append(wave[wmin+1+k])
-				ind_seg.append(wmin+1+k)
-			## index list of sorted wave_seg
-			ilist = sorted(range(len(wave_seg)), key=wave_seg.__getitem__)
-			## index of wave_seg center
-			icen = math.floor((Nw_seg-1)/2)
+				Nw_seg = wmax-wmin-1 # number of crossing wvl in segment
+				wave_seg = [] # a segment (every detect) of wave
+				ind_seg = [] # corresponing segment for sort use
+				for k in range(Nw_seg):
+					wave_seg.append(wave[wmin+1+k])
+					ind_seg.append(wmin+1+k)
+				## index list of sorted wave_seg
+				ilist = sorted(range(len(wave_seg)), key=wave_seg.__getitem__)
+				## index of wave_seg center
+				icen = math.floor((Nw_seg-1)/2)
 
-			## Visualisation (for test use)
-			##------------------------------
-			# print('wave, i: ', wave[i], i)
-			# print('wave_seg: ', wave_seg)
-			# print('ind_seg: ', ind_seg)
-			# print('ilist: ', ilist)
-			# print('icen: ', icen)
+				## Visualisation (for test use)
+				##------------------------------
+				# print('wave, i: ', wave[i], i)
+				# print('wave_seg: ', wave_seg)
+				# print('ind_seg: ', ind_seg)
+				# print('ilist: ', ilist)
+				# print('icen: ', icen)
 
-			## Remove all crossing wvl between two channels
-			##----------------------------------------------
-			if cmod=='all': # most conservative but risk having holes
-				pass
-			## Remove (almost) equal wvl (NOT nb of wvl!) for both sides
-			##-----------------------------------------------------------
-			elif cmod=='eq': # (default)
-				## Select ascendant pair closest to segment center
-				for k in range(icen):
-					if ilist[icen]>ilist[0]: # large center
-						if ilist[icen-k]<ilist[0]:
-							for p in range(ilist[icen-k]+1):
-								del ind_seg[0]
-							for q in range(Nw_seg-ilist[icen]):
-								del ind_seg[-1]
-							break
-					else: # small center
-						if ilist[icen+k]>ilist[0]:
-							for p in range(ilist[icen]+1):
-								del ind_seg[0]
-							for q in range(Nw_seg-ilist[icen+k]):
-								del ind_seg[-1]
-							break
-			## Leave 2 closest wvl not crossing
-			##----------------------------------
-			elif cmod=='closest_left':
-				for k in range(ilist[0]):
-					del ind_seg[0]
-			elif cmod=='closest_right':
-				for k in range(Nw_seg-ilist[-1]):
-					del ind_seg[-1]
-			## Others
-			##--------
-			else:
-				print('ERROR: Not supported clean mode! ')
+				## Remove all crossing wvl between two channels
+				##----------------------------------------------
+				if cmod=='all': # most conservative but risk having holes
+					pass
+				## Remove (almost) equal wvl (NOT nb of wvl!) for both sides
+				##-----------------------------------------------------------
+				elif cmod=='eq': # (default)
+					## Select ascendant pair closest to segment center
+					for k in range(icen):
+						if ilist[icen]>ilist[0]: # large center
+							if ilist[icen-k]<ilist[0]:
+								for p in range(ilist[icen-k]+1):
+									del ind_seg[0]
+								for q in range(Nw_seg-ilist[icen]):
+									del ind_seg[-1]
+								break
+						else: # small center
+							if ilist[icen+k]>ilist[0]:
+								for p in range(ilist[icen]+1):
+									del ind_seg[0]
+								for q in range(Nw_seg-ilist[icen+k]):
+									del ind_seg[-1]
+								break
+				## Leave 2 closest wvl not crossing
+				##----------------------------------
+				elif cmod=='closest_left':
+					for k in range(ilist[0]):
+						del ind_seg[0]
+				elif cmod=='closest_right':
+					for k in range(Nw_seg-ilist[0]):
+						del ind_seg[-1]
+				## Others
+				##--------
+				else:
+					print('ERROR: Not supported clean mode! ')
 
-			print('ind_seg (final): ', ind_seg)
-			ind.extend(ind_seg)
+				# print('ind_seg (final): ', ind_seg)
+				ind.extend(ind_seg)
+
+	## Do clean
+	##----------
 	data_new = np.delete(data, ind, axis=0)
 	wave_new = list(np.delete(np.array(wave), ind))
 
 	## Display clean detail
 	##----------------------
-	print('\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
-	print('Number of wavelengths deleted: ', len(ind))
-	for i in ind:
-		print('wave, i: ', wave[i], i)
-	print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n')
+	if verbose==True:
+		print('\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+		print('Number of wavelengths deleted: ', len(ind))
+		print('Ind, wavelengths: ')
+		for i in ind:
+			print(i, wave[i])
+		print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n')
 
 	## Overwrite fits file
 	##---------------------
 	if filOUT is not None:
+		# comment = 'Wavelength removal info in _wclean_info.csv'
+
 		write_fits(filOUT, hdr, data_new, wave_new) # hdr auto changed
+		
+		## Write csv file
+		wlist = []
+		for i in ind:
+			wlist.append([i, wave[i]])
+		write_csv(filOUT+'_wclean_info', \
+			header=['Ind', 'Wavelengths'], dataset=wlist)
 
 	return data_new, wave_new
 
@@ -397,7 +433,7 @@ class iconvolve(improve):
 	(IDL based) CONVOLVE 2D image or 3D cube with given kernels
 	"""
 	def __init__(self, filIN, filKER, saveKER, \
-		wmod=0, uncIN=None, wmod_unc=0, \
+		wmod=0, uncIN=None, wmod_unc=0, cfile=None, \
 		psf=None, filTMP=None, filOUT=None):
 		## INPUTS
 		super().__init__(filIN, wmod)
@@ -408,6 +444,7 @@ class iconvolve(improve):
 		self.filKER = list(filKER)
 		## doc (csv) file of kernel list
 		self.saveKER = saveKER
+		self.cfile = cfile
 		self.filTMP = filTMP
 		self.filOUT = filOUT
 
@@ -448,23 +485,28 @@ class iconvolve(improve):
 	def choker(self, filIN):
 		## CHOose KERnel (list)
 
-		## create list
-		klist = []
-		for i, image in enumerate(filIN):
-			## check PSF profil (or is not a cube)
-			if self.sig_lam is not None:
-				image = filIN[i]
-				ind = closest(self.psf, self.sig_lam[i])
-				kernel = self.filKER[ind]
-			else:
-				image = filIN[0]
-				kernel = self.filKER[0]
-			## klist line elements: image, kernel
-			k = [image, kernel]
-			klist.append(k)
+		if self.cfile is not None: # read archived info
+			karxiv = read_csv(self.cfile, 'Images', 'Kernels')
+			klist = []
+			for k in karxiv:
+				klist.append(k)
+		else: # create list
+			klist = []
+			for i, image in enumerate(filIN):
+				## check PSF profil (or is not a cube)
+				if self.sig_lam is not None:
+					image = filIN[i]
+					ind = closest(self.psf, self.sig_lam[i])
+					kernel = self.filKER[ind]
+				else:
+					image = filIN[0]
+					kernel = self.filKER[0]
+				## klist line elements: image, kernel
+				k = [image, kernel]
+				klist.append(k)
 
-		## write csv file
-		write_csv(self.saveKER, header=['Images', 'Kernels'], data=klist)
+			## write csv file
+			write_csv(self.saveKER, header=['Images', 'Kernels'], dataset=klist)
 
 	def do_conv(self, ipath):
 		
@@ -505,7 +547,6 @@ class iconvolve(improve):
 		if self.filOUT is not None:
 			comment = "[ICONVOLV]ed by G. Aniano's IDL routine."
 			# comment = 'https://www.astro.princeton.edu/~ganiano/Kernels.html'
-
 			write_fits(self.filOUT, self.hdr, self.convim, wave=self.wvl, \
 				COMMENT=comment)
 
