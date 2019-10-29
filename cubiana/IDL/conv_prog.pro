@@ -2,7 +2,7 @@
 ; assign the header information to variables for use later.
 src='M83'
 path='/Users/dhu/data/pahpedia/'+src+'/output/' ; See path_out
-param = READ_CSV(path+'kernels_'+src+'.csv', N_TABLE_HEADER=1)
+param = READ_CSV(path+src+'_kernels.csv', N_TABLE_HEADER=1)
 ; HELP, param, /STRUCTURES
 im_file = param.FIELD1
 kern_file = param.FIELD2

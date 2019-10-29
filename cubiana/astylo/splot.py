@@ -10,9 +10,11 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
+global mycolorlib, LSList
 # cmap = mpl.cm.viridis
 # norm = mpl.colors.Normalize(vmin=0, vmax=1)
-COList = ['k', 'r', 'g', 'b', 'm', 'y', 'c']
+mycolorlib = ['k', 'grey', 'r', 'orange', 'y', 'g', 'c', 'b', \
+	'm', 'pink', 'chocolate', 'lime'] # 12 colors
 LSList = ['-', '--', '-.', ':']
 sizeXS, sizeS, sizeM = 4, 6, 8
 sizeL, sizeXL, sizeXXL = 10, 12, 14
@@ -175,7 +177,7 @@ class plot2d_m(plotool):
 	def __init__(self, xlist, ylist, xall=None, \
 		xerr=None, yerr=None, xlim=(None, None), \
 		ylim=(None, None), xlog=False, ylog=False, \
-		clist='default', lslist=None, lablist=None, \
+		cl='default', lslist=None, lablist=None, \
 		c='b', ls=None, lw=.5, ec='r', elw=.8, \
 		xlab='X', ylab='Y', lab=None, legend=None, \
 		title=None, figsize=None, figint=False):
@@ -194,10 +196,10 @@ class plot2d_m(plotool):
 			if yerr is not None:
 				self.yerr = yerr[i]
 			
-			if clist=='default':
-				c = COList[i]
-			elif clist is not None:
-				c = clist[i]
+			if cl=='default':
+				c = mycolorlib[i]
+			elif cl is not None:
+				c = cl[i]
 
 			if lslist is not None:
 				ls = lslist[i]

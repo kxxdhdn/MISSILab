@@ -18,7 +18,7 @@ from astylo.processim import wclean
 path = '/Users/dhu/data/pahpedia/M83/output/'
 file = 'M83_0'
 
-wclean(path+file, filOUT=path+file+'_wclean_test')
+wclean(path+file, cmod='closest_right', filOUT=path+file+'_wclean_test')
 
 t_total = time.time()
 print("****** total_time = {:.0f} seconds ******".format(t_total - t0))

@@ -6,6 +6,7 @@
 Sublime input & output
 
 """
+
 import numpy as np
 from astropy.io import fits
 from astropy.wcs import WCS
@@ -145,28 +146,29 @@ def write_hdf5(file, header, data, append=False):
 	hf.flush()
 	hf.close()
 
-def read_ascii(file):
+def read_ascii(file, dtype=str):
 	'''
 	Read ASCII file
 
 	--- INPUT ---
 	file        input ASCII file
+	dtype       data type (default: 'str')
 	--- OUTPUT ---
+	dataset     output data array
 	'''
-	f = open(file+ascext, 'r')
-	## f.read() -> str | f.readlines() -> list
-	dataset =[]
-	for line in f.readlines():
-		line = line.strip()
-		print(line)
-		if line[0]!='#':
-			line = line.split()
-			data = []
-			for vec in line:
-				data.append(vec)
-			dataset.append(data)
+	with open(file+ascext, 'r') as f:
+		## f.read() -> str | f.readlines() -> list
+		dataset =[]
+		for line in f.readlines():
+			line = line.strip()
+			# print(line)
+			if line[0]!='#':
+				line = list(map(dtype, line.split()))
+				data = []
+				for vec in line:
+					data.append(vec)
+				dataset.append(data)
 
-	f.close()
 	dataset = np.array(dataset)
 
 	return dataset

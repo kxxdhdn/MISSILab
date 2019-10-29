@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-'''
+"""
 
 Uncertainty propagation with Monte-Carlo method
 
-'''
+"""
 
 import numpy as np
 

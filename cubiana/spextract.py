@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 ## astylo
 from astylo.sinout import read_fits, write_fits, WCSextract, read_ascii
-from astylo.processim import slicube, crop, iconvolve, project
+from astylo.processim import slicube, crop, iconvolve, project, wclean
 from astylo.myfunclib import fclean
 from astylo.mc import MunC
 from astylo.splot import plot2d
@@ -28,8 +28,8 @@ if src=='IC10':
 	wmod = 0
 
 instr = ['IRS', 'IRC']
-chnl = ['SL2', 'SL1', 'LL2']
-# chnl = ['SL2', 'SL1', 'LL2', 'LL1']
+# chnl = ['SL2', 'SL1', 'LL2']
+chnl = ['SL2', 'SL1', 'LL2', 'LL1']
 
 ##---------------------------
 ##         Path Store
@@ -49,11 +49,12 @@ if not os.path.exists(path_out):
 path_root = os.getcwd()+'/'
 path_idl = path_root+'/IDL/'
 ## Default files
-chnl_ref = path_data+src+'_'+chnl[-1] ###
-file_ref = path_data+src+'_ref'
+file_ref = path_data+src+'_'+chnl[-1] # to produce project_ref
+project_ref = path_out+src+'_ref' ###
 file_all = path_out+src
 
-list_ker = path_out+'kernels_'+src ### See also IDL/conv_prog.pro
+## kernel list stocked in csv file
+cker = path_out+src+'_kernels' ### See also IDL/conv_prog.pro
 
 ##---------------------------
 ##         Read Data
@@ -71,9 +72,31 @@ dx, dy = 15, 15
 ##--------
 psf = [2.,2.5,3.,3.5,4.,4.5,5.,5.5,6.]
 kernelist = []
-for p in psf:
-	kernelist.append(path_ker+'Kernel_HiRes_Gauss_0'+ \
-		str(p)+'_to_Gauss_06.0') ###
+# psf_ref = 'Gauss6.0'
+# psf_ref = 'IRAC3'
+# psf_ref = 'IRAC4'
+psf_ref = 'MIPS1'
+# psf_ref = 'WISE3'
+# psf_ref = 'WISE4'
+
+if psf_ref=='Gauss6.0':
+	file_ker = '_to_Gauss_06.0'
+elif psf_ref=='IRAC3': # 2.11 (no LL1)
+	file_ker = '_IRAC_5.8'
+elif psf_ref=='IRAC4': # 2.82 (no LL1)
+	file_ker = '_IRAC_8.0'
+elif psf_ref=='MIPS1': # 6.43
+	file_ker = '_to_MIPS_24'
+elif psf_ref=='WISE3': # 6.60
+	file_ker = '_WISE_MAP_11.6'
+elif psf_ref=='WISE4': # 11.89
+	file_ker = '_WISE_MAP_22.1'
+else:
+	file_ker = None
+
+if file_ker is not None:
+	for p in psf:
+		kernelist.append(path_ker+'Kernel_HiRes_Gauss_0'+str(p)+file_ker) ###
 
 ##---------------------------
 ##         Processing
@@ -81,14 +104,14 @@ for p in psf:
 
 ## Cropped ref image
 ##-------------------
-cr = crop(filIN=chnl_ref, cen=(ra,dec), size=(dx,dy), \
-	wmod=wmod, filOUT=file_ref)
-hdr = read_fits(file_ref)[0]
+cr = crop(filIN=file_ref, cen=(ra,dec), size=(dx,dy), \
+	wmod=wmod, filOUT=project_ref)
+hdr = read_fits(project_ref)[0]
 NAXIS1 = hdr['NAXIS1']
 NAXIS2 = hdr['NAXIS2']
 
 t_init = time.time()
-print("****** init_time = {:.0f} seconds ******".format(t_init - t0))
+print(">> init_time = {:.0f} seconds <<".format(t_init - t0))
 
 b0 = input("(Re)do homegeneisation? [y/n] ")
 # b0 = 'y'
@@ -101,11 +124,10 @@ if b0=='y':
 	# b1 = 'y'
 	if b1=='y':
 		hypercube=[]
-		Nmc += 1
 	else:
-		Nmc = 1
+		Nmc = 0
 	
-	for j in range(Nmc):
+	for j in range(Nmc+1):
 		cubi = []
 		wavALL = []
 		slices = []
@@ -127,33 +149,37 @@ if b0=='y':
 			# 	slicube(filIN=file_data, filSL=file_slice, \
 			# 		wmod=wmod, uncIN=file_unc, wmod_unc=wmod)
 
-			## Smooth images [IDL]
-			##---------------------
-			if j==0: # unc not added
-				conv = iconvolve(filIN=file_data, filKER=kernelist, \
-					saveKER=list_ker, wmod=wmod, \
-					filTMP=file_slice, filOUT=file_conv)
-				wavALL.extend(conv.wave())
-			else: # add unc
-				conv = iconvolve(filIN=file_data, filKER=kernelist, \
-					saveKER=list_ker, wmod=wmod, uncIN=file_unc, wmod_unc=wmod, \
-					filTMP=file_slice, filOUT=file_conv)
-			
-			conv.do_conv(ipath=path_idl)
+			if file_ker is not None:
+				## Smooth images [IDL]
+				##---------------------
+				if j==0: # unc not added
+					conv = iconvolve(filIN=file_data, filKER=kernelist, \
+						saveKER=cker, wmod=wmod, \
+						filTMP=file_slice, filOUT=file_conv)
+					wavALL.extend(conv.wave())
+				else: # add unc
+					conv = iconvolve(filIN=file_data, filKER=kernelist, \
+						saveKER=cker, wmod=wmod, uncIN=file_unc, wmod_unc=wmod, \
+						cfile=cker, filTMP=file_slice, filOUT=file_conv)
+				
+				conv.do_conv(ipath=path_idl)
+			else:
+				file_conv = file_data
 
 			## Reproject convolved cube
 			##--------------------------
-			pr = project(filIN=file_conv, filREF=file_ref, \
-				filTMP=file_slice, filOUT=file_out+'_'+str(j))
+			pr = project(filIN=file_conv, filREF=project_ref, \
+				filTMP=file_slice)#, filOUT=file_out+'_'+str(j))
 			
 			slices.extend(pr.slice_names())
 			cubi.append(pr.image()) # Here, pr.image is a 3D cube
 		
+			fclean(file_conv+'.fits')
+
 		cube = np.concatenate(cubi)
 
 		hdr['APERNAME'] = 'SL2+SL1+LL2(ref)'
 		comment = "Homegeneized cube produced by [SPEXTRACT] routine. "
-
 		write_fits(file_all+'_'+str(j), hdr, cube, wave=wavALL, COMMENT=comment)
 
 		if j==0:
@@ -161,67 +187,57 @@ if b0=='y':
 			cube0 = cube
 
 			t_no_mc = time.time()
-			print("****** no_mc_time = {:.0f} seconds ******".format(t_no_mc - t1))
+			print(">> no_mc_time = {:.0f} seconds <<".format(t_no_mc - t1))
 		else:
 			## append hypercube
 			hypercube.append(cube)
 
 			## ieme iteration finished
 			print("---------------- {} ----------------".format(j))
-
-	if b1=='y':
-		## Calculate MC uncertainties
-		##----------------------------
-		t2 = time.time()
-
-		hypercube = np.array(hypercube)
-		print('>>>>>>>>>>>>>')
-		print("hypercube shape: ", hypercube.shape)
-		print('>>>>>>>>>>>>>')
-
-		unc = MunC(hypercube, 0, \
-			file_all+'_unc', hdr, wavALL)
-
-		t_cal_unc = time.time()
-		print("****** cal_unc_time = {:.0f} seconds ******".format(t_cal_unc - t2))
-	else:
-		unc = read_fits(file_all+'_unc')[1]
-	
-	fclean(path_tmp+'*.fits')
-
+	b2 = 'y'
 else:
 	b2 = input("(Re)calculate uncertainty? [y/n] ")
+
+## Calculate MC uncertainties
+##----------------------------
+## Time offset
+t2 = time.time()
+
+cube0, wavALL = read_fits(file_all+'_0')[1:3]
+
+if b2=='y':
+	hypercube=[]
+	for j in range(Nmc+1):
+		if j==0:
+			pass
+		else:
+			cube = read_fits(file_all+'_'+str(j))[1]
+			hypercube.append(cube)
 	
-	## Time offset
-	t1 = time.time()
+	hypercube = np.array(hypercube)
+	print('>>>>>>>>>>>>>')
+	print("hypercube shape: ", hypercube.shape)
+	print('>>>>>>>>>>>>>')
 
-	cube0, wavALL = read_fits(file_all+'_0')[1:3]
-	
-	if b2=='y':
-		hypercube=[]
-		Nmc += 1
-		for j in range(Nmc):
-			if j==0:
-				pass
-			else:
-				cube = read_fits(file_all+'_'+str(j))[1]
-				hypercube.append(cube)
-		
-		hypercube = np.array(hypercube)
-		print('>>>>>>>>>>>>>')
-		print("hypercube shape: ", hypercube.shape)
-		print('>>>>>>>>>>>>>')
+	unc = MunC(hypercube, 0, file_all+'_unc', hdr, wavALL)
 
-		unc = MunC(hypercube, 0, \
-			file_all+'_unc', hdr, wavALL)
+	t_cal_unc = time.time()
+	print(">> cal_unc_time = {:.0f} seconds <<".format(t_cal_unc - t2))
+else:
+	unc = read_fits(file_all+'_unc')[1]
 
-	else:
-		unc = read_fits(file_all+'_unc')[1]
+## Clean Wavelengths
+##-------------------
+cube0, wavALL = wclean(file_all+'_0', filOUT=file_all, verbose=True)
+if b0=='y':
+	unc = wclean(file_all+'_unc', cfile=file_all+'_wclean_info', \
+		filOUT=file_all+'_unc')[0]
+else:
+	unc = wclean(file_all+'_unc', filOUT=file_all+'_unc', verbose=True)[0]
 
 print('\n>>>>>>>>>>>>>>>>>>\n')
 print("Final cube shape: ", unc.shape)
 print('\n>>>>>>>>>>>>>>>>>>\n')
-
 
 ##---------------------------
 ##           plot
@@ -232,4 +248,7 @@ plot2d(wavALL, cube0[:,8,8], yerr=unc[:,8,8])
 plt.show()
 
 t_total = time.time()
-print("****** total_time = {:.0f} seconds ******".format(t_total - t1))
+if b0=='y':
+	print(">> total_time = {:.0f} seconds <<".format(t_total - t1))
+else:
+	print(">> total_time = {:.0f} seconds <<".format(t_total - t2))
