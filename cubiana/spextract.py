@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 ## astylo
 from astylo.sinout import read_fits, write_fits, WCSextract, read_ascii
 from astylo.processim import slicube, crop, iconvolve, project, wclean
+from astylo.phot import synthetic_photometry
 from astylo.myfunclib import fclean
 from astylo.mc import MunC
 from astylo.splot import plot2d

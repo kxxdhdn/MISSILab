@@ -16,6 +16,38 @@ import subprocess as SP
 from sinout import read_fits, write_fits, WCSextract, read_csv, write_csv
 from myfunclib import fclean, closest
 
+def specorrect(filIN, factor=1., offset=0., wlim=(None,None), \
+	wmod=0, filOUT=None):
+	'''
+	calibrate spectra from different obs. in order to eliminate gaps
+	
+
+	--- INPUT ---
+	filIN       input fits file
+	factor      scalar or ndarray (Default: 1.)
+	offset      scalar or ndarray (Default: 0.)
+	wlim        wave limits (Default: (None,None) = all spectrum)
+	wmod        wave mode
+	filOUT      overwrite fits file (Default: NO)
+	--- OUTPUT ---
+	im          im = factor * im + offset
+	'''
+	hdr, im, wvl = read_fits(file=filIN, wmod=wmod)
+
+	if wlim[0] is None:
+		wmin = wvl[0]
+	if wlim[1] is None:
+		wmax = wvl[-1]
+		
+	for k, lam in enumerate(wvl):
+		if lam>=wmin and lam<=wmax:
+			im[k,:,:] = factor * im[k,:,:] + offset
+				
+	if filOUT is not None:
+		write_fits(filOUT, hdr, im, wave=wvl)
+
+	return im
+
 def wmask(filIN, filOUT=None):
 	'''
 	Mask wavelengths
@@ -169,46 +201,14 @@ def wclean(filIN, wmod=0, cmod='eq', cfile=None, \
 
 	return data_new, wave_new
 
-def specorrect(filIN, filOUT=None, \
-	factor=None, zero=None, wmin=None, wmax=None, wmod=0):
-	"""
-	calibrate spectra from different obs. in order to eliminate gaps
-	[optional] im = factor * im + zero
-	"""
-	im, wvl, hdr = read_fits(file=filIN, wmod=wmod)
-	if wmin is None:
-		wmin = wvl[0]
-	if wmax is None:
-		wmax = wvl[-1]
-	
-	if factor is not None:
-		if zero is not None:
-			for k, lam in enumerate(wvl):
-				if lam>=wmin and lam<=wmax:
-					im[k,:,:] = factor * im[k,:,:] + zero
-		else:
-			for k, lam in enumerate(wvl):
-				if lam>=wmin and lam<=wmax:
-					im[k,:,:] *= factor
-	else:
-		if zero is not None:
-			for k, lam in enumerate(wvl):
-				if lam>=wmin and lam<=wmax:
-					im[k,:,:] += zero
-	
-	if filOUT is not None:
-		write_fits(filOUT, hdr, im, wave=wvl)
-
-	return im
-
 def hextract(filIN, filOUT, x0, x1, y0, y1):
-	"""
+	'''
 	crop 2D image with pixel sequence numbers
 	[ref]
 	IDL lib hextract
 	https://idlastro.gsfc.nasa.gov/ftp/pro/astrom/hextract.pro
-	"""
-	oldim = read_fits(filIN)[0]
+	'''
+	oldim = read_fits(filIN)[1]
 	hdr, w = WCSextract(filIN)[0:2]
 	# hdr['NAXIS1'] = x1 - x0 + 1
 	# hdr['NAXIS2'] = y1 - y0 + 1
@@ -227,9 +227,9 @@ def hextract(filIN, filOUT, x0, x1, y0, y1):
 ##-----------------------------------------------
 
 class improve:
-	"""
+	'''
 	IMage PROcessing VEssel
-	"""
+	'''
 	def __init__(self, filIN, wmod=0):
 		
 		## INPUTS
@@ -329,9 +329,9 @@ class improve:
 		return self.im
 
 class slicube(improve):
-	"""
+	'''
 	SLIce CUBE
-	"""
+	'''
 	def __init__(self, filIN, filSL, wmod=0, \
 		uncIN=None, wmod_unc=0, suffix=None):
 		super().__init__(filIN, wmod)
@@ -350,9 +350,9 @@ class slicube(improve):
 		return self.slicnames
 
 class crop(improve):
-	"""
+	'''
 	CROP 2D image or 3D cube
-	"""
+	'''
 	def __init__(self, filIN, cen, size, \
 		wmod=0, uncIN=None, wmod_unc=0, \
 		shape='box', filOUT=None):
@@ -371,9 +371,9 @@ class crop(improve):
 		return self.wvl
 
 class project(improve):
-	"""
+	'''
 	PROJECT 2D image or 3D cube
-	"""
+	'''
 	def __init__(self, filIN, filREF=None, hdREF=None, wmod=0, \
 		uncIN=None, wmod_unc=0, filTMP=None, filOUT=None):
 		super().__init__(filIN, wmod)
@@ -429,9 +429,9 @@ class project(improve):
 		return self.slicnames
 
 class iconvolve(improve):
-	"""
+	'''
 	(IDL based) CONVOLVE 2D image or 3D cube with given kernels
-	"""
+	'''
 	def __init__(self, filIN, filKER, saveKER, \
 		wmod=0, uncIN=None, wmod_unc=0, cfile=None, \
 		psf=None, filTMP=None, filOUT=None):
@@ -456,7 +456,7 @@ class iconvolve(improve):
 		self.sig_lam = None
 				
 	def spitzer_irs(self):
-		"""
+		'''
 		Spitzer/IRS PSF profil
 		[ref]
 		Pereira-Santaella, Miguel, Almudena Alonso-Herrero, George H.
@@ -466,7 +466,7 @@ class iconvolve(improve):
 		Spitzer Infrared Spectrograph.” The Astrophysical Journal
 		Supplement Series 188, no. 2 (June 1, 2010): 447.
 		doi:10.1088/0067-0049/188/2/447.
-		"""
+		'''
 		sig_par_wave = [0, 13.25, 40.]
 		sig_par_fwhm = [2.8, 3.26, 10.1]
 		sig_per_wave = [0, 15.5, 40.]
