@@ -16,37 +16,6 @@ import subprocess as SP
 from sinout import read_fits, write_fits, WCSextract, read_csv, write_csv
 from myfunclib import fclean, closest
 
-def specorrect(filIN, factor=1., offset=0., wlim=(None,None), \
-	wmod=0, filOUT=None):
-	'''
-	calibrate spectra from different obs. in order to eliminate gaps
-	
-
-	--- INPUT ---
-	filIN       input fits file
-	factor      scalar or ndarray (Default: 1.)
-	offset      scalar or ndarray (Default: 0.)
-	wlim        wave limits (Default: (None,None) = all spectrum)
-	wmod        wave mode
-	filOUT      overwrite fits file (Default: NO)
-	--- OUTPUT ---
-	im          im = factor * im + offset
-	'''
-	hdr, im, wvl = read_fits(file=filIN, wmod=wmod)
-
-	if wlim[0] is None:
-		wmin = wvl[0]
-	if wlim[1] is None:
-		wmax = wvl[-1]
-		
-	for k, lam in enumerate(wvl):
-		if lam>=wmin and lam<=wmax:
-			im[k,:,:] = factor * im[k,:,:] + offset
-				
-	if filOUT is not None:
-		write_fits(filOUT, hdr, im, wave=wvl)
-
-	return im
 
 def wmask(filIN, filOUT=None):
 	'''
@@ -222,7 +191,7 @@ def hextract(filIN, filOUT, x0, x1, y0, y1):
 
 ##-----------------------------------------------
 
-##			IMPROVE based tools
+##			"improve" based tools
 
 ##-----------------------------------------------
 
@@ -378,6 +347,7 @@ class project(improve):
 		uncIN=None, wmod_unc=0, filTMP=None, filOUT=None):
 		super().__init__(filIN, wmod)
 		## input hdREF must be (reduced) 2D header
+		
 		self.uncadd(uncIN, wmod_unc)
 
 		if filREF is not None:
