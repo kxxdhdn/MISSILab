@@ -11,8 +11,7 @@ import matplotlib.pyplot as plt
 from astylo.sinout import read_fits, write_fits, WCSextract, read_ascii
 from astylo.processim import slicube, crop, iconvolve, project, wclean
 from astylo.phot import synthetic_photometry
-from astylo.myfunclib import fclean
-from astylo.mc import MunC
+from astylo.myfunclib import fclean, MCerror
 from astylo.splot import plot2d
 
 ##---------------------------
@@ -220,7 +219,8 @@ if b2=='y':
 	print("hypercube shape: ", hypercube.shape)
 	print('>>>>>>>>>>>>>')
 
-	unc = MunC(hypercube, 0, file_all+'_unc', hdr, wavALL)
+	unc = MCerror(hypercube)
+	write_fits(file_all+'unc', hdr, unc, wavALL)
 
 	t_cal_unc = time.time()
 	print(">> cal_unc_time = {:.0f} seconds <<".format(t_cal_unc - t2))

@@ -25,9 +25,9 @@ from splot import plot2d_m, mycolorlib
 
 class PSFcalib:
 	'''
-	PSF calibration (See Kospal18)
+	PSF calibration (See Kospal08)
 	'''
-	def __init__(self)
+	def __init__(self):
 
 		pass
 
@@ -140,8 +140,12 @@ def specorrect(filIN, factor=1., offset=0., wlim=(None,None), \
 
 	if wlim[0] is None:
 		wmin = wvl[0]
+	else:
+		wmin = wlim[0]
 	if wlim[1] is None:
 		wmax = wvl[-1]
+	else:
+		wmin = wlim[1]
 		
 	for k, lam in enumerate(wvl):
 		if lam>=wmin and lam<=wmax:
@@ -232,7 +236,7 @@ if __name__ == "__main__":
 	
 	## photometry_profile
 	##--------------------
-	'''
+
 	p = photometry_profile('./data/', \
 		'IRAC1', 'IRAC2', 'IRAC3', 'IRAC4', 'MIPS1', \
 		'WISE1', 'WISE2', 'WISE3', 'WISE4')
@@ -240,9 +244,9 @@ if __name__ == "__main__":
 	# file_save = ''
 	# p.save(file_save, transparent=True)
 	p.show()
-	'''
+
 	## intercalib.synthetic_photometry
 	##----------------------------
-	calib = intercalib('/Users/dhu/data/pahpedia/M83/output/M83')
+	# calib = intercalib('/Users/dhu/data/pahpedia/M83/output/M83')
 
-	wcen, Fnu, sig = calib.synthetic_photometry(['MIPS1'])
+	# wcen, Fnu, sig = calib.synthetic_photometry(['MIPS1'])

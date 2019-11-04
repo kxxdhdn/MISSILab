@@ -13,17 +13,17 @@ import scipy.interpolate as interpolate
 import subprocess as SP
 
 def fclean(filIN, *alert):
-	"""
+	'''
 	Clean folder/files
-	"""
+	'''
 	SP.call('rm -rf '+filIN, shell=True)
 	for text in alert:
 		print(text)
 
 def pix2sr(X, CDELT):
-	"""
+	'''
 	X pixel = Y sr
-	"""
+	'''
 	PFOV = 3600 * abs(CDELT)
 	
 	return X * (PFOV * 2. * math.pi / (360. * 3600.))**2.
@@ -35,15 +35,15 @@ def sr2arcsec2(X):
 	return X * (360. * 3600. / (2. * math.pi))**2.
 
 def rad2arcsec(X):
-	"""
+	'''
 	X rad = Y arcsec
-	"""
+	'''
 	return X * 360. * 3600. / (2. * math.pi)
 
 def celest2deg(h, m, s, dd, mm, ss):
-	"""
+	'''
 	Degree to world coord conversion
-	"""
+	'''
 	ra = (h + m/60. + s/3600.) * 360./24.
 	if dd>0:
 		dec = dd + mm/60. + ss/3600.
@@ -53,37 +53,37 @@ def celest2deg(h, m, s, dd, mm, ss):
 	return ra, dec
 
 def f_lin(x, A, B):
-	"""
+	'''
 	Y = A * x + B
-	"""
+	'''
 	return A * x + B
 
 def f_lin1(x, B):
-	"""
+	'''
 	Y = x + B
-	"""
+	'''
 	return x + B
 
 def f_lin0(x, A):
-	"""
+	'''
 	Y = A * x
-	"""
+	'''
 	return A * x
 
 def gaussian(x, mu, sigma):
-	"""
+	'''
 	Normalized Gaussian function given variable x
-	"""
+	'''
 	return 1/(sigma * np.sqrt(2 * np.pi)) * np.exp( - (x - mu)**2 / (2 * sigma**2))
 
 def gaussian2D(x, y, mux, muy, sigx, sigy, A=1.):
-	"""
+	'''
 	2D Gaussian function given iid variables x & y (and amplitude A)
-	"""
+	'''
 	return A * np.exp(- (x - mux)**2 / (2 * sigx**2) - (y - muy)**2 / (2 * sigy**2))
 
 def rms(a, ddof=0):
-	"""
+	'''
 	Calculate root mean square
 	
 	--- INPUT ---
@@ -91,7 +91,7 @@ def rms(a, ddof=0):
 	ddof         Delta Degrees of Freedom
 	--- OUTPUT ---
 	rms          root mean square of a
-	"""
+	'''
 	n = np.size(a) - ddof
 	a = np.array(a)
 	ms = np.sum(a*a) / n
@@ -99,7 +99,7 @@ def rms(a, ddof=0):
 	return np.sqrt(ms)
 
 def nanrms(a, ddof=0):
-	"""
+	'''
 	Calculate root mean square (nan = 0)
 	
 	--- INPUT ---
@@ -107,7 +107,7 @@ def nanrms(a, ddof=0):
 	ddof         Delta Degrees of Freedom
 	--- OUTPUT ---
 	rms          root mean square of a
-	"""
+	'''
 	n = np.size(a) - ddof
 	a = np.array(a)
 	ms = np.nansum(a*a) / n
@@ -115,9 +115,9 @@ def nanrms(a, ddof=0):
 	return np.sqrt(ms)
 
 def std(a, ddof=0):
-	"""
+	'''
 	The same as np.std
-	"""
+	'''
 	n = np.size(a) - ddof
 	a = np.array(a)
 	mu = np.mean(a)
@@ -126,15 +126,24 @@ def std(a, ddof=0):
 	return np.sqrt(ms)
 
 def closest(a, val):
-	"""
+	'''
 	Return the index i corresponding to the closest a[i] to val
-	"""
+	'''
 	a = list(a)
 	
 	return a.index(min(a, key=lambda x:abs(x-val)))
 
 def bsplinterpol(x, y, x0):
-
+	'''
+	Monte-Carlo propagated error calculator
+	
+	--- INPUT ---
+	x           in base x
+	y           in data y
+	x0          out base x
+	--- OUTPUT ---
+	bspl(x0)    B-spline interpol out data
+	'''
 	mask = []
 	for i, yi in enumerate(y):
 		if np.isnan(yi)==1 or yi==0:
@@ -152,6 +161,40 @@ def bsplinterpol(x, y, x0):
 	bspl = interpolate.BSpline(t, c, k, extrapolate=False)
 	
 	return bspl(x0)
+
+def MCerror(arr, axis=0):
+	'''
+	Monte-Carlo propagated error calculator
+	
+	--- INPUT ---
+	arr         array
+	axis        axis or axes along which error is calculated
+	--- OUTPUT ---
+	err         one dim less than arr
+	'''
+	## Detect dimension
+	##------------------
+	axsh = arr.shape
+	NAXIS = np.size(axsh)
+	dim = NAXIS - 1
+	if axis==0:
+		if dim==2:
+			err = np.full((axsh[1],axsh[2]), np.nan)
+			for i in range(axsh[2]):
+				for j in range(axsh[1]):
+					err[j,i] = np.nanstd(arr[:,j:i], ddof=1)
+		elif dim==3:
+			err = np.full((axsh[1],axsh[2],axsh[3]), np.nan)
+			for i in range(axsh[3]):
+				for j in range(axsh[2]):
+					for k in range(axsh[1]):
+						err[k,j,i] = np.nanstd(arr[:,k,j,i], ddof=1)
+		else:
+			print('ERROR: dimension not supported! ')
+	else:
+		print('ERROR: array shape not supported! ')
+
+	return err
 
 """
 ------------------------------ MAIN (test) ------------------------------

@@ -14,12 +14,12 @@ import subprocess as SP
 
 ## astylo
 from sinout import read_fits, write_fits, WCSextract, read_csv, write_csv
-from myfunclib import fclean, closest
+from myfunclib import fclean, closest, bsplinterpol
 
 
 def wmask(filIN, filOUT=None):
 	'''
-	Mask wavelengths
+	MASK Wavelengths
 
 	--- INPUT ---
 	filIN       input fits file 
@@ -34,7 +34,7 @@ def wmask(filIN, filOUT=None):
 def wclean(filIN, wmod=0, cmod='eq', cfile=None, \
 	filOUT=None, verbose=False):
 	'''
-	Clean wavelengths
+	CLEAN Wavelengths
 
 	--- INPUT ---
 	filIN       input fits file
@@ -170,9 +170,72 @@ def wclean(filIN, wmod=0, cmod='eq', cfile=None, \
 
 	return data_new, wave_new
 
+def interfill(arr, axis):
+	'''
+	FILL undersampling/artificial gap by (bspl)INTERpolation
+
+	--- INPUT ---
+	arr         array
+	axis        axis along which interpolation
+	--- OUTPUT ---
+	newarr      new array
+	'''
+	print(">> fill gaps with b-splines <<")
+
+	axsh = arr.shape
+	NAXIS = np.size(axsh)
+	newarr = np.copy(arr)
+	if NAXIS==1: # 1D array
+		x = np.arange(axsh[0])
+		for i in range(axsh[0]):
+			newarr = bsplinterpol(x, arr, x)
+	if NAXIS==2: # no wavelength
+		if axis==0: # col direction
+			y = np.arange(axsh[0])
+			for i in range(axsh[1]):
+				col = bsplinterpol(y, arr[:,i], y)
+				for j in range(axsh[0]):
+					newarr[j,i] = col[j]
+		elif axis==1: # row direction
+			x = np.arange(axsh[1])
+			for j in range(axsh[0]):
+				row = bsplinterpol(x, arr[j,:], x)
+				for i in range(axsh[1]):
+					newarr[j,i] = row[i]
+		else:
+			print('ERROR: Unkown axis! ')
+	elif NAXIS==3:
+		if axis==0: # fill wavelength
+			z = np.arange(axsh[0])
+			for i in range(axsh[2]):
+				for j in range(axsh[1]):
+					wvl = bsplinterpol(z, arr[:,j,i], z)
+					for k in range(axsh[0]):
+						newarr[k,j,i] = wvl[k]
+		elif axis==1: # col direction
+			y = np.arange(axsh[1])
+			for k in range(axsh[0]):
+				for i in range(axsh[2]):
+					col = bsplinterpol(y, arr[k,:,i], y)
+					for j in range(axsh[1]):
+						newarr[k,j,i] = col[j]
+		elif axis==2: # row direction
+			x = np.arange(axsh[2])
+			for k in range(axsh[0]):
+				for j in range(axsh[1]):
+					row = bsplinterpol(x, arr[k,j,:], x)
+					for i in range(axsh[2]):
+						newarr[k,j,i] = row[i]
+		else:
+			print('ERROR: Unkown axis! ')
+	else:
+		print('ERROR: array shape not supported! ')
+
+	return newarr
+
 def hextract(filIN, filOUT, x0, x1, y0, y1):
 	'''
-	crop 2D image with pixel sequence numbers
+	Crop 2D image with pixel sequence numbers
 	[ref]
 	IDL lib hextract
 	https://idlastro.gsfc.nasa.gov/ftp/pro/astrom/hextract.pro
@@ -220,21 +283,15 @@ class improve:
 			self.im = read_fits(filIN, wmod=wmod)[1]
 			self.wvl = None
 
-	def uncadd(self, uncIN=None, wmod=0):
+	def addunc(self, uncIN=None, wmod=0):
 		## uncertainty adding
 		mu, sigma = 0., 1.
 
 		if uncIN is not None:
 			unc = read_fits(uncIN, wmod)[1]
-			theta = np.random.normal(mu, sigma, \
-				self.NAXIS1*self.NAXIS2).reshape(
-				self.NAXIS2, self.NAXIS1)
+			theta = np.random.normal(mu, sigma, unc.shape)
 			## unc has the same dimension with im
-			if self.is3d==True:
-				for k in range(self.NAXIS3):
-					self.im[k,:,:] += theta * unc[k,:,:]
-			else:
-				self.im += theta * unc
+			self.im += theta * unc
 
 	def slice(self, filSL, suffix=None):
 		## 3D cube slicing
@@ -305,7 +362,7 @@ class slicube(improve):
 		uncIN=None, wmod_unc=0, suffix=None):
 		super().__init__(filIN, wmod)
 		
-		self.uncadd(uncIN, wmod_unc)
+		self.addunc(uncIN, wmod_unc)
 
 		self.slicnames = self.slice(filSL, suffix)
 
@@ -328,7 +385,7 @@ class crop(improve):
 		## slicrop: slice 
 		super().__init__(filIN, wmod)
 
-		self.uncadd(uncIN, wmod_unc)
+		self.addunc(uncIN, wmod_unc)
 		
 		if shape=='box':
 			self.cropim = self.rectangle(cen, size, filOUT)
@@ -347,8 +404,8 @@ class project(improve):
 		uncIN=None, wmod_unc=0, filTMP=None, filOUT=None):
 		super().__init__(filIN, wmod)
 		## input hdREF must be (reduced) 2D header
-		
-		self.uncadd(uncIN, wmod_unc)
+
+		self.addunc(uncIN, wmod_unc)
 
 		if filREF is not None:
 			hdREF = WCSextract(filREF)[0]
@@ -408,7 +465,7 @@ class iconvolve(improve):
 		## INPUTS
 		super().__init__(filIN, wmod)
 		
-		self.uncadd(uncIN, wmod_unc)
+		self.addunc(uncIN, wmod_unc)
 
 		## input kernel file list
 		self.filKER = list(filKER)
@@ -423,7 +480,7 @@ class iconvolve(improve):
 			self.psf = [2.,2.5,3.,3.5,4.,4.5,5.,5.5,6.]
 		else:
 			self.psf = psf
-		self.sig_lam = None
+		self.sigma_lam = None
 				
 	def spitzer_irs(self):
 		'''
@@ -437,20 +494,20 @@ class iconvolve(improve):
 		Supplement Series 188, no. 2 (June 1, 2010): 447.
 		doi:10.1088/0067-0049/188/2/447.
 		'''
-		sig_par_wave = [0, 13.25, 40.]
-		sig_par_fwhm = [2.8, 3.26, 10.1]
-		sig_per_wave = [0, 15.5, 40.]
-		sig_per_fwhm = [3.8, 3.8, 10.1]
+		sim_par_wave = [0, 13.25, 40.]
+		sim_par_fwhm = [2.8, 3.26, 10.1]
+		sim_per_wave = [0, 15.5, 40.]
+		sim_per_fwhm = [3.8, 3.8, 10.1]
 		
 		## fwhm (arcsec)
-		fwhm_par = np.interp(self.wvl, sig_par_wave, sig_par_fwhm)
-		fwhm_per = np.interp(self.wvl, sig_per_wave, sig_per_fwhm)
+		fwhm_par = np.interp(self.wvl, sim_par_wave, sim_par_fwhm)
+		fwhm_per = np.interp(self.wvl, sim_per_wave, sim_per_fwhm)
 		#fwhm_lam = np.sqrt(fwhm_par * fwhm_per)
 		
 		## sigma (arcsec)
-		sig_par = fwhm_par / (2. * np.sqrt(2.*np.log(2.)))
-		sig_per = fwhm_per / (2. * np.sqrt(2.*np.log(2.)))
-		self.sig_lam = np.sqrt(sig_par * sig_per)
+		sigma_par = fwhm_par / (2. * np.sqrt(2.*np.log(2.)))
+		sigma_per = fwhm_per / (2. * np.sqrt(2.*np.log(2.)))
+		self.sigma_lam = np.sqrt(sigma_par * sigma_per)
 		
 	def choker(self, filIN):
 		## CHOose KERnel (list)
@@ -464,9 +521,9 @@ class iconvolve(improve):
 			klist = []
 			for i, image in enumerate(filIN):
 				## check PSF profil (or is not a cube)
-				if self.sig_lam is not None:
+				if self.sigma_lam is not None:
 					image = filIN[i]
-					ind = closest(self.psf, self.sig_lam[i])
+					ind = closest(self.psf, self.sigma_lam[i])
 					kernel = self.filKER[ind]
 				else:
 					image = filIN[0]
@@ -534,4 +591,28 @@ class iconvolve(improve):
 """
 if __name__ == "__main__":
 
-	pass
+	from myfunclib import MCerror
+
+	## Test interfill
+	##----------------
+	Nmc = 3
+
+	filIN = '/Users/dhu/Github/MISSILab/cubiana/tests/data/IC10_SL1'
+	filOUT = '/Users/dhu/Github/MISSILab/cubiana/tests/out/IC10_SL1'
+
+	hdr, im, wvl = read_fits(filIN, wmod=1)
+	unc = read_fits(filIN+'_unc', wmod=1)[1]
+	
+	mu, sigma = 0., 1.
+	hyperim = []
+	for i in range(Nmc+1):
+		if i==0:
+			newim = interfill(im, axis=1)
+			write_fits(filOUT, hdr, newim, wvl)
+		else:
+			iunc = im + unc * np.random.normal(mu, sigma, im.shape)
+			hyperim.append(interfill(iunc, axis=1))
+	hyperim = np.array(hyperim)
+	print(hyperim.shape)
+	newunc = MCerror(hyperim)
+	write_fits(filOUT+'_unc', hdr, newunc, wvl)
