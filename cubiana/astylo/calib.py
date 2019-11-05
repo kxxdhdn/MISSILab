@@ -15,6 +15,7 @@ import subprocess as SP
 ## astylo
 from sinout import read_hdf5, write_hdf5, read_fits, read_ascii
 from splot import plot2d_m, mycolorlib
+from processim import iconvolve, project
 
 
 ##-----------------------------------------------
@@ -49,14 +50,16 @@ class intercalib:
 		if filIN is not None:
 			self.hdr, self.im, self.wvl = read_fits(filIN, wmod=wmod)
 
-	def synthetic_photometry(self, filt_UTF8, w_spec=None, Fnu_spec=None):
+	def synthetic_photometry(self, filt_UTF8, \
+		w_spec=None, Fnu_spec=None, verbose=False):
 		'''
 		External Fortran library needed
 
 		--- INPUT ---
 		filt_UTF8    name list of photometry
-		w_spec       wavelengths of obs. spectrum
-		Fnu_spec     fluxes of spectrum
+		w_spec       wavelengths of obs. spectrum (via filIN)
+		Fnu_spec     fluxes of spectrum (via filIN)
+		verbose      keep i/o h5 file (Default: False)
 		--- OUTPUT ---
 		wcen         center wavelength
 		Fnu_filt     fluxes of synthetic photometry
@@ -99,26 +102,40 @@ class intercalib:
 
 		## Clean temperary file
 		##----------------------
-		SP.call(['rm', '-rf', fortIN+'.h5'])
-		SP.call(['rm', '-rf', fortOUT+'.h5'])
+		if verbose==False:
+			SP.call(['rm', '-rf', fortIN+'.h5'])
+			SP.call(['rm', '-rf', fortOUT+'.h5'])
 
 		return wcen, Fnu_filt, std_dev
 		
 class spec2phot(intercalib):
 	'''
+	Intercalibration between spectrometry and photometry (REF)
 	'''
-	def __init__(self, arg):
-		super().__init__()
+	def __init__(self, filIN, filREF, wmod=0, ):
+		super().__init__(filIN, wmod)
 
 		pass
 
-class phot2phot(intercalib):
+class phot2phot:
 	'''
+	Intercalibration between two photometry
 	'''
-	def __init__(self, arg):
-		super().__init__()
+	def __init__(self, filIN, filREF, filKER=None, saveKER=None, \
+		wmod=0, uncIN=None, wmod_unc=0, Nmc=0, filOUT=None):
 
-		pass
+		## Convolution (optional)
+		if filKER is not None:
+			conv = iconvolve(filIN, filKER, saveKER, \
+				wmod, uncIN, wmod_unc, filOUT=filPRO)
+		else:
+			filPRO = filIN
+
+		## Reprojection
+		self.pro = project(filPRO, filREF, filOUT=filOUT)
+
+	def image(self):
+		return self.pro.image()
 
 def specorrect(filIN, factor=1., offset=0., wlim=(None,None), \
 	wmod=0, filOUT=None):
@@ -207,7 +224,7 @@ def photometry_profile(path_dat, *photometry):
 	p.ax.vlines(pinklines, 0, 1.1, linestyles='dotted', colors='pink')
 
 	## tick setting
-	##-----------------------------------------------
+	##-------------------- x --------------------------
 	xtic = [2, 3, 4, 5, 6, 7, 8, 10, 12, 15, 20, 30, 40]
 	xtic_min = np.arange(2., 41., 1.)
 	p.ax.set_xticks(xtic, minor=False) # major
@@ -216,7 +233,7 @@ def photometry_profile(path_dat, *photometry):
 	p.ax.xaxis.set_major_formatter(ScalarFormatter()) # major
 	p.ax.xaxis.set_minor_formatter(NullFormatter()) # minor
 	# p.ax.minorticks_off()
-	##-----------------------------------------------
+	##--------------------- y --------------------------
 	ytic = np.arange(0, 1.01, .2)
 	ytic_min = np.arange(0, 1., .1)
 	p.ax.set_yticks(ytic, minor=False) # major
@@ -234,19 +251,16 @@ def photometry_profile(path_dat, *photometry):
 """
 if __name__ == "__main__":
 	
+	##--------------------
 	## photometry_profile
 	##--------------------
+	# p = photometry_profile('./data/', \
+	# 	'IRAC1', 'IRAC2', 'IRAC3', 'IRAC4', 'MIPS1', \
+	# 	'WISE1', 'WISE2', 'WISE3', 'WISE4')
+	# p.show()
 
-	p = photometry_profile('./data/', \
-		'IRAC1', 'IRAC2', 'IRAC3', 'IRAC4', 'MIPS1', \
-		'WISE1', 'WISE2', 'WISE3', 'WISE4')
-
-	# file_save = ''
-	# p.save(file_save, transparent=True)
-	p.show()
-
+	##---------------------------------
 	## intercalib.synthetic_photometry
-	##----------------------------
-	# calib = intercalib('/Users/dhu/data/pahpedia/M83/output/M83')
-
-	# wcen, Fnu, sig = calib.synthetic_photometry(['MIPS1'])
+	##---------------------------------
+	calib = intercalib('/Users/dhu/data/pahpedia/M83/output/M83')
+	wcen, Fnu, sig = calib.synthetic_photometry(['MIPS1'])

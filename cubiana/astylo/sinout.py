@@ -122,7 +122,7 @@ def read_hdf5(file, *header):
 
 	hf.close()
 
-	return np.array(dataset)
+	return dataset
 
 def write_hdf5(file, header, data, append=False):
 	'''
@@ -193,7 +193,7 @@ def read_csv(file, *header):
 			data = np.array(data)
 			dataset.append(data)
 
-	return np.array(dataset)
+	return dataset
 
 def write_csv(file, header, dataset, append=False):
 	'''

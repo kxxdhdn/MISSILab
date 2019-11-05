@@ -42,13 +42,14 @@
 	+ std
 	+ closest
 	+ bsplinterpol
+	+ MCerror
 
 + <sup>__&dagger;__</sup>processim
 	+ wclean
-	+ specorrect
+	+ interfill
 	+ hextract
 	+ improve
-		+ uncadd
+		+ addunc
 		+ slice
 		+ rectangle
 	+ slicube
@@ -70,8 +71,13 @@
 		+ wave
 		+ slice_names
 
-+ <sup>__&dagger;__</sup>mc
-	+ calunc
++ calib
+	+ intercalib
+		+ synthetic_photometry
+	+ spec2phot
+	+ phot2phot
+	+ specorrect
+	+ photometry_profile
 
 <sup>__&dagger;__</sup> This module calls modules from the same package.
 

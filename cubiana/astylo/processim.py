@@ -42,7 +42,7 @@ def wclean(filIN, wmod=0, cmod='eq', cfile=None, \
 	cmod        clean mode (Default: 'eq')
 	cfile       input csv file (archived info)
 	filOUT      overwrite fits file (Default: NO)
-	verbose     display wclean info (Default : False)
+	verbose     display wclean info (Default: False)
 	--- OUTPUT ---
 	data_new    new fits data
 	wave_new    new fits wave
@@ -423,8 +423,8 @@ class project(improve):
 				for f in slicIN:
 					im.append(reproject_interp(f+'.fits', hdREF)[0])
 					if filTMP is not None:
-						write_fits(f+'_rep', hdREF, im)
-						self.slicnames.append(f+'_rep')
+						write_fits(f+'_pro', hdREF, im)
+						self.slicnames.append(f+'_pro')
 					fclean(f+'.fits')
 
 				self.projim = np.array(im)
@@ -595,7 +595,7 @@ if __name__ == "__main__":
 
 	## Test interfill
 	##----------------
-	Nmc = 3
+	Nmc = 2
 
 	filIN = '/Users/dhu/Github/MISSILab/cubiana/tests/data/IC10_SL1'
 	filOUT = '/Users/dhu/Github/MISSILab/cubiana/tests/out/IC10_SL1'
