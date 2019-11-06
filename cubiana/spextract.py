@@ -72,7 +72,6 @@ phot_p = 'IRAC4_SINGS' ### phot for calib phot [phot2phot]
 file_phot_p = path_phot+src+'_'+phot_p # => file_calib_p
 Uconvert_p = False
 file_calib_p = path_calib+src+'_'+phot_p
-calib_p = path_calib+src+'_'+phot_s+'_to_'+phot_p
 
 ##---------------------------
 ##         Read Data
@@ -277,28 +276,40 @@ write_fits(file_calib_p, hdr_p, im_p)
 
 ## Crop to save time
 ##-------------------
-dx_phot = int(2. * dx)
-dy_phot = int(2. * dy)
-cro_s = crop(filIN=file_calib_s, wmod=0, \
-	cen=(ra, dec), \
-	size=(dx_phot, dy_phot), \
-	filOUT=file_calib_s)
-cro_p = crop(filIN=file_calib_p, wmod=0, \
-	cen=(ra, dec), \
-	size=(dx_phot, dy_phot), \
-	filOUT=file_calib_p)
-
-## phot2phot
-##-----------
-p2p = phot2phot(filIN=file_calib_s, \
-	filREF=file_calib_p, filOUT=calib_p)
-newim_s = p2p.image()
-newim_p = cro_p.image()
-print('coucou')
-# plt.scatter(newim_p, newim_s)
+# dx_phot = int(2. * dx)
+# dy_phot = int(2. * dy)
+# cro_s = crop(filIN=file_calib_s, wmod=0, \
+# 	cen=(ra, dec), \
+# 	size=(dx_phot, dy_phot), \
+# 	filOUT=file_calib_s)
+# cro_p = crop(filIN=file_calib_p, wmod=0, \
+# 	cen=(ra, dec), \
+# 	size=(dx_phot, dy_phot), \
+# 	filOUT=file_calib_p)
 
 ## spec2phot
 ##-----------
+
+## phot2phot
+##-----------
+## Use reprojection to crop
+pro_s = project(file_calib_s, file_all, filOUT=file_calib_s)
+p2p = phot2phot(filIN=file_calib_p, \
+	filREF=file_calib_s, filOUT=file_calib_p)
+newim_p = p2p.image()
+newim_s = pro_s.image()
+
+plt.figure()
+x = np.arange(1.,1.e4,1.)
+plt.plot(x, x, c='k')
+plt.scatter(newim_p, newim_s, c='m', s=1., label='p2p')
+plt.xscale('symlog')
+plt.yscale('symlog')
+# plt.xlim((0,2.e2))
+# plt.ylim((0,2.e2))
+plt.xlabel(phot_p)
+plt.ylabel(phot_s)
+plt.legend()
 
 ##---------------------------
 ##           plot
@@ -306,7 +317,7 @@ print('coucou')
 
 # plot2d(wavALL, cube0[:,10,10], yerr=unc[:,10,10])
 
-# plt.show()
+plt.show()
 
 t_total = time.time()
 if b0=='y':

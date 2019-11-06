@@ -13,7 +13,8 @@ from matplotlib.ticker import ScalarFormatter, NullFormatter
 import subprocess as SP
 
 ## astylo
-from sinout import read_hdf5, write_hdf5, read_fits, read_ascii
+from sinout import read_fits, WCSextract, \
+	read_hdf5, write_hdf5, read_ascii
 from splot import plot2d_m, mycolorlib
 from processim import iconvolve, project
 
@@ -31,111 +32,6 @@ class PSFcalib:
 	def __init__(self):
 
 		pass
-
-##-----------------------------------------------
-
-##			"intercalib" based tools
-
-##-----------------------------------------------
-
-class intercalib:
-	'''
-	Intercalibration
-	'''
-	def __init__(self, filIN=None, wmod=0):
-		
-		## INPUTS
-		self.filIN = filIN
-
-		if filIN is not None:
-			self.hdr, self.im, self.wvl = read_fits(filIN, wmod=wmod)
-
-	def synthetic_photometry(self, filt_UTF8, \
-		w_spec=None, Fnu_spec=None, verbose=False):
-		'''
-		External Fortran library needed
-
-		--- INPUT ---
-		filt_UTF8    name list of photometry
-		w_spec       wavelengths of obs. spectrum (via filIN)
-		Fnu_spec     fluxes of spectrum (via filIN)
-		verbose      keep i/o h5 file (Default: False)
-		--- OUTPUT ---
-		wcen         center wavelength
-		Fnu_filt     fluxes of synthetic photometry
-		std_dev      standard deviation
-		'''
-		if self.filIN is not None:
-			n1 = self.hdr['NAXIS1']
-			n2 = self.hdr['NAXIS2']
-			n3 = self.hdr['NAXIS3']
-			## Interpolation correction (spectrum debut)
-			##-------------------------------------------
-			w_spec = [.1]
-			w_spec.extend(self.wvl) # extended wave
-			Fnu_spec = np.zeros((n3+1)*n2*n1).reshape(n3+1, n2, n1)
-			Fnu_spec[1:,:,:] = np.copy(self.im) # extended cube
-
-		## Write the input file
-		fortIN = './synthetic_photometry_input'
-
-		filt_ASCII = [n.encode('ascii', 'ignore') for n in filt_UTF8]
-		write_hdf5(fortIN, 'Filter label', filt_ASCII)
-		write_hdf5(fortIN, 'Wavelength (microns)', w_spec, append=True)
-		write_hdf5(fortIN, 'Flux (x.Hz-1)', Fnu_spec, append=True)
-		write_hdf5(fortIN, '(docalib,dophot)', [1,1], append=True)
-
-		## Call the Fortran lib
-		##----------------------
-		SP.call('synthetic_photometry')
-
-		## Read the output
-		fortOUT = './synthetic_photometry_output'
-
-		wcen, Fnu_filt, smat = read_hdf5(fortOUT, \
-			'Central wavelength (microns)', \
-			'Flux (x.Hz-1)', \
-			'Standard deviation matrix')
-		wcen = wcen[0]
-		Fnu_filt = Fnu_filt[0]
-		std_dev = smat[0][0]
-
-		## Clean temperary file
-		##----------------------
-		if verbose==False:
-			SP.call(['rm', '-rf', fortIN+'.h5'])
-			SP.call(['rm', '-rf', fortOUT+'.h5'])
-
-		return wcen, Fnu_filt, std_dev
-		
-class spec2phot(intercalib):
-	'''
-	Intercalibration between spectrometry and photometry (REF)
-	'''
-	def __init__(self, filIN, filREF, wmod=0, ):
-		super().__init__(filIN, wmod)
-
-		pass
-
-class phot2phot:
-	'''
-	Intercalibration between two photometry
-	'''
-	def __init__(self, filIN, filREF, filKER=None, saveKER=None, \
-		wmod=0, uncIN=None, wmod_unc=0, Nmc=0, filOUT=None):
-
-		## Convolution (optional)
-		if filKER is not None:
-			conv = iconvolve(filIN, filKER, saveKER, \
-				wmod, uncIN, wmod_unc, filOUT=filPRO)
-		else:
-			filPRO = filIN
-
-		## Reprojection
-		self.pro = project(filPRO, filREF, filOUT=filOUT)
-
-	def image(self):
-		return self.pro.image()
 
 def specorrect(filIN, factor=1., offset=0., wlim=(None,None), \
 	wmod=0, filOUT=None):
@@ -173,6 +69,151 @@ def specorrect(filIN, factor=1., offset=0., wlim=(None,None), \
 
 	return im
 
+##-----------------------------------------------
+
+##			"intercalib" based tools
+
+##-----------------------------------------------
+
+class intercalib:
+	'''
+	Intercalibration
+	'''
+	def __init__(self, filIN, filREF=None, wmod=0):
+		
+		## INPUTS
+		self.filIN = filIN
+
+		if filIN is not None:
+			self.hdr, w, self.is3d = WCSextract(filIN)
+			if self.is3d==True:
+				self.im, self.wvl = read_fits(filIN, wmod=wmod)[1:3]
+			else:
+				self.im = read_fits(filIN, wmod=wmod)[1]
+				self.wvl = None
+
+	def synthetic_photometry(self, filt_UTF8, \
+		w_spec=None, Fnu_spec=None, verbose=False):
+		'''
+		External Fortran library needed
+
+		--- INPUT ---
+		filt_UTF8    name list of photometry
+		w_spec       wavelengths of obs. spectrum (via filIN)
+		Fnu_spec     fluxes of spectrum (via filIN)
+		verbose      keep i/o h5 file (Default: False)
+		--- OUTPUT ---
+		wcen         center wavelength
+		Fnu_filt     fluxes of synthetic photometry
+		std_dev      standard deviation
+		'''
+		if self.filIN is not None:
+			n1 = self.hdr['NAXIS1']
+			n2 = self.hdr['NAXIS2']
+			n3 = len(self.wvl)
+			## Interpolation correction (spectrum debut)
+			##-------------------------------------------
+			w_spec = [.1]
+			w_spec.extend(self.wvl) # extended wave
+			Fnu_spec = np.zeros((n3+1)*n2*n1).reshape(n3+1, n2, n1)
+			Fnu_spec[1:,:,:] = np.copy(self.im) # extended cube
+		## ELSE: possible to use without input file
+
+		## Write the input file
+		fortIN = './synthetic_photometry_input'
+
+		filt_ASCII = [n.encode('ascii', 'ignore') for n in filt_UTF8]
+		write_hdf5(fortIN, 'Filter label', filt_ASCII)
+		write_hdf5(fortIN, 'Wavelength (microns)', w_spec, append=True)
+		write_hdf5(fortIN, 'Flux (x.Hz-1)', Fnu_spec, append=True)
+		write_hdf5(fortIN, '(docalib,dophot)', [1,1], append=True)
+
+		## Call the Fortran lib
+		##----------------------
+		SP.call('synthetic_photometry')
+
+		## Read the output
+		fortOUT = './synthetic_photometry_output'
+
+		wcen, Fnu_filt, smat = read_hdf5(fortOUT, \
+			'Central wavelength (microns)', \
+			'Flux (x.Hz-1)', \
+			'Standard deviation matrix')
+		wcen = wcen[0]
+		Fnu_filt = Fnu_filt[0]
+		std_dev = smat[0][0]
+
+		## Clean temperary file
+		##----------------------
+		if verbose==False:
+			SP.call(['rm', '-rf', fortIN+'.h5'])
+			SP.call(['rm', '-rf', fortOUT+'.h5'])
+
+		return wcen, Fnu_filt, std_dev
+		
+class spec2phot(intercalib):
+	'''
+	Intercalibration between spectrometry and photometry (REF)
+	'''
+	def __init__(self, filIN, filREF, phot, filKER=None, saveKER=None, \
+		wmod=0, uncIN=None, wmod_unc=0, Nmc=0, filOUT=None):
+		super().__init__(filIN, filREF, wmod)
+
+		if self.is3d==True: # filIN is spec
+			## Convolution to phot (filREF)
+			if filKER is not None:
+				conv = iconvolve(filIN, filKER, saveKER, \
+					wmod, uncIN, wmod_unc, filOUT=filPRO)
+			else:
+				filPRO = filIN # filPRO is spec
+			
+			## Reprojection to spec (filIN)
+			pro = project(filREF, filPRO, filOUT=filOUT)
+
+		else: # filIN is phot
+			## Reset header (should be spec)
+			self.hdr, self.im, self.wvl = read_fits(filREF, wmod=wmod)
+			
+			## Convolution to spec (filREF)
+			if filKER is not None:
+				conv = iconvolve(filIN, filKER, saveKER, \
+					wmod, uncIN, wmod_unc, filOUT=filPRO)
+			else:
+				filPRO = filIN # filPRO is phot
+			
+			## Reprojection to spec (filREF)
+			pro = project(filPRO, filREF, filOUT=filOUT)
+			
+		F_phot = pro.image()
+
+		## Synthetic photometry
+		wcen, self.F_syn, sig = self.synthetic_photometry([phot])
+
+	def image(self):
+		return self.F_syn
+
+	def calib_coeff(self):
+		return 
+
+class phot2phot:
+	'''
+	Intercalibration between two photometry
+	'''
+	def __init__(self, filIN, filREF, filKER=None, saveKER=None, \
+		wmod=0, uncIN=None, wmod_unc=0, Nmc=0, filOUT=None):
+
+		## Convolution (optional)
+		if filKER is not None:
+			conv = iconvolve(filIN, filKER, saveKER, \
+				wmod, uncIN, wmod_unc, filOUT=filPRO)
+		else:
+			filPRO = filIN
+
+		## Reprojection
+		self.pro = project(filPRO, filREF, filOUT=filOUT)
+
+	def image(self):
+		return self.pro.image()
 
 def photometry_profile(path_dat, *photometry):
 	'''
@@ -263,4 +304,4 @@ if __name__ == "__main__":
 	## intercalib.synthetic_photometry
 	##---------------------------------
 	calib = intercalib('/Users/dhu/data/pahpedia/M83/output/M83')
-	wcen, Fnu, sig = calib.synthetic_photometry(['MIPS1'])
+	wcen, F_syn, sig = calib.synthetic_photometry(['MIPS1'])
