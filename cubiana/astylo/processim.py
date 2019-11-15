@@ -458,6 +458,10 @@ class project(improve):
 class iconvolve(improve):
 	'''
 	(IDL based) CONVOLVE 2D image or 3D cube with given kernels
+
+	--- INPUT ---
+	filKER      convolution kernel(s) (tuple or list)
+	--- OUTPUT ---
 	'''
 	def __init__(self, filIN, filKER, saveKER, \
 		wmod=0, uncIN=None, wmod_unc=0, cfile=None, \
@@ -468,7 +472,7 @@ class iconvolve(improve):
 		self.addunc(uncIN, wmod_unc)
 
 		## input kernel file list
-		self.filKER = list(filKER)
+		self.filKER = filKER
 		## doc (csv) file of kernel list
 		self.saveKER = saveKER
 		self.cfile = cfile
@@ -509,8 +513,8 @@ class iconvolve(improve):
 		sigma_per = fwhm_per / (2. * np.sqrt(2.*np.log(2.)))
 		self.sigma_lam = np.sqrt(sigma_par * sigma_per)
 		
-	def choker(self, filIN):
-		## CHOose KERnel (list)
+	def choker(self, filIM):
+		## CHOose KERnel(s)
 
 		if self.cfile is not None: # read archived info
 			karxiv = read_csv(self.cfile, 'Images', 'Kernels')
@@ -519,14 +523,14 @@ class iconvolve(improve):
 				klist.append(k)
 		else: # create list
 			klist = []
-			for i, image in enumerate(filIN):
+			for i, image in enumerate(filIM):
 				## check PSF profil (or is not a cube)
 				if self.sigma_lam is not None:
-					image = filIN[i]
+					image = filIM[i]
 					ind = closest(self.psf, self.sigma_lam[i])
 					kernel = self.filKER[ind]
 				else:
-					image = filIN[0]
+					image = filIM[0]
 					kernel = self.filKER[0]
 				## klist line elements: image, kernel
 				k = [image, kernel]

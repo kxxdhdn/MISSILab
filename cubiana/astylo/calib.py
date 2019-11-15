@@ -98,14 +98,14 @@ class intercalib:
 		External Fortran library needed
 
 		--- INPUT ---
-		filt_UTF8    name list of photometry
+		filt_UTF8    photometry name (tuple or list)
 		w_spec       wavelengths of obs. spectrum (via filIN)
 		Fnu_spec     fluxes of spectrum (via filIN)
 		verbose      keep i/o h5 file (Default: False)
 		--- OUTPUT ---
 		wcen         center wavelength
 		Fnu_filt     fluxes of synthetic photometry
-		std_dev      standard deviation
+		smat         standard deviation matrices
 		'''
 		if self.filIN is not None:
 			n1 = self.hdr['NAXIS1']
@@ -139,9 +139,6 @@ class intercalib:
 			'Central wavelength (microns)', \
 			'Flux (x.Hz-1)', \
 			'Standard deviation matrix')
-		wcen = wcen[0]
-		Fnu_filt = Fnu_filt[0]
-		std_dev = smat[0][0]
 
 		## Clean temperary file
 		##----------------------
@@ -149,18 +146,27 @@ class intercalib:
 			SP.call(['rm', '-rf', fortIN+'.h5'])
 			SP.call(['rm', '-rf', fortOUT+'.h5'])
 
-		return wcen, Fnu_filt, std_dev
+		return wcen, Fnu_filt, smat
 		
 class spec2phot(intercalib):
 	'''
 	Intercalibration between spectrometry and photometry (REF)
+
+	--- INPUT ---
+	filIN       to convolve
+	filREF      convolution ref
+	phot        photometry name (once a phot)
+	filKER      convolution kernel(s) (Default: None)
+	wmod        control filIN or filREF (Default: None)
+	--- OUTPUT ---
 	'''
 	def __init__(self, filIN, filREF, phot, filKER=None, saveKER=None, \
 		wmod=0, uncIN=None, wmod_unc=0, Nmc=0, filOUT=None):
 		super().__init__(filIN, filREF, wmod)
+		self.phot = phot
 
 		if self.is3d==True: # filIN is spec
-			## Convolution to phot (filREF)
+			## Convolve filIN (spec)
 			if filKER is not None:
 				conv = iconvolve(filIN, filKER, saveKER, \
 					wmod, uncIN, wmod_unc, filOUT=filPRO)
@@ -174,7 +180,7 @@ class spec2phot(intercalib):
 			## Reset header (should be spec)
 			self.hdr, self.im, self.wvl = read_fits(filREF, wmod=wmod)
 			
-			## Convolution to spec (filREF)
+			## Convolve filIN (phot)
 			if filKER is not None:
 				conv = iconvolve(filIN, filKER, saveKER, \
 					wmod, uncIN, wmod_unc, filOUT=filPRO)
@@ -187,13 +193,22 @@ class spec2phot(intercalib):
 		F_phot = pro.image()
 
 		## Synthetic photometry
-		wcen, self.F_syn, sig = self.synthetic_photometry([phot])
+		wcen, F_syn, sig = self.synthetic_photometry((phot))
+		self.wcen = wcen[0]
+		self.F_syn = F_syn[0]
+		self.sig = sig[0][0]
+
+		self.factor = F_phot / self.F_syn
+
+	def calib_factor(self):
+		return self.factor
 
 	def image(self):
 		return self.F_syn
-
-	def calib_coeff(self):
-		return 
+	
+	def write_image(self, filSYN):
+		comment = "Synthetic photometry with " + self.phot
+		write_fits(filSYN, self.hdr, self.F_syn, self.wvl, COMMENT=comment)
 
 class phot2phot:
 	'''
@@ -304,4 +319,4 @@ if __name__ == "__main__":
 	## intercalib.synthetic_photometry
 	##---------------------------------
 	calib = intercalib('/Users/dhu/data/pahpedia/M83/output/M83')
-	wcen, F_syn, sig = calib.synthetic_photometry(['MIPS1'])
+	wcen, F_syn, sig = calib.synthetic_photometry(('IRAC2', 'MIPS1', 'WISE3'))

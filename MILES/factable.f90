@@ -176,7 +176,7 @@ MODULE factable
   TYPE(bands_IN), DIMENSION(33), SAVE, PUBLIC :: BIN = &
     [ bands_IN(label='Main 3.3', wave=3.3_DP, &
         sigmaS=0.04_DP, sigmaL=0.04_DP), &
-      bands_IN(label='Main 3.4', wave=3.45, &
+      bands_IN(label='Main 3.4', wave=3.45_DP, &
         sigmaS=0.04_DP, sigmaL=0.04_DP), &
       bands_IN(label='Small 5.2', wave=5.2394667_DP, &
         sigmaS=0.025218240_DP, sigmaL=0.058333420_DP), &

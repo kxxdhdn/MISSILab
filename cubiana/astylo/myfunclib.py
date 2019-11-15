@@ -52,6 +52,26 @@ def celest2deg(h, m, s, dd, mm, ss):
 
 	return ra, dec
 
+def deg2celest(ra, dec):
+	'''
+	World coord to degree conversion
+	'''
+	h = math.floor(ra * 24./360.)
+	m = math.floor((ra - h) * 60.)
+	s = (ra - h - m/60.) * 3600.
+	if dec>0:
+		dd = math.floor(dec)
+		mm = math.floor((dec - dd) * 60.)
+		ss = (dec - dd - mm/60.) * 3600.
+	else:
+		dd = math.ceil(dec) # negtive
+		mm = -math.ceil((dec - dd)) # positive
+		ss = -(dec - dd + mm/60.) * 3600. # positive
+
+	print('{.0f}h{.0f}m{04.2f}s, {.0f}d{.0f}m{04.2f}s'.format(h,m,s,dd,mm,ss))
+
+	return h, m, s, dd, mm, ss
+
 def f_lin(x, A, B):
 	'''
 	Y = A * x + B
