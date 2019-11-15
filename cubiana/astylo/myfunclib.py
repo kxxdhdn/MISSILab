@@ -57,18 +57,18 @@ def deg2celest(ra, dec):
 	World coord to degree conversion
 	'''
 	h = math.floor(ra * 24./360.)
-	m = math.floor((ra - h) * 60.)
-	s = (ra - h - m/60.) * 3600.
+	m = math.floor((ra*24./360. - h) * 60.)
+	s = ((ra*24./360. - h)*60 - m) * 60.
 	if dec>0:
 		dd = math.floor(dec)
-		mm = math.floor((dec - dd) * 60.)
-		ss = (dec - dd - mm/60.) * 3600.
+		mm = math.floor(dec - dd) * 60.
+		ss = ((dec - dd)*60. - mm) * 60.
 	else:
 		dd = math.ceil(dec) # negtive
-		mm = -math.ceil((dec - dd)) # positive
-		ss = -(dec - dd + mm/60.) * 3600. # positive
+		mm = -math.ceil((dec - dd) * 60.) # positive
+		ss = -((dec - dd)*60. + mm) * 60. # positive
 
-	print('{.0f}h{.0f}m{04.2f}s, {.0f}d{.0f}m{04.2f}s'.format(h,m,s,dd,mm,ss))
+	print('{:d}h{:d}m{:04.2f}s, {:d}d{:d}m{:04.2f}s'.format(h,m,s,dd,mm,ss))
 
 	return h, m, s, dd, mm, ss
 
