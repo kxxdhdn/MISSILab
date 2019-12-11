@@ -9,6 +9,7 @@ PROCESS IMage
 
 import math
 import numpy as np
+from scipy.io import readsav
 from reproject import reproject_interp
 import subprocess as SP
 
@@ -311,23 +312,29 @@ class improve:
 
 		return slicnames
 	
-	def rectangle(self, cen, size, filOUT=None):
-		## rectangle center in (ra, dec)
+	def rectangle(self, CENval, SIZpix, CENpix=None, filOUT=None):
+		## rectangle center in (ra, dec) if CENpix is None
 		## rectangle size in pix
 		## [optional] 2D raw data to crop
-		print("Crop centre (ra, dec): [{:.8}, {:.8}]".format(*cen))
-		print("Crop size (pix): [{}, {}].".format(*size))
 		
-		## convert coord
-		xcen, ycen = self.w.all_world2pix(cen[0], cen[1], 1)
-		if not (0<xcen<self.NAXIS1 and 0<ycen<self.NAXIS2):
-			print("ERROR: crop centre overpassed image border! ")
-			exit()
+		if CENpix is None:
+			## convert coord
+			xcen, ycen = self.w.all_world2pix(CENval[0], CENval[1], 1)
+			print("Crop centre (ra, dec): [{:.8}, {:.8}]".format(*CENval))
+			if not (0<xcen<self.NAXIS1 and 0<ycen<self.NAXIS2):
+				print("ERROR: crop centre overpassed image border! ")
+				exit()
+		else:
+			xcen, ycen = CENpix[0], CENpix[1]
+			print("Crop centre (x, y): [{}, {}]".format(*CENpix))
+		
+		print("Crop size (pix): [{}, {}].".format(*SIZpix))
+		
 		## lowerleft origin
-		xmin = math.floor(xcen - size[0]/2.)
-		ymin = math.floor(ycen - size[1]/2.)
-		xmax = xmin + size[0]
-		ymax = ymin + size[1]
+		xmin = math.floor(xcen - SIZpix[0]/2.)
+		ymin = math.floor(ycen - SIZpix[1]/2.)
+		xmax = xmin + SIZpix[0]
+		ymax = ymin + SIZpix[1]
 		if not (xmin>=0 and xmax<=self.NAXIS1 and ymin>=0 and ymax<=self.NAXIS2):
 			print("ERROR: crop region overpassed image border! ")
 			exit()
@@ -346,8 +353,8 @@ class improve:
 		self.hdr['CRPIX2'] += -ymin
 		## write cropped image/cube
 		if filOUT is not None:
-			comment = "[RECTANGLE] cropped at centre: [{:.8}, {:.8}]. ".format(*cen)
-			# comment = "with size [{}, {}] (pix).".format(*size)
+			comment = "[RECTANGLE] cropped at centre: [{:.8}, {:.8}]. ".format(*CENval)
+			# comment = "with size [{}, {}] (pix).".format(*SIZpix)
 
 			write_fits(filOUT, self.hdr, self.im, wave=self.wvl, \
 				COMMENT=comment)
@@ -379,7 +386,7 @@ class crop(improve):
 	'''
 	CROP 2D image or 3D cube
 	'''
-	def __init__(self, filIN, cen, size, \
+	def __init__(self, filIN, CENval, SIZpix, \
 		wmod=0, uncIN=None, wmod_unc=0, \
 		shape='box', filOUT=None):
 		## slicrop: slice 
@@ -388,7 +395,8 @@ class crop(improve):
 		self.addunc(uncIN, wmod_unc)
 		
 		if shape=='box':
-			self.cropim = self.rectangle(cen, size, filOUT)
+			self.cropim = self.rectangle(
+				CENval=CENval, SIZpix=SIZpix, filOUT=filOUT)
 
 	def image(self):
 		return self.cropim
@@ -590,6 +598,54 @@ class iconvolve(improve):
 	def slice_names(self):
 		return self.slicnames
 
+class slitextract(improve):
+	'''
+	AKARI/IRC spectroscopy slit coord extraction
+
+	--- INPUT ---
+	savIN       input sav file (IDL)
+	filIRC      IRC N3 (long exp) frame corrected (2MASS corrected)
+	--- OUTPUT ---
+	'''
+	def __init__(self, savIN, filIRC, filOUT):
+		super().__init__(filIRC)
+
+		im = readsav(savIN+'.sav', python_dict=True)['specimage_n_wc']
+		im = im[::-1] # -> ascending order
+		wave = readsav(savIN+'.sav', python_dict=True)['wave_array']
+		wave = wave[::-1] # -> ascending order
+		table = readsav(savIN+'.sav', python_dict=True)['source_table']
+		ref_x = table['image_x'][0] # slit ref x
+		ref_y = table['image_y'][0] # slit ref y
+		dx = im.shape[1] # slit length
+		dy = 1 # slit width: 256*5"/10' for 'Ns' & 256*3"/10' for 'Nh' 
+		cube = im.reshape(im.shape[0], dy, dx)
+
+		## Modify cube header
+		self.rectangle(CENval=None, SIZpix=(dx, dy), CENpix=(ref_x, ref_y))
+		self.hdr['CTYPE3'] = 'WAVELENGTH'
+		self.hdr['CUNIT1'] = 'deg'
+		self.hdr['CUNIT2'] = 'deg'
+		self.hdr['BUNIT'] = 'MJy/sr'
+		self.hdr['EQUINOX'] = 2000.0
+		comment = "Assembled AKARI/IRC slit spectroscopy cube. "
+
+		write_fits(filOUT, self.hdr, cube, wave=wave, \
+				COMMENT=comment)
+
+class imontage(improve):
+	'''
+	Image/cube mosaic
+
+	--- INPUT ---
+	--- OUTPUT ---
+	'''
+	def __init__(self, arg):
+		super().__init__(filIN, wmod)
+
+		self.arg = arg
+		
+
 """
 ------------------------------ MAIN (test) ------------------------------
 """
@@ -597,26 +653,37 @@ if __name__ == "__main__":
 
 	from myfunclib import MCerror
 
+	import os
+	path = os.getcwd() + '/../tests/'
+
+	## Test slitextract
+	##------------------
+	savIN = path + 'data/1420415.1.N3_NG.IRC_SPECRED_OUT'
+	filIRC = path + 'data/F011213824_N002'
+	filOUT = path + 'out/M83_AKARI'
+
+	slitextract(savIN, filIRC, filOUT)
+
 	## Test interfill
 	##----------------
-	Nmc = 2
+	# Nmc = 2
 
-	filIN = '/Users/dhu/Github/MISSILab/cubiana/tests/data/IC10_SL1'
-	filOUT = '/Users/dhu/Github/MISSILab/cubiana/tests/out/IC10_SL1'
+	# filIN = path + 'data/IC10_SL1'
+	# filOUT = path + 'out/IC10_SL1'
 
-	hdr, im, wvl = read_fits(filIN, wmod=1)
-	unc = read_fits(filIN+'_unc', wmod=1)[1]
+	# hdr, im, wvl = read_fits(filIN, wmod=1)
+	# unc = read_fits(filIN+'_unc', wmod=1)[1]
 	
-	mu, sigma = 0., 1.
-	hyperim = []
-	for i in range(Nmc+1):
-		if i==0:
-			newim = interfill(im, axis=1)
-			write_fits(filOUT, hdr, newim, wvl)
-		else:
-			iunc = im + unc * np.random.normal(mu, sigma, im.shape)
-			hyperim.append(interfill(iunc, axis=1))
-	hyperim = np.array(hyperim)
-	print(hyperim.shape)
-	newunc = MCerror(hyperim)
-	write_fits(filOUT+'_unc', hdr, newunc, wvl)
+	# mu, sigma = 0., 1.
+	# hyperim = []
+	# for i in range(Nmc+1):
+	# 	if i==0:
+	# 		newim = interfill(im, axis=1)
+	# 		write_fits(filOUT, hdr, newim, wvl)
+	# 	else:
+	# 		iunc = im + unc * np.random.normal(mu, sigma, im.shape)
+	# 		hyperim.append(interfill(iunc, axis=1))
+	# hyperim = np.array(hyperim)
+	# print(hyperim.shape)
+	# newunc = MCerror(hyperim)
+	# write_fits(filOUT+'_unc', hdr, newunc, wvl)

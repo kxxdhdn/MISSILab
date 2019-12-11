@@ -40,15 +40,15 @@ def rad2arcsec(X):
 	'''
 	return X * 360. * 3600. / (2. * math.pi)
 
-def celest2deg(h, m, s, dd, mm, ss):
+def celest2deg(h, m, s, deg, arcmin, arcsec):
 	'''
 	Degree to world coord conversion
 	'''
 	ra = (h + m/60. + s/3600.) * 360./24.
-	if dd>0:
-		dec = dd + mm/60. + ss/3600.
+	if deg<0:
+		dec = -(-deg + arcmin/60. + arcsec/3600.)
 	else:
-		dec = -(-dd + mm/60. + ss/3600.)
+		dec = deg + arcmin/60. + arcsec/3600.
 
 	return ra, dec
 
@@ -60,17 +60,17 @@ def deg2celest(ra, dec):
 	m = math.floor((ra*24./360. - h) * 60.)
 	s = ((ra*24./360. - h)*60 - m) * 60.
 	if dec>0:
-		dd = math.floor(dec)
-		mm = math.floor(dec - dd) * 60.
-		ss = ((dec - dd)*60. - mm) * 60.
+		deg = math.floor(dec)
+		arcmin = math.floor(dec - deg) * 60.
+		arcsec = ((dec - deg)*60. - arcmin) * 60.
 	else:
-		dd = math.ceil(dec) # negtive
-		mm = -math.ceil((dec - dd) * 60.) # positive
-		ss = -((dec - dd)*60. + mm) * 60. # positive
+		deg = math.ceil(dec) # negtive
+		arcmin = -math.ceil((dec - deg) * 60.) # positive
+		arcsec = -((dec - deg)*60. + arcmin) * 60. # positive
 
-	print('{:d}h{:d}m{:04.2f}s, {:d}d{:d}m{:04.2f}s'.format(h,m,s,dd,mm,ss))
+	print('{:d}h{:d}m{:04.2f}s, {:d}d{:d}m{:04.2f}s'.format(h,m,s,deg,arcmin,arcsec))
 
-	return h, m, s, dd, mm, ss
+	return h, m, s, deg, arcmin, arcsec
 
 def f_lin(x, A, B):
 	'''
