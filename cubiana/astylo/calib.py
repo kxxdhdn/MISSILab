@@ -16,7 +16,7 @@ import subprocess as SP
 from sinout import read_fits, WCSextract, \
 	read_hdf5, write_hdf5, read_ascii
 from splot import plot2d_m, mycolorlib
-from processim import iconvolve, project
+from processim import iconvolve, iproject
 
 
 ##-----------------------------------------------
@@ -174,7 +174,7 @@ class spec2phot(intercalib):
 				filPRO = filIN # filPRO is spec
 			
 			## Reprojection to spec (filIN)
-			pro = project(filREF, filPRO, filOUT=filOUT)
+			pro = iproject(filREF, filPRO, filOUT=filOUT)
 
 		else: # filIN is phot
 			## Reset header (should be spec)
@@ -188,7 +188,7 @@ class spec2phot(intercalib):
 				filPRO = filIN # filPRO is phot
 			
 			## Reprojection to spec (filREF)
-			pro = project(filPRO, filREF, filOUT=filOUT)
+			pro = iproject(filPRO, filREF, filOUT=filOUT)
 			
 		F_phot = pro.image()
 
@@ -225,7 +225,7 @@ class phot2phot:
 			filPRO = filIN
 
 		## Reprojection
-		self.pro = project(filPRO, filREF, filOUT=filOUT)
+		self.pro = iproject(filPRO, filREF, filOUT=filOUT)
 
 	def image(self):
 		return self.pro.image()

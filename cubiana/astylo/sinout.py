@@ -25,34 +25,38 @@ def read_fits(file, wmod=0):
 
 	--- INPUT ---
 	file        input fits file
-	wmod        wave mode
+	wmod        output wave mode (0 - 1darray; 1 - FITS_rec. default: 0)
 	--- OUTPUT ---
 	hdr         header of primary HDU
 	data        data in primary HDU
-	wave        data in table 1 (if exists)
+	wave        data in table 1 (None if does not exist)
 	'''
 	with fits.open(file+fitsext) as hdul:
-		## read header
+		## Read header/data
 		hdr = hdul[0].header
+		data = hdul[0].data
+		wave = None
 
-		## read data
-		# 3D
-		if hdr['NAXIS']==3:
-			data = hdul[0].data
+		## Read wavelength
+		if len(hdul)==2:
+			wave = hdul[1].data
+
+			if isinstance(hdul[1], fits.BinTableHDU):
+				if wmod==0:
+					wave = wave[0][0][:,0] ## Convert FITS_rec to 1darray
+			elif isinstance(hdul[1], fits.ImageHDU):
+				Nw = len(wave)
+				if wmod==1:
+					wave = np.array(wave)
+					arr = wave.reshape((Nw,1))
+					col = fits.Column(array=[wave], format=str(Nw)+'E', \
+						name='WAVELENGTH', unit='um', dim='(1,{})'.format(Nw))
+					tab = fits.BinTableHDU.from_columns([col], name='WCS-TAB')
+					wave = tab.data
 			
-			if wmod==0:
-				wave = hdul[1].data # rewitten header
-			else:
-				wave = hdul[1].data[0][0][:,0] # CUBISM witten
-			
-			return hdr, data, wave
-		# 2D
-		else:
-			data = hdul[0].data
+	return hdr, data, wave
 
-			return hdr, data
-
-def write_fits(file, header, data, wave=None, **hdrl):
+def write_fits(file, header, data, wave=None, wmod=0, **hdrl):
 	'''
 	Write fits file
 
@@ -60,7 +64,8 @@ def write_fits(file, header, data, wave=None, **hdrl):
 	file        input fits file
 	header      header of primary HDU
 	data        data in primary HDU
-	wave        data in table 1 (default: None)
+	wave        data in table 1 (ndarray. default: None)
+	wmod        wave table format (0 - Image; 1 - BinTable. default: 0)
 	--- OUTPUT ---
 	new fits file
 	'''
@@ -68,27 +73,48 @@ def write_fits(file, header, data, wave=None, **hdrl):
 		header[key] = value
 	primary_hdu = fits.PrimaryHDU(header=header, data=data)
 	hdul = fits.HDUList(primary_hdu)
-	## add table
+	
+	## Add table
 	if wave is not None:
-		hdu = fits.ImageHDU(data=wave, name="Wavelength (microns)")
+		## Convert wave format
+		if isinstance(wave, fits.fitsrec.FITS_rec):
+			if wmod==0:
+				wave = wave[0][0][:,0]
+		else:
+			Nw = len(wave)
+			if wmod==1:
+				wave = np.array(wave)
+				arr = wave.reshape((Nw,1))
+				col = fits.Column(array=[wave], format=str(Nw)+'E', \
+					name='WAVELENGTH', unit='um', dim='(1,{})'.format(Nw))
+				tab = fits.BinTableHDU.from_columns([col], name='WCS-TAB')
+				wave = tab.data
+		## Create table
+		if wmod==0:
+			hdu = fits.ImageHDU(data=wave, name='WAVELENGTH (um)')
+		elif wmod==1:
+			hdu = fits.BinTableHDU(data=wave, name='WCS-TAB')
+
 		hdul.append(hdu)
 
 	hdul.writeto(file+fitsext, overwrite=True)
 
-def WCSextract(file):
+def WCSextract(file=None, header=None):
 	'''
 	extract WCS (auto detect & reduce dim if 3D)
 
 	--- INPUT ---
 	file        input fits file
+	header      input fits header
 	--- OUTPUT ---
 	header      header of primary HDU
 	w           2D WCS
 	is3d        if input data is 3D: True
 	'''
-	hdr = fits.open(file+fitsext)[0].header
+	if file is not None:
+		hdr = fits.open(file+fitsext)[0].header
+		header = hdr.copy()
 
-	header = hdr.copy()
 	if header['NAXIS']==3:
 		is3d = True
 		for kw in hdr.keys():
@@ -146,7 +172,7 @@ def write_hdf5(file, header, data, append=False):
 	hf.flush()
 	hf.close()
 
-def read_ascii(file, dtype=str):
+def read_ascii(file, dtype=str, ascext=ascext):
 	'''
 	Read ASCII file
 

@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 ## astylo
 from astylo.sinout import read_fits, write_fits, WCSextract, read_ascii
-from astylo.processim import slicube, crop, iconvolve, project, wclean
+from astylo.processim import islice, icrop, iconvolve, iproject, wclean
 from astylo.calib import intercalib, phot2phot
 from astylo.myfunclib import fclean, MCerror, pix2sr
 from astylo.splot import plot2d
@@ -21,11 +21,8 @@ from astylo.splot import plot2d
 Nmc = 2
 
 src = 'M82'
-wmod = 1
 ## Not useful if need to modify IDL/conv_prog.pro
 # src = input("Input source name: ")
-if src=='IC10':
-	wmod = 0
 
 instr = ['IRS', 'IRC']
 # chnl = ['SL2', 'SL1', 'LL2'] # hdr['APERNAME'] related
@@ -38,11 +35,11 @@ verbose = False
 ##---------------------------
 
 ## Data dir
-path_data = '/Users/dhu/data/pahpedia/'+src+'/' ###
-path_tmp = '/Users/dhu/data/pahpedia/tmp/' ### See also IDL/convolve_image.pro
+path_data = '/Users/dhu/Data/PAHpedia/'+src+'/' ###
+path_tmp = '/Users/dhu/Data/PAHpedia/tmp/' ### See also IDL/convolve_image.pro
 if not os.path.exists(path_tmp):
 	os.makedirs(path_tmp)
-path_test = '/Users/dhu/data/pahpedia/tests/' ###
+path_test = '/Users/dhu/Data/PAHpedia/tests/' ###
 path_out = path_data+'output/' ###vvv See also
 if not os.path.exists(path_out):
 	os.makedirs(path_out)
@@ -55,11 +52,11 @@ path_cur = os.getcwd()+'/'
 path_idl = path_cur+'/IDL/'
 
 ## Kernel list stocked in csv file
-path_ker = '/Users/dhu/data/kernels/' ###
+path_ker = '/Users/dhu/Data/kernels/' ###
 cker = path_out+src+'_kernels' ### See also IDL/conv_prog.pro
 
 ## Intercalibration
-path_phot = '/Users/dhu/data/photometry/'+src+'/' ###
+path_phot = '/Users/dhu/Data/photometry/'+src+'/' ###
 path_calib = path_data+'calib/' ###
 if not os.path.exists(path_calib):
 	os.makedirs(path_calib)
@@ -116,8 +113,7 @@ if file_ker is not None:
 
 ## Cropped ref image
 ##-------------------
-crop(filIN=file_ref, cen=(ra,dec), size=(dx,dy), \
-	wmod=wmod, filOUT=project_ref)
+icrop(file_ref, project_ref, cenval=(ra,dec), sizpix=(dx,dy), wmod=1)
 hdr = read_fits(project_ref)[0]
 NAXIS1 = hdr['NAXIS1']
 NAXIS2 = hdr['NAXIS2']
@@ -154,27 +150,27 @@ if b0=='y':
 			## Slice cube
 			##------------
 			# if j==0: # unc not added
-			# 	sl = slicube(file_data, file_slice, wmod=wmod)
+			# 	sl = islice(file_data, file_slice)
 			# 	wvl = sl.wave()
-			# 	slist = sl.slice_names()
+			# 	slist = sl.filenames()
 			# else: # add unc
-			# 	slicube(filIN=file_data, filSL=file_slice, \
-			# 		wmod=wmod, uncIN=file_unc, wmod_unc=wmod)
+			# 	islice(filIN=file_data, filSL=file_slice, uncIN=file_unc)
 
 			if file_ker is not None:
 				## Smooth images [IDL]
 				##---------------------
 				if j==0: # unc not added
 					conv = iconvolve(filIN=file_data, filKER=kernelist, \
-						saveKER=cker, wmod=wmod, \
+						saveKER=cker, wmod=1, \
 						filTMP=file_slice, filOUT=file_conv)
-					wavALL.extend(conv.wave())
 				else: # add unc
 					conv = iconvolve(filIN=file_data, filKER=kernelist, \
-						saveKER=cker, wmod=wmod, uncIN=file_unc, wmod_unc=wmod, \
-						cfile=cker, filTMP=file_slice, filOUT=file_conv)
-				
+						saveKER=cker, wmod=1, uncIN=file_unc, \
+						filTMP=file_slice, filOUT=file_conv)
+
 				conv.do_conv(ipath=path_idl)
+
+				wavALL.extend(conv.wave())
 
 				file_proj = file_conv
 			else:
@@ -182,10 +178,10 @@ if b0=='y':
 
 			## Reproject convolved cube
 			##--------------------------
-			pro = project(filIN=file_proj, filREF=project_ref, \
+			pro = iproject(filIN=file_proj, filREF=project_ref, \
 				filTMP=file_slice)#, filOUT=file_out+'_'+str(j))
 			
-			slices.extend(pro.slice_names())
+			slices.extend(pro.filenames())
 			cubi.append(pro.image()) # Here, pro.image is a 3D cube
 		
 			fclean(file_conv+'.fits')
@@ -195,7 +191,7 @@ if b0=='y':
 		# hdr['APERNAME'] = 'SL2+SL1+LL2(ref)'
 		hdr['APERNAME'] = 'SL2+SL1+LL2+LL1(ref)'
 		comment = "Homegeneized cube produced by [SPEXTRACT] routine. "
-		write_fits(file_all+'_'+str(j), hdr, cube, wave=wavALL, COMMENT=comment)
+		write_fits(file_all+'_'+str(j), hdr, cube, wavALL, 1, COMMENT=comment)
 
 		if j==0:
 			## no uncertainty added cube
@@ -231,14 +227,14 @@ if b2=='y':
 		else:
 			cube = read_fits(file_all+'_'+str(j))[1]
 			hypercube.append(cube)
-	
+
 	hypercube = np.array(hypercube)
 	print('>>>>>>>>>>>>>')
 	print("hypercube shape: ", hypercube.shape)
 	print('>>>>>>>>>>>>>')
 
 	unc = MCerror(hypercube)
-	write_fits(file_all+'_unc', hdr, unc, wavALL)
+	write_fits(file_all+'_unc', hdr, unc, wavALL, 1)
 
 	t_cal_unc = time.time()
 	print(">> cal_unc_time = {:.0f} seconds <<".format(t_cal_unc - t2))
@@ -247,8 +243,8 @@ else:
 
 ## Clean Wavelengths
 ##-------------------
-cube0, wavALL = wclean(file_all+'_0', filOUT=file_all, verbose=True)
-unc = wclean(file_all+'_unc', filOUT=file_all+'_unc')[0]
+cube0, wavALL = wclean(file_all+'_0', wmod=1, filOUT=file_all, verbose=True)
+unc = wclean(file_all+'_unc', wmod=1, filOUT=file_all+'_unc')[0]
 
 print('\n>>>>>>>>>>>>>>>>>>\n')
 print("Final cube shape: ", unc.shape)
@@ -260,14 +256,14 @@ print('\n>>>>>>>>>>>>>>>>>>\n')
 
 ## Convert Jy/pix to MJy/sr (Optional)
 ##-------------------------------------
-hdr_s, im_s = read_fits(file_phot_s)
+hdr_s, im_s = read_fits(file_phot_s)[0:2]
 # if hdr_s['SIGUNIT']=='Jy/pix              / Unit of the map': # DustPedia
 if Uconvert_s==True:
 	im_s = im_s * 1.e-6 / pix2sr(1., hdr_s['CDELT1'])
 	hdr_s['SIGUNIT'] = 'MJy/sr'
 write_fits(file_calib_s, hdr_s, im_s)
 
-hdr_p, im_p = read_fits(file_phot_p)
+hdr_p, im_p = read_fits(file_phot_p)[0:2]
 # if hdr_p['SIGUNIT']=='Jy/pix              / Unit of the map': # DustPedia
 if Uconvert_p==True:
 	im_p = im_p * 1.e-6 / pix2sr(1., hdr_p['CDELT1'])
@@ -278,14 +274,10 @@ write_fits(file_calib_p, hdr_p, im_p)
 ##-------------------
 # dx_phot = int(2. * dx)
 # dy_phot = int(2. * dy)
-# cro_s = crop(filIN=file_calib_s, wmod=0, \
-# 	cen=(ra, dec), \
-# 	size=(dx_phot, dy_phot), \
-# 	filOUT=file_calib_s)
-# cro_p = crop(filIN=file_calib_p, wmod=0, \
-# 	cen=(ra, dec), \
-# 	size=(dx_phot, dy_phot), \
-# 	filOUT=file_calib_p)
+# cro_s = icrop(file_calib_s, file_calib_s, \
+# 	cenval=(ra, dec), sizpix=(dx_phot, dy_phot))
+# cro_p = icrop(file_calib_p, file_calib_p, \
+# 	cenval=(ra, dec), sizpix=(dx_phot, dy_phot))
 
 ## spec2phot
 ##-----------
@@ -293,7 +285,7 @@ write_fits(file_calib_p, hdr_p, im_p)
 ## phot2phot
 ##-----------
 ## Use reprojection to crop
-pro_s = project(file_calib_s, file_all, filOUT=file_calib_s)
+pro_s = iproject(file_calib_s, file_all, filOUT=file_calib_s)
 p2p = phot2phot(filIN=file_calib_p, \
 	filREF=file_calib_s, filOUT=file_calib_p)
 newim_p = p2p.image()

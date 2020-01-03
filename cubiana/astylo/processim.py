@@ -11,10 +11,11 @@ import math
 import numpy as np
 from scipy.io import readsav
 from reproject import reproject_interp
+from ccdproc import combine
 import subprocess as SP
 
 ## astylo
-from sinout import read_fits, write_fits, WCSextract, read_csv, write_csv
+from sinout import read_fits, write_fits, WCSextract, read_csv, write_csv, read_ascii
 from myfunclib import fclean, closest, bsplinterpol
 
 
@@ -32,8 +33,8 @@ def wmask(filIN, filOUT=None):
 	pass
 
 
-def wclean(filIN, wmod=0, cmod='eq', cfile=None, \
-	filOUT=None, verbose=False):
+def wclean(filIN, cmod='eq', cfile=None, \
+	wmod=0, filOUT=None, verbose=False):
 	'''
 	CLEAN Wavelengths
 
@@ -48,7 +49,7 @@ def wclean(filIN, wmod=0, cmod='eq', cfile=None, \
 	data_new    new fits data
 	wave_new    new fits wave
 	'''
-	hdr, data, wave = read_fits(filIN, wmod=wmod)
+	hdr, data, wave = read_fits(filIN)
 	Nw = len(wave)
 	
 	ind = [] # list of indices of wvl to remove
@@ -160,7 +161,7 @@ def wclean(filIN, wmod=0, cmod='eq', cfile=None, \
 	if filOUT is not None:
 		# comment = 'Wavelength removal info in _wclean_info.csv'
 
-		write_fits(filOUT, hdr, data_new, wave_new) # hdr auto changed
+		write_fits(filOUT, hdr, data_new, wave_new, wmod) # hdr auto changed
 		
 		## Write csv file
 		wlist = []
@@ -278,100 +279,118 @@ class improve:
 			self.NAXIS1, self.NAXIS2))
 		## 3D cube slicing
 		if self.is3d==True:
-			self.im, self.wvl = read_fits(filIN, wmod=wmod)[1:3]
+			self.im, self.wvl = read_fits(filIN)[1:3]
 			self.NAXIS3 = len(self.wvl)
 		else:
-			self.im = read_fits(filIN, wmod=wmod)[1]
+			self.im = read_fits(filIN)[1]
 			self.wvl = None
 
-	def addunc(self, uncIN=None, wmod=0):
+	def addunc(self, uncIN=None):
 		## uncertainty adding
 		mu, sigma = 0., 1.
 
 		if uncIN is not None:
-			unc = read_fits(uncIN, wmod)[1]
+			unc = read_fits(uncIN)[1]
 			theta = np.random.normal(mu, sigma, unc.shape)
 			## unc has the same dimension with im
 			self.im += theta * unc
 
+		return self.im
+
 	def slice(self, filSL, suffix=None):
 		## 3D cube slicing
 		if self.is3d==True:
-			slicnames = []
+			lstOUT = []
 			for k in range(self.NAXIS3):
 				## output filename list
 				f = filSL+'_'+'0'*(4-len(str(k)))+str(k)
 				if suffix is not None:
 					f += suffix
-				slicnames.append(f)
+				lstOUT.append(f)
 				comment = "NO.{} image [SLICE]d from {}.fits".format(k, self.filIN)
-				write_fits(f, self.hdr, self.im[k,:,:])
+				write_fits(f, self.hdr, self.im[k,:,:]) # addunc inclu
 		else:
 			print('Input file is a 2D image which cannot be sliced! ')
 			exit()
 
-		return slicnames
+		return lstOUT
 	
-	def rectangle(self, CENval, SIZpix, CENpix=None, filOUT=None):
-		## rectangle center in (ra, dec) if CENpix is None
-		## rectangle size in pix
-		## [optional] 2D raw data to crop
-		
-		if CENpix is None:
-			## convert coord
-			xcen, ycen = self.w.all_world2pix(CENval[0], CENval[1], 1)
-			print("Crop centre (ra, dec): [{:.8}, {:.8}]".format(*CENval))
-			if not (0<xcen<self.NAXIS1 and 0<ycen<self.NAXIS2):
-				print("ERROR: crop centre overpassed image border! ")
-				exit()
+	def crop(self, sizpix=None, cenpix=None, sizval=None, cenval=None, filOUT=None):
+		'''
+		If pix and val co-exist, pix will be taken.
+
+		--- INPUT ---
+		sizpix      crop size in pix (dx, dy)
+		cenpix      crop center in pix (x, y)
+		sizval      crop size in deg (dRA, dDEC) -> (dx, dy)
+		cenval      crop center in deg (RA, DEC) -> (x, y)
+		--- OUTPUT ---
+		'''
+		## Crop center
+		if cenpix is None:
+			## Convert coord
+			cenpix = self.w.all_world2pix(cenval[0], cenval[1], 1)
 		else:
-			xcen, ycen = CENpix[0], CENpix[1]
-			print("Crop centre (x, y): [{}, {}]".format(*CENpix))
+			cenval = self.w.all_pix2world(np.array([cenpix]), 1)[0]
+		if not (0<cenpix[0]<self.NAXIS1 and 0<cenpix[1]<self.NAXIS2):
+			print("ERROR: crop centre overpassed image border! ")
+			exit()
+		print("Crop centre (RA, DEC): [{:.8}, {:.8}] \n".format(*cenval))
+		print("Crop centre (x, y): [{}, {}]".format(*cenpix))
+		print('----------')
 		
-		print("Crop size (pix): [{}, {}].".format(*SIZpix))
+		## Crop size
+		if sizpix is None:
+			print("Crop size (dRA, dDEC): [{}, {}].".format(*sizval))
+			## CDELTn needed (Physical increment at the reference pixel)
+			sizpix = np.array(sizval) / np.array(self.hdr['CDELT1'], self.hdr['CDELT2'])
+		print("Crop size (dx, dy): [{}, {}].".format(*sizpix))
+		print('----------')
 		
 		## lowerleft origin
-		xmin = math.floor(xcen - SIZpix[0]/2.)
-		ymin = math.floor(ycen - SIZpix[1]/2.)
-		xmax = xmin + SIZpix[0]
-		ymax = ymin + SIZpix[1]
+		xmin = math.floor(cenpix[0] - sizpix[0]/2.)
+		ymin = math.floor(cenpix[1] - sizpix[1]/2.)
+		xmax = xmin + sizpix[0]
+		ymax = ymin + sizpix[1]
 		if not (xmin>=0 and xmax<=self.NAXIS1 and ymin>=0 and ymax<=self.NAXIS2):
 			print("ERROR: crop region overpassed image border! ")
 			exit()
 
 		## OUTPUTS
 		##---------
-		## new image
+		## New image
 		if self.is3d==True:
-			self.im = self.im[:, ymin:ymax, xmin:xmax]
+			self.im = self.im[:, ymin:ymax, xmin:xmax] # addunc inclu
 			## recover 3D non-reduced header
-			self.hdr = read_fits(self.filIN, self.wmod)[0]
+			self.hdr = read_fits(self.filIN)[0]
 		else:
-			self.im = self.im[ymin:ymax, xmin:xmax]
-		## modify header
-		self.hdr['CRPIX1'] += -xmin
-		self.hdr['CRPIX2'] += -ymin
-		## write cropped image/cube
+			self.im = self.im[ymin:ymax, xmin:xmax] # addunc inclu
+		## Modify header
+		## Suppose no non-linear distortion
+		self.hdr['CRPIX1'] = sizpix[0] / 2.
+		self.hdr['CRPIX2'] = sizpix[1] / 2.
+		self.hdr['CRVAL1'] = cenval[0]
+		self.hdr['CRVAL2'] = cenval[1]
+		## Write cropped image/cube
 		if filOUT is not None:
-			comment = "[RECTANGLE] cropped at centre: [{:.8}, {:.8}]. ".format(*CENval)
-			# comment = "with size [{}, {}] (pix).".format(*SIZpix)
+			comment = "[ICROP]ped at centre: [{:.8}, {:.8}]. ".format(*cenval)
+			# comment = "with size [{}, {}] (pix).".format(*sizpix)
 
-			write_fits(filOUT, self.hdr, self.im, wave=self.wvl, \
+			write_fits(filOUT, self.hdr, self.im, self.wvl, self.wmod, \
 				COMMENT=comment)
 
 		return self.im
 
-class slicube(improve):
+class islice(improve):
 	'''
 	SLIce CUBE
 	'''
-	def __init__(self, filIN, filSL, wmod=0, \
-		uncIN=None, wmod_unc=0, suffix=None):
-		super().__init__(filIN, wmod)
+	def __init__(self, filIN, filSL, uncIN=None, suffix=None):
+		super().__init__(filIN)
 		
-		self.addunc(uncIN, wmod_unc)
+		self.addunc(uncIN)
 
-		self.slicnames = self.slice(filSL, suffix)
+		self.slist = self.slice(filSL, suffix) # addunc inclu
 
 	def image(self):
 		return self.im
@@ -379,24 +398,23 @@ class slicube(improve):
 	def wave(self):
 		return self.wvl
 
-	def slice_names(self):
-		return self.slicnames
+	def filenames(self):
+		return self.slist
 
-class crop(improve):
+class icrop(improve):
 	'''
 	CROP 2D image or 3D cube
 	'''
-	def __init__(self, filIN, CENval, SIZpix, \
-		wmod=0, uncIN=None, wmod_unc=0, \
-		shape='box', filOUT=None):
+	def __init__(self, filIN, filOUT=None, \
+		sizpix=None, cenpix=None, sizval=None, cenval=None, \
+		uncIN=None, wmod=0):
 		## slicrop: slice 
 		super().__init__(filIN, wmod)
 
-		self.addunc(uncIN, wmod_unc)
+		self.addunc(uncIN)
 		
-		if shape=='box':
-			self.cropim = self.rectangle(
-				CENval=CENval, SIZpix=SIZpix, filOUT=filOUT)
+		self.cropim = self.crop(sizpix=sizpix, cenpix=cenpix, \
+			sizval=sizval, cenval=cenval, filOUT=filOUT) # addunc inclu
 
 	def image(self):
 		return self.cropim
@@ -404,16 +422,16 @@ class crop(improve):
 	def wave(self):
 		return self.wvl
 
-class project(improve):
+class iproject(improve):
 	'''
 	PROJECT 2D image or 3D cube
 	'''
-	def __init__(self, filIN, filREF=None, hdREF=None, wmod=0, \
-		uncIN=None, wmod_unc=0, filTMP=None, filOUT=None):
+	def __init__(self, filIN, filREF=None, hdREF=None, \
+		uncIN=None, filTMP=None, wmod=0, filOUT=None):
 		super().__init__(filIN, wmod)
 		## input hdREF must be (reduced) 2D header
 
-		self.addunc(uncIN, wmod_unc)
+		self.addunc(uncIN)
 
 		if filREF is not None:
 			hdREF = WCSextract(filREF)[0]
@@ -422,23 +440,22 @@ class project(improve):
 		if hdREF is not None:
 			if self.is3d==True:
 				if filTMP is not None:
-					filSL = filTMP
+					slicIN = self.slice(filSL=filTMP, suffix='_') # addunc inclu
 				else:
-					filSL = self.filIN
-				slicIN = self.slice(filSL=filSL, suffix='_')
+					slicIN = self.slice(filSL=filIN, suffix='_') # addunc inclu
 				im = []
-				self.slicnames = []
+				self.slist = []
 				for f in slicIN:
 					im.append(reproject_interp(f+'.fits', hdREF)[0])
 					if filTMP is not None:
 						write_fits(f+'_pro', hdREF, im)
-						self.slicnames.append(f+'_pro')
+						self.slist.append(f+'_pro')
 					fclean(f+'.fits')
 
 				self.projim = np.array(im)
 				## recover non-reduced 3D header
 				if filREF is not None:
-					hdr = read_fits(filREF, self.wmod)[0]
+					hdr = read_fits(filREF)[0]
 			else:
 				self.projim, footprint = reproject_interp(filIN+'.fits', hdREF)
 		else:
@@ -448,10 +465,10 @@ class project(improve):
 			comment = "Re[PROJECT]ed image. "
 			
 			if self.is3d==True:
-				write_fits(filOUT, hdr, self.projim, wave=self.wvl, \
+				write_fits(filOUT, hdr, self.projim, self.wvl, wmod, \
 					COMMENT=comment)
 			else:
-				write_fits(filOUT, hdREF, self.projim, wave=self.wvl, \
+				write_fits(filOUT, hdREF, self.projim, self.wvl, wmod, \
 					COMMENT=comment)
 	
 	def image(self):
@@ -460,8 +477,8 @@ class project(improve):
 	def wave(self):
 		return self.wvl
 
-	def slice_names(self):
-		return self.slicnames
+	def filenames(self):
+		return self.slist
 
 class iconvolve(improve):
 	'''
@@ -472,18 +489,16 @@ class iconvolve(improve):
 	--- OUTPUT ---
 	'''
 	def __init__(self, filIN, filKER, saveKER, \
-		wmod=0, uncIN=None, wmod_unc=0, cfile=None, \
-		psf=None, filTMP=None, filOUT=None):
+		uncIN=None, psf=None, filTMP=None, wmod=0, filOUT=None):
 		## INPUTS
 		super().__init__(filIN, wmod)
 		
-		self.addunc(uncIN, wmod_unc)
+		self.addunc(uncIN)
 
 		## input kernel file list
 		self.filKER = filKER
 		## doc (csv) file of kernel list
 		self.saveKER = saveKER
-		self.cfile = cfile
 		self.filTMP = filTMP
 		self.filOUT = filOUT
 
@@ -523,48 +538,40 @@ class iconvolve(improve):
 		
 	def choker(self, filIM):
 		## CHOose KERnel(s)
+		klist = []
+		for i, image in enumerate(filIM):
+			## check PSF profil (or is not a cube)
+			if self.sigma_lam is not None:
+				image = filIM[i]
+				ind = closest(self.psf, self.sigma_lam[i])
+				kernel = self.filKER[ind]
+			else:
+				image = filIM[0]
+				kernel = self.filKER[0]
+			## klist line elements: image, kernel
+			k = [image, kernel]
+			klist.append(k)
 
-		if self.cfile is not None: # read archived info
-			karxiv = read_csv(self.cfile, 'Images', 'Kernels')
-			klist = []
-			for k in karxiv:
-				klist.append(k)
-		else: # create list
-			klist = []
-			for i, image in enumerate(filIM):
-				## check PSF profil (or is not a cube)
-				if self.sigma_lam is not None:
-					image = filIM[i]
-					ind = closest(self.psf, self.sigma_lam[i])
-					kernel = self.filKER[ind]
-				else:
-					image = filIM[0]
-					kernel = self.filKER[0]
-				## klist line elements: image, kernel
-				k = [image, kernel]
-				klist.append(k)
-
-			## write csv file
-			write_csv(self.saveKER, header=['Images', 'Kernels'], dataset=klist)
+		## write csv file
+		write_csv(self.saveKER, header=['Images', 'Kernels'], dataset=klist)
 
 	def do_conv(self, ipath):
 		
 		if self.is3d==True:
 			if self.filTMP is not None:
-				filSL = self.filTMP
+				f2conv = self.slice(self.filTMP) # addunc inclu
 			else:
-				filSL = self.filIN
+				f2conv = self.slice(self.filIN) # addunc inclu
 			
-			slicIN = self.slice(filSL)
 			self.spitzer_irs()
-			self.choker(slicIN)
+
 		else:
 			if self.filTMP is not None: # ?? TO DELETE
-				filIN = [self.filTMP]
+				f2conv = [self.filTMP]
 			else:
-				filIN = [self.filIN]
+				f2conv = [self.filIN]
 			
-			self.choker(filIN)
+		self.choker(f2conv)
 
 		SP.call('cd '+ipath+'\nidl conv.pro', shell=True)
 
@@ -572,21 +579,21 @@ class iconvolve(improve):
 		##---------
 		if self.is3d==True:
 			im = []
-			self.slicnames = []
-			for f in slicIN:
+			self.slist = []
+			for f in f2conv:
 				im.append(read_fits(f+'_conv')[1])
-				self.slicnames.append(f+'_conv')
+				self.slist.append(f+'_conv')
 
 			self.convim = np.array(im)
 			## recover non-reduced 3D header
-			self.hdr = read_fits(self.filIN, self.wmod)[0]
+			self.hdr = read_fits(self.filIN)[0]
 		else:
 			self.convim = read_fits(self.filIN+'_conv')[1]
 		
 		if self.filOUT is not None:
 			comment = "[ICONVOLV]ed by G. Aniano's IDL routine."
 			# comment = 'https://www.astro.princeton.edu/~ganiano/Kernels.html'
-			write_fits(self.filOUT, self.hdr, self.convim, wave=self.wvl, \
+			write_fits(self.filOUT, self.hdr, self.convim, self.wvl, self.wmod, \
 				COMMENT=comment)
 
 	def image(self):
@@ -595,56 +602,93 @@ class iconvolve(improve):
 	def wave(self):
 		return self.wvl
 
-	def slice_names(self):
-		return self.slicnames
+	def filenames(self):
+		return self.slist
 
 class slitextract(improve):
 	'''
 	AKARI/IRC spectroscopy slit coord extraction
 
 	--- INPUT ---
-	savIN       input sav file (IDL)
-	filIRC      IRC N3 (long exp) frame corrected (2MASS corrected)
+	filOUT      output FITS file
+	dirIRC      path of IRC dataset
+	parobs[0]   observation id
+	parobs[1]   IRC N3 (long exp) frame (2MASS corrected; 90 deg rot needed)
+	slit        
+	Nw          num of wave
+	Ny          slit length
+	Nx          slit width
 	--- OUTPUT ---
 	'''
-	def __init__(self, savIN, filIRC, filOUT):
-		super().__init__(filIRC)
-
-		im = readsav(savIN+'.sav', python_dict=True)['specimage_n_wc']
-		im = im[::-1] # -> ascending order
+	def __init__(self, dirIRC, parobs, slit, Nw=259, Ny=31, Nx=None, filOUT=None):
+		path = dirIRC + parobs[0] + '/irc_specred_out_' + slit+'/'
+		filSAV = path + parobs[0] + '.N3_NG.IRC_SPECRED_OUT'
+		filIN = path + parobs[1]
+		super().__init__(filIN)
+		
+		## Read output data
+		spec_arr = []
+		for i in range(Ny):
+			spec_arr.append(read_ascii(path+'spec'+str(i), float, '.spc'))
+		spec_arr = np.array(spec_arr)
+		table = readsav(filSAV+'.sav', python_dict=True)['source_table']
+		ref_x = table['image_y'][0] # slit ref x
+		ref_y = 512-table['image_x'][0] # slit ref y
+		## Slit width will be corrected by intercalib with IRS data after reprojection
+		if slit=='Ns':
+			Nx = 3 # 412pix * 5"/10' = 3.43 pix (Ns)
+		elif slit=='Nh':
+			Nx = 2 # 412pix * 3"/10' = 2.06 pix (Nh)
+		
+		cube = np.empty([Nw,Ny,Nx])
+		unc = np.empty([Nw,Ny,Nx])
+		wave = np.empty(Nw)
+		
+		## Alternative (see IRC_SPEC_TOOL; not needed if use IDL extracted spec)
+		'''
+		image = readsav(savIN+'.sav', python_dict=True)['specimage_n_wc']
+		image = image[::-1] # -> ascending order
+		noise = readsav(savIN+'.sav', python_dict=True)['noisemap_n']
+		noise = noise[::-1]
 		wave = readsav(savIN+'.sav', python_dict=True)['wave_array']
 		wave = wave[::-1] # -> ascending order
-		table = readsav(savIN+'.sav', python_dict=True)['source_table']
-		ref_x = table['image_x'][0] # slit ref x
-		ref_y = table['image_y'][0] # slit ref y
-		dx = im.shape[1] # slit length
-		dy = 1 # slit width: 256*5"/10' for 'Ns' & 256*3"/10' for 'Nh' 
-		cube = im.reshape(im.shape[0], dy, dx)
-
+		Nw = image.shape[0] # num of wave
+		Ny = image.shape[1] # slit length
+		spec_y = table['spec_y'][0] # ref pts of wavelength
+		
+		d_wave_offset_pix = -(spec_y-round(spec_y[0])) # Wave shift
+		warr = np.arange(Nw)
+		wave_shift = np.interp(warr+d_wave_offset_pix, warr, wave)
+		
+		for k in range(Nw):
+			for j in range(Ny):
+				for i in range(Nx):
+					cube[k][j][i] = image[k][j]
+					unc[k][j][i] = noise[k][j]
+		'''
+		
+		## Broaden cube width
+		for k in range(Nw):
+			for j in range(Ny):
+				for i in range(Nx):
+					cube[k][j][i] = spec_arr[j,k,1]
+					unc[k][j][i] = (spec_arr[j,k,3]-spec_arr[j,k,2])/2
+			wave[k] = spec_arr[0,k,0]
+		
 		## Modify cube header
-		self.rectangle(CENval=None, SIZpix=(dx, dy), CENpix=(ref_x, ref_y))
+		self.crop(sizpix=(Nx, Ny), cenpix=(ref_x, ref_y))
 		self.hdr['CTYPE3'] = 'WAVELENGTH'
 		self.hdr['CUNIT1'] = 'deg'
 		self.hdr['CUNIT2'] = 'deg'
 		self.hdr['BUNIT'] = 'MJy/sr'
 		self.hdr['EQUINOX'] = 2000.0
 		comment = "Assembled AKARI/IRC slit spectroscopy cube. "
+		uncom = "Assembled AKARI/IRC slit spectroscopy uncertainty cube. "
 
 		write_fits(filOUT, self.hdr, cube, wave=wave, \
-				COMMENT=comment)
-
-class imontage(improve):
-	'''
-	Image/cube mosaic
-
-	--- INPUT ---
-	--- OUTPUT ---
-	'''
-	def __init__(self, arg):
-		super().__init__(filIN, wmod)
-
-		self.arg = arg
-		
+			COMMENT=comment)
+		write_fits(filOUT+'_unc', self.hdr, unc, wave=wave, \
+			COMMENT=uncom)
 
 """
 ------------------------------ MAIN (test) ------------------------------
@@ -654,22 +698,48 @@ if __name__ == "__main__":
 	from myfunclib import MCerror
 
 	import os
-	path = os.getcwd() + '/../tests/'
+	path_test = os.getcwd() + '/../tests/'
 
-	## Test slitextract
-	##------------------
-	savIN = path + 'data/1420415.1.N3_NG.IRC_SPECRED_OUT'
-	filIRC = path + 'data/F011213824_N002'
-	filOUT = path + 'out/M83_AKARI'
+	## Test slitextract + imontage
+	##-----------------------------
+	path_data = '/Users/dhu/Data/AKARI/data/'
 
-	slitextract(savIN, filIRC, filOUT)
+	obs_id = ['1420415.1', '1420415.2']
+	N3_frame = ['F011213824_N002', 'F011213865_N002']
+	slit = ['Ns', 'Nh']
+
+	# savIN = []
+	# filIRC = []
+	# for i, obs in enumerate(obs_id):
+	# 	for s in slit:
+	# 		path_out = path_data + obs + '/irc_specred_out_'+s+'/'
+	# 		savIN.append(path_out + obs + '.N3_NG.IRC_SPECRED_OUT')
+	# 		filIRC.append(path_out + N3_frame[i])
+	
+	filOUT = path_test + 'out/M83_AKARI'
+
+	slitextract(path_data, (obs_id[0], N3_frame[0]), slit[0], filOUT=filOUT)
+
+	## Test FITS ref point shift (improve.crop)
+	##-----------------------------------------------
+	# filIN = path_test + 'data/M83_0'
+	# filOUT = path_test + 'out/M83_ref_shift'
+	
+	# w = WCSextract(filIN)[1]
+	# hdr, data, wave = read_fits(filIN)
+	# hdr['CRPIX1'] = hdr['NAXIS1'] / 2.
+	# hdr['CRPIX2'] = hdr['NAXIS2'] / 2.
+	# pix = np.array([(hdr['CRPIX1'], hdr['CRPIX2'])])
+	# hdr['CRVAL1'], hdr['CRVAL2'] = w.all_pix2world(pix, 1)[0]
+
+	# write_fits(filOUT, hdr, data, wave)
 
 	## Test interfill
 	##----------------
 	# Nmc = 2
 
-	# filIN = path + 'data/IC10_SL1'
-	# filOUT = path + 'out/IC10_SL1'
+	# filIN = path_test + 'data/IC10_SL1'
+	# filOUT = path_test + 'out/IC10_SL1'
 
 	# hdr, im, wvl = read_fits(filIN, wmod=1)
 	# unc = read_fits(filIN+'_unc', wmod=1)[1]

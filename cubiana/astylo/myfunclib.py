@@ -40,9 +40,9 @@ def rad2arcsec(X):
 	'''
 	return X * 360. * 3600. / (2. * math.pi)
 
-def celest2deg(h, m, s, deg, arcmin, arcsec):
+def hour2deg(h, m, s, deg, arcmin, arcsec):
 	'''
-	Degree to world coord conversion
+	Degree to hour angle conversion
 	'''
 	ra = (h + m/60. + s/3600.) * 360./24.
 	if deg<0:
@@ -52,22 +52,22 @@ def celest2deg(h, m, s, deg, arcmin, arcsec):
 
 	return ra, dec
 
-def deg2celest(ra, dec):
+def deg2hour(ra, dec):
 	'''
-	World coord to degree conversion
+	hour angle to degree conversion
 	'''
 	h = math.floor(ra * 24./360.)
 	m = math.floor((ra*24./360. - h) * 60.)
 	s = ((ra*24./360. - h)*60 - m) * 60.
-	if dec>0:
-		deg = math.floor(dec)
-		arcmin = math.floor(dec - deg) * 60.
-		arcsec = ((dec - deg)*60. - arcmin) * 60.
-	else:
+	if dec<0:
 		deg = math.ceil(dec) # negtive
 		arcmin = -math.ceil((dec - deg) * 60.) # positive
 		arcsec = -((dec - deg)*60. + arcmin) * 60. # positive
-
+	else:
+		deg = math.floor(dec)
+		arcmin = math.floor((dec - deg) * 60.)
+		arcsec = ((dec - deg)*60. - arcmin) * 60.
+		
 	print('{:d}h{:d}m{:04.2f}s, {:d}d{:d}m{:04.2f}s'.format(h,m,s,deg,arcmin,arcsec))
 
 	return h, m, s, deg, arcmin, arcsec
@@ -245,4 +245,4 @@ if __name__ == "__main__":
 	ax.scatter(x, x, g2, s=.5)
 	#plt.show()
 
-	print("degree=",celest2deg(0, 58, 48, -179, 40, 8))
+	print("degree=",hour2deg(0, 58, 48, -179, 40, 8))
