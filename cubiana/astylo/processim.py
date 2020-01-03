@@ -335,9 +335,9 @@ class improve:
 		if not (0<cenpix[0]<self.NAXIS1 and 0<cenpix[1]<self.NAXIS2):
 			print("ERROR: crop centre overpassed image border! ")
 			exit()
-		print("Crop centre (RA, DEC): [{:.8}, {:.8}] \n".format(*cenval))
-		print("Crop centre (x, y): [{}, {}]".format(*cenpix))
 		print('----------')
+		print("Crop centre (RA, DEC): [{:.8}, {:.8}]".format(*cenval))
+		print("Crop centre (x, y): [{}, {}]".format(*cenpix))
 		
 		## Crop size
 		if sizpix is None:
@@ -614,14 +614,14 @@ class slitextract(improve):
 	dirIRC      path of IRC dataset
 	parobs[0]   observation id
 	parobs[1]   IRC N3 (long exp) frame (2MASS corrected; 90 deg rot needed)
-	slit        
+	parobs[2]   slit
 	Nw          num of wave
 	Ny          slit length
 	Nx          slit width
 	--- OUTPUT ---
 	'''
-	def __init__(self, dirIRC, parobs, slit, Nw=259, Ny=31, Nx=None, filOUT=None):
-		path = dirIRC + parobs[0] + '/irc_specred_out_' + slit+'/'
+	def __init__(self, dirIRC, parobs, Nw=259, Ny=31, Nx=None, filOUT=None):
+		path = dirIRC + parobs[0] + '/irc_specred_out_' + parobs[2]+'/'
 		filSAV = path + parobs[0] + '.N3_NG.IRC_SPECRED_OUT'
 		filIN = path + parobs[1]
 		super().__init__(filIN)
@@ -635,9 +635,9 @@ class slitextract(improve):
 		ref_x = table['image_y'][0] # slit ref x
 		ref_y = 512-table['image_x'][0] # slit ref y
 		## Slit width will be corrected by intercalib with IRS data after reprojection
-		if slit=='Ns':
+		if parobs[2]=='Ns':
 			Nx = 3 # 412pix * 5"/10' = 3.43 pix (Ns)
-		elif slit=='Nh':
+		elif parobs[2]=='Nh':
 			Nx = 2 # 412pix * 3"/10' = 2.06 pix (Nh)
 		
 		cube = np.empty([Nw,Ny,Nx])
@@ -674,6 +674,11 @@ class slitextract(improve):
 					cube[k][j][i] = spec_arr[j,k,1]
 					unc[k][j][i] = (spec_arr[j,k,3]-spec_arr[j,k,2])/2
 			wave[k] = spec_arr[0,k,0]
+
+		## Save spec in wave ascending order
+		self.slitim = cube[::-1]
+		self.unc = unc[::-1]
+		self.wvl = wave[::-1]
 		
 		## Modify cube header
 		self.crop(sizpix=(Nx, Ny), cenpix=(ref_x, ref_y))
@@ -685,10 +690,18 @@ class slitextract(improve):
 		comment = "Assembled AKARI/IRC slit spectroscopy cube. "
 		uncom = "Assembled AKARI/IRC slit spectroscopy uncertainty cube. "
 
-		write_fits(filOUT, self.hdr, cube, wave=wave, \
+		write_fits(filOUT, self.hdr, self.slitim, self.wvl, \
 			COMMENT=comment)
-		write_fits(filOUT+'_unc', self.hdr, unc, wave=wave, \
+		write_fits(filOUT+'_unc', self.hdr, self.unc, self.wvl, \
 			COMMENT=uncom)
+		print('obs_id: {} \nslit: {}'.format(parobs[0], parobs[2]))
+		print('----------\n')
+
+	def image(self):
+		return self.slitim
+
+	def wave(self):
+		return self.wvl
 
 """
 ------------------------------ MAIN (test) ------------------------------
@@ -705,20 +718,21 @@ if __name__ == "__main__":
 	path_data = '/Users/dhu/Data/AKARI/data/'
 
 	obs_id = ['1420415.1', '1420415.2']
-	N3_frame = ['F011213824_N002', 'F011213865_N002']
+	N3 = ['F011213824_N002', 'F011213865_N002']
 	slit = ['Ns', 'Nh']
 
-	# savIN = []
-	# filIRC = []
-	# for i, obs in enumerate(obs_id):
-	# 	for s in slit:
-	# 		path_out = path_data + obs + '/irc_specred_out_'+s+'/'
-	# 		savIN.append(path_out + obs + '.N3_NG.IRC_SPECRED_OUT')
-	# 		filIRC.append(path_out + N3_frame[i])
-	
-	filOUT = path_test + 'out/M83_AKARI'
+	par_obs = []
+	file_out = []
+	for i, obs in enumerate(obs_id):
+		for s in slit:
+			par_obs.append([obs, N3[i], s])
+			file_out.append(path_test + 'out/M83_' + obs + '_' + s)
 
-	slitextract(path_data, (obs_id[0], N3_frame[0]), slit[0], filOUT=filOUT)
+	sx = []
+	for j, par in enumerate(par_obs):
+		sx.append(slitextract(path_data, par, filOUT=file_out[j]))
+	# print(sx[0].image().shape, sx[0].wave())
+
 
 	## Test FITS ref point shift (improve.crop)
 	##-----------------------------------------------
