@@ -50,8 +50,8 @@ def read_fits(file, wmod=0):
 					wave = np.array(wave)
 					arr = wave.reshape((Nw,1))
 					col = fits.Column(array=[wave], format=str(Nw)+'E', \
-						name='WAVELENGTH', unit='um', dim='(1,{})'.format(Nw))
-					tab = fits.BinTableHDU.from_columns([col], name='WCS-TAB')
+						name='WAVE-TAB', unit='um', dim='(1,{})'.format(Nw))
+					tab = fits.BinTableHDU.from_columns([col], name='WCS-TAB ')
 					wave = tab.data
 			
 	return hdr, data, wave
@@ -86,14 +86,14 @@ def write_fits(file, header, data, wave=None, wmod=0, **hdrl):
 				wave = np.array(wave)
 				arr = wave.reshape((Nw,1))
 				col = fits.Column(array=[wave], format=str(Nw)+'E', \
-					name='WAVELENGTH', unit='um', dim='(1,{})'.format(Nw))
-				tab = fits.BinTableHDU.from_columns([col], name='WCS-TAB')
+					name='WAVE-TAB', unit='um', dim='(1,{})'.format(Nw))
+				tab = fits.BinTableHDU.from_columns([col], name='WCS-TAB ')
 				wave = tab.data
 		## Create table
 		if wmod==0:
-			hdu = fits.ImageHDU(data=wave, name='WAVELENGTH (um)')
+			hdu = fits.ImageHDU(data=wave, name='WAVE-TAB')
 		elif wmod==1:
-			hdu = fits.BinTableHDU(data=wave, name='WCS-TAB')
+			hdu = fits.BinTableHDU(data=wave, name='WCS-TAB ')
 
 		hdul.append(hdu)
 

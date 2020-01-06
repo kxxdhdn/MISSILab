@@ -11,7 +11,6 @@ import math
 import numpy as np
 from scipy.io import readsav
 from reproject import reproject_interp
-from ccdproc import combine
 import subprocess as SP
 
 ## astylo
@@ -273,10 +272,10 @@ class improve:
 		## read image/cube
 		## self.hdr is a 2D (reduced) header
 		self.hdr, self.w, self.is3d = WCSextract(filIN)
-		self.NAXIS1 = self.hdr['NAXIS1']
-		self.NAXIS2 = self.hdr['NAXIS2']
+		self.Nx = self.hdr['NAXIS1']
+		self.Ny = self.hdr['NAXIS2']
 		print("Raw size (pix): {} * {}".format(
-			self.NAXIS1, self.NAXIS2))
+			self.Nx, self.Ny))
 		## 3D cube slicing
 		if self.is3d==True:
 			self.im, self.wvl = read_fits(filIN)[1:3]
@@ -332,7 +331,7 @@ class improve:
 			cenpix = self.w.all_world2pix(cenval[0], cenval[1], 1)
 		else:
 			cenval = self.w.all_pix2world(np.array([cenpix]), 1)[0]
-		if not (0<cenpix[0]<self.NAXIS1 and 0<cenpix[1]<self.NAXIS2):
+		if not (0<cenpix[0]<self.Nx and 0<cenpix[1]<self.Ny):
 			print("ERROR: crop centre overpassed image border! ")
 			exit()
 		print('----------')
@@ -352,7 +351,7 @@ class improve:
 		ymin = math.floor(cenpix[1] - sizpix[1]/2.)
 		xmax = xmin + sizpix[0]
 		ymax = ymin + sizpix[1]
-		if not (xmin>=0 and xmax<=self.NAXIS1 and ymin>=0 and ymax<=self.NAXIS2):
+		if not (xmin>=0 and xmax<=self.Nx and ymin>=0 and ymax<=self.Ny):
 			print("ERROR: crop region overpassed image border! ")
 			exit()
 
@@ -425,19 +424,71 @@ class icrop(improve):
 class iproject(improve):
 	'''
 	PROJECT 2D image or 3D cube
+
+	--- INPUT ---
+	fmod        output file frame
+	            'ref' - same as ref frame (Default)
+	            'rec' - recenter back to input frame
+	            'ext' - cover both input and ref frame
+	--- OUTPUT ---
 	'''
 	def __init__(self, filIN, filREF=None, hdREF=None, \
-		uncIN=None, filTMP=None, wmod=0, filOUT=None):
+		uncIN=None, filTMP=None, wmod=0, fmod='ref', filOUT=None):
 		super().__init__(filIN, wmod)
 		## input hdREF must be (reduced) 2D header
 
 		self.addunc(uncIN)
 
 		if filREF is not None:
-			hdREF = WCSextract(filREF)[0]
+			wcsREF = WCSextract(filREF)
+			hdREF = wcsREF[0]
+			self.ref_is_3d = wcsREF[2]
 			hdREF['EQUINOX'] = 2000.0
-		
+
 		if hdREF is not None:
+			## Frame mode options
+			##--------------------
+			## Input WCS
+			p = [[0,0]]
+			p.append([0,self.Ny])
+			p.append([self.Nx,0])
+			p.append([self.Nx,self.Ny])
+			val = self.w.all_pix2world(np.array(p), 1)
+			## Ref WCS
+			w = WCSextract(header=hdREF)[1]
+			pts = []
+			for i in range(4):
+				pts.append(w.all_world2pix(val[i,0], val[i,1], 1))
+			pts = np.array(pts)
+			xmin = min(pts[:,0])
+			xmax = max(pts[:,0])
+			ymin = min(pts[:,1])
+			ymax = max(pts[:,1])
+			## Modify ref header
+			if fmod=='ref':
+				pass
+			elif fmod=='rec': 
+				hdREF['CRPIX1'] = -xmin
+				hdREF['CRPIX2'] = -ymin
+				hdREF['NAXIS1'] = math.ceil(xmax - xmin)
+				hdREF['NAXIS2'] = math.ceil(ymax - ymin)
+				print('******')
+				print(hdREF['NAXIS1'])
+				print('******')
+			elif fmod=='ext':
+				if xmin<0:
+					hdREF['CRPIX1'] = -xmin
+				if ymin<0:
+					hdREF['CRPIX2'] = -ymin
+				hdREF['NAXIS1'] = math.ceil(max(xmax, hdREF['NAXIS1']-xmin, \
+					xmax-xmin, hdREF['NAXIS1']))
+				hdREF['NAXIS2'] = math.ceil(max(ymax, hdREF['NAXIS2']-ymin, \
+					ymax-ymin, hdREF['NAXIS2']))
+			## Save hdREF
+			self.hdREF = hdREF
+
+			## Do reprojection
+			##-----------------
 			if self.is3d==True:
 				if filTMP is not None:
 					slicIN = self.slice(filSL=filTMP, suffix='_') # addunc inclu
@@ -453,23 +504,22 @@ class iproject(improve):
 					fclean(f+'.fits')
 
 				self.projim = np.array(im)
-				## recover non-reduced 3D header
-				if filREF is not None:
-					hdr = read_fits(filREF)[0]
 			else:
 				self.projim, footprint = reproject_interp(filIN+'.fits', hdREF)
 		else:
 			print('ERROR: Can not find projection reference! ')
+			exit()
 			
 		if filOUT is not None:
-			comment = "Re[PROJECT]ed image. "
-			
 			if self.is3d==True:
-				write_fits(filOUT, hdr, self.projim, self.wvl, wmod, \
-					COMMENT=comment)
+				self.hdOUT = read_fits(filREF)[0] # Non-reduced 3D ref header
 			else:
-				write_fits(filOUT, hdREF, self.projim, self.wvl, wmod, \
-					COMMENT=comment)
+				self.hdOUT = hdREF
+
+			comment = "Reprojected by <iproject>. "
+
+			write_fits(filOUT, self.hdOUT, self.projim, self.wvl, wmod, \
+				COMMENT=comment)
 	
 	def image(self):
 		return self.projim
@@ -479,6 +529,20 @@ class iproject(improve):
 
 	def filenames(self):
 		return self.slist
+
+	def ref_ext(self, uncREF):
+		if self.ref_is_3d==True:
+			slicREF = self.slice(filSL=self.filREF, suffix='_')
+			ref_im = []
+			for r in slicREF:
+				ref_im.append(reproject_interp(r+'.fits', self.hdREF)[0])
+				fclean(r+'.fits')
+
+			ref_im = np.array(ref_im)
+		else:
+			ref_im = reproject_interp(self.filREF+'.fits', self.hdREF)[0]
+
+		return ref_im
 
 class iconvolve(improve):
 	'''
@@ -591,7 +655,7 @@ class iconvolve(improve):
 			self.convim = read_fits(self.filIN+'_conv')[1]
 		
 		if self.filOUT is not None:
-			comment = "[ICONVOLV]ed by G. Aniano's IDL routine."
+			comment = "Convolved by G. Aniano's IDL routine."
 			# comment = 'https://www.astro.princeton.edu/~ganiano/Kernels.html'
 			write_fits(self.filOUT, self.hdr, self.convim, self.wvl, self.wmod, \
 				COMMENT=comment)
@@ -682,7 +746,7 @@ class slitextract(improve):
 		
 		## Modify cube header
 		self.crop(sizpix=(Nx, Ny), cenpix=(ref_x, ref_y))
-		self.hdr['CTYPE3'] = 'WAVELENGTH'
+		# self.hdr['CTYPE3'] = 'WAVE-TAB'
 		self.hdr['CUNIT1'] = 'deg'
 		self.hdr['CUNIT2'] = 'deg'
 		self.hdr['BUNIT'] = 'MJy/sr'
@@ -703,12 +767,34 @@ class slitextract(improve):
 	def wave(self):
 		return self.wvl
 
+class imontage(iproject):
+	'''
+	Combine input file and ref file
+
+	'''
+	def __init__(self, filIN, filREF, hdREF=None, \
+		uncIN=None, filTMP=None, wmod=0, fmod='ext', filOUT=None):
+		super().__init__(filIN, filREF, hdREF, \
+			uncIN, filTMP, wmod, fmod)
+
+		in_im = self.image()
+
+		## Reproject ref file, if fmod is not 'ref'
+		ref_im = self.ref_ext()
+
+		if filOUT is not None:
+			comment = "A <imontage> production"
+
+			write_fits(filOUT, self.hdREF, out_im, self.wvl, \
+				COMMENT=comment)
+		
 """
 ------------------------------ MAIN (test) ------------------------------
 """
 if __name__ == "__main__":
 
 	from myfunclib import MCerror
+	from sinout import WCSextract
 
 	import os
 	path_test = os.getcwd() + '/../tests/'
@@ -732,6 +818,8 @@ if __name__ == "__main__":
 	for j, par in enumerate(par_obs):
 		sx.append(slitextract(path_data, par, filOUT=file_out[j]))
 	# print(sx[0].image().shape, sx[0].wave())
+	ns = WCSextract(file_out[0])[1]
+	nh = WCSextract(file_out[1])[1]
 
 
 	## Test FITS ref point shift (improve.crop)
