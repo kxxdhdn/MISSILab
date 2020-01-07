@@ -12,11 +12,11 @@ import numpy as np
 import scipy.interpolate as interpolate
 import subprocess as SP
 
-def fclean(filIN, *alert):
+def fclean(file, *alert):
 	'''
 	Clean folder/files
 	'''
-	SP.call('rm -rf '+filIN, shell=True)
+	SP.call('rm -rf '+file, shell=True)
 	for text in alert:
 		print(text)
 

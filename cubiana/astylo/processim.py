@@ -7,6 +7,7 @@ PROCESS IMage
 
 """
 
+import os
 import math
 import numpy as np
 from scipy.io import readsav
@@ -264,6 +265,9 @@ class improve:
 	IMage PROcessing VEssel
 	'''
 	def __init__(self, filIN, wmod=0):
+		'''
+		self: filIN, wmod, hdr, w, is3d, Nx, Ny, Nw, im, wvl
+		'''
 		
 		## INPUTS
 		self.filIN = filIN
@@ -279,7 +283,7 @@ class improve:
 		## 3D cube slicing
 		if self.is3d==True:
 			self.im, self.wvl = read_fits(filIN)[1:3]
-			self.NAXIS3 = len(self.wvl)
+			self.Nw = len(self.wvl)
 		else:
 			self.im = read_fits(filIN)[1]
 			self.wvl = None
@@ -298,9 +302,9 @@ class improve:
 
 	def slice(self, filSL, suffix=None):
 		## 3D cube slicing
+		lstOUT = []
 		if self.is3d==True:
-			lstOUT = []
-			for k in range(self.NAXIS3):
+			for k in range(self.Nw):
 				## output filename list
 				f = filSL+'_'+'0'*(4-len(str(k)))+str(k)
 				if suffix is not None:
@@ -310,7 +314,12 @@ class improve:
 				write_fits(f, self.hdr, self.im[k,:,:]) # addunc inclu
 		else:
 			print('Input file is a 2D image which cannot be sliced! ')
-			exit()
+			f = filSL+'_0000'
+			if suffix is not None:
+				f += suffix
+			lstOUT.append(f)
+			write_fits(f, self.hdr, self.im) # addunc inclu
+			print('Rewritten with only random noise added (if provided).')
 
 		return lstOUT
 	
@@ -382,10 +391,20 @@ class improve:
 
 class islice(improve):
 	'''
-	SLIce CUBE
+	Slice a cube
+
+	self: slist, path_tmp, (filIN, wmod, hdr, w, is3d, Nx, Ny, Nw, im, wvl)
 	'''
-	def __init__(self, filIN, filSL, uncIN=None, suffix=None):
+	def __init__(self, filIN, filSL=None, uncIN=None, suffix=None):
 		super().__init__(filIN)
+
+		if filSL is None:
+			path_tmp = os.getcwd()+'/tmp_slice/'
+			if not os.path.exists(path_tmp):
+				os.makedirs(path_tmp)
+			self.path_tmp = path_tmp
+
+			filSL = path_tmp+'slice'
 		
 		self.addunc(uncIN)
 
@@ -399,6 +418,9 @@ class islice(improve):
 
 	def filenames(self):
 		return self.slist
+
+	def clean(self):
+		fclean()
 
 class icrop(improve):
 	'''
@@ -421,38 +443,47 @@ class icrop(improve):
 	def wave(self):
 		return self.wvl
 
-class iproject(improve):
+class iproject(islice):
 	'''
 	PROJECT 2D image or 3D cube
 
 	--- INPUT ---
-	fmod        output file frame
-	            'ref' - same as ref frame (Default)
-	            'rec' - recenter back to input frame
-	            'ext' - cover both input and ref frame
+
 	--- OUTPUT ---
 	'''
-	def __init__(self, filIN, filREF=None, hdREF=None, \
-		uncIN=None, filTMP=None, wmod=0, fmod='ref', filOUT=None):
-		super().__init__(filIN, wmod)
-		## input hdREF must be (reduced) 2D header
+	def __init__(self, filIN, uncIN=None, filTMP=None):
+		'''
+		self: (slist, path_tmp, filIN, wmod, hdr, w, is3d, Nx, Ny, Nw, im, wvl)
+		'''
+		super().__init__(filIN, filTMP, uncIN, '_') # addunc inclu
 
-		self.addunc(uncIN)
+	def reproject(self, filREF=None, hdREF=None, fmod='ref', wmod=0, filOUT=None):
+		'''
+		PROJECT 2D image or 3D cube
+
+		--- INPUT ---
+		fmod        output file frame
+		            'ref' - same as ref frame (Default)
+		            'rec' - recenter back to input frame
+		            'ext' - cover both input and ref frame
+		--- OUTPUT ---
+
+		self: hdREF, im, hdr, wmod
+		'''
+		self.wmod = wmod
 
 		if filREF is not None:
-			wcsREF = WCSextract(filREF)
-			hdREF = wcsREF[0]
-			self.ref_is_3d = wcsREF[2]
+			hdREF = WCSextract(filREF)[0]
 			hdREF['EQUINOX'] = 2000.0
 
 		if hdREF is not None:
 			## Frame mode options
 			##--------------------
 			## Input WCS
-			p = [[0,0]]
-			p.append([0,self.Ny])
-			p.append([self.Nx,0])
-			p.append([self.Nx,self.Ny])
+			p = [[0, 0]]
+			p.append([0, self.Ny])
+			p.append([self.Nx, 0])
+			p.append([self.Nx, self.Ny])
 			val = self.w.all_pix2world(np.array(p), 1)
 			## Ref WCS
 			w = WCSextract(header=hdREF)[1]
@@ -472,9 +503,6 @@ class iproject(improve):
 				hdREF['CRPIX2'] = -ymin
 				hdREF['NAXIS1'] = math.ceil(xmax - xmin)
 				hdREF['NAXIS2'] = math.ceil(ymax - ymin)
-				print('******')
-				print(hdREF['NAXIS1'])
-				print('******')
 			elif fmod=='ext':
 				if xmin<0:
 					hdREF['CRPIX1'] = -xmin
@@ -489,60 +517,40 @@ class iproject(improve):
 
 			## Do reprojection
 			##-----------------
-			if self.is3d==True:
-				if filTMP is not None:
-					slicIN = self.slice(filSL=filTMP, suffix='_') # addunc inclu
-				else:
-					slicIN = self.slice(filSL=filIN, suffix='_') # addunc inclu
-				im = []
-				self.slist = []
-				for f in slicIN:
-					im.append(reproject_interp(f+'.fits', hdREF)[0])
-					if filTMP is not None:
-						write_fits(f+'_pro', hdREF, im)
-						self.slist.append(f+'_pro')
-					fclean(f+'.fits')
+			im = []
+			for f in self.slist:
+				im.append(reproject_interp(f+'.fits', hdREF)[0])
+				write_fits(f+'_pro', hdREF, im)
+				fclean(f+'.fits')
 
-				self.projim = np.array(im)
-			else:
-				self.projim, footprint = reproject_interp(filIN+'.fits', hdREF)
+			self.im = np.array(im)
 		else:
 			print('ERROR: Can not find projection reference! ')
 			exit()
 			
 		if filOUT is not None:
 			if self.is3d==True:
-				self.hdOUT = read_fits(filREF)[0] # Non-reduced 3D ref header
+				## Non-reduced 3D ref header
+				self.hdr = read_fits(filREF)[0]
+				self.hdr['CRPIX1'] = hdREF['CRPIX1']
+				self.hdr['CRPIX2'] = hdREF['CRPIX2']
+				self.hdr['NAXIS1'] = hdREF['NAXIS1']
+				self.hdr['NAXIS2'] = hdREF['NAXIS2']
 			else:
-				self.hdOUT = hdREF
+				self.hdr = hdREF
 
 			comment = "Reprojected by <iproject>. "
 
-			write_fits(filOUT, self.hdOUT, self.projim, self.wvl, wmod, \
+			write_fits(filOUT, self.hdr, self.im, self.wvl, self.wmod, \
 				COMMENT=comment)
 	
-	def image(self):
-		return self.projim
+		return self.im
 
 	def wave(self):
 		return self.wvl
 
 	def filenames(self):
 		return self.slist
-
-	def ref_ext(self, uncREF):
-		if self.ref_is_3d==True:
-			slicREF = self.slice(filSL=self.filREF, suffix='_')
-			ref_im = []
-			for r in slicREF:
-				ref_im.append(reproject_interp(r+'.fits', self.hdREF)[0])
-				fclean(r+'.fits')
-
-			ref_im = np.array(ref_im)
-		else:
-			ref_im = reproject_interp(self.filREF+'.fits', self.hdREF)[0]
-
-		return ref_im
 
 class iconvolve(improve):
 	'''
@@ -769,18 +777,37 @@ class slitextract(improve):
 
 class imontage(iproject):
 	'''
-	Combine input file and ref file
+	<improve> based montage tool
 
+	--- INPUT ---
+	flist       list of files to combine
+	--- OUTPUT ---
 	'''
-	def __init__(self, filIN, filREF, hdREF=None, \
-		uncIN=None, filTMP=None, wmod=0, fmod='ext', filOUT=None):
-		super().__init__(filIN, filREF, hdREF, \
-			uncIN, filTMP, wmod, fmod)
+	def __init__(self, flist, hdr_ref=None):
 
-		in_im = self.image()
+		super().__init__(file, unc, tmp)
+		self.flist = flist
+		self.hdr_ref = hdr_ref
+	
+	def repro(self, file, ref=None, hdr_ref=self.hdr_ref, unc=None, \
+		tmp=None, fmod='ext', wmod=0, out=None):
+		'''
+		Reproject input file
+		'''
+		super().__init__(file, unc, tmp)
+		image = self.reproject(ref, hdr_ref, fmod, wmod, out)
 
-		## Reproject ref file, if fmod is not 'ref'
-		ref_im = self.ref_ext()
+		return image
+
+	# def pointing(self, image):
+
+	def combine(self, filIN, uncIN, wmod=0, filOUT=None):
+		'''
+		Combine the reprojected file1 to the new input file (after reproj it)
+
+		'''
+
+
 
 		if filOUT is not None:
 			comment = "A <imontage> production"
@@ -794,7 +821,6 @@ class imontage(iproject):
 if __name__ == "__main__":
 
 	from myfunclib import MCerror
-	from sinout import WCSextract
 
 	import os
 	path_test = os.getcwd() + '/../tests/'
@@ -817,9 +843,8 @@ if __name__ == "__main__":
 	sx = []
 	for j, par in enumerate(par_obs):
 		sx.append(slitextract(path_data, par, filOUT=file_out[j]))
-	# print(sx[0].image().shape, sx[0].wave())
-	ns = WCSextract(file_out[0])[1]
-	nh = WCSextract(file_out[1])[1]
+	print(sx[0].image().shape, sx[0].wave())
+	# imontage(file_out)
 
 
 	## Test FITS ref point shift (improve.crop)
