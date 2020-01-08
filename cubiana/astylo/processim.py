@@ -420,7 +420,7 @@ class islice(improve):
 		return self.slist
 
 	def clean(self):
-		fclean()
+		fclean(path_tmp)
 
 class icrop(improve):
 	'''
@@ -443,7 +443,7 @@ class icrop(improve):
 	def wave(self):
 		return self.wvl
 
-class iproject(islice):
+class iproject(improve):
 	'''
 	PROJECT 2D image or 3D cube
 
@@ -451,27 +451,14 @@ class iproject(islice):
 
 	--- OUTPUT ---
 	'''
-	def __init__(self, filIN, uncIN=None, filTMP=None):
+	def __init__(self, filIN, filREF=None, hdREF=None, fmod='ref'):
 		'''
-		self: (slist, path_tmp, filIN, wmod, hdr, w, is3d, Nx, Ny, Nw, im, wvl)
+		self: hdREF, (filIN, wmod, hdr, w, is3d, Nx, Ny, Nw, im, wvl)
 		'''
-		super().__init__(filIN, filTMP, uncIN, '_') # addunc inclu
+		super().__init__(filIN)
+		self.slist = None
 
-	def reproject(self, filREF=None, hdREF=None, fmod='ref', wmod=0, filOUT=None):
-		'''
-		PROJECT 2D image or 3D cube
-
-		--- INPUT ---
-		fmod        output file frame
-		            'ref' - same as ref frame (Default)
-		            'rec' - recenter back to input frame
-		            'ext' - cover both input and ref frame
-		--- OUTPUT ---
-
-		self: hdREF, im, hdr, wmod
-		'''
-		self.wmod = wmod
-
+		## Prepare reprojection header
 		if filREF is not None:
 			hdREF = WCSextract(filREF)[0]
 			hdREF['EQUINOX'] = 2000.0
@@ -514,30 +501,48 @@ class iproject(islice):
 					ymax-ymin, hdREF['NAXIS2']))
 			## Save hdREF
 			self.hdREF = hdREF
-
-			## Do reprojection
-			##-----------------
-			im = []
-			for f in self.slist:
-				im.append(reproject_interp(f+'.fits', hdREF)[0])
-				write_fits(f+'_pro', hdREF, im)
-				fclean(f+'.fits')
-
-			self.im = np.array(im)
 		else:
 			print('ERROR: Can not find projection reference! ')
 			exit()
-			
+
+	def reproject(self, filOUT=None, wmod=0, uncIN=None, filTMP=None):
+		'''
+		PROJECT 2D image or 3D cube
+
+		--- INPUT ---
+		fmod        output file frame
+		            'ref' - same as ref frame (Default)
+		            'rec' - recenter back to input frame
+		            'ext' - cover both input and ref frame
+		--- OUTPUT ---
+
+		self: wmod, im, hdr, slist
+		'''
+		self.wmod = wmod
+		self.addunc(uncIN)
+
+		if filTMP is None:
+			path_tmp = os.getcwd()+'/tmp_pro/'
+			if not os.path.exists(path_tmp):
+				os.makedirs(path_tmp)
+			self.path_tmp = path_tmp
+
+			filTMP = path_tmp+'slice'
+		
+		self.slist = self.slice(filTMP, '_') # addunc inclu
+
+		## Do reprojection
+		##-----------------
+		im = []
+		for f in self.slist:
+			im.append(reproject_interp(f+'.fits', self.hdREF)[0])
+			write_fits(f+'_pro', self.hdREF, im)
+			fclean(f+'.fits')
+
+		self.im = np.array(im)
+
 		if filOUT is not None:
-			if self.is3d==True:
-				## Non-reduced 3D ref header
-				self.hdr = read_fits(filREF)[0]
-				self.hdr['CRPIX1'] = hdREF['CRPIX1']
-				self.hdr['CRPIX2'] = hdREF['CRPIX2']
-				self.hdr['NAXIS1'] = hdREF['NAXIS1']
-				self.hdr['NAXIS2'] = hdREF['NAXIS2']
-			else:
-				self.hdr = hdREF
+			self.hdr = self.hdREF
 
 			comment = "Reprojected by <iproject>. "
 
@@ -551,6 +556,9 @@ class iproject(islice):
 
 	def filenames(self):
 		return self.slist
+
+	def clean(self):
+		fclean(path_tmp)
 
 class iconvolve(improve):
 	'''
@@ -783,37 +791,68 @@ class imontage(iproject):
 	flist       list of files to combine
 	--- OUTPUT ---
 	'''
-	def __init__(self, flist, hdr_ref=None):
+	def __init__(self, flist, ref=None, hdr_ref=None, fmod='ext'):
 
-		super().__init__(file, unc, tmp)
+		super().__init__(flist[0], ref, hdr_ref, fmod)
 		self.flist = flist
-		self.hdr_ref = hdr_ref
+		self.fmod = fmod
 	
-	def repro(self, file, ref=None, hdr_ref=self.hdr_ref, unc=None, \
-		tmp=None, fmod='ext', wmod=0, out=None):
+	def repro(self, out=None, wmod=0, unc=None, tmp=None):
 		'''
 		Reproject input file
 		'''
-		super().__init__(file, unc, tmp)
-		image = self.reproject(ref, hdr_ref, fmod, wmod, out)
+		image = self.reproject(out, wmod, unc, tmp)
 
 		return image
 
 	# def pointing(self, image):
 
-	def combine(self, filIN, uncIN, wmod=0, filOUT=None):
+	def combine(self, method='average', template=None, filOUT=None, ulist=None):
 		'''
-		Combine the reprojected file1 to the new input file (after reproj it)
+		Combine the reprojected file to the new input file (after reproj it)
 
 		'''
+		Nf = len(self.flist)
+		template = os.getcwd()+'/repro_template'
 
+		## Extend reprojection header
+		for i in range(Nf):
+			## self.hdREF renewed in every cycle
+			super().__init__(self.flist[i], None, self.hdREF, self.fmod)
+			if i<Nf-1:
+				self.repro() # unc will be added later
+			else:
+				self.repro(out=template) # save template
 
+		## Reproject images
+		hyperim = []
+		for i in range(Nf):
+			super().__init__(self.flist[i], None, self.hdREF) # fmod='ref'
+			hyperim.append(self.repro(unc=ulist[i]))
+		hyperim = np.array(hyperim)
+
+		# ## Alternative reprojection (with repro_template.fits)
+		# hyperim = []
+		# for i in range(Nf):
+		# 	super().__init__(self.flist[i], template) # fmod='ref'
+		# 	hyperim.append(self.repro(unc=ulist[i]))
+		# hyperim = np.array(hyperim)
+
+		## Combine images
+		Nw, Ny, Nx = hyperim[0].shape
+		combim = np.zeros((Nw, Ny, Nx))
+		for k in range(Nw):
+			for y in range(Ny):
+				for x in range(Nx):
+					combim[k,y,x] = np.nanmean(hyperim[:,k,y,x])
 
 		if filOUT is not None:
 			comment = "A <imontage> production"
 
-			write_fits(filOUT, self.hdREF, out_im, self.wvl, \
+			write_fits(filOUT, self.hdREF, combim, self.wvl, \
 				COMMENT=comment)
+
+		# self.clean()
 		
 """
 ------------------------------ MAIN (test) ------------------------------
@@ -840,12 +879,15 @@ if __name__ == "__main__":
 			par_obs.append([obs, N3[i], s])
 			file_out.append(path_test + 'out/M83_' + obs + '_' + s)
 
-	sx = []
+	spec = []
+	unc_out = []
 	for j, par in enumerate(par_obs):
-		sx.append(slitextract(path_data, par, filOUT=file_out[j]))
-	print(sx[0].image().shape, sx[0].wave())
-	# imontage(file_out)
-
+		spec.append(slitextract(path_data, par, filOUT=file_out[j]))
+		unc_out.append(file_out[j]+'_unc')
+	# print(spec[0].image().shape, spec[0].wave())
+	
+	mont = imontage(file_out, file_out[0])
+	mont.combine(filOUT=path_test + 'out/M83_IRC', ulist=unc_out)
 
 	## Test FITS ref point shift (improve.crop)
 	##-----------------------------------------------

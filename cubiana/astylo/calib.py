@@ -174,8 +174,8 @@ class spec2phot(intercalib):
 				filPRO = filIN # filPRO is spec
 			
 			## Reprojection to spec (filIN)
-			pro = iproject(filREF)
-			F_phot = pro.reproject(filPRO, filOUT=filOUT)
+			pro = iproject(filREF, filPRO)
+			F_phot = pro.reproject(filOUT)
 
 		else: # filIN is phot
 			## Reset header (should be spec)
@@ -189,8 +189,8 @@ class spec2phot(intercalib):
 				filPRO = filIN # filPRO is phot
 			
 			## Reprojection to spec (filREF)
-			pro = iproject(filPRO)
-			F_phot = pro.reproject(filREF, filOUT=filOUT)
+			pro = iproject(filPRO, filREF)
+			F_phot = pro.reproject(filOUT)
 
 		## Synthetic photometry
 		wcen, F_syn, sig = self.synthetic_photometry((phot))
@@ -225,8 +225,8 @@ class phot2phot:
 			filPRO = filIN
 
 		## Reprojection config
-		pro = iproject(filPRO)
-		self.im = pro.reproject(filREF, filOUT=filOUT)
+		pro = iproject(filPRO, filREF)
+		self.im = pro.reproject(filOUT)
 
 	def image(self):
 		return self.im

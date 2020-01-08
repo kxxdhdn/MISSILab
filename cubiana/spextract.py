@@ -178,11 +178,11 @@ if b0=='y':
 
 			## Reproject convolved cube
 			##--------------------------
-			pro = iproject(filIN=file_proj, filREF=project_ref, \
-				filTMP=file_slice)#, filOUT=file_out+'_'+str(j))
+			pro = iproject(file_proj, project_ref)
+			pro_cube = pro.reproject(filTMP=file_slice)#, filOUT=file_out+'_'+str(j))
 			
 			slices.extend(pro.filenames())
-			cubi.append(pro.image()) # Here, pro.image is a 3D cube
+			cubi.append(pro_cube)
 		
 			fclean(file_conv+'.fits')
 
@@ -285,11 +285,11 @@ write_fits(file_calib_p, hdr_p, im_p)
 ## phot2phot
 ##-----------
 ## Use reprojection to crop
-pro_s = iproject(file_calib_s, file_all, filOUT=file_calib_s)
+pro_s = iproject(file_calib_s, file_all)
+newim_s = pro_s.reproject(file_calib_s)
 p2p = phot2phot(filIN=file_calib_p, \
 	filREF=file_calib_s, filOUT=file_calib_p)
 newim_p = p2p.image()
-newim_s = pro_s.image()
 
 plt.figure()
 x = np.arange(1.,1.e4,1.)
