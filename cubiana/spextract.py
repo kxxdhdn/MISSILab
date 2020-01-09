@@ -8,11 +8,11 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 ## astylo
-from astylo.sinout import read_fits, write_fits, WCSextract, read_ascii
-from astylo.processim import islice, icrop, iconvolve, iproject, wclean
+from astylo.bio import read_fits, write_fits, read_ascii
+from astylo.proc import islice, icrop, iconvolve, iproject, wclean
 from astylo.calib import intercalib, phot2phot
-from astylo.myfunclib import fclean, MCerror, pix2sr
-from astylo.splot import plot2d
+from astylo.lib import fclean, MCerror, pix2sr
+from astylo.plot import plot2d
 
 ##---------------------------
 ##       Initialisation
@@ -114,7 +114,7 @@ if file_ker is not None:
 ## Cropped ref image
 ##-------------------
 icrop(file_ref, project_ref, cenval=(ra,dec), sizpix=(dx,dy), wmod=1)
-hdr = read_fits(project_ref)[0]
+hdr = read_fits(project_ref).header
 NAXIS1 = hdr['NAXIS1']
 NAXIS2 = hdr['NAXIS2']
 
@@ -154,7 +154,7 @@ if b0=='y':
 			# 	wvl = sl.wave()
 			# 	slist = sl.filenames()
 			# else: # add unc
-			# 	islice(filIN=file_data, filSL=file_slice, uncIN=file_unc)
+			# 	islice(filIN=file_data, filSL=file_slice, filUNC=file_unc)
 
 			if file_ker is not None:
 				## Smooth images [IDL]
@@ -165,7 +165,7 @@ if b0=='y':
 						filTMP=file_slice, filOUT=file_conv)
 				else: # add unc
 					conv = iconvolve(filIN=file_data, filKER=kernelist, \
-						saveKER=cker, wmod=1, uncIN=file_unc, \
+						saveKER=cker, wmod=1, filUNC=file_unc, \
 						filTMP=file_slice, filOUT=file_conv)
 
 				conv.do_conv(ipath=path_idl)
@@ -217,7 +217,8 @@ else:
 ## Time offset
 t2 = time.time()
 
-cube0, wavALL = read_fits(file_all+'_0')[1:3]
+cube0 = read_fits(file_all+'_0').data
+wavALL = read_fits(file_all+'_0').wave
 
 if b2=='y':
 	hypercube=[]
@@ -225,7 +226,7 @@ if b2=='y':
 		if j==0:
 			pass
 		else:
-			cube = read_fits(file_all+'_'+str(j))[1]
+			cube = read_fits(file_all+'_'+str(j)).data
 			hypercube.append(cube)
 
 	hypercube = np.array(hypercube)
@@ -239,7 +240,7 @@ if b2=='y':
 	t_cal_unc = time.time()
 	print(">> cal_unc_time = {:.0f} seconds <<".format(t_cal_unc - t2))
 else:
-	unc = read_fits(file_all+'_unc')[1]
+	unc = read_fits(file_all+'_unc').data
 
 ## Clean Wavelengths
 ##-------------------
@@ -256,14 +257,16 @@ print('\n>>>>>>>>>>>>>>>>>>\n')
 
 ## Convert Jy/pix to MJy/sr (Optional)
 ##-------------------------------------
-hdr_s, im_s = read_fits(file_phot_s)[0:2]
+hdr_s = read_fits(file_phot_s).header
+im_s = read_fits(file_phot_s).data
 # if hdr_s['SIGUNIT']=='Jy/pix              / Unit of the map': # DustPedia
 if Uconvert_s==True:
 	im_s = im_s * 1.e-6 / pix2sr(1., hdr_s['CDELT1'])
 	hdr_s['SIGUNIT'] = 'MJy/sr'
 write_fits(file_calib_s, hdr_s, im_s)
 
-hdr_p, im_p = read_fits(file_phot_p)[0:2]
+hdr_p = read_fits(file_phot_p).header
+im_p = read_fits(file_phot_p).data
 # if hdr_p['SIGUNIT']=='Jy/pix              / Unit of the map': # DustPedia
 if Uconvert_p==True:
 	im_p = im_p * 1.e-6 / pix2sr(1., hdr_p['CDELT1'])

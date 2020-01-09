@@ -13,10 +13,9 @@ from matplotlib.ticker import ScalarFormatter, NullFormatter
 import subprocess as SP
 
 ## astylo
-from sinout import read_fits, WCSextract, \
-	read_hdf5, write_hdf5, read_ascii
-from splot import plot2d_m, mycolorlib
-from processim import iconvolve, iproject
+from bio import read_fits, ext_wcs, read_hdf5, write_hdf5, read_ascii
+from plot import plot2d_m, colorlib
+from proc import iconvolve, iproject
 
 
 ##-----------------------------------------------
@@ -49,7 +48,9 @@ def specorrect(filIN, factor=1., offset=0., wlim=(None,None), \
 	--- OUTPUT ---
 	im          im = factor * im + offset
 	'''
-	hdr, im, wvl = read_fits(file=filIN, wmod=wmod)
+	hdr = read_fits(file=filIN, wmod=wmod).header
+	im = read_fits(file=filIN, wmod=wmod).data
+	wvl = read_fits(file=filIN, wmod=wmod).wave
 
 	if wlim[0] is None:
 		wmin = wvl[0]
@@ -85,11 +86,14 @@ class intercalib:
 		self.filIN = filIN
 
 		if filIN is not None:
-			self.hdr, w, self.is3d = WCSextract(filIN)
+			self.hdr = ext_wcs(filIN).header
+			w = ext_wcs(filIN).WCS
+			self.is3d = ext_wcs(filIN).is3d
 			if self.is3d==True:
-				self.im, self.wvl = read_fits(filIN, wmod=wmod)[1:3]
+				self.im = read_fits(filIN, wmod=wmod).data
+				self.wvl = read_fits(filIN, wmod=wmod).wave
 			else:
-				self.im = read_fits(filIN, wmod=wmod)[1]
+				self.im = read_fits(filIN, wmod=wmod).data
 				self.wvl = None
 
 	def synthetic_photometry(self, filt_UTF8, \
@@ -179,7 +183,9 @@ class spec2phot(intercalib):
 
 		else: # filIN is phot
 			## Reset header (should be spec)
-			self.hdr, self.im, self.wvl = read_fits(filREF, wmod=wmod)
+			self.hdr = read_fits(filREF, wmod=wmod).header
+			self.im = read_fits(filREF, wmod=wmod).data
+			self.wvl = read_fits(filREF, wmod=wmod).wave
 			
 			## Convolve filIN (phot)
 			if filKER is not None:
@@ -253,7 +259,7 @@ def photometry_profile(path_dat, *photometry):
 	## Plotting setting
 	##------------------
 	p = plot2d_m(lam, val, xlim=(1.9, 40.), ylim=(-.01, 1.01), \
-	xlog=1, ylog=1, cl=mycolorlib[2:], lw=1.8, \
+	xlog=1, ylog=1, cl=colorlib[2:], lw=1.8, \
 	lablist=photometry, \
 	xlab=r'$Wavelength,\,\,\lambda\,\,[\mu m]$', \
 	ylab='Response', \

@@ -1,17 +1,17 @@
 # astylo
 
 
-+ sinout
++ bio
 	+ read_fits
 	+ write_fits
-	+ WCSextract
+	+ ext_WCS
 	+ read_hdf5
 	+ write_hdf5
 	+ read_ascii
 	+ read_csv
 	+ write_csv
 
-+ splot
++ plot
 	+ plotool
 		+ figure
 		+ set_border
@@ -26,7 +26,7 @@
 	+ plot2d
 	+ plot2d_m
 
-+ myfunclib
++ lib
 	+ fclean
 	+ pix2sr
 	+ sr2arcsec2
@@ -44,7 +44,7 @@
 	+ bsplinterpol
 	+ MCerror
 
-+ <sup>__&dagger;__</sup>processim
++ <sup>__&dagger;__</sup>proc
 	+ wclean
 	+ interfill
 	+ hextract
@@ -59,7 +59,7 @@
 	+ crop
 		+ image
 		+ wave
-	+ project
+	+ iproject
 		+ image
 		+ wave
 		+ slice_names
@@ -70,6 +70,8 @@
 		+ image
 		+ wave
 		+ slice_names
+	+ sextract
+	+ imontage
 
 + calib
 	+ intercalib

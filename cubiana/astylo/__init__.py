@@ -7,7 +7,7 @@ print("           -=-=-=-=-=-=-=-=-=-")
 print("          |       astylo      |")
 print("           -=-=-=-=-=-=-=-=-=-")
 print("\n            Developed by D. HU")
-print("          Version 0.2 (20191024)")
+print("          Version 0.3 (20200108)")
 print("\n---------------------------------------------")
 
 
