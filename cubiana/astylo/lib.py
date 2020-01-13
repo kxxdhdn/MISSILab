@@ -96,11 +96,11 @@ def gaussian(x, mu, sigma):
 	'''
 	return 1/(sigma * np.sqrt(2 * np.pi)) * np.exp( - (x - mu)**2 / (2 * sigma**2))
 
-def gaussian2D(x, y, mux, muy, sigx, sigy, A=1.):
+def gaussian2D(x1, x2, mu1, mu2, sig1, sig2, A=1.):
 	'''
 	2D Gaussian function given iid variables x & y (and amplitude A)
 	'''
-	return A * np.exp(- (x - mux)**2 / (2 * sigx**2) - (y - muy)**2 / (2 * sigy**2))
+	return A * np.exp(- (x1 - mu1)**2 / (2 * sig1**2) - (x2 - mu2)**2 / (2 * sig2**2))
 
 def rms(a, ddof=0):
 	'''

@@ -164,7 +164,6 @@ def wclean(filIN, cmod='eq', cfile=None, \
 	##---------------------
 	if filOUT is not None:
 		# comment = 'Wavelength removal info in _wclean_info.csv'
-
 		write_fits(filOUT, hdr, data_new, wave_new, wmod) # hdr auto changed
 		
 		## Write csv file
@@ -270,51 +269,93 @@ class impro:
 	'''
 	IMage PROcessing VEssel
 	'''
-	def __init__(self, filIN, wmod=0):
+	def __init__(self, filIN, wmod=0, verbose=True):
 		'''
-		self: filIN, wmod, hdr, w, is3d, Nx, Ny, Nw, im, wvl
+		self: filIN, wmod, hdr, w, dim, Nx, Ny, Nw, im, wvl
 		'''
 		
 		## INPUTS
 		self.filIN = filIN
 		self.wmod = wmod
+		self.verbose = verbose
 
 		## read image/cube
 		## self.hdr is a 2D (reduced) header
 		ws = ext_wcs(filIN)
 		self.hdr = ws.header
 		self.w = ws.WCS
-		self.is3d = ws.is3d
 		self.Nx = self.hdr['NAXIS1']
 		self.Ny = self.hdr['NAXIS2']
-		print("Raw size (pix): {} * {}".format(
-			self.Nx, self.Ny))
+		self.Nw = None
+		if verbose==True:
+			print('<impro> file: ', filIN)
+			print('Raw size (pix): {} * {}'.format(self.Nx, self.Ny))
 		## 3D cube slicing
 		ds = read_fits(filIN)
-		if self.is3d==True:
-			self.im = ds.data
-			self.wvl = ds.wave
+		self.im = ds.data
+		self.wvl = ds.wave
+		self.dim = len(self.im.shape)
+		if self.dim==3:
 			self.Nw = len(self.wvl)
-		else:
-			self.im = ds.data
-			self.wvl = None
 
-	def add_gauss_n(self, filUNC=None):
-		## Add gaussian noise
-		mu, sigma = 0., 1.
+	def rand_norm(self, file=None, unc=None, sigma=1., mu=0.):
+		'''
+		Add random N(0,1) noise
+		'''
+		if file is not None:
+			unc = read_fits(file).data
 
-		if filUNC is not None:
-			unc = read_fits(filUNC).data
-			theta = np.random.normal(mu, sigma, unc.shape)
-			## unc has the same dimension with im
+		if unc is not None:
+			## unc should have the same dimension with im
+			ax = unc.shape
+			theta = np.random.normal(mu, sigma, ax)
 			self.im += theta * unc
+
+		return self.im
+
+	def rand_splitnorm(self, file=None, unc=None, sigma=1., mu=0.):
+		'''
+		Add random SN(0,lam,lam*tau) noise
+
+		------ INPUT ------
+		file                2 FITS files for unc of left & right sides
+		unc                 2 uncertainty ndarrays
+		------ OUTPUT ------
+		'''
+		if file is not None:
+			unc = []
+			for f in file:
+				unc.append(read_fits(f).data)
+			
+		if unc is not None:
+			## unc[i] should have the same dimension with self.im
+			tau = unc[1]/unc[0]
+			peak = 1/(1+tau)
+			ax = tau.shape
+			theta = np.random.normal(mu, sigma, ax) # ~N(0,1)
+			flag = np.random.random(ax) # ~U(0,1)
+			if len(ax)==2:
+				for x in range(ax[1]):
+					for y in range(ax[0]):
+						if flag[y,x]<peak[y,x]:
+							self.im[y,x] += -abs(theta[y,x]) * unc[0][y,x]
+						else:
+							self.im[y,x] += abs(theta[y,x]) * unc[1][y,x]
+			elif len(ax)==3:
+				for x in range(ax[2]):
+					for y in range(ax[1]):
+						for k in range(ax[0]):
+							if flag[k,y,x]<peak[k,y,x]:
+								self.im[k,y,x] += -abs(theta[k,y,x]) * unc[0][k,y,x]
+							else:
+								self.im[k,y,x] += abs(theta[k,y,x]) * unc[1][k,y,x]
 
 		return self.im
 
 	def slice(self, filSL, suffix=None):
 		## 3D cube slicing
 		slist = []
-		if self.is3d==True:
+		if self.dim==3:
 			for k in range(self.Nw):
 				## output filename list
 				f = filSL+'_'+'0'*(4-len(str(k)))+str(k)
@@ -348,31 +389,47 @@ class impro:
 		self.im             cropped image array
 		'''
 		## Crop center
+		##-------------
 		if cenpix is None:
-			## Convert coord
-			cenpix = self.w.all_world2pix(cenval[0], cenval[1], 1)
+			if cenval is None:
+				print('ERROR: crop center unavailable! ')
+				exit()
+			else:
+				## Convert coord
+				cenpix = self.w.all_world2pix(cenval[0], cenval[1], 1)
 		else:
 			cenval = self.w.all_pix2world(np.array([cenpix]), 1)[0]
 		if not (0<cenpix[0]<self.Nx and 0<cenpix[1]<self.Ny):
 			print("ERROR: crop centre overpassed image border! ")
 			exit()
-		print('----------')
-		print("Crop centre (RA, DEC): [{:.8}, {:.8}]".format(*cenval))
-		print("Crop centre (x, y): [{}, {}]".format(*cenpix))
-		
+
 		## Crop size
+		##-----------
 		if sizpix is None:
-			print("Crop size (dRA, dDEC): [{}, {}].".format(*sizval))
-			## CDELTn needed (Physical increment at the reference pixel)
-			sizpix = np.array(sizval) / np.array(self.hdr['CDELT1'], self.hdr['CDELT2'])
-		print("Crop size (dx, dy): [{}, {}].".format(*sizpix))
-		print('----------')
+			if sizval is None:
+				print('ERROR: crop size unavailable! ')
+				exit()
+			else:
+				## CDELTn needed (Physical increment at the reference pixel)
+				sizpix = np.array(sizval) / np.array(self.hdr['CDELT1'], self.hdr['CDELT2'])
+		# else:
+			# sizval = np.array(sizpix) * np.array(self.hdr['CDELT1'], self.hdr['CDELT2'])
+
+		if self.verbose==True:
+			print('----------')
+			print("Crop centre (RA, DEC): [{:.8}, {:.8}]".format(*cenval))
+			# print("Crop size (dRA, dDEC): [{}, {}]\n".format(*sizval))
+			print("Crop centre (x, y): [{}, {}]".format(*cenpix))
+			print("Crop size (dx, dy): [{}, {}]".format(*sizpix))
+			print('----------')
 		
-		## lowerleft origin
+		## Lowerleft origin
+		##------------------
 		xmin = math.floor(cenpix[0] - sizpix[0]/2.)
 		ymin = math.floor(cenpix[1] - sizpix[1]/2.)
 		xmax = xmin + sizpix[0]
 		ymax = ymin + sizpix[1]
+
 		if not (xmin>=0 and xmax<=self.Nx and ymin>=0 and ymax<=self.Ny):
 			print("ERROR: crop region overpassed image border! ")
 			exit()
@@ -380,11 +437,11 @@ class impro:
 		## OUTPUTS
 		##---------
 		## New image
-		if self.is3d==True:
+		if self.dim==3:
 			self.im = self.im[:, ymin:ymax, xmin:xmax] # gauss_noise inclu
 			## recover 3D non-reduced header
 			self.hdr = read_fits(self.filIN).header
-		else:
+		elif self.dim==2:
 			self.im = self.im[ymin:ymax, xmin:xmax] # gauss_noise inclu
 		## Modify header
 		## Suppose no non-linear distortion
@@ -396,7 +453,6 @@ class impro:
 		if filOUT is not None:
 			comment = "[ICROP]ped at centre: [{:.8}, {:.8}]. ".format(*cenval)
 			# comment = "with size [{}, {}] (pix).".format(*sizpix)
-
 			write_fits(filOUT, self.hdr, self.im, self.wvl, self.wmod, \
 				COMMENT=comment)
 
@@ -406,21 +462,24 @@ class islice(impro):
 	'''
 	Slice a cube
 
-	self: slist, path_tmp, (filIN, wmod, hdr, w, is3d, Nx, Ny, Nw, im, wvl)
+	self: slist, path_tmp, (filIN, wmod, hdr, w, dim, Nx, Ny, Nw, im, wvl)
 	'''
-	def __init__(self, filIN, filSL=None, filUNC=None, suffix=None):
+	def __init__(self, filIN, filSL=None, filUNC=None, dist='norm', suffix=None):
 		super().__init__(filIN)
 
 		if filSL is None:
 			cur_tmp = 1 # slices stocked in current path
-			path_tmp = os.getcwd()+'/tmp_slice/'
+			path_tmp = os.getcwd()+'/tmp_proc/'
 			if not os.path.exists(path_tmp):
 				os.makedirs(path_tmp)
 			self.path_tmp = path_tmp
 
 			filSL = path_tmp+'slice'
 		
-		self.add_gauss_n(filUNC)
+		if dist=='norm':
+			self.rand_norm(filUNC)
+		elif dist=='splitnorm':
+			self.rand_splitnorm(filUNC)
 
 		self.slist = self.slice(filSL, suffix) # gauss_noise inclu
 
@@ -445,11 +504,14 @@ class icrop(impro):
 	'''
 	def __init__(self, filIN, filOUT=None, \
 		sizpix=None, cenpix=None, sizval=None, cenval=None, \
-		filUNC=None, wmod=0):
+		filUNC=None, dist='norm', wmod=0):
 		## slicrop: slice 
 		super().__init__(filIN, wmod)
 
-		self.add_gauss_n(filUNC)
+		if dist=='norm':
+			self.rand_norm(filUNC)
+		elif dist=='splitnorm':
+			self.rand_splitnorm(filUNC)
 		
 		im_crop = self.crop(filOUT=filOUT, sizpix=sizpix, cenpix=cenpix, \
 			sizval=sizval, cenval=cenval) # gauss_noise inclu
@@ -477,10 +539,15 @@ class iproject(impro):
 	'''
 	def __init__(self, filIN, filREF=None, hdREF=None, fmod='ref'):
 		'''
-		self: hdREF, (filIN, wmod, hdr, w, is3d, Nx, Ny, Nw, im, wvl)
+		self: hdr_ref, (filIN, wmod, hdr, w, dim, Nx, Ny, Nw, im, wvl)
 		'''
 		super().__init__(filIN)
-		self.slist = None
+
+		## Set path of tmp files
+		path_tmp = os.getcwd()+'/tmp_proc/'
+		if not os.path.exists(path_tmp):
+			os.makedirs(path_tmp)
+		self.path_tmp = path_tmp
 
 		## Prepare reprojection header
 		if filREF is not None:
@@ -488,46 +555,47 @@ class iproject(impro):
 			hdREF['EQUINOX'] = 2000.0
 
 		if hdREF is not None:
-			## Frame mode options
-			##--------------------
-			## Input WCS (old)
-			pix_old = [[0, 0]]
-			pix_old.append([0, self.Ny])
-			pix_old.append([self.Nx, 0])
-			pix_old.append([self.Nx, self.Ny])
-			world_arr = self.w.all_pix2world(np.array(pix_old), 1)
-			## Ref WCS (new)
-			w = ext_wcs(header=hdREF).WCS
-			pix_new = w.all_world2pix(world_arr, 1)
-			xmin = min(pix_new[:][0])
-			xmax = max(pix_new[:,0])
-			ymin = min(pix_new[:,1])
-			ymax = max(pix_new[:,1])
-
-			## Modify ref header
+			## Frame mode (fmod) options
+			##---------------------------
 			if fmod=='ref':
 				pass
-			elif fmod=='rec': 
-				hdREF['CRPIX1'] = -xmin
-				hdREF['CRPIX2'] = -ymin
-				hdREF['NAXIS1'] = math.ceil(xmax - xmin)
-				hdREF['NAXIS2'] = math.ceil(ymax - ymin)
-			elif fmod=='ext':
-				if xmin<0:
+			else:
+				## Input WCS (old)
+				pix_old = [[0, 0]]
+				pix_old.append([0, self.Ny])
+				pix_old.append([self.Nx, 0])
+				pix_old.append([self.Nx, self.Ny])
+				world_arr = self.w.all_pix2world(np.array(pix_old), 1)
+				## Ref WCS (new)
+				w = ext_wcs(header=hdREF).WCS
+				pix_new = w.all_world2pix(world_arr, 1)
+				xmin = min(pix_new[:][0])
+				xmax = max(pix_new[:,0])
+				ymin = min(pix_new[:,1])
+				ymax = max(pix_new[:,1])
+
+				## Modify ref header
+				if fmod=='rec': 
 					hdREF['CRPIX1'] = -xmin
-				if ymin<0:
 					hdREF['CRPIX2'] = -ymin
-				hdREF['NAXIS1'] = math.ceil(max(xmax, hdREF['NAXIS1']-xmin, \
-					xmax-xmin, hdREF['NAXIS1']))
-				hdREF['NAXIS2'] = math.ceil(max(ymax, hdREF['NAXIS2']-ymin, \
-					ymax-ymin, hdREF['NAXIS2']))
+					hdREF['NAXIS1'] = math.ceil(xmax - xmin)
+					hdREF['NAXIS2'] = math.ceil(ymax - ymin)
+				elif fmod=='ext':
+					if xmin<0:
+						hdREF['CRPIX1'] = -xmin
+					if ymin<0:
+						hdREF['CRPIX2'] = -ymin
+					hdREF['NAXIS1'] = math.ceil(max(xmax, hdREF['NAXIS1']-xmin, \
+						xmax-xmin, hdREF['NAXIS1']))
+					hdREF['NAXIS2'] = math.ceil(max(ymax, hdREF['NAXIS2']-ymin, \
+						ymax-ymin, hdREF['NAXIS2']))
 			## Save hdREF
-			self.header_ref = hdREF
+			self.hdr_ref = hdREF
 		else:
 			print('ERROR: Can not find projection reference! ')
 			exit()
 
-	def reproject(self, filOUT=None, wmod=0, filUNC=None, filTMP=None):
+	def reproject(self, filOUT=None, filUNC=None, dist='norm', wmod=0, filTMP=None):
 		'''
 		PROJECT 2D image or 3D cube
 
@@ -538,19 +606,17 @@ class iproject(impro):
 		filTMP              save tmp files
 		------ OUTPUT ------
 
-		self: wmod, im, hdr, slist
+		self: filTMP
 		'''
 		self.wmod = wmod
-		self.add_gauss_n(filUNC)
+		if dist=='norm':
+			self.rand_norm(filUNC)
+		elif dist=='splitnorm':
+			self.rand_splitnorm(filUNC)
 
 		if filTMP is None:
 			cur_tmp = 1 # tmp files stocked in current path
-			path_tmp = os.getcwd()+'/tmp_rep/'
-			if not os.path.exists(path_tmp):
-				os.makedirs(path_tmp)
-			self.path_tmp = path_tmp
-
-			filTMP = path_tmp+'slice'
+			filTMP = self.path_tmp+'slice'
 		else:
 			self.filTMP = filTMP
 		
@@ -558,21 +624,22 @@ class iproject(impro):
 
 		## Do reprojection
 		##-----------------
-		im_rep = []
+		cube_rep = []
 		for f in self.slist:
-			im_rep.append(reproject_interp(f+'.fits', self.header_ref)[0])
-			write_fits(f+'_rep', self.header_ref, im_rep)
+			im_rep = reproject_interp(f+'.fits', self.hdr_ref)[0]
+			cube_rep.append(im_rep)
+
+			write_fits(f+'_rep', self.hdr_ref, im_rep)
 			fclean(f+'.fits')
 		if cur_tmp==1:
-			fclean(path_tmp)
+			fclean(self.path_tmp)
 
-		self.im = np.array(im_rep)
+		self.im = np.array(cube_rep)
 
 		if filOUT is not None:
-			self.hdr = self.header_ref
+			self.hdr = self.hdr_ref
 
 			comment = "Reprojected by <iproject>. "
-
 			write_fits(filOUT, self.hdr, self.im, self.wvl, self.wmod, \
 				COMMENT=comment)
 	
@@ -596,63 +663,88 @@ class imontage(iproject):
 
 	------ INPUT ------
 	flist               list of files
-	ref
+	ref                 
+	header_ref          
+	fmod                
 	------ OUTPUT ------
 	'''
 	def __init__(self, flist, ref=None, header_ref=None, fmod='ext'):
+		'''
+		self: hdr_ref, path_tmp, (filIN, wmod, hdr, w, dim, Nx, Ny, Nw, im, wvl)
+		'''
 		super().__init__(flist[0], ref, header_ref, fmod)
 		self.flist = flist
-		self.fmod = fmod
 
-		super().__init__()
+		## Set path of tmp files
+		path_tmp = os.getcwd()+'/tmp_proc/'
+		if not os.path.exists(path_tmp):
+			os.makedirs(path_tmp)
+		self.path_tmp = path_tmp
 
-	def combine(self, method='average', footprint=None, filOUT=None, ulist=None):
+		## Refresh self.hdr_ref in every circle
+		if fmod=='ext':
+			for f in flist:
+				super().__init__(f, None, self.hdr_ref, 'ext')
+
+	def footprint(self, filOUT=None, wmod=0):
 		'''
-		Combine the reprojected file to the new input file (after reproj it)
+		self: hdr_ref, (filIN, wmod, hdr, w, dim, Nx, Ny, Nw, im, wvl)
+		'''
+		if filOUT is None:
+			cur_tmp = 1 # tmp files stocked in current path
+			filOUT = self.path_tmp+'footprint'
+		
+		Nx = self.hdr_ref['NAXIS1']
+		Ny = self.hdr_ref['NAXIS2']
+		im_fp = np.ones((Ny, Nx))
+		
+		comment = "<imontage> footprint"
+		write_fits(filOUT, self.hdr_ref, im_fp, None, wmod, \
+				COMMENT=comment)
+
+		return im_fp
+
+	def combine(self, filOUT=None, method='average', ulist=None, dist='norm'):
+		'''
+		Reproject and combine input files to the ref WCS
 
 		'''
-		Nf = len(self.flist)
-		footprint = os.getcwd()+'/repro_footprint'
-
-		## Extend reprojection header
-		for i in range(Nf):
-			## self.header_ref renewed in every cycle
-			super().__init__(self.flist[i], None, self.header_ref, self.fmod)
-			if i<Nf-1:
-				self.reproject() # unc will be added later
-			else:
-				self.reproject(footprint) # save footprint
-
 		## Reproject images
 		hyperim = []
-		for i in range(Nf):
-			super().__init__(self.flist[i], None, self.header_ref) # fmod='ref'
-			hyperim.append(self.reproject(filUNC=ulist[i]))
+		for i, f in enumerate(self.flist):
+			super().__init__(f, None, self.hdr_ref) # fmod='ref'
+			hyperim.append(self.reproject(filUNC=ulist[i], dist=dist))
 		hyperim = np.array(hyperim)
 
-		# ## Alternative reprojection (with repro_footprint.fits)
-		# hyperim = []
-		# for i in range(Nf):
-		# 	super().__init__(self.flist[i], footprint) # fmod='ref'
-		# 	hyperim.append(self.reproject(unc=ulist[i]))
-		# hyperim = np.array(hyperim)
-
 		## Combine images
-		Nw, Ny, Nx = hyperim[0].shape
-		combim = np.zeros((Nw, Ny, Nx))
-		for k in range(Nw):
+		# dim = len(hyperim[0].shape)
+		if self.dim==2:
+			Ny, Nx = hyperim[0].shape
+			im_comb = np.zeros((Ny, Nx))
 			for y in range(Ny):
 				for x in range(Nx):
-					combim[k,y,x] = np.nanmean(hyperim[:,k,y,x])
+					im_comb[y,x] = np.nanmean(hyperim[:,y,x])
+		elif self.dim==3:
+			Nw, Ny, Nx = hyperim[0].shape
+			print(hyperim.shape)
+			im_comb = np.zeros((Nw, Ny, Nx))
+			for k in range(Nw):
+				for y in range(Ny):
+					for x in range(Nx):
+						im_comb[k,y,x] = np.nanmean(hyperim[:,k,y,x])
 
 		if filOUT is not None:
 			comment = "A <imontage> production"
-
-			write_fits(filOUT, self.header_ref, combim, self.wvl, \
+			write_fits(filOUT, self.hdr_ref, im_comb, self.wvl, \
 				COMMENT=comment)
 
-		## Clean tmp files
-		self.clean()
+		return im_comb
+
+	def clean(self, file=None):
+		if file is not None:
+			fclean(file)
+		else:
+			fclean(self.path_tmp)
 
 class iconvolve(impro):
 	'''
@@ -671,11 +763,14 @@ class iconvolve(impro):
 	------ OUTPUT ------
 	'''
 	def __init__(self, filIN, filKER, kfile, \
-		filUNC=None, psf=None, filTMP=None, wmod=0, filOUT=None):
+		filUNC=None, dist='norm', psf=None, filTMP=None, wmod=0, filOUT=None):
 		## INPUTS
 		super().__init__(filIN, wmod)
 		
-		self.add_gauss_n(filUNC)
+		if dist=='norm':
+			self.rand_norm(filUNC)
+		elif dist=='splitnorm':
+			self.rand_splitnorm(filUNC)
 
 		## input kernel file list
 		self.filKER = filKER
@@ -743,7 +838,7 @@ class iconvolve(impro):
 		ipath               path of IDL routines
 		------ OUTPUT ------
 		'''
-		if self.is3d==True:
+		if self.dim==3:
 			if self.filTMP is not None:
 				f2conv = self.slice(self.filTMP) # gauss_noise inclu
 			else:
@@ -763,7 +858,7 @@ class iconvolve(impro):
 
 		## OUTPUTS
 		##---------
-		if self.is3d==True:
+		if self.dim==3:
 			im = []
 			self.slist = []
 			for f in f2conv:
@@ -798,73 +893,117 @@ class sextract(impro):
 
 	------ INPUT ------
 	filOUT              output FITS file
-	data_dir            path of IRC dataset
+	ipath               path of IRC dataset
 	parobs[0]           observation id
-	parobs[1]           IRC N3 (long exp) frame (2MASS corrected; 90 deg rot needed)
-	parobs[2]           slit
+	parobs[1]           slit name
+	parobs[2]           IRC N3 (long exp) frame (2MASS corrected; 90 deg rot needed)
 	Nw                  num of wave
 	Ny                  slit length
 	Nx                  slit width
 	------ OUTPUT ------
 	'''
-	def __init__(self, data_dir=None, parobs=None):
-		path = data_dir + parobs[0] + '/irc_specred_out_' + parobs[2]+'/'
-		filSAV = path + parobs[0] + '.N3_NG.IRC_SPECRED_OUT'
-		filIN = path + parobs[1]
+	def __init__(self, ipath=None, parobs=None):
+		self.path = ipath + parobs[0] + '/irc_specred_out_' + parobs[1]+'/'
+		filIN = self.path + parobs[2]
 		super().__init__(filIN)
-	
-	def spec_build(self, filOUT=None, Nw, Ny, Nx):
+		
+		self.filSAV = self.path + parobs[0] + '.N3_NG.IRC_SPECRED_OUT'
+		self.table = readsav(self.filSAV+savext, python_dict=True)['source_table']
+
+		## Slit width will be corrected by intercalib with IRS data after reprojection
+		if parobs[1]=='Ns':
+			self.slit_width = 3 # 412pix * 5"/10' = 3.43 pix (Ns)
+		elif parobs[1]=='Nh':
+			self.slit_width = 2 # 412pix * 3"/10' = 2.06 pix (Nh)
+
+		print('\n----------')
+		print('Slit extracted from ')
+		print('obs_id: {} \nslit: {}'.format(parobs[0], parobs[1]))
+		print('----------\n')
+
+	def rand_pointing(self, sigma=0.):
+		'''
+		Add pointing uncertainty to WCS
+
+		------ INPUT ------
+		sigma               pointing accuracy (deg)
+		------ OUTPUT ------
+		'''
+		d_ro = abs(np.random.normal(0., sigma)) # N(0,sigma)
+		d_phi = np.random.random() *2. * np.pi # U(0,2pi)
+		self.hdr['CRVAL1'] += d_ro * np.cos(d_phi)
+		self.hdr['CRVAL2'] += d_ro * np.sin(d_phi)
+
+		return d_ro, d_phi
+
+	def spec_build(self, filOUT=None, Ny=31, sig_pt=0.):
 		'''
 		Build the spectral cube/slit from spectra extracted by IDL pipeline
 		(see IRC_SPEC_TOOL, plot_spec_with_image)
 		'''
-		## Read output data
-		spec_arr = []
-		for i in range(Ny):
-			spec_arr.append(read_ascii(path+'spec'+str(i), float, '.spc'))
-		spec_arr = np.array(spec_arr)
-		table = readsav(filSAV+savext, python_dict=True)['source_table']
-		ref_x = table['image_y'][0] # slit ref x
-		ref_y = 512-table['image_x'][0] # slit ref y
-		## Slit width will be corrected by intercalib with IRS data after reprojection
-		if parobs[2]=='Ns':
-			Nx = 3 # 412pix * 5"/10' = 3.43 pix (Ns)
-		elif parobs[2]=='Nh':
-			Nx = 2 # 412pix * 3"/10' = 2.06 pix (Nh)
-		
-		cube = np.empty([Nw,Ny,Nx])
-		unc = np.empty([Nw,Ny,Nx])
-		wave = np.empty(Nw)
-		
-		## Broaden cube width
-		for k in range(Nw):
-			for j in range(Ny):
-				for i in range(Nx):
-					cube[k][j][i] = spec_arr[j,k,1]
-					unc[k][j][i] = (spec_arr[j,k,3]-spec_arr[j,k,2])/2
-			wave[k] = spec_arr[0,k,0]
+		Nx = self.slit_width
+		ref_x = self.table['image_y'][0] # slit ref x
+		ref_y = 512 - self.table['image_x'][0] # slit ref y
 
-		## Save spec in wave ascending order
-		self.im = cube[::-1]
-		self.unc = unc[::-1]
-		self.wvl = wave[::-1]
-		
-		## Modify cube header
+		## Get slit coord from 2MASS corrected N3 frame
+		## Do NOT touch self.im (N3 frame, 2D) before this step
 		self.crop(sizpix=(Nx, Ny), cenpix=(ref_x, ref_y))
 		# self.hdr['CTYPE3'] = 'WAVE-TAB'
 		self.hdr['CUNIT1'] = 'deg'
 		self.hdr['CUNIT2'] = 'deg'
 		self.hdr['BUNIT'] = 'MJy/sr'
 		self.hdr['EQUINOX'] = 2000.0
-		comment = "Assembled AKARI/IRC slit spectroscopy cube. "
-		uncom = "Assembled AKARI/IRC slit spectroscopy uncertainty cube. "
 
-		write_fits(filOUT, self.hdr, self.im, self.wvl, \
-			COMMENT=comment)
-		write_fits(filOUT+'_unc', self.hdr, self.unc, self.wvl, \
-			COMMENT=uncom)
-		print('obs_id: {} \nslit: {}'.format(parobs[0], parobs[2]))
-		print('----------\n')
+		## Add pointing unc
+		self.rand_pointing(sig_pt)
+
+		## Read spec
+		spec_arr = []
+		for i in range(Ny):
+			spec_arr.append(read_ascii(self.path+'spec'+str(i), float, '.spc'))
+		spec_arr = np.array(spec_arr)
+		Nw = len(spec_arr[0,:,0])
+		
+		## Broaden cube width
+		cube = np.empty([Nw,Ny,Nx])
+		unc = np.empty([Nw,Ny,Nx]) # Symmetric unc
+		unc_N = np.empty([Nw,Ny,Nx]) # Asymmetric negtive
+		unc_P = np.empty([Nw,Ny,Nx]) # Asymmetric positive
+		wave = np.empty(Nw)
+		for k in range(Nw):
+			for j in range(Ny):
+				for i in range(Nx):
+					cube[k][j][i] = spec_arr[j,k,1]
+					unc[k][j][i] = (spec_arr[j,k,3]-spec_arr[j,k,2])/2
+					unc_N[k][j][i] = (spec_arr[j,k,1]-spec_arr[j,k,2])
+					unc_P[k][j][i] = (spec_arr[j,k,3]-spec_arr[j,k,1])
+			wave[k] = spec_arr[0,k,0]
+
+		## Save spec in wave ascending order
+		self.cube = cube[::-1]
+		self.unc = unc[::-1]
+		self.unc_N = unc_N[::-1]
+		self.unc_P = unc_P[::-1]
+		self.wvl = wave[::-1]
+
+		if filOUT is not None:
+			comment = "Assembled AKARI/IRC slit spectroscopy cube. "
+			write_fits(filOUT, self.hdr, self.cube, self.wvl, \
+				COMMENT=comment)
+
+			uncom = "Assembled AKARI/IRC slit spec uncertainty cube. "
+			write_fits(filOUT+'_unc', self.hdr, self.unc, self.wvl, \
+				COMMENT=uncom)
+
+			uncom_N = "Assembled AKARI/IRC slit spec uncertainty (N) cube. "
+			write_fits(filOUT+'_unc_N', self.hdr, self.unc_N, self.wvl, \
+				COMMENT=uncom)
+
+			uncom_P = "Assembled AKARI/IRC slit spec uncertainty (P) cube. "
+			write_fits(filOUT+'_unc_P', self.hdr, self.unc_P, self.wvl, \
+				COMMENT=uncom)
+
+		return self.cube
 
 	def sav_build(self):
 		'''
@@ -872,14 +1011,19 @@ class sextract(impro):
 		Including wave calib, ?, etc. 
 		(see IRC_SPEC_TOOL, plot_spec_with_image)
 		'''
-		image = readsav(savIN+savext, python_dict=True)['specimage_n_wc']
+		filSAV = self.filSAV
+		table = self.table
+		## Read SAV file
+		image = readsav(filSAV+savext, python_dict=True)['specimage_n_wc']
 		image = image[::-1] # -> ascending order
-		noise = readsav(savIN+savext, python_dict=True)['noisemap_n']
+		noise = readsav(filSAV+savext, python_dict=True)['noisemap_n']
 		noise = noise[::-1]
-		wave = readsav(savIN+savext, python_dict=True)['wave_array']
+		wave = readsav(filSAV+savext, python_dict=True)['wave_array']
 		wave = wave[::-1] # -> ascending order
 		Nw = image.shape[0] # num of wave
 		Ny = image.shape[1] # slit length
+		ref_x = table['image_y'][0] # slit ref x
+		ref_y = 512-table['image_x'][0] # slit ref y
 		spec_y = table['spec_y'][0] # ref pts of wavelength
 		
 		d_wave_offset_pix = -(spec_y-round(spec_y[0])) # Wave shift
@@ -892,10 +1036,8 @@ class sextract(impro):
 					cube[k][j][i] = image[k][j]
 					unc[k][j][i] = noise[k][j]
 
-	def add_pointing_unc(self, image):
-
 	def image(self):
-		return self.im
+		return self.cube
 
 	def wave(self):
 		return self.wvl

@@ -89,13 +89,13 @@ def ext_wcs(file=None, header=None):
 	dataset             dataset object
 	  header              header of primary HDU
 	  WCS                 2D WCS
-	  is3d                True: if input data is 3D
+	  was3d               True: if input data is 3D
 	'''
 	## Initialize dataset object
 	dataset = type('', (), {})()
 	dataset.WCS = WCS(None, naxis=2)
 	dataset.header = None
-	dataset.is3d = False
+	dataset.was3d = False
 
 	## Read file/header
 	if file is not None:
@@ -109,7 +109,7 @@ def ext_wcs(file=None, header=None):
 
 	## Reduce header dim/kw
 	if header['NAXIS']==3:
-		dataset.is3d = True
+		dataset.was3d = True
 		for kw in hdr.keys():
 			if '3' in kw:
 				del header[kw]
