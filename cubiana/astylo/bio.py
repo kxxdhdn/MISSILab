@@ -50,7 +50,7 @@ def read_fits(file, file_unc=None, wmod=0):
 		dataset.header = hdr
 		if 'CTYPE3' in hdr.keys():
 			del hdr['CTYPE3']
-		dataset.WCS = WCS(hdr)
+		# dataset.WCS = WCS(hdr)
 
 		## Read wavelength
 		if len(hdul)==2:

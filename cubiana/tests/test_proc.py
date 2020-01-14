@@ -46,6 +46,9 @@ from astylo.proc import wclean, interfill, sextract, imontage
 ## TEST sextract + imontage
 ##--------------------------
 path_data = '/Users/dhu/Data/AKARI/data/'
+build_tmp = 'out/cubuild/'
+if not os.path.exists(build_tmp):
+	os.makedirs(build_tmp)
 
 obs_id = ['1420415.1', '1420415.2']
 N3 = ['F011213824_N002', 'F011213865_N002']
@@ -56,8 +59,10 @@ file_out = []
 for i, obs in enumerate(obs_id):
 	for s in slit:
 		par_obs.append([obs, s, N3[i]])
-		file_out.append('out/M83_' + obs + '_' + s)
+		file_out.append(build_tmp + '/M83_' + obs + '_' + s)
 
+## Simple/functional tests
+'''
 spec = []
 unc_out = []
 for j, par in enumerate(par_obs):
@@ -68,12 +73,35 @@ for j, par in enumerate(par_obs):
 	unc_out.append([file_out[j]+'_unc_N', file_out[j]+'_unc_P']) # Asymmetric unc
 # print(spec[0].shape, '\n', sext.wave())
 
-# mont = imontage(file_out, file_out[0])
 mont = imontage(file_out, file_out[0])
 # print(mont.footprint())
 # mont.clean()
 # mont.combine('out/M83_IRC', ulist=unc_out, dist='norm') # Symmetric unc
 mont.combine('out/M83_IRC', ulist=unc_out, dist='splitnorm') # Asymmetric unc
+'''
+
+## Monte-Carlo test
+Nmc = 6
+for i in range(Nmc+1):
+	if i==0:
+		sig_pt = 0.
+	else:
+		sig_pt = 1./3600
+
+	spec = []
+	unc_ = []
+	for j, par in enumerate(par_obs):
+		sext = sextract(path_data, par)
+		cube = sext.spec_build(file_out[j]+str(i), sig_pt=sig_pt) # Add pointing accuracy
+		spec.append(cube)
+		## Asymmetric unc cubes (header without pointing shift)
+		if i==0:
+			unc_out.append([file_out[j]+'_unc_N', file_out[j]+'_unc_P'])
+	# print(spec[0].shape, '\n', sext.wave())
+
+	mont = imontage(file_out, file_out[0])
+	mont.combine('out/M83_IRC', method='weighted_avg', \
+		ulist=unc_out, dist='splitnorm') # Asymmetric unc
 
 
 ## TEST FITS ref point shift (impro.crop)

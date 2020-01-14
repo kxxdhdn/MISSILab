@@ -16,7 +16,7 @@ import subprocess as SP
 
 ## Local
 from bio import read_fits, write_fits, ext_wcs, read_csv, write_csv, read_ascii
-from lib import fclean, closest, bsplinterpol
+from lib import fclean, nanavg, closest, bsplinterpol
 
 savext = '.sav'
 
@@ -269,7 +269,7 @@ class impro:
 	'''
 	IMage PROcessing VEssel
 	'''
-	def __init__(self, filIN, wmod=0, verbose=True):
+	def __init__(self, filIN, wmod=0, verbose=False):
 		'''
 		self: filIN, wmod, hdr, w, dim, Nx, Ny, Nw, im, wvl
 		'''
@@ -307,8 +307,7 @@ class impro:
 
 		if unc is not None:
 			## unc should have the same dimension with im
-			ax = unc.shape
-			theta = np.random.normal(mu, sigma, ax)
+			theta = np.random.normal(mu, sigma, self.im.shape)
 			self.im += theta * unc
 
 		return self.im
@@ -331,20 +330,19 @@ class impro:
 			## unc[i] should have the same dimension with self.im
 			tau = unc[1]/unc[0]
 			peak = 1/(1+tau)
-			ax = tau.shape
-			theta = np.random.normal(mu, sigma, ax) # ~N(0,1)
-			flag = np.random.random(ax) # ~U(0,1)
-			if len(ax)==2:
-				for x in range(ax[1]):
-					for y in range(ax[0]):
+			theta = np.random.normal(mu, sigma, self.im.shape) # ~N(0,1)
+			flag = np.random.random(self.im.shape) # ~U(0,1)
+			if self.dim==2:
+				for x in range(self.Nx):
+					for y in range(self.Ny):
 						if flag[y,x]<peak[y,x]:
 							self.im[y,x] += -abs(theta[y,x]) * unc[0][y,x]
 						else:
 							self.im[y,x] += abs(theta[y,x]) * unc[1][y,x]
-			elif len(ax)==3:
-				for x in range(ax[2]):
-					for y in range(ax[1]):
-						for k in range(ax[0]):
+			elif self.dim==3:
+				for x in range(self.Nx):
+					for y in range(self.Ny):
+						for k in range(self.Nw):
 							if flag[k,y,x]<peak[k,y,x]:
 								self.im[k,y,x] += -abs(theta[k,y,x]) * unc[0][k,y,x]
 							else:
@@ -468,7 +466,6 @@ class islice(impro):
 		super().__init__(filIN)
 
 		if filSL is None:
-			cur_tmp = 1 # slices stocked in current path
 			path_tmp = os.getcwd()+'/tmp_proc/'
 			if not os.path.exists(path_tmp):
 				os.makedirs(path_tmp)
@@ -537,7 +534,7 @@ class iproject(impro):
 		                  'ext' - cover both input and ref frame
 	------ OUTPUT ------
 	'''
-	def __init__(self, filIN, filREF=None, hdREF=None, fmod='ref'):
+	def __init__(self, filIN, filREF=None, hdREF=None, fmod='ref', ext_pix=0):
 		'''
 		self: hdr_ref, (filIN, wmod, hdr, w, dim, Nx, Ny, Nw, im, wvl)
 		'''
@@ -586,9 +583,9 @@ class iproject(impro):
 					if ymin<0:
 						hdREF['CRPIX2'] = -ymin
 					hdREF['NAXIS1'] = math.ceil(max(xmax, hdREF['NAXIS1']-xmin, \
-						xmax-xmin, hdREF['NAXIS1']))
+						xmax-xmin, hdREF['NAXIS1'])) + ext_pix # save edges
 					hdREF['NAXIS2'] = math.ceil(max(ymax, hdREF['NAXIS2']-ymin, \
-						ymax-ymin, hdREF['NAXIS2']))
+						ymax-ymin, hdREF['NAXIS2'])) + ext_pix
 			## Save hdREF
 			self.hdr_ref = hdREF
 		else:
@@ -615,7 +612,6 @@ class iproject(impro):
 			self.rand_splitnorm(filUNC)
 
 		if filTMP is None:
-			cur_tmp = 1 # tmp files stocked in current path
 			filTMP = self.path_tmp+'slice'
 		else:
 			self.filTMP = filTMP
@@ -631,7 +627,7 @@ class iproject(impro):
 
 			write_fits(f+'_rep', self.hdr_ref, im_rep)
 			fclean(f+'.fits')
-		if cur_tmp==1:
+		if filTMP is None:
 			fclean(self.path_tmp)
 
 		self.im = np.array(cube_rep)
@@ -691,7 +687,6 @@ class imontage(iproject):
 		self: hdr_ref, (filIN, wmod, hdr, w, dim, Nx, Ny, Nw, im, wvl)
 		'''
 		if filOUT is None:
-			cur_tmp = 1 # tmp files stocked in current path
 			filOUT = self.path_tmp+'footprint'
 		
 		Nx = self.hdr_ref['NAXIS1']
@@ -706,7 +701,7 @@ class imontage(iproject):
 
 	def combine(self, filOUT=None, method='average', ulist=None, dist='norm'):
 		'''
-		Reproject and combine input files to the ref WCS
+		Reproject and combine input files (with same wavelengths) to the ref WCS
 
 		'''
 		## Reproject images
@@ -717,21 +712,10 @@ class imontage(iproject):
 		hyperim = np.array(hyperim)
 
 		## Combine images
-		# dim = len(hyperim[0].shape)
-		if self.dim==2:
-			Ny, Nx = hyperim[0].shape
-			im_comb = np.zeros((Ny, Nx))
-			for y in range(Ny):
-				for x in range(Nx):
-					im_comb[y,x] = np.nanmean(hyperim[:,y,x])
-		elif self.dim==3:
-			Nw, Ny, Nx = hyperim[0].shape
-			print(hyperim.shape)
-			im_comb = np.zeros((Nw, Ny, Nx))
-			for k in range(Nw):
-				for y in range(Ny):
-					for x in range(Nx):
-						im_comb[k,y,x] = np.nanmean(hyperim[:,k,y,x])
+		if method=='average':
+			im_comb = nanavg(hyperim, axis=0)
+		elif method=='weighted_avg':
+			im_comb = nanavg(hyperim, axis=0, weights=None)
 
 		if filOUT is not None:
 			comment = "A <imontage> production"
@@ -936,7 +920,7 @@ class sextract(impro):
 
 		return d_ro, d_phi
 
-	def spec_build(self, filOUT=None, Ny=31, sig_pt=0.):
+	def spec_build(self, filOUT=None, write_unc=True, Ny=31, sig_pt=0.):
 		'''
 		Build the spectral cube/slit from spectra extracted by IDL pipeline
 		(see IRC_SPEC_TOOL, plot_spec_with_image)
@@ -991,17 +975,18 @@ class sextract(impro):
 			write_fits(filOUT, self.hdr, self.cube, self.wvl, \
 				COMMENT=comment)
 
-			uncom = "Assembled AKARI/IRC slit spec uncertainty cube. "
-			write_fits(filOUT+'_unc', self.hdr, self.unc, self.wvl, \
-				COMMENT=uncom)
+			if write_unc==True:
+				uncom = "Assembled AKARI/IRC slit spec uncertainty cube. "
+				write_fits(filOUT+'_unc', self.hdr, self.unc, self.wvl, \
+					COMMENT=uncom)
 
-			uncom_N = "Assembled AKARI/IRC slit spec uncertainty (N) cube. "
-			write_fits(filOUT+'_unc_N', self.hdr, self.unc_N, self.wvl, \
-				COMMENT=uncom)
+				uncom_N = "Assembled AKARI/IRC slit spec uncertainty (N) cube. "
+				write_fits(filOUT+'_unc_N', self.hdr, self.unc_N, self.wvl, \
+					COMMENT=uncom)
 
-			uncom_P = "Assembled AKARI/IRC slit spec uncertainty (P) cube. "
-			write_fits(filOUT+'_unc_P', self.hdr, self.unc_P, self.wvl, \
-				COMMENT=uncom)
+				uncom_P = "Assembled AKARI/IRC slit spec uncertainty (P) cube. "
+				write_fits(filOUT+'_unc_P', self.hdr, self.unc_P, self.wvl, \
+					COMMENT=uncom)
 
 		return self.cube
 
@@ -1041,7 +1026,41 @@ class sextract(impro):
 
 	def wave(self):
 		return self.wvl
-	
+
+def concatenate(flist, filOUT=None, comment=None, sort_wave=True):
+	'''
+
+	'''
+	dataset = type('', (), {})()
+
+	## Read data
+	wave = []
+	data = []
+	for f in flist:
+		ds = read_fits(f)
+		data.append(ds.data)
+		wave.append(ds.wave)
+	data = np.concatenate(data)
+	wave = np.concatenate(wave)
+	hdr = ds.header
+
+	## Sort wavelength in wave ascending order
+	if sort_wave==True:
+		ind = sorted(range(len(wave)), key=wave.__getitem__)
+		wave = np.sort(wave)
+		data = data[ind]
+
+	## Save data
+	dataset.data = data
+	dataset.wave = wave
+
+	## Write FITS file
+	if filOUT is not None:
+		write_fits(filOUT, hdr, data, wave, \
+			COMMENT=comment)
+
+	return dataset
+
 """
 ------------------------------ MAIN (test) ------------------------------
 """

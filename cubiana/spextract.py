@@ -11,16 +11,16 @@ import matplotlib.pyplot as plt
 from astylo.bio import read_fits, write_fits, read_ascii
 from astylo.proc import islice, icrop, iconvolve, iproject, wclean
 from astylo.calib import intercalib, phot2phot
-from astylo.lib import fclean, MCerror, pix2sr
+from astylo.lib import fclean, pix2sr
 from astylo.plot import plot2d
 
 ##---------------------------
 ##       Initialisation
 ##---------------------------
 
-Nmc = 2
+Nmc = 6
 
-src = 'M82'
+src = 'M83'
 ## Not useful if need to modify IDL/conv_prog.pro
 # src = input("Input source name: ")
 
@@ -161,11 +161,11 @@ if b0=='y':
 				##---------------------
 				if j==0: # unc not added
 					conv = iconvolve(filIN=file_data, filKER=kernelist, \
-						saveKER=cker, wmod=1, \
+						kfile=cker, wmod=1, \
 						filTMP=file_slice, filOUT=file_conv)
 				else: # add unc
 					conv = iconvolve(filIN=file_data, filKER=kernelist, \
-						saveKER=cker, wmod=1, filUNC=file_unc, \
+						kfile=cker, wmod=1, filUNC=file_unc, \
 						filTMP=file_slice, filOUT=file_conv)
 
 				conv.do_conv(ipath=path_idl)
@@ -234,7 +234,7 @@ if b2=='y':
 	print("hypercube shape: ", hypercube.shape)
 	print('>>>>>>>>>>>>>')
 
-	unc = MCerror(hypercube)
+	unc = np.nanstd(hypercube, axis=0, ddof=1)
 	write_fits(file_all+'_unc', hdr, unc, wavALL, 1)
 
 	t_cal_unc = time.time()
@@ -254,7 +254,7 @@ print('\n>>>>>>>>>>>>>>>>>>\n')
 ##---------------------------
 ##      Intercalibration
 ##---------------------------
-
+'''
 ## Convert Jy/pix to MJy/sr (Optional)
 ##-------------------------------------
 hdr_s = read_fits(file_phot_s).header
@@ -305,12 +305,14 @@ plt.yscale('symlog')
 plt.xlabel(phot_p)
 plt.ylabel(phot_s)
 plt.legend()
-
+'''
 ##---------------------------
 ##           plot
 ##---------------------------
 
-# plot2d(wavALL, cube0[:,10,10], yerr=unc[:,10,10])
+# for x in range(15):
+# 	for y in range(15):
+# 		plot2d(wavALL, cube0[:,y,x], yerr=unc[:,y,x])
 
 plt.show()
 

@@ -145,6 +145,17 @@ def std(a, ddof=0):
 	
 	return np.sqrt(ms)
 
+def nanavg(a, axis=None, weights=None, MaskedValue=np.nan):
+	'''
+	Numpy.average with NaNs
+	'''
+	ma = np.ma.MaskedArray(a, mask=np.isnan(a))
+	avg = np.average(ma, axis=axis, weights=weights).data
+	mask = np.average(ma, axis=axis, weights=weights).mask
+	avg[mask] = MaskedValue
+
+	return avg
+
 def closest(a, val):
 	'''
 	Return the index i corresponding to the closest a[i] to val
@@ -181,40 +192,6 @@ def bsplinterpol(x, y, x0):
 	bspl = interpolate.BSpline(t, c, k, extrapolate=False)
 	
 	return bspl(x0)
-
-def MCerror(arr, axis=0):
-	'''
-	Monte-Carlo propagated error calculator
-	
-	--- INPUT ---
-	arr         array
-	axis        axis or axes along which error is calculated
-	--- OUTPUT ---
-	err         one dim less than arr
-	'''
-	## Detect dimension
-	##------------------
-	axsh = arr.shape
-	NAXIS = np.size(axsh)
-	dim = NAXIS - 1
-	if axis==0:
-		if dim==2:
-			err = np.full((axsh[1],axsh[2]), np.nan)
-			for i in range(axsh[2]):
-				for j in range(axsh[1]):
-					err[j,i] = np.nanstd(arr[:,j:i], ddof=1)
-		elif dim==3:
-			err = np.full((axsh[1],axsh[2],axsh[3]), np.nan)
-			for i in range(axsh[3]):
-				for j in range(axsh[2]):
-					for k in range(axsh[1]):
-						err[k,j,i] = np.nanstd(arr[:,k,j,i], ddof=1)
-		else:
-			print('ERROR: dimension not supported! ')
-	else:
-		print('ERROR: array shape not supported! ')
-
-	return err
 
 """
 ------------------------------ MAIN (test) ------------------------------
