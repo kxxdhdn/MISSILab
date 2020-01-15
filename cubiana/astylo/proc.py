@@ -664,23 +664,23 @@ class imontage(iproject):
 	fmod                
 	------ OUTPUT ------
 	'''
-	def __init__(self, flist, ref=None, header_ref=None, fmod='ext'):
+	def __init__(self, flist=[], ref=None, header_ref=None, fmod='ext', ext_pix=0):
 		'''
-		self: hdr_ref, path_tmp, (filIN, wmod, hdr, w, dim, Nx, Ny, Nw, im, wvl)
+		self: flist, (hdr_ref, path_tmp, filIN, wmod, hdr, w, dim, Nx, Ny, Nw, im, wvl)
 		'''
-		super().__init__(flist[0], ref, header_ref, fmod)
+		Nf = np.size(flist)
+		if Nf==0:
+			print('ERROR: No input!')
+			exit()
+		else:
+			super().__init__(filIN=flist[0], filREF=ref, \
+				hdREF=header_ref, fmod=fmod, ext_pix=ext_pix)
+			## Refresh self.hdr_ref in every circle
+			if fmod=='ext':
+				for f in flist:
+					super().__init__(filIN=f, filREF=None, \
+						hdREF=self.hdr_ref, fmod='ext', ext_pix=ext_pix)
 		self.flist = flist
-
-		## Set path of tmp files
-		path_tmp = os.getcwd()+'/tmp_proc/'
-		if not os.path.exists(path_tmp):
-			os.makedirs(path_tmp)
-		self.path_tmp = path_tmp
-
-		## Refresh self.hdr_ref in every circle
-		if fmod=='ext':
-			for f in flist:
-				super().__init__(f, None, self.hdr_ref, 'ext')
 
 	def footprint(self, filOUT=None, wmod=0):
 		'''
@@ -698,6 +698,14 @@ class imontage(iproject):
 				COMMENT=comment)
 
 		return im_fp
+
+	def mc_unc(self, Nmc=1, ulist=None):
+		'''
+		'''
+		for i in range(Nmc):
+			for j, f in enumerate(self.flist):
+				super().__init__(f, None, self.hdr_ref)
+	def reproject(self, filOUT=None, filUNC=None, dist='norm', wmod=0, filTMP=None):
 
 	def combine(self, filOUT=None, method='average', ulist=None, dist='norm'):
 		'''

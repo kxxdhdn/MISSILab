@@ -3,7 +3,7 @@
 
 class base:
 	"""docstring for base"""
-	def __init__(self, a1=, a2=222):
+	def __init__(self, a1, a2=0):
 		print('base')
 		self.a1 = a1
 		self.a2 = a2
@@ -31,7 +31,7 @@ class l1(base):
 
 class l2(base):
 	"""docstring for l2"""
-	def __init__(self, c1=2, c2=22):
+	def __init__(self, c1=None, c2=None):
 		print('\nlevel 2')
 		super().__init__(c1, c2)
 		self.c1 = c1
@@ -39,6 +39,11 @@ class l2(base):
 		print(self.a1)
 		print(self.a2)
 		print('level 2\n')
+
+	def f2(self):
+		self.c1 = 2
+		print(self.c1)
+		print(self.a1)
 
 class l3(l1, base):
 	"""docstring for l3"""
@@ -69,8 +74,9 @@ class l3(l1, base):
 	def f33(self):
 		super().__init__(6,66)
 		self.f3(77)
-		
+
 		
 if __name__ == "__main__":
 	
-	l3(5, 55, 555).f33()
+	l2().f2()
+	# l3(5, 55, 555).f33()
