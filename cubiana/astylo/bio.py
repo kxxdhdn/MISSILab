@@ -45,12 +45,16 @@ def read_fits(file, file_unc=None, wmod=0):
 
 	## Read header & data
 	with fits.open(file+fitsext) as hdul:
+		dataset.HDUL = hdul
 		hdr = hdul[0].header
 		dataset.data = hdul[0].data
 		dataset.header = hdr
-		if 'CTYPE3' in hdr.keys():
-			del hdr['CTYPE3']
-		# dataset.WCS = WCS(hdr)
+
+		## hd is hdr with the r reduced...
+		# hd = hdr.copy()
+		# if 'CTYPE3' in hd.keys():
+		# 	del hd['CTYPE3'] # The only kw known to count (see test_bio.py)
+		# dataset.WCS = WCS(hd)
 
 		## Read wavelength
 		if len(hdul)==2:
@@ -75,7 +79,7 @@ def read_fits(file, file_unc=None, wmod=0):
 		## Read uncertainty data
 		with fits.open(file+fitsext) as hdul:
 			dataset.unc = hdul[0].data
-		
+	
 	return dataset
 
 def ext_wcs(file=None, header=None):
@@ -114,7 +118,7 @@ def ext_wcs(file=None, header=None):
 			if '3' in kw:
 				del header[kw]
 		header['NAXIS'] = 2
-		header['COMMENT'] = "3D distorsion kw excluded (for astropy.wcs). "
+		header['COMMENT'] = "3D keywords excluded (for astropy.wcs). "
 	
 	## Create 2D WCS object
 	dataset.WCS = WCS(header, naxis=2)

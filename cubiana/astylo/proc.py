@@ -6,11 +6,11 @@
 image PROCessing
 
 """
-
 import os
 import math
 import numpy as np
 from scipy.io import readsav
+from astropy import wcs
 from reproject import reproject_interp
 import subprocess as SP
 
@@ -354,6 +354,11 @@ class impro:
 		## 3D cube slicing
 		slist = []
 		if self.dim==3:
+			hdr = self.hdr.copy()
+			for kw in self.hdr.keys():
+				if '3' in kw:
+					del hdr[kw]
+			hdr['NAXIS'] = 2
 			for k in range(self.Nw):
 				## output filename list
 				f = filSL+'_'+'0'*(4-len(str(k)))+str(k)
@@ -361,7 +366,7 @@ class impro:
 					f += suffix
 				slist.append(f)
 				comment = "NO.{} image [SLICE]d from {}.fits".format(k, self.filIN)
-				write_fits(f, self.hdr, self.im[k,:,:]) # gauss_noise inclu
+				write_fits(f, hdr, self.im[k,:,:]) # gauss_noise inclu
 		else:
 			print('Input file is a 2D image which cannot be sliced! ')
 			f = filSL+'_0000'
@@ -394,7 +399,13 @@ class impro:
 				exit()
 			else:
 				## Convert coord
-				cenpix = self.w.all_world2pix(cenval[0], cenval[1], 1)
+				try:
+					cenpix = self.w.all_world2pix(cenval[0], cenval[1], 1)
+				except wcs.wcs.NoConvergence as e:
+					cenpix = e.best_solution
+					print("Best solution:\n{0}".format(e.best_solution))
+					print("Achieved accuracy:\n{0}".format(e.accuracy))
+					print("Number of iterations:\n{0}".format(e.niter))
 		else:
 			cenval = self.w.all_pix2world(np.array([cenpix]), 1)[0]
 		if not (0<cenpix[0]<self.Nx and 0<cenpix[1]<self.Ny):
@@ -519,32 +530,51 @@ class icrop(impro):
 	def wave(self):
 		return self.wvl
 
-class iproject(impro):
+class imontage(impro):
 	'''
-	PROJECT 2D image or 3D cube
+	2D image or 3D cube montage toolkit
 	i means <impro>-based or initialize
 
 	------ INPUT ------
-	filIN               input FITS file
+	file                input FITS file (list)
 	filREF              ref file (priority if co-exist with input header)
 	hdREF               ref header
 	fmod                output file frame
 		                  'ref' - same as ref frame (Default)
 		                  'rec' - recenter back to input frame
 		                  'ext' - cover both input and ref frame
+	ext_pix             number of pixels to extend to save edge
 	------ OUTPUT ------
 	'''
-	def __init__(self, filIN, filREF=None, hdREF=None, fmod='ref', ext_pix=0):
+	def __init__(self, file, filREF=None, hdREF=None, fmod='ref', ext_pix=0):
 		'''
-		self: hdr_ref, (filIN, wmod, hdr, w, dim, Nx, Ny, Nw, im, wvl)
+		self: hdr_ref, path_tmp, 
+		(filIN, wmod, hdr, w, dim, Nx, Ny, Nw, im, wvl)
 		'''
-		super().__init__(filIN)
-
 		## Set path of tmp files
 		path_tmp = os.getcwd()+'/tmp_proc/'
 		if not os.path.exists(path_tmp):
 			os.makedirs(path_tmp)
 		self.path_tmp = path_tmp
+
+		## Inputs
+		self.file = file
+		self.filREF = filREF
+		self.hdREF = hdREF
+		self.fmod = fmod
+		self.ext_pix = ext_pix
+		
+		## Init ref header
+		self.hdr_ref = None
+
+	def make_header(self, file, filREF=None, hdREF=None, fmod='ref', ext_pix=0):
+		'''
+		Make header tool
+
+		------ INPUT ------
+		file                single FITS file
+		'''
+		super().__init__(file)
 
 		## Prepare reprojection header
 		if filREF is not None:
@@ -565,7 +595,13 @@ class iproject(impro):
 				world_arr = self.w.all_pix2world(np.array(pix_old), 1)
 				## Ref WCS (new)
 				w = ext_wcs(header=hdREF).WCS
-				pix_new = w.all_world2pix(world_arr, 1)
+				try:
+					pix_new = w.all_world2pix(world_arr, 1)
+				except wcs.wcs.NoConvergence as e:
+					pix_new = e.best_solution
+					print("Best solution:\n{0}".format(e.best_solution))
+					print("Achieved accuracy:\n{0}".format(e.accuracy))
+					print("Number of iterations:\n{0}".format(e.niter))
 				xmin = min(pix_new[:][0])
 				xmax = max(pix_new[:,0])
 				ymin = min(pix_new[:,1])
@@ -592,20 +628,70 @@ class iproject(impro):
 			print('ERROR: Can not find projection reference! ')
 			exit()
 
-	def reproject(self, filOUT=None, filUNC=None, dist='norm', wmod=0, filTMP=None):
+	def make(self):
 		'''
-		PROJECT 2D image or 3D cube
+		Preparation (make header)
+		'''
+		file = self.file
+		filREF = self.filREF
+		hdREF = self.hdREF
+		fmod = self.fmod
+		ext_pix = self.ext_pix
+
+		if isinstance(file, str):
+			self.make_header(file, filREF, hdREF, fmod, ext_pix)
+		elif isinstance(file, list):
+			self.make_header(file[0], filREF, hdREF, fmod, ext_pix)
+			if fmod=='ext':
+				## Refresh self.hdr_ref in every circle
+				for f in file:
+					self.make_header(file=f, filREF=None, \
+						hdREF=self.hdr_ref, fmod='ext', ext_pix=ext_pix)
+		
+		print('imontage: Making ref header...[done]')
+
+		return self.hdr_ref
+
+	def footprint(self, filOUT=None, wmod=0):
+		'''
+		Show reprojection footprint
+		'''
+		if filOUT is None:
+			filOUT = self.path_tmp+'footprint'
+		
+		Nx = self.hdr_ref['NAXIS1']
+		Ny = self.hdr_ref['NAXIS2']
+		im_fp = np.ones((Ny, Nx))
+		
+		comment = "<imontage> footprint"
+		write_fits(filOUT, self.hdr_ref, im_fp, None, wmod, \
+				COMMENT=comment)
+
+		return im_fp
+
+	def reproject(self, file=None, filOUT=None, \
+		filUNC=None, dist='norm', wmod=0, filTMP=None):
+		'''
+		Reproject 2D image or 3D cube
 
 		------ INPUT ------
+		file                single FITS file to reproject
 		filOUT              output FITS file
 		wmod                wave mode of output file
-		filUNC              unc file (add gaussian noise)
+		filUNC              unc files
+		dist                uncertainty distribution
+		                      'norm' - N(0,1)
+		                      'splitnorm' - SN(0,lam,lam*tau)
 		filTMP              save tmp files
 		------ OUTPUT ------
 
 		self: filTMP
 		'''
+		if file is not None:
+			super().__init__(file)
+
 		self.wmod = wmod
+		
 		if dist=='norm':
 			self.rand_norm(filUNC)
 		elif dist=='splitnorm':
@@ -621,11 +707,21 @@ class iproject(impro):
 		## Do reprojection
 		##-----------------
 		cube_rep = []
+		# for k in range(self.Nw):
 		for f in self.slist:
+			# print(self.hdr_ref)
+			# print(read_fits(f).header)
 			im_rep = reproject_interp(f+'.fits', self.hdr_ref)[0]
+			# hdr = self.hdr.copy()
+			# for kw in self.hdr.keys():
+			# 	if '3' in kw:
+			# 		del hdr[kw]
+			# hdr['NAXIS'] = 2
+			# phdu = fits.PrimaryHDU(header=hdr, data=self.im[k,:,:])
+			# im_rep = reproject_interp(phdu, self.hdr_ref)[0]
 			cube_rep.append(im_rep)
 
-			write_fits(f+'_rep', self.hdr_ref, im_rep)
+			write_fits(f+'rep', self.hdr_ref, im_rep)
 			fclean(f+'.fits')
 		if filTMP is None:
 			fclean(self.path_tmp)
@@ -641,95 +737,80 @@ class iproject(impro):
 	
 		return self.im
 
-	def wave(self):
-		return self.wvl
-
-	def filenames(self):
-		return self.slist
-
-	def clean(self, file=None):
-		if file is not None:
-			fclean(file)
-		else:
-			fclean(self.path_tmp)
-
-class imontage(iproject):
-	'''
-	<impro> based montage tool
-
-	------ INPUT ------
-	flist               list of files
-	ref                 
-	header_ref          
-	fmod                
-	------ OUTPUT ------
-	'''
-	def __init__(self, flist=[], ref=None, header_ref=None, fmod='ext', ext_pix=0):
+	def reproject_mc(self, Nmc=0, filUNC=None, dist='norm', write_mc=False):
 		'''
-		self: flist, (hdr_ref, path_tmp, filIN, wmod, hdr, w, dim, Nx, Ny, Nw, im, wvl)
+		Generate Monte-Carlo uncertainties for reprojected input files
 		'''
-		Nf = np.size(flist)
-		if Nf==0:
-			print('ERROR: No input!')
-			exit()
-		else:
-			super().__init__(filIN=flist[0], filREF=ref, \
-				hdREF=header_ref, fmod=fmod, ext_pix=ext_pix)
-			## Refresh self.hdr_ref in every circle
-			if fmod=='ext':
-				for f in flist:
-					super().__init__(filIN=f, filREF=None, \
-						hdREF=self.hdr_ref, fmod='ext', ext_pix=ext_pix)
-		self.flist = flist
-
-	def footprint(self, filOUT=None, wmod=0):
-		'''
-		self: hdr_ref, (filIN, wmod, hdr, w, dim, Nx, Ny, Nw, im, wvl)
-		'''
-		if filOUT is None:
-			filOUT = self.path_tmp+'footprint'
+		print('imontage: Generating Monte-Carlo unc...')
 		
-		Nx = self.hdr_ref['NAXIS1']
-		Ny = self.hdr_ref['NAXIS2']
-		im_fp = np.ones((Ny, Nx))
-		
-		comment = "<imontage> footprint"
-		write_fits(filOUT, self.hdr_ref, im_fp, None, wmod, \
-				COMMENT=comment)
+		file_rep = None
+		hyperim = [] # [i,(w,)y,x]
+		sigma = [] # [i,(w,)y,x]
+		for i, f in enumerate(self.file):
+			im = [] # [j,(w,)y,x]
+			for j in range(Nmc+1):
+				if write_mc==True:
+					f_rep = f+'_rep/'
+					if not os.path.exists(f_rep):
+						os.makedirs(f_rep)
+					file_unc = f_rep + 'unc'
+					if j==0:
+						file_rep = f_rep + 'rep'
+					else:
+						file_rep = f_rep + 'rep_' + str(j)
 
-		return im_fp
+				if j==0:
+					im0 = self.reproject(f, filOUT=file_rep, \
+						filUNC=None, dist=dist, wmod=0, filTMP=None)
+				else:
+					im.append(self.reproject(f, filOUT=file_rep, \
+						filUNC=filUNC[i], dist=dist, wmod=0, filTMP=None))
+			im_std = np.nanstd(np.array(im), axis=0)
+			sigma.append(im_std)
+			hyperim.append(np.array(im0))
+			
+			if write_mc==True:
+				write_fits(file_unc, self.hdr_ref, im_std, self.wvl)
 
-	def mc_unc(self, Nmc=1, ulist=None):
-		'''
-		'''
-		for i in range(Nmc):
-			for j, f in enumerate(self.flist):
-				super().__init__(f, None, self.hdr_ref)
-	def reproject(self, filOUT=None, filUNC=None, dist='norm', wmod=0, filTMP=None):
+		print('imontage: Generating Monte-Carlo unc...[done]')
 
-	def combine(self, filOUT=None, method='average', ulist=None, dist='norm'):
+		return hyperim, sigma
+
+	def combine(self, filOUT=None, method='average', \
+		filUNC=None, do_rep=True, Nmc=0, dist='norm', write_mc=False):
 		'''
-		Reproject and combine input files (with same wavelengths) to the ref WCS
+		Stitching input files (with the same wavelengths) to the ref WCS
 
 		'''
-		## Reproject images
-		hyperim = []
-		for i, f in enumerate(self.flist):
-			super().__init__(f, None, self.hdr_ref) # fmod='ref'
-			hyperim.append(self.reproject(filUNC=ulist[i], dist=dist))
+		if do_rep==True:
+			hyperim, unc = self.reproject_mc(Nmc=Nmc, \
+				filUNC=filUNC, dist=dist, write_mc=write_mc)
+		else:
+			hyperim = [] # [i,(w,)y,x]
+			unc = [] # [i,(w,)y,x]]
+			for i, f in enumerate(self.file):
+				file_rep = f+'_rep/rep'
+				file_unc = f+'_rep/unc'
+				hyperim.append(read_fits(file_rep).data)
+				if filUNC is not None:
+					unc.append(read_fits(file_unc).data) # reprojected unc
 		hyperim = np.array(hyperim)
+		unc = np.array(unc)
 
 		## Combine images
 		if method=='average':
 			im_comb = nanavg(hyperim, axis=0)
-		elif method=='weighted_avg':
-			im_comb = nanavg(hyperim, axis=0, weights=None)
+		elif method=='wgt_avg':
+			inv_var = 1./unc**2
+			im_comb = nanavg(hyperim, axis=0, weights=inv_var)
 
 		if filOUT is not None:
 			comment = "A <imontage> production"
 			write_fits(filOUT, self.hdr_ref, im_comb, self.wvl, \
 				COMMENT=comment)
 
+		print('imontage: Combine images...[done]')
+		
 		return im_comb
 
 	def clean(self, file=None):
@@ -894,7 +975,7 @@ class sextract(impro):
 	Nx                  slit width
 	------ OUTPUT ------
 	'''
-	def __init__(self, ipath=None, parobs=None):
+	def __init__(self, ipath=None, parobs=None, verbose=False):
 		self.path = ipath + parobs[0] + '/irc_specred_out_' + parobs[1]+'/'
 		filIN = self.path + parobs[2]
 		super().__init__(filIN)
@@ -908,10 +989,11 @@ class sextract(impro):
 		elif parobs[1]=='Nh':
 			self.slit_width = 2 # 412pix * 3"/10' = 2.06 pix (Nh)
 
-		print('\n----------')
-		print('Slit extracted from ')
-		print('obs_id: {} \nslit: {}'.format(parobs[0], parobs[1]))
-		print('----------\n')
+		if verbose==True:
+			print('\n----------')
+			print('Slit extracted from ')
+			print('obs_id: {} \nslit: {}'.format(parobs[0], parobs[1]))
+			print('----------\n')
 
 	def rand_pointing(self, sigma=0.):
 		'''

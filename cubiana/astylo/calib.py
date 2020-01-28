@@ -15,7 +15,7 @@ import subprocess as SP
 ## astylo
 from bio import read_fits, ext_wcs, read_hdf5, write_hdf5, read_ascii
 from plot import plot2d_m, colorlib
-from proc import iconvolve, iproject
+from proc import iconvolve, imontage
 
 
 ##-----------------------------------------------
@@ -178,8 +178,8 @@ class spec2phot(intercalib):
 				filPRO = filIN # filPRO is spec
 			
 			## Reprojection to spec (filIN)
-			pro = iproject(filREF, filPRO)
-			F_phot = pro.reproject(filOUT)
+			pro = imontage(filREF, filPRO)
+			F_phot = pro.reproject(filOUT=filOUT)
 
 		else: # filIN is phot
 			## Reset header (should be spec)
@@ -195,8 +195,8 @@ class spec2phot(intercalib):
 				filPRO = filIN # filPRO is phot
 			
 			## Reprojection to spec (filREF)
-			pro = iproject(filPRO, filREF)
-			F_phot = pro.reproject(filOUT)
+			pro = imontage(filPRO, filREF)
+			F_phot = pro.reproject(filOUT=filOUT)
 
 		## Synthetic photometry
 		wcen, F_syn, sig = self.synthetic_photometry((phot))
@@ -231,8 +231,8 @@ class phot2phot:
 			filPRO = filIN
 
 		## Reprojection config
-		pro = iproject(filPRO, filREF)
-		self.im = pro.reproject(filOUT)
+		pro = imontage(filPRO, filREF)
+		self.im = pro.reproject(filOUT=filOUT)
 
 	def image(self):
 		return self.im

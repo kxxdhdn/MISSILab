@@ -11,7 +11,122 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from astylo.bio import read_fits, write_fits, ext_wcs
-from astylo.proc import wclean, interfill, sextract, imontage
+from astylo.proc import wclean, interfill, sextract, imontage, concatenate
+from astylo.plot import plot2d
+
+path_out = os.getcwd()+'/out/'
+
+
+## TEST sextract + imontage
+##--------------------------
+path_data = '/Users/dhu/Data/AKARI/data/'
+path_out = os.getcwd()+'/out/'
+path_build = path_out+'cubuild/'
+if not os.path.exists(path_build):
+	os.makedirs(path_build)
+
+obs_id = ['1420415.1', '1420415.2']
+N3 = ['F011213824_N002', 'F011213865_N002']
+slit = ['Ns', 'Nh']
+
+par_obs = []
+out_tmp = []
+for i, obs in enumerate(obs_id):
+	for s in slit:
+		par_obs.append([obs, s, N3[i]])
+		out_tmp.append(path_build + 'M83_' + obs + '_' + s)
+
+## Monte-Carlo test
+print('sextract: Building cube from slit extraction...')
+Nmc = 6
+
+unc_build = []
+for j in range(Nmc+1):
+	for i, par in enumerate(par_obs):
+		sext = sextract(path_data, par)
+		if j==0:
+			cube = sext.spec_build(out_tmp[i], \
+				write_unc=True, sig_pt=0.)
+			## Symmetric unc cubes (header without pointing shift)
+			# unc_build.append(out_tmp[i]+'_unc')
+			## Asymmetric unc cubes (header without pointing shift)
+			unc_build.append([out_tmp[i]+'_unc_N', out_tmp[i]+'_unc_P'])
+		else:
+			## Add pointing accuracy
+			cube = sext.spec_build(out_tmp[i]+'_'+str(j), \
+				write_unc=True, sig_pt=1./3600)
+print('sextract: Building cube from slit extraction...[done]')
+
+ref_irs = path_out+'M83_IRS'
+mont = imontage(out_tmp, ref_irs, None, 'ref', 3)
+mont.make()
+
+# print(mont.footprint())
+# mont.clean()
+# mont.combine(path_out+'M83_IRC', method='average', write_mc=True, \
+# 	do_rep=True, Nmc=Nmc, filUNC=unc_build, dist='norm') # Symmetric unc
+mont.combine(path_out+'M83_IRC', method='wgt_avg', write_mc=True, \
+	do_rep=True, Nmc=Nmc, filUNC=unc_build, dist='splitnorm') # Asymmetric unc
+
+## Skip rep
+# im0 = mont.combine(path_out+'M83_IRC', method='average', \
+# 	filUNC='not_None', do_rep=False)
+# im0 = mont.combine(path_out+'M83_IRC', method='wgt_avg', \
+# 	filUNC='not_None', do_rep=False)
+
+## Reprendre MC
+hyperim = []
+for j in range(Nmc):
+	out_tmp_mc = []
+	build_unc_mc = []
+	for f in out_tmp:
+		f_mc = f+'_'+str(j+1)
+		out_tmp_mc.append(f_mc)
+		build_unc_mc.append(f_mc+'_unc')
+		# build_unc_mc.append([f_mc+'_unc_N', f_mc+'_unc_P'])
+	mont_mc = imontage(out_tmp_mc, None, mont.hdr_ref, 'ref')
+	mont_mc.make()
+	# hyperim.append(mont_mc.combine(path_build+'M83_IRC_'+str(j+1), write_mc=True, \
+	# 		method='average', Nmc=Nmc, filUNC=build_unc_mc, dist='norm'))
+	hyperim.append(mont_mc.combine(path_build+'M83_IRC_'+str(j+1), write_mc=True, \
+			method='wgt_avg', Nmc=Nmc, filUNC=build_unc_mc, dist='splitnorm'))
+	print(read_fits(path_build+'M83_IRC_'+str(j+1)).data.shape)
+	hyperim.append(read_fits(path_build+'M83_IRC_'+str(j+1)).data)
+hyperim = np.array(hyperim)
+unc = np.nanstd(hyperim, axis=0)
+write_fits(path_out+'M83_IRC_unc', mont.hdr_ref, unc, mont.wvl)
+
+
+## TEST concatenate
+##------------------
+
+file = [path_out+'M83_IRS']
+file.append(path_out+'M83_IRC')
+concatenate(file, path_out+'M83')
+
+func = [path_out+'M83_IRS_unc']
+func.append(path_out+'M83_IRC_unc')
+concatenate(func, path_out+'M83_unc')
+
+ds = read_fits(path_out+'M83')
+uds = read_fits(path_out+'M83_unc')
+data = ds.data
+wvl = ds.wave
+unc = uds.data
+
+ma = np.ma.MaskedArray(data, mask=np.isnan(data))
+mask_any = ma.mask.any(axis=0)
+Ny = mask_any.shape[0]
+Nx = mask_any.shape[1]
+for y in range(Ny):
+	for x in range(Nx):
+		# fig, ax = plt.subplots()
+		# ax.errorbar(wvl, data[:,y,x])
+		# ax.set_xscale('symlog')
+		# ax.set_yscale('symlog')
+		if mask_any[y,x]==False:
+			plot2d(wvl, data[:,y,x], yerr=unc[:,y,x], xlog=1, ylog=1)
+plt.show()
 
 
 ## TEST stat. dist. (impro.rand_splitnorm)
@@ -42,72 +157,6 @@ from astylo.proc import wclean, interfill, sextract, imontage
 # plt.bar(center, hist, align='center', width=width)
 # plt.show()
 # exit()
-
-## TEST sextract + imontage
-##--------------------------
-path_data = '/Users/dhu/Data/AKARI/data/'
-build_tmp = 'out/cubuild/'
-if not os.path.exists(build_tmp):
-	os.makedirs(build_tmp)
-
-obs_id = ['1420415.1', '1420415.2']
-N3 = ['F011213824_N002', 'F011213865_N002']
-slit = ['Ns', 'Nh']
-
-par_obs = []
-out_tmp = []
-for i, obs in enumerate(obs_id):
-	for s in slit:
-		par_obs.append([obs, s, N3[i]])
-		out_tmp.append(build_tmp + '/M83_' + obs + '_' + s)
-
-## Simple/functional tests
-
-
-unc_out = []
-for j, par in enumerate(par_obs):
-	sext = sextract(path_data, par)
-	cube = sext.spec_build(out_tmp[j], sig_pt=1./3600) # Add pointing accuracy
-	# unc_out.append(out_tmp[j]+'_unc') # Symmetric unc
-	unc_out.append([out_tmp[j]+'_unc_N', out_tmp[j]+'_unc_P']) # Asymmetric unc
-	# print(cube.shape, '\n', sext.wave())
-
-mont = imontage(out_tmp, out_tmp[0])
-# print(mont.footprint())
-# mont.clean()
-# mont.combine('out/M83_IRC', ulist=unc_out, dist='norm') # Symmetric unc
-mont.combine('out/M83_IRC', ulist=unc_out, dist='splitnorm') # Asymmetric unc
-'''
-
-## Monte-Carlo test
-Nmc = 6
-for i in range(Nmc+1):
-	if i==0:
-		wunc = True
-		sig_pt = 0.
-	else:
-		wunc = False
-		sig_pt = 1./3600 # Add pointing accuracy
-
-	spec = []
-	unc_build = []
-	for j, par in enumerate(par_obs):
-		sext = sextract(path_data, par)
-		cube = sext.spec_build(out_tmp[j]+'_'+str(i), write_unc=wunc, sig_pt=sig_pt)
-		spec.append(cube)
-		## Asymmetric unc cubes (header without pointing shift)
-		if i==0:
-			unc_build.append([out_tmp[j]+'_unc_N', out_tmp[j]+'_unc_P'])
-
-
-## Calculate unc_rep
-unc_rep = np.nanstd()
-
-for i in range(Nmc+1):
-	mont = imontage(out_tmp[], out_tmp[0])
-	mont.combine('out/M83_IRC', method='weighted_avg', \
-		ulist=unc_build, dist='splitnorm') # Asymmetric unc
-'''
 
 ## TEST FITS ref point shift (impro.crop)
 ##----------------------------------------

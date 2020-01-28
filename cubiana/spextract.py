@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 ## astylo
 from astylo.bio import read_fits, write_fits, read_ascii
-from astylo.proc import islice, icrop, iconvolve, iproject, wclean
+from astylo.proc import islice, icrop, iconvolve, imontage, wclean
 from astylo.calib import intercalib, phot2phot
 from astylo.lib import fclean, pix2sr
 from astylo.plot import plot2d
@@ -18,7 +18,7 @@ from astylo.plot import plot2d
 ##       Initialisation
 ##---------------------------
 
-Nmc = 6
+Nmc = 2
 
 src = 'M83'
 ## Not useful if need to modify IDL/conv_prog.pro
@@ -56,7 +56,7 @@ path_ker = '/Users/dhu/Data/kernels/' ###
 cker = path_out+src+'_kernels' ### See also IDL/conv_prog.pro
 
 ## Intercalibration
-path_phot = '/Users/dhu/Data/photometry/'+src+'/' ###
+path_phot = '/Users/dhu/Data/Photometry/'+src+'/' ###
 path_calib = path_data+'calib/' ###
 if not os.path.exists(path_calib):
 	os.makedirs(path_calib)
@@ -178,10 +178,11 @@ if b0=='y':
 
 			## Reproject convolved cube
 			##--------------------------
-			pro = iproject(file_proj, project_ref)
+			pro = imontage(file_proj, project_ref)
+			pro.make()
 			pro_cube = pro.reproject(filTMP=file_slice)#, filOUT=file_out+'_'+str(j))
 			
-			slices.extend(pro.filenames())
+			slices.extend(pro.slist)
 			cubi.append(pro_cube)
 		
 			fclean(file_conv+'.fits')
@@ -288,8 +289,8 @@ write_fits(file_calib_p, hdr_p, im_p)
 ## phot2phot
 ##-----------
 ## Use reprojection to crop
-pro_s = iproject(file_calib_s, file_all)
-newim_s = pro_s.reproject(file_calib_s)
+pro_s = imontage(file_calib_s, file_all)
+newim_s = pro_s.reproject(filOUT=file_calib_s)
 p2p = phot2phot(filIN=file_calib_p, \
 	filREF=file_calib_s, filOUT=file_calib_p)
 newim_p = p2p.image()

@@ -147,14 +147,58 @@ def std(a, ddof=0):
 
 def nanavg(a, axis=None, weights=None, MaskedValue=np.nan):
 	'''
-	Numpy.average with NaNs
+	Numpy.average with NaNs (weight normalisation included)
 	'''
+	## NaNs -> --
 	ma = np.ma.MaskedArray(a, mask=np.isnan(a))
-	avg = np.average(ma, axis=axis, weights=weights).data
-	mask = np.average(ma, axis=axis, weights=weights).mask
-	avg[mask] = MaskedValue
+	if weights is not None:
+		wgt = np.ma.MaskedArray(weights, mask=np.isnan(a))
+	else:
+		wgt = weights
+
+	mask_any = ma.mask.any(axis=axis)
+	mask_all = ma.mask.all(axis=axis)
+
+	avg = np.average(ma, axis=axis, weights=wgt).data
+
+	## Check weight sums
+	# print(np.average(ma, axis=axis, weights=wgt, returned=True)[1])
+
+	## Convert output none value convention (Default: 0.)
+	avg[mask_all] = MaskedValue
 
 	return avg
+
+def nanstd(a, axis=None, weights=None, MaskedValue=np.nan):
+	'''
+	Weighted standard deviation with NaNs
+	'''
+	ma = np.ma.MaskedArray(a, mask=np.isnan(a))
+	if weights is not None:
+		wgt = np.ma.MaskedArray(weights, mask=np.isnan(a))
+	else:
+		wgt = weights
+
+	mask_any = ma.mask.any(axis=axis)
+	mask_all = ma.mask.all(axis=axis)
+
+	avg = np.average(ma, axis=axis, weights=wgt)
+	
+	dev_ma = []
+	for i in range(ma.shape[axis]):
+		dev_ma.append(np.take(ma, i, axis=axis) - avg)
+	dev_ma = np.array(dev_ma)
+	## Count nonzero weights
+	wgt_nz = np.ma.masked_where(wgt==0, wgt)
+	Nwgt = wgt_nz.count(axis=axis)
+	print(Nwgt)
+
+	std = np.sqrt(Nwgt/(Nwgt-1) * np.average(dev_ma**2, axis=axis, weights=wgt).data)
+
+	## Convert output none value convention (Default: 0.)
+	std[mask_all] = MaskedValue
+
+	return std
 
 def closest(a, val):
 	'''
