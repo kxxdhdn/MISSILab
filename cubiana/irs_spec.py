@@ -23,7 +23,8 @@ from astylo.plot import plot2d
 from param import (
 	src, Nmc, path_cur, path_idl, 
 	root, path_irs, path_phot, path_ker, 
-	fits_irs, fits_unc_irs, chnl, fits_ker, path_out, 
+	fits_irs, fits_irs_unc, chnl, 
+	fits_ker, path_out, csv_ker, 
 	phot, phot0, path_cal, fits_phot, fits_phot0, 
 	path_test, path_tmp, verbose, 
 )
@@ -31,20 +32,51 @@ from param import (
 ##---------------------------
 ##      Initialisation
 ##---------------------------
+Nch = 4 # Number of chnl used
 ## Set output path
-fits_out_irs = path_out+src+'_IRS'
-fits_out_unc_irs = path_out+src+'_IRS_unc'
+fits_out_irs = []
+for i in range(Nch):
+	fits_out_irs.append(path_out+src+'_'+chnl[i])
 
 ##---------------------------
 ##       Combine obs
 ##---------------------------
-for j in trange(Nmc, desc='imontage : Combining IRS...'):
-	## Reproject all chnl to the last one in the chnl list
-	mont = imontage(fits_irs, fits_irs[0], fmod='ext', ext_pix=2)
-	mont.make()
-	mont.combine(fits_out_irs, 'wgt_avg', fits_unc_irs, Nmc=Nmc, write_mc=True)#, do_rep=False)
+## Reproject all chnl to the last one in the chnl list
+##--------------------
+## Make ref frame header
+ref_irs = fits_irs[3][0] # [chnl][label]
+# print(ref_irs)
+# exit()
+mont = imontage(sum(fits_irs,[]), ref_irs, \
+	fmod='ext', ext_pix=2, ftmp=path_tmp)
+mont.make()
+# mont.footprint(path_tmp+'footprint')
+mont.hdr_ref = read_fits(path_tmp+'footprint0').header
 
-print('imontage : Combining IRS cube [done]')
+combim = []
+for i in trange(Nch, leave=False, \
+	desc='Building IRS cube'):
+	mont.combine(fits_irs[i], fits_out_irs[i], 'wgt_avg', \
+		fits_irs_unc[i], Nmc=Nmc, write_mc=True, do_rep=False)[0]
+
+print('Combining IRS cubes [done]')
+
+
+## PSF Convolution
+##-----------------
+# for j in trange(Nmc+1, desc='iconvolve: Convolving PSF'):
+# 	for f in fits_irs:
+# 		filename = os.path.basename(f)
+# 		f_rep = mont.path_tmp + filename+'_rep/'
+# 		if j==0:
+# 			conv = iconvolve(f_rep+'rep', fits_ker, csv_ker)
+# 		else:
+# 			conv = iconvolve(f_rep+'rep_'+str(j))
+
+# 		conv.do_conv(ipath=path_idl)
+
+# print('iconvolve: Convolving PSF [done]')
+
 
 ##---------------------------
 ##         Path Store

@@ -6,6 +6,7 @@
 image PROCessing
 
 """
+from tqdm import tqdm, trange
 import os
 import math
 import numpy as np
@@ -350,7 +351,7 @@ class impro:
 
 		return self.im
 
-	def slice(self, filSL, suffix=None):
+	def slice(self, filSL, postfix=''):
 		## 3D cube slicing
 		slist = []
 		if self.dim==3:
@@ -361,17 +362,13 @@ class impro:
 			hdr['NAXIS'] = 2
 			for k in range(self.Nw):
 				## output filename list
-				f = filSL+'_'+'0'*(4-len(str(k)))+str(k)
-				if suffix is not None:
-					f += suffix
+				f = filSL+'_'+'0'*(4-len(str(k)))+str(k)+postfix
 				slist.append(f)
 				comment = "NO.{} image [SLICE]d from {}.fits".format(k, self.filIN)
 				write_fits(f, hdr, self.im[k,:,:]) # gauss_noise inclu
 		else:
 			print('Input file is a 2D image which cannot be sliced! ')
-			f = filSL+'_0000'
-			if suffix is not None:
-				f += suffix
+			f = filSL+'_0000'+postfix
 			slist.append(f)
 			write_fits(f, self.hdr, self.im) # gauss_noise inclu
 			print('Rewritten with only random noise added (if provided).')
@@ -473,7 +470,7 @@ class islice(impro):
 
 	self: slist, path_tmp, (filIN, wmod, hdr, w, dim, Nx, Ny, Nw, im, wvl)
 	'''
-	def __init__(self, filIN, filSL=None, filUNC=None, dist='norm', suffix=None):
+	def __init__(self, filIN, filSL=None, filUNC=None, dist='norm', postfix=''):
 		super().__init__(filIN)
 
 		if filSL is None:
@@ -489,7 +486,7 @@ class islice(impro):
 		elif dist=='splitnorm':
 			self.rand_splitnorm(filUNC)
 
-		self.slist = self.slice(filSL, suffix) # gauss_noise inclu
+		self.slist = self.slice(filSL, postfix) # gauss_noise inclu
 
 	def image(self):
 		return self.im
@@ -536,7 +533,7 @@ class imontage(impro):
 	i means <impro>-based or initialize
 
 	------ INPUT ------
-	file                input FITS file (list)
+	file                input FITS file (list, cf impro.filIN)
 	filREF              ref file (priority if co-exist with input header)
 	hdREF               ref header
 	fmod                output file frame
@@ -544,18 +541,23 @@ class imontage(impro):
 		                  'rec' - recenter back to input frame
 		                  'ext' - cover both input and ref frame
 	ext_pix             number of pixels to extend to save edge
+	ftmp                tmp file path
 	------ OUTPUT ------
 	'''
-	def __init__(self, file, filREF=None, hdREF=None, fmod='ref', ext_pix=0):
+	def __init__(self, file, filREF=None, hdREF=None, \
+		fmod='ref', ext_pix=0, ftmp=None):
 		'''
 		self: hdr_ref, path_tmp, 
 		(filIN, wmod, hdr, w, dim, Nx, Ny, Nw, im, wvl)
 		'''
 		## Set path of tmp files
-		path_tmp = os.getcwd()+'/tmp_proc/'
-		if not os.path.exists(path_tmp):
-			os.makedirs(path_tmp)
-		self.path_tmp = path_tmp
+		if ftmp is None:
+			path_tmp = os.getcwd()+'/tmp_proc/'
+			if not os.path.exists(path_tmp):
+				os.makedirs(path_tmp)
+			self.path_tmp = path_tmp
+		else:
+			self.path_tmp = ftmp
 
 		## Inputs
 		self.file = file
@@ -609,21 +611,27 @@ class imontage(impro):
 
 				## Modify ref header
 				if fmod=='rec': 
-					hdREF['CRPIX1'] = -xmin
-					hdREF['CRPIX2'] = -ymin
+					hdREF['CRPIX1'] += -xmin
+					hdREF['CRPIX2'] += -ymin
 					hdREF['NAXIS1'] = math.ceil(xmax - xmin)
 					hdREF['NAXIS2'] = math.ceil(ymax - ymin)
 				elif fmod=='ext':
 					if xmin<0:
-						hdREF['CRPIX1'] = -xmin
+						hdREF['CRPIX1'] += -xmin
 					if ymin<0:
-						hdREF['CRPIX2'] = -ymin
+						hdREF['CRPIX2'] += -ymin
 					hdREF['NAXIS1'] = math.ceil(max(xmax, hdREF['NAXIS1']-xmin, \
 						xmax-xmin, hdREF['NAXIS1'])) + ext_pix # save edges
 					hdREF['NAXIS2'] = math.ceil(max(ymax, hdREF['NAXIS2']-ymin, \
 						ymax-ymin, hdREF['NAXIS2'])) + ext_pix
 			## Save hdREF
 			self.hdr_ref = hdREF
+
+			## Test hdREF (Quick check: old=new or old<new)
+			# w_new = ext_wcs(header=hdREF).WCS
+			# print('old: ', w.all_world2pix(self.hdr['CRVAL1'], self.hdr['CRVAL2'], 1))
+			# print('new: ', w_new.all_world2pix(self.hdr['CRVAL1'], self.hdr['CRVAL2'], 1))
+			# exit()
 		else:
 			print('ERROR: Can not find projection reference! ')
 			exit()
@@ -648,11 +656,11 @@ class imontage(impro):
 					self.make_header(file=f, filREF=None, \
 						hdREF=self.hdr_ref, fmod='ext', ext_pix=ext_pix)
 		
-		print('imontage: Making ref header...[done]')
+		tqdm.write('<imontage> Making ref header...[done]')
 
 		return self.hdr_ref
 
-	def footprint(self, filOUT=None, wmod=0):
+	def footprint(self, filOUT=None):
 		'''
 		Show reprojection footprint
 		'''
@@ -664,54 +672,47 @@ class imontage(impro):
 		im_fp = np.ones((Ny, Nx))
 		
 		comment = "<imontage> footprint"
-		write_fits(filOUT, self.hdr_ref, im_fp, None, wmod, \
+		write_fits(filOUT, self.hdr_ref, im_fp, None, wmod=0, \
 				COMMENT=comment)
 
 		return im_fp
 
-	def reproject(self, file=None, filOUT=None, \
-		filUNC=None, dist='norm', wmod=0, filTMP=None):
+	def reproject(self, filIN, filOUT=None, \
+		filUNC=None, dist='norm', postfix=''):
 		'''
 		Reproject 2D image or 3D cube
 
 		------ INPUT ------
-		file                single FITS file to reproject
+		filIN               single FITS file to reproject
 		filOUT              output FITS file
-		wmod                wave mode of output file
 		filUNC              unc files
 		dist                uncertainty distribution
 		                      'norm' - N(0,1)
 		                      'splitnorm' - SN(0,lam,lam*tau)
-		filTMP              save tmp files
+		postfix              
 		------ OUTPUT ------
 
-		self: filTMP
 		'''
-		if file is not None:
-			super().__init__(file)
-
-		self.wmod = wmod
+		super().__init__(filIN)
 		
 		if dist=='norm':
 			self.rand_norm(filUNC)
 		elif dist=='splitnorm':
 			self.rand_splitnorm(filUNC)
-
-		if filTMP is None:
-			filTMP = self.path_tmp+'slice'
-		else:
-			self.filTMP = filTMP
 		
-		self.slist = self.slice(filTMP, '_') # gauss_noise inclu
+		## Set reprojection tmp path
+		##---------------------------
+		filename = os.path.basename(filIN)
+		rep_tmp = self.path_tmp+filename+postfix+'/'
+		if not os.path.exists(rep_tmp):
+			os.makedirs(rep_tmp)
+
+		self.slist = self.slice(rep_tmp+'slice', '_') # gauss_noise inclu
 
 		## Do reprojection
 		##-----------------
 		cube_rep = []
 		# for k in range(self.Nw):
-		for f in self.slist:
-			# print(self.hdr_ref)
-			# print(read_fits(f).header)
-			im_rep = reproject_interp(f+'.fits', self.hdr_ref)[0]
 			# hdr = self.hdr.copy()
 			# for kw in self.hdr.keys():
 			# 	if '3' in kw:
@@ -719,99 +720,134 @@ class imontage(impro):
 			# hdr['NAXIS'] = 2
 			# phdu = fits.PrimaryHDU(header=hdr, data=self.im[k,:,:])
 			# im_rep = reproject_interp(phdu, self.hdr_ref)[0]
+		for s in self.slist:
+			im_rep = reproject_interp(s+'.fits', self.hdr_ref)[0]
 			cube_rep.append(im_rep)
-
-			write_fits(f+'rep', self.hdr_ref, im_rep)
-			fclean(f+'.fits')
-		if filTMP is None:
-			fclean(self.path_tmp)
-
+			write_fits(s+'rep_', self.hdr_ref, im_rep)
+			fclean(s+'.fits')
 		self.im = np.array(cube_rep)
 
-		if filOUT is not None:
-			self.hdr = self.hdr_ref
-
-			comment = "Reprojected by <iproject>. "
-			write_fits(filOUT, self.hdr, self.im, self.wvl, self.wmod, \
+		comment = "Reprojected by <imontage>. "
+		if filOUT is None:
+			filOUT = self.path_tmp+filename+postfix+'_rep'
+		self.file_rep = filOUT
+		
+		write_fits(filOUT, self.hdr_ref, self.im, self.wvl, wmod=0, \
 				COMMENT=comment)
-	
+		
 		return self.im
 
-	def reproject_mc(self, Nmc=0, filUNC=None, dist='norm', write_mc=False):
+	def reproject_mc(self, filIN, filUNC, Nmc=0, dist='norm', write_mc=False):
 		'''
-		Generate Monte-Carlo uncertainties for reprojected input files
+		Generate Monte-Carlo uncertainties for reprojected input file
 		'''
-		print('imontage: Generating Monte-Carlo unc...')
 		
-		file_rep = None
-		hyperim = [] # [i,(w,)y,x]
-		sigma = [] # [i,(w,)y,x]
-		for i, f in enumerate(self.file):
-			im = [] # [j,(w,)y,x]
-			for j in range(Nmc+1):
-				if write_mc==True:
-					f_rep = f+'_rep/'
-					if not os.path.exists(f_rep):
-						os.makedirs(f_rep)
-					file_unc = f_rep + 'unc'
-					if j==0:
-						file_rep = f_rep + 'rep'
-					else:
-						file_rep = f_rep + 'rep_' + str(j)
+		hyperim = [] # [j,(w,)y,x]
+		for j in trange(Nmc+1, leave=False, \
+			desc='<imontage> Reprojection (MC level)'):
 
-				if j==0:
-					im0 = self.reproject(f, filOUT=file_rep, \
-						filUNC=None, dist=dist, wmod=0, filTMP=None)
-				else:
-					im.append(self.reproject(f, filOUT=file_rep, \
-						filUNC=filUNC[i], dist=dist, wmod=0, filTMP=None))
-			im_std = np.nanstd(np.array(im), axis=0)
-			sigma.append(im_std)
-			hyperim.append(np.array(im0))
-			
-			if write_mc==True:
-				write_fits(file_unc, self.hdr_ref, im_std, self.wvl)
+			if j==0:
+				im0 = self.reproject(filIN, \
+					filUNC=None, dist=dist)
+				file_rep = self.file_rep
+			else:
+				hyperim.append(self.reproject(filIN, \
+					filUNC=filUNC, dist=dist, postfix='_'+str(j)))
+		im0 = np.array(im0)
+		hyperim = np.array(hyperim)
+		unc = np.nanstd(hyperim, axis=0)
 
-		print('imontage: Generating Monte-Carlo unc...[done]')
+		if write_mc==True:
+			write_fits(file_rep+'_unc', self.hdr_ref, unc, self.wvl)
 
-		return hyperim, sigma
+		return im0, unc, hyperim
 
-	def combine(self, filOUT=None, method='average', \
+	def combine(self, file, filOUT=None, method='average', \
 		filUNC=None, do_rep=True, Nmc=0, dist='norm', write_mc=False):
 		'''
 		Stitching input files (with the same wavelengths) to the ref WCS
 
+		If filUNC is None, no MC
+		If Nmc==0, no MC
 		'''
-		if do_rep==True:
-			hyperim, unc = self.reproject_mc(Nmc=Nmc, \
-				filUNC=filUNC, dist=dist, write_mc=write_mc)
-		else:
-			hyperim = [] # [i,(w,)y,x]
-			unc = [] # [i,(w,)y,x]]
-			for i, f in enumerate(self.file):
-				file_rep = f+'_rep/rep'
-				file_unc = f+'_rep/unc'
-				hyperim.append(read_fits(file_rep).data)
+		wvl = read_fits(file[0]).wave
+
+		superim0 = [] # [i,(w,)y,x]
+		superunc = [] # [i,(w,)y,x]
+		superim = [] # [i,j,(w,)y,x]
+		Nf = np.size(file)
+		for i in trange(Nf, leave=False, \
+			desc='<imontage> Reprojection (file level)'):
+			## (Re)do reprojection
+			##---------------------
+			if do_rep==True:
+				## With MC
 				if filUNC is not None:
-					unc.append(read_fits(file_unc).data) # reprojected unc
-		hyperim = np.array(hyperim)
-		unc = np.array(unc)
+					im0, unc, hyperim = self.reproject_mc(file[i], filUNC[i], \
+						Nmc=Nmc, dist=dist, write_mc=write_mc)
+					superunc.append(unc)
+					superim.append(hyperim)
+				## Without MC
+				else:
+					im0 = self.reproject(file[i])					
+				superim0.append(im0)
+
+			## Read archives
+			##---------------
+			else:
+				filename = os.path.basename(file[i])
+				file_rep = self.path_tmp+filename+'_rep'
+				if filUNC is not None:
+					hyperim = [] # [j,(w,)y,x]
+					for j in range(Nmc+1):
+						if j==0:
+							superunc.append(read_fits(file_rep+'_unc').data)
+						else:
+							file_rep = self.path_tmp+filename+'_'+str(j)+'_rep'
+							hyperim.append(read_fits(file_rep).data)
+					hyperim = np.array(hyperim)
+					superim.append(hyperim)
+				superim0.append(read_fits(file_rep).data)
+
+		superim0 = np.array(superim0)
+		superunc = np.array(superunc)
+		superim = np.array(superim)
 
 		## Combine images
-		if method=='average':
-			im_comb = nanavg(hyperim, axis=0)
-		elif method=='wgt_avg':
-			inv_var = 1./unc**2
-			im_comb = nanavg(hyperim, axis=0, weights=inv_var)
+		##----------------
+		## Think about using 'try - except'
+		if filUNC is not None:
+			inv_var = 1./superunc**2
+			hyperim_comb = []
+			for j in trange(Nmc+1, leave=False, \
+				desc='<imontage> Stitching'):
+				if j==0:
+					if method=='average':
+						im0_comb = nanavg(superim0, axis=0)
+					elif method=='wgt_avg':
+						im0_comb = nanavg(superim0, axis=0, weights=inv_var)
+				else:
+					if method=='average':
+						hyperim_comb.append(nanavg(superim[:,j-1], axis=0))
+					elif method=='wgt_avg':
+						hyperim_comb.append(nanavg(superim[:,j-1], axis=0, weights=inv_var))
+			hyperim_comb = np.array(hyperim_comb)
+			unc_comb = np.nanstd(hyperim_comb)
+		else:
+			## If no unc, inverse variance weighted mean not available
+			im0_comb = nanavg(superim0, axis=0)
 
 		if filOUT is not None:
 			comment = "A <imontage> production"
-			write_fits(filOUT, self.hdr_ref, im_comb, self.wvl, \
-				COMMENT=comment)
 
-		print('imontage: Combine images...[done]')
+			write_fits(filOUT, self.hdr_ref, im0_comb, wvl, \
+				COMMENT=comment)
+			write_fits(filOUT+'_unc', self.hdr_ref, im0_comb, wvl, \
+				COMMENT=comment)
 		
-		return im_comb
+		tqdm.write('<imontage> Combining images...[done]')
+		
+		return im0_comb, unc_comb, hyperim_comb, superim0, superunc, superim
 
 	def clean(self, file=None):
 		if file is not None:
