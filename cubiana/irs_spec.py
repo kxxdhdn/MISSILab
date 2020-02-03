@@ -5,6 +5,8 @@ import logging, sys
 # logging.basicConfig(stream=sys.stderr, level=logging.ERROR)
 # print(logging.getLogger())
 logging.disable(sys.maxsize)
+import warnings
+warnings.filterwarnings("ignore", category=RuntimeWarning) 
 
 import time
 t0 = time.time()
@@ -44,23 +46,25 @@ for i in range(Nch):
 ## Reproject all chnl to the last one in the chnl list
 ##--------------------
 ## Make ref frame header
-ref_irs = fits_irs[3][0] # [chnl][label]
+ref_irs = fits_irs[0][0] # [chnl][label]
 # print(ref_irs)
 # exit()
 mont = imontage(sum(fits_irs,[]), ref_irs, \
 	fmod='ext', ext_pix=2, ftmp=path_tmp)
 mont.make()
-# mont.footprint(path_tmp+'footprint')
-mont.hdr_ref = read_fits(path_tmp+'footprint0').header
-
+mont.footprint(path_tmp+'footprint')
+# from astropy import wcs
+# print(wcs.WCS(mont.hdr_ref))
+# print(wcs.WCS(read_fits(path_tmp+'footprint0').header))
+# exit()
+# mont.hdr_ref = read_fits(path_tmp+'footprint0').header
+print(fits_irs)
+exit()
 combim = []
 for i in trange(Nch, leave=False, \
-	desc='Building IRS cube'):
+	desc='Building IRS cubes'):
 	mont.combine(fits_irs[i], fits_out_irs[i], 'wgt_avg', \
-		fits_irs_unc[i], Nmc=Nmc, write_mc=True, do_rep=False)[0]
-
-print('Combining IRS cubes [done]')
-
+		fits_irs_unc[i], Nmc=Nmc, do_rep=True)
 
 ## PSF Convolution
 ##-----------------
@@ -75,9 +79,6 @@ print('Combining IRS cubes [done]')
 
 # 		conv.do_conv(ipath=path_idl)
 
-# print('iconvolve: Convolving PSF [done]')
+# print('iconvolve: Convolving PSF...[done]')
 
-
-##---------------------------
-##         Path Store
-##---------------------------
+print('Building IRS cubes...[done]')

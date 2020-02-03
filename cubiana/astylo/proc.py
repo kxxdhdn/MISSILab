@@ -16,7 +16,8 @@ from reproject import reproject_interp
 import subprocess as SP
 
 ## Local
-from bio import read_fits, write_fits, ext_wcs, read_csv, write_csv, read_ascii
+from bio import read_fits, write_fits, read_csv, write_csv, read_ascii
+from astrolib import fixwcs, pc2cd
 from lib import fclean, nanavg, closest, bsplinterpol
 
 savext = '.sav'
@@ -247,18 +248,126 @@ def hextract(filIN, filOUT, x0, x1, y0, y1):
 	https://idlastro.gsfc.nasa.gov/ftp/pro/astrom/hextract.pro
 	'''
 	ds = read_fits(filIN)
-	oldim = ds.data
+	oldimage = ds.data
 	hdr = ds.header
-	w = ext_wcs(filIN).WCS
+	w = fixwcs(filIN).WCS
 	# hdr['NAXIS1'] = x1 - x0 + 1
 	# hdr['NAXIS2'] = y1 - y0 + 1
 	hdr['CRPIX1'] += -x0
 	hdr['CRPIX2'] += -y0
-	newim = oldim[y0:y1+1, x0:x1+1]
+	newimage = oldimage[y0:y1+1, x0:x1+1]
 
 	write_fits(filOUT, hdr, newim)
 
-	return newim
+	return newimage
+
+def hswarp(oldimage, oldheader, refheader, \
+	fixheader=False, keepedge=False, tmpdir=None, \
+	verbose=True):
+	'''
+	Python version of hswarp (IDL), 
+	a SWarp drop-in replacement for hastrom, 
+	created by S. Hony
+
+	------ INPUT ------
+	file                2 FITS files for unc of left & right sides
+	unc                 2 uncertainty ndarrays
+	------ OUTPUT ------
+	cl                  output object
+	  image               newimage
+	  header              newheader
+	'''
+	## Initialize output object
+	cl = type('', (), {})()
+
+	## Set path of tmp files
+	if tmpdir is None:
+		path_tmp = os.getcwd()+'/tmp_hswarp/'
+	else:
+		path_tmp = tmpdir
+	if not os.path.exists(path_tmp):
+		os.makedirs(path_tmp)
+
+	## Convert CDELTi + PCi_j to CDi_j
+	if fixheader==True:
+		refh = refheader
+		oldh = oldheader
+	else:
+		refh = refheader
+		oldh = oldheader
+	write_fits(path_tmp+'old', oldh, oldimage)
+	with open(path_tmp+'coadd.head', 'w') as f:
+		f.write(str(refh))
+
+	## Create config file
+	SP.call('swarp -d > swarp.cfg', shell=True, cwd=path_tmp)
+	## Config param list
+	swarp_opt = ' -c swarp.cfg -SUBTRACT_BACK N '
+	if verbose==False:
+		swarp_opt += ' -VERBOSE_TYPE QUIET '
+	## Run SWarp
+	SP.call('swarp '+swarp_opt+' -RESAMPLING_TYPE LANCZOS3 '+' old.fits', \
+		shell=True, cwd=path_tmp)
+	coadd = read_fits(path_tmp+'coadd')
+	newimage = coadd.data
+	newheader = coadd.header
+
+	## Add back in the edges because LANCZOS3 kills the edges
+	## Do it in steps of less and less precision
+	if keepedge==True:
+		oldweight = read_fits(path_tmp+'coadd.weight').data
+		if np.sum(oldweight==0)!=0:
+			SP.call('swarp '+swarp_opt+' -RESAMPLING_TYPE LANCZOS2 '+' old.fits', \
+				shell=True, cwd=path_tmp)
+			edgeimage = read_fits(path_tmp+'coadd').data
+			newweight = read_fits(path_tmp+'coadd.weight').data
+			edgeidx = np.ma.array(oldweight, 
+				mask=np.logical_and(oldweight==0, newweight!=0)).mask
+			if edgeidx.any():
+				newimage[edgeidx] = edgeimage[edgeidx]
+
+			oldweight = read_fits(path_tmp+'coadd.weight').data
+			if np.sum(oldweight==0)!=0:
+				SP.call('swarp '+swarp_opt+' -RESAMPLING_TYPE BILINEAR '+' old.fits', \
+					shell=True, cwd=path_tmp)
+				edgeimage = read_fits(path_tmp+'coadd').data
+				newweight = read_fits(path_tmp+'coadd.weight').data
+				edgeidx = np.ma.array(oldweight, 
+					mask=np.logical_and(oldweight==0, newweight!=0)).mask
+				if edgeidx.any():
+					newimage[edgeidx] = edgeimage[edgeidx]
+
+				oldweight = read_fits(path_tmp+'coadd.weight').data
+				if np.sum(oldweight==0)!=0:
+					SP.call('swarp '+swarp_opt+' -RESAMPLING_TYPE NEAREST '+' old.fits', \
+						shell=True, cwd=path_tmp)
+					edgeimage = read_fits(path_tmp+'coadd').data
+					newweight = read_fits(path_tmp+'coadd.weight').data
+					edgeidx = np.ma.array(oldweight, 
+						mask=np.logical_and(oldweight==0, newweight!=0)).mask
+					if edgeidx.any():
+						newimage[edgeidx] = edgeimage[edgeidx]
+
+	## SWarp is conserving surface brightness/pixel
+	## while the pixels size changes
+	oldcdelt = pc2cd(wcs=fixwcs(header=oldh).wcs).cdelt
+	refcdelt = pc2cd(wcs=fixwcs(header=refh).wcs).cdelt
+	old_pixel_fov = abs(oldcdelt[0]*oldcdelt[1])
+	new_pixel_fov = abs(refcdelt[0]*refcdelt[1])
+	newimage = newimage * old_pixel_fov/new_pixel_fov
+	# print('-------------------')
+	# print(old_pixel_fov/new_pixel_fov)
+	# write_fits(path_tmp+'new', newheader, newimage)
+	# print('-------------------')
+
+	## Delete tmp file if tmpdir not given
+	if tmpdir is None:
+		fclean(path_tmp)
+
+	cl.image = newimage
+	cl.header = newheader
+
+	return cl
 
 ##-----------------------------------------------
 
@@ -282,7 +391,7 @@ class impro:
 
 		## read image/cube
 		## self.hdr is a 2D (reduced) header
-		ws = ext_wcs(filIN)
+		ws = fixwcs(filIN)
 		self.hdr = ws.header
 		self.w = ws.WCS
 		self.Nx = self.hdr['NAXIS1']
@@ -345,9 +454,11 @@ class impro:
 					for y in range(self.Ny):
 						for k in range(self.Nw):
 							if flag[k,y,x]<peak[k,y,x]:
-								self.im[k,y,x] += -abs(theta[k,y,x]) * unc[0][k,y,x]
+								self.im[k,y,x] += -abs(
+									theta[k,y,x]) * unc[0][k,y,x]
 							else:
-								self.im[k,y,x] += abs(theta[k,y,x]) * unc[1][k,y,x]
+								self.im[k,y,x] += abs(
+									theta[k,y,x]) * unc[1][k,y,x]
 
 		return self.im
 
@@ -364,7 +475,6 @@ class impro:
 				## output filename list
 				f = filSL+'_'+'0'*(4-len(str(k)))+str(k)+postfix
 				slist.append(f)
-				comment = "NO.{} image [SLICE]d from {}.fits".format(k, self.filIN)
 				write_fits(f, hdr, self.im[k,:,:]) # gauss_noise inclu
 		else:
 			print('Input file is a 2D image which cannot be sliced! ')
@@ -375,7 +485,8 @@ class impro:
 
 		return slist
 	
-	def crop(self, filOUT=None, sizpix=None, cenpix=None, sizval=None, cenval=None):
+	def crop(self, filOUT=None, \
+		sizpix=None, cenpix=None, sizval=None, cenval=None):
 		'''
 		If pix and val co-exist, pix will be taken.
 
@@ -417,9 +528,11 @@ class impro:
 				exit()
 			else:
 				## CDELTn needed (Physical increment at the reference pixel)
-				sizpix = np.array(sizval) / np.array(self.hdr['CDELT1'], self.hdr['CDELT2'])
+				sizpix = np.array(sizval) / np.array(
+					self.hdr['CDELT1'], self.hdr['CDELT2'])
 		# else:
-			# sizval = np.array(sizpix) * np.array(self.hdr['CDELT1'], self.hdr['CDELT2'])
+			# sizval = np.array(sizpix) * np.array(
+			# 	self.hdr['CDELT1'], self.hdr['CDELT2'])
 
 		if self.verbose==True:
 			print('----------')
@@ -541,23 +654,23 @@ class imontage(impro):
 		                  'rec' - recenter back to input frame
 		                  'ext' - cover both input and ref frame
 	ext_pix             number of pixels to extend to save edge
-	ftmp                tmp file path
+	tmpdir              tmp file path
 	------ OUTPUT ------
 	'''
 	def __init__(self, file, filREF=None, hdREF=None, \
-		fmod='ref', ext_pix=0, ftmp=None):
+		fmod='ref', ext_pix=0, tmpdir=None):
 		'''
 		self: hdr_ref, path_tmp, 
 		(filIN, wmod, hdr, w, dim, Nx, Ny, Nw, im, wvl)
 		'''
 		## Set path of tmp files
-		if ftmp is None:
+		if tmpdir is None:
 			path_tmp = os.getcwd()+'/tmp_proc/'
-			if not os.path.exists(path_tmp):
-				os.makedirs(path_tmp)
-			self.path_tmp = path_tmp
 		else:
-			self.path_tmp = ftmp
+			path_tmp = tmpdir
+		if not os.path.exists(path_tmp):
+			os.makedirs(path_tmp)
+		self.path_tmp = path_tmp
 
 		## Inputs
 		self.file = file
@@ -580,8 +693,8 @@ class imontage(impro):
 
 		## Prepare reprojection header
 		if filREF is not None:
-			hdREF = ext_wcs(filREF).header
-			hdREF['EQUINOX'] = 2000.0
+			hdREF = read_fits(filREF).header
+			# hdREF['EQUINOX'] = 2000.0
 
 		if hdREF is not None:
 			## Frame mode (fmod) options
@@ -596,7 +709,7 @@ class imontage(impro):
 				pix_old.append([self.Nx, self.Ny])
 				world_arr = self.w.all_pix2world(np.array(pix_old), 1)
 				## Ref WCS (new)
-				w = ext_wcs(header=hdREF).WCS
+				w = fixwcs(header=hdREF).WCS
 				try:
 					pix_new = w.all_world2pix(world_arr, 1)
 				except wcs.wcs.NoConvergence as e:
@@ -604,7 +717,7 @@ class imontage(impro):
 					print("Best solution:\n{0}".format(e.best_solution))
 					print("Achieved accuracy:\n{0}".format(e.accuracy))
 					print("Number of iterations:\n{0}".format(e.niter))
-				xmin = min(pix_new[:][0])
+				xmin = min(pix_new[:,0])
 				xmax = max(pix_new[:,0])
 				ymin = min(pix_new[:,1])
 				ymax = max(pix_new[:,1])
@@ -628,9 +741,11 @@ class imontage(impro):
 			self.hdr_ref = hdREF
 
 			## Test hdREF (Quick check: old=new or old<new)
-			# w_new = ext_wcs(header=hdREF).WCS
-			# print('old: ', w.all_world2pix(self.hdr['CRVAL1'], self.hdr['CRVAL2'], 1))
-			# print('new: ', w_new.all_world2pix(self.hdr['CRVAL1'], self.hdr['CRVAL2'], 1))
+			# w_new = fixwcs(header=hdREF).WCS
+			# print('old: ', w.all_world2pix(
+			# 	self.hdr['CRVAL1'], self.hdr['CRVAL2'], 1))
+			# print('new: ', w_new.all_world2pix(
+			# 	self.hdr['CRVAL1'], self.hdr['CRVAL2'], 1))
 			# exit()
 		else:
 			print('ERROR: Can not find projection reference! ')
@@ -737,11 +852,12 @@ class imontage(impro):
 		
 		return self.im
 
-	def reproject_mc(self, filIN, filUNC, Nmc=0, dist='norm', write_mc=False):
+	def reproject_mc(self, filIN, filUNC, Nmc=0, dist='norm'):
 		'''
 		Generate Monte-Carlo uncertainties for reprojected input file
 		'''
-		
+		dataset = type('', (), {})()
+
 		hyperim = [] # [j,(w,)y,x]
 		for j in trange(Nmc+1, leave=False, \
 			desc='<imontage> Reprojection (MC level)'):
@@ -757,20 +873,28 @@ class imontage(impro):
 		hyperim = np.array(hyperim)
 		unc = np.nanstd(hyperim, axis=0)
 
-		if write_mc==True:
-			write_fits(file_rep+'_unc', self.hdr_ref, unc, self.wvl)
+		comment = "An <imontage> production"
+		
+		write_fits(file_rep+'_unc', self.hdr_ref, unc, self.wvl, \
+			COMMENT=comment)
 
-		return im0, unc, hyperim
+		dataset.im0 = im0
+		dataset.unc = unc
+		dataset.hyperim = hyperim
+
+		return dataset
 
 	def combine(self, file, filOUT=None, method='average', \
-		filUNC=None, do_rep=True, Nmc=0, dist='norm', write_mc=False):
+		filUNC=None, do_rep=True, Nmc=0, dist='norm'):
 		'''
 		Stitching input files (with the same wavelengths) to the ref WCS
 
 		If filUNC is None, no MC
 		If Nmc==0, no MC
 		'''
+		dataset = type('', (), {})()
 		wvl = read_fits(file[0]).wave
+		dataset.wvl = wvl
 
 		superim0 = [] # [i,(w,)y,x]
 		superunc = [] # [i,(w,)y,x]
@@ -784,7 +908,7 @@ class imontage(impro):
 				## With MC
 				if filUNC is not None:
 					im0, unc, hyperim = self.reproject_mc(file[i], filUNC[i], \
-						Nmc=Nmc, dist=dist, write_mc=write_mc)
+						Nmc=Nmc, dist=dist)
 					superunc.append(unc)
 					superim.append(hyperim)
 				## Without MC
@@ -830,7 +954,8 @@ class imontage(impro):
 					if method=='average':
 						hyperim_comb.append(nanavg(superim[:,j-1], axis=0))
 					elif method=='wgt_avg':
-						hyperim_comb.append(nanavg(superim[:,j-1], axis=0, weights=inv_var))
+						hyperim_comb.append(
+							nanavg(superim[:,j-1], axis=0, weights=inv_var))
 			hyperim_comb = np.array(hyperim_comb)
 			unc_comb = np.nanstd(hyperim_comb)
 		else:
@@ -838,16 +963,23 @@ class imontage(impro):
 			im0_comb = nanavg(superim0, axis=0)
 
 		if filOUT is not None:
-			comment = "A <imontage> production"
+			comment = "An <imontage> production"
 
 			write_fits(filOUT, self.hdr_ref, im0_comb, wvl, \
 				COMMENT=comment)
 			write_fits(filOUT+'_unc', self.hdr_ref, im0_comb, wvl, \
 				COMMENT=comment)
 		
+		dataset.im0_comb = im0_comb
+		dataset.unc_comb = unc_comb
+		dataset.hyperim_comb = hyperim_comb
+		dataset.superim0 = superim0
+		dataset.superunc = superunc
+		dataset.superim = superim
+
 		tqdm.write('<imontage> Combining images...[done]')
 		
-		return im0_comb, unc_comb, hyperim_comb, superim0, superunc, superim
+		return dataset
 
 	def clean(self, file=None):
 		if file is not None:
@@ -867,14 +999,13 @@ class iconvolve(impro):
 	filUNC              unc file (add gaussian noise)
 	psf                 PSF list
 	filTMP              temporary file
-	wmod                wave mode
 	filOUT              output file
 	------ OUTPUT ------
 	'''
 	def __init__(self, filIN, filKER, kfile, \
-		filUNC=None, dist='norm', psf=None, filTMP=None, wmod=0, filOUT=None):
+		filUNC=None, dist='norm', psf=None, filTMP=None, filOUT=None):
 		## INPUTS
-		super().__init__(filIN, wmod)
+		super().__init__(filIN)
 		
 		if dist=='norm':
 			self.rand_norm(filUNC)
@@ -982,8 +1113,7 @@ class iconvolve(impro):
 		
 		if self.filOUT is not None:
 			comment = "Convolved by G. Aniano's IDL routine."
-			# comment = 'https://www.astro.princeton.edu/~ganiano/Kernels.html'
-			write_fits(self.filOUT, self.hdr, self.convim, self.wvl, self.wmod, \
+			write_fits(self.filOUT, self.hdr, self.convim, self.wvl, \
 				COMMENT=comment)
 
 	def image(self):
@@ -1005,7 +1135,7 @@ class sextract(impro):
 	ipath               path of IRC dataset
 	parobs[0]           observation id
 	parobs[1]           slit name
-	parobs[2]           IRC N3 (long exp) frame (2MASS corrected; 90 deg rot needed)
+	parobs[2]           IRC N3 (long exp) frame (2MASS corrected; 90 deg rot)
 	Nw                  num of wave
 	Ny                  slit length
 	Nx                  slit width
@@ -1019,7 +1149,7 @@ class sextract(impro):
 		self.filSAV = self.path + parobs[0] + '.N3_NG.IRC_SPECRED_OUT'
 		self.table = readsav(self.filSAV+savext, python_dict=True)['source_table']
 
-		## Slit width will be corrected by intercalib with IRS data after reprojection
+		## Slit width will be corrected by intercalib with IRS data
 		if parobs[1]=='Ns':
 			self.slit_width = 3 # 412pix * 5"/10' = 3.43 pix (Ns)
 		elif parobs[1]=='Nh':

@@ -9,7 +9,6 @@ Basic Input & Output
 
 import numpy as np
 from astropy.io import fits
-from astropy.wcs import WCS
 import h5py as H5
 import csv
 
@@ -30,35 +29,29 @@ def read_fits(file, file_unc=None, wmod=0):
 	                      0 - 1darray; 
 	                      1 - FITS_rec.
 	------ OUTPUT ------
-	dataset             dataset object
+	cl                  output object
 	  header              header of primary HDU
 	  data                data in primary HDU
 	  header_w            header of W-TAB
 	  wave                data in table 1 (None if does not exist)
 	  unc                 uncertainty array
 	'''
-	## Initialize dataset object
-	dataset = type('', (), {})()
-	dataset.header_w = None
-	dataset.wave = None
-	dataset.unc = None
+	## Initialize output object
+	cl = type('', (), {})()
+	cl.header_w = None
+	cl.wave = None
+	cl.unc = None
 
 	## Read header & data
 	with fits.open(file+fitsext) as hdul:
-		dataset.HDUL = hdul
+		cl.HDUL = hdul
 		hdr = hdul[0].header
-		dataset.data = hdul[0].data
-		dataset.header = hdr
-
-		## hd is hdr with the r reduced...
-		# hd = hdr.copy()
-		# if 'CTYPE3' in hd.keys():
-		# 	del hd['CTYPE3'] # The only kw known to count (see test_bio.py)
-		# dataset.WCS = WCS(hd)
+		cl.data = hdul[0].data
+		cl.header = hdr
 
 		## Read wavelength
 		if len(hdul)==2:
-			dataset.header_w = hdul[1].header
+			cl.header_w = hdul[1].header
 			wave = hdul[1].data
 
 			if isinstance(hdul[1], fits.BinTableHDU):
@@ -73,59 +66,14 @@ def read_fits(file, file_unc=None, wmod=0):
 					tab = fits.BinTableHDU.from_columns([col], name='WCS-TAB ')
 					wave = tab.data
 			
-			dataset.wave = wave
+			cl.wave = wave
 	
 	if file_unc is not None:
 		## Read uncertainty data
 		with fits.open(file+fitsext) as hdul:
-			dataset.unc = hdul[0].data
-	
-	return dataset
+			cl.unc = hdul[0].data
 
-def ext_wcs(file=None, header=None):
-	'''
-	Extract WCS (auto detect & reduce dim if 3D)
-
-	------ INPUT ------
-	file                input fits file (priority if co-exist with input header)
-	header              input fits header
-	------ OUTPUT ------
-	dataset             dataset object
-	  header              header of primary HDU
-	  WCS                 2D WCS
-	  was3d               True: if input data is 3D
-	'''
-	## Initialize dataset object
-	dataset = type('', (), {})()
-	dataset.WCS = WCS(None, naxis=2)
-	dataset.header = None
-	dataset.was3d = False
-
-	## Read file/header
-	if file is not None:
-		hdr = fits.open(file+fitsext)[0].header
-		header = hdr.copy()
-	else:
-		if header is not None:
-			hdr = header.copy()
-		else:
-			return dataset
-
-	## Reduce header dim/kw
-	if header['NAXIS']==3:
-		dataset.was3d = True
-		for kw in hdr.keys():
-			if '3' in kw:
-				del header[kw]
-		header['NAXIS'] = 2
-		header['COMMENT'] = "3D keywords excluded (for astropy.wcs). "
-	
-	## Create 2D WCS object
-	dataset.WCS = WCS(header, naxis=2)
-
-	dataset.header = header # (reduced) header
-
-	return dataset
+	return cl
 
 def write_fits(file, header, data, wave=None, wmod=0, **hdrl):
 	'''

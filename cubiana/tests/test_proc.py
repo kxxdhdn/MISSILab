@@ -4,24 +4,47 @@
 import time
 t0 = time.time()
 
-import sys, os
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/..')
+import sys, os, logging
+testdir = os.path.dirname(os.path.abspath(__file__))
+# logging.disable(sys.maxsize)
 
 import numpy as np
 import matplotlib.pyplot as plt
 
-from astylo.bio import read_fits, write_fits, ext_wcs
-from astylo.proc import wclean, interfill, sextract, imontage, concatenate
+## Local
+sys.path.insert(0, testdir+'/..') ## astylo path
+from astylo.bio import read_fits, write_fits
+from astylo.astrolib import fixwcs
+from astylo.proc import (
+	wclean, interfill, hswarp, 
+	sextract, imontage, concatenate, 
+)
 from astylo.plot import plot2d
 
-path_out = os.getcwd()+'/out/'
+## Set path
+datdir = testdir+'/dat/'
+outdir = testdir+'/out/'
 
+
+## TEST hswarp
+##-------------
+oldimage = read_fits(datdir+'M82_09_SL1').data[0]
+oldheader = fixwcs(datdir+'M82_09_SL1').header
+refheader = fixwcs(datdir+'M82_LL1_fp').header
+
+sw = hswarp(oldimage, oldheader, refheader, \
+	fixheader=False, keepedge=False, \
+	verbose=False)#, tmpdir=outdir+'test_tmp/')
+print(sw.image.shape)
+# print(sw.header)
+
+
+'''
 
 ## TEST sextract + imontage
 ##--------------------------
 path_data = '/Users/dhu/Data/AKARI/data/'
-path_out = os.getcwd()+'/out/'
-path_build = path_out+'cubuild/'
+path_build = outdir+'cubuild/'
 if not os.path.exists(path_build):
 	os.makedirs(path_build)
 
@@ -57,21 +80,21 @@ for j in range(Nmc+1):
 				write_unc=True, sig_pt=1./3600)
 print('sextract: Building cube from slit extraction...[done]')
 
-ref_irs = path_out+'M83_IRS'
+ref_irs = outdir+'M83_IRS'
 mont = imontage(out_tmp, ref_irs, None, 'ref', 3)
 mont.make()
 
 # print(mont.footprint())
 # mont.clean()
-# mont.combine(path_out+'M83_IRC', method='average', write_mc=True, \
+# mont.combine(outdir+'M83_IRC', method='average', write_mc=True, \
 # 	do_rep=True, Nmc=Nmc, filUNC=unc_build, dist='norm') # Symmetric unc
-mont.combine(path_out+'M83_IRC', method='wgt_avg', write_mc=True, \
+mont.combine(outdir+'M83_IRC', method='wgt_avg', write_mc=True, \
 	do_rep=True, Nmc=Nmc, filUNC=unc_build, dist='splitnorm') # Asymmetric unc
 
 ## Skip rep
-# im0 = mont.combine(path_out+'M83_IRC', method='average', \
+# im0 = mont.combine(outdir+'M83_IRC', method='average', \
 # 	filUNC='not_None', do_rep=False)
-# im0 = mont.combine(path_out+'M83_IRC', method='wgt_avg', \
+# im0 = mont.combine(outdir+'M83_IRC', method='wgt_avg', \
 # 	filUNC='not_None', do_rep=False)
 
 ## Reprendre MC
@@ -94,22 +117,22 @@ for j in range(Nmc):
 	hyperim.append(read_fits(path_build+'M83_IRC_'+str(j+1)).data)
 hyperim = np.array(hyperim)
 unc = np.nanstd(hyperim, axis=0)
-write_fits(path_out+'M83_IRC_unc', mont.hdr_ref, unc, mont.wvl)
+write_fits(outdir+'M83_IRC_unc', mont.hdr_ref, unc, mont.wvl)
 
 
 ## TEST concatenate
 ##------------------
 
-file = [path_out+'M83_IRS']
-file.append(path_out+'M83_IRC')
-concatenate(file, path_out+'M83')
+file = [outdir+'M83_IRS']
+file.append(outdir+'M83_IRC')
+concatenate(file, outdir+'M83')
 
-func = [path_out+'M83_IRS_unc']
-func.append(path_out+'M83_IRC_unc')
-concatenate(func, path_out+'M83_unc')
+func = [outdir+'M83_IRS_unc']
+func.append(outdir+'M83_IRC_unc')
+concatenate(func, outdir+'M83_unc')
 
-ds = read_fits(path_out+'M83')
-uds = read_fits(path_out+'M83_unc')
+ds = read_fits(outdir+'M83')
+uds = read_fits(outdir+'M83_unc')
 data = ds.data
 wvl = ds.wave
 unc = uds.data
@@ -163,7 +186,7 @@ plt.show()
 # filIN = 'data/M83_0'
 # filOUT = 'out/M83_ref_shift'
 
-# w = ext_wcs(filIN).WCS
+# w = fixwcs(filIN).WCS
 # hdr, data, wave = read_fits(filIN)
 # hdr['CRPIX1'] = hdr['NAXIS1'] / 2.
 # hdr['CRPIX2'] = hdr['NAXIS2'] / 2.
@@ -203,6 +226,8 @@ plt.show()
 # file = 'M83_0'
 
 # wclean(path+file, cmod='closest_right', filOUT=path+file+'_wclean_test')
+
+'''
 
 t_total = time.time()
 print("****** total_time = {:.0f} seconds ******".format(t_total - t0))
