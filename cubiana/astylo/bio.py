@@ -158,7 +158,7 @@ def write_hdf5(file, header, data, append=False):
 	hf.flush()
 	hf.close()
 
-def read_ascii(file, dtype=str, ascext=ascext):
+def read_ascii(file, ascext=ascext, dtype=str):
 	'''
 	Read ASCII file
 

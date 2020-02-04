@@ -22,352 +22,6 @@ from lib import fclean, nanavg, closest, bsplinterpol
 
 savext = '.sav'
 
-def wmask(filIN, filOUT=None):
-	'''
-	MASK Wavelengths
-
-	--- INPUT ---
-	filIN       input fits file 
-	filOUT      overwrite fits file (Default: NO)
-	--- OUTPUT ---
-	data_new    new fits data
-	wave_new    new fits wave
-	'''
-	pass
-
-
-def wclean(filIN, cmod='eq', cfile=None, \
-	wmod=0, filOUT=None, verbose=False):
-	'''
-	CLEAN Wavelengths
-
-	--- INPUT ---
-	filIN       input fits file
-	wmod        wave mode
-	cmod        clean mode (Default: 'eq')
-	cfile       input csv file (archived info)
-	filOUT      overwrite fits file (Default: NO)
-	verbose     display wclean info (Default: False)
-	--- OUTPUT ---
-	data_new    new fits data
-	wave_new    new fits wave
-	'''
-	ds = read_fits(filIN)
-	hdr = ds.header
-	data = ds.data
-	wave = ds.wave
-	Nw = len(wave)
-	
-	ind = [] # list of indices of wvl to remove
-	if cfile is not None:
-		indarxiv = read_csv(cfile, 'Ind')[0]
-		ind = []
-		for i in indarxiv:
-			ind.append(int(i))
-	else:
-		## Detect crossing wvl
-		##---------------------
-		for i in range(Nw-1):
-			if wave[i]>=wave[i+1]: # found wave(i+1), i_max=Nw-2
-				
-				wmin = -1 # lower limit: closest wave smaller than wave[i+1]
-				wmax = 0 # upper limit: closest wave larger than wave[i]
-				
-				for j in range(i+1):
-					dw = wave[i+1] - wave[i-j]
-					if dw>0: # found the closest smaller wave[i-j]
-						wmin = i-j
-						break # only the innermost loop
-				if wmin==-1:
-					print('WARNING: Left side fully covered! ')
-				
-				for j in range(Nw-i-1):
-					dw = wave[i+1+j] - wave[i]
-					if dw>0: # found the closest larger wave[i+1+j]
-						wmax = i+1+j
-						break
-				if wmax==0:
-					print('WARNING: right side fully covered! ')
-
-				Nw_seg = wmax-wmin-1 # number of crossing wvl in segment
-				wave_seg = [] # a segment (every detect) of wave
-				ind_seg = [] # corresponing segment for sort use
-				for k in range(Nw_seg):
-					wave_seg.append(wave[wmin+1+k])
-					ind_seg.append(wmin+1+k)
-				## index list of sorted wave_seg
-				ilist = sorted(range(len(wave_seg)), key=wave_seg.__getitem__)
-				## index of wave_seg center
-				icen = math.floor((Nw_seg-1)/2)
-
-				## Visualisation (for test use)
-				##------------------------------
-				# print('wave, i: ', wave[i], i)
-				# print('wave_seg: ', wave_seg)
-				# print('ind_seg: ', ind_seg)
-				# print('ilist: ', ilist)
-				# print('icen: ', icen)
-
-				## Remove all crossing wvl between two channels
-				##----------------------------------------------
-				if cmod=='all': # most conservative but risk having holes
-					pass
-				## Remove (almost) equal wvl (NOT nb of wvl!) for both sides
-				##-----------------------------------------------------------
-				elif cmod=='eq': # (default)
-					## Select ascendant pair closest to segment center
-					for k in range(icen):
-						if ilist[icen]>ilist[0]: # large center
-							if ilist[icen-k]<ilist[0]:
-								for p in range(ilist[icen-k]+1):
-									del ind_seg[0]
-								for q in range(Nw_seg-ilist[icen]):
-									del ind_seg[-1]
-								break
-						else: # small center
-							if ilist[icen+k]>ilist[0]:
-								for p in range(ilist[icen]+1):
-									del ind_seg[0]
-								for q in range(Nw_seg-ilist[icen+k]):
-									del ind_seg[-1]
-								break
-				## Leave 2 closest wvl not crossing
-				##----------------------------------
-				elif cmod=='closest_left':
-					for k in range(ilist[0]):
-						del ind_seg[0]
-				elif cmod=='closest_right':
-					for k in range(Nw_seg-ilist[0]):
-						del ind_seg[-1]
-				## Others
-				##--------
-				else:
-					print('ERROR: Not supported clean mode! ')
-
-				# print('ind_seg (final): ', ind_seg)
-				ind.extend(ind_seg)
-
-	## Do clean
-	##----------
-	data_new = np.delete(data, ind, axis=0)
-	wave_new = list(np.delete(np.array(wave), ind))
-
-	## Display clean detail
-	##----------------------
-	if verbose==True:
-		print('\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
-		print('Number of wavelengths deleted: ', len(ind))
-		print('Ind, wavelengths: ')
-		for i in ind:
-			print(i, wave[i])
-		print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n')
-
-	## Overwrite fits file
-	##---------------------
-	if filOUT is not None:
-		# comment = 'Wavelength removal info in _wclean_info.csv'
-		write_fits(filOUT, hdr, data_new, wave_new, wmod) # hdr auto changed
-		
-		## Write csv file
-		wlist = []
-		for i in ind:
-			wlist.append([i, wave[i]])
-		write_csv(filOUT+'_wclean_info', \
-			header=['Ind', 'Wavelengths'], dataset=wlist)
-
-	return data_new, wave_new
-
-def interfill(arr, axis):
-	'''
-	FILL undersampling/artificial gap by (bspl)INTERpolation
-
-	--- INPUT ---
-	arr         array
-	axis        axis along which interpolation
-	--- OUTPUT ---
-	newarr      new array
-	'''
-	print(">> fill gaps with b-splines <<")
-
-	axsh = arr.shape
-	NAXIS = np.size(axsh)
-	newarr = np.copy(arr)
-	if NAXIS==1: # 1D array
-		x = np.arange(axsh[0])
-		for i in range(axsh[0]):
-			newarr = bsplinterpol(x, arr, x)
-	if NAXIS==2: # no wavelength
-		if axis==0: # col direction
-			y = np.arange(axsh[0])
-			for i in range(axsh[1]):
-				col = bsplinterpol(y, arr[:,i], y)
-				for j in range(axsh[0]):
-					newarr[j,i] = col[j]
-		elif axis==1: # row direction
-			x = np.arange(axsh[1])
-			for j in range(axsh[0]):
-				row = bsplinterpol(x, arr[j,:], x)
-				for i in range(axsh[1]):
-					newarr[j,i] = row[i]
-		else:
-			print('ERROR: Unkown axis! ')
-	elif NAXIS==3:
-		if axis==0: # fill wavelength
-			z = np.arange(axsh[0])
-			for i in range(axsh[2]):
-				for j in range(axsh[1]):
-					wvl = bsplinterpol(z, arr[:,j,i], z)
-					for k in range(axsh[0]):
-						newarr[k,j,i] = wvl[k]
-		elif axis==1: # col direction
-			y = np.arange(axsh[1])
-			for k in range(axsh[0]):
-				for i in range(axsh[2]):
-					col = bsplinterpol(y, arr[k,:,i], y)
-					for j in range(axsh[1]):
-						newarr[k,j,i] = col[j]
-		elif axis==2: # row direction
-			x = np.arange(axsh[2])
-			for k in range(axsh[0]):
-				for j in range(axsh[1]):
-					row = bsplinterpol(x, arr[k,j,:], x)
-					for i in range(axsh[2]):
-						newarr[k,j,i] = row[i]
-		else:
-			print('ERROR: Unkown axis! ')
-	else:
-		print('ERROR: array shape not supported! ')
-
-	return newarr
-
-def hextract(filIN, filOUT, x0, x1, y0, y1):
-	'''
-	Crop 2D image with pixel sequence numbers
-	[ref]
-	IDL lib hextract
-	https://idlastro.gsfc.nasa.gov/ftp/pro/astrom/hextract.pro
-	'''
-	ds = read_fits(filIN)
-	oldimage = ds.data
-	hdr = ds.header
-	w = fixwcs(filIN).WCS
-	# hdr['NAXIS1'] = x1 - x0 + 1
-	# hdr['NAXIS2'] = y1 - y0 + 1
-	hdr['CRPIX1'] += -x0
-	hdr['CRPIX2'] += -y0
-	newimage = oldimage[y0:y1+1, x0:x1+1]
-
-	write_fits(filOUT, hdr, newim)
-
-	return newimage
-
-def hswarp(oldimage, oldheader, refheader, \
-	fixheader=False, keepedge=False, tmpdir=None, \
-	verbose=True):
-	'''
-	Python version of hswarp (IDL), 
-	a SWarp drop-in replacement for hastrom, 
-	created by S. Hony
-
-	------ INPUT ------
-	file                2 FITS files for unc of left & right sides
-	unc                 2 uncertainty ndarrays
-	------ OUTPUT ------
-	cl                  output object
-	  image               newimage
-	  header              newheader
-	'''
-	## Initialize output object
-	cl = type('', (), {})()
-
-	## Set path of tmp files
-	if tmpdir is None:
-		path_tmp = os.getcwd()+'/tmp_hswarp/'
-	else:
-		path_tmp = tmpdir
-	if not os.path.exists(path_tmp):
-		os.makedirs(path_tmp)
-
-	## Convert CDELTi + PCi_j to CDi_j
-	if fixheader==True:
-		refh = refheader
-		oldh = oldheader
-	else:
-		refh = refheader
-		oldh = oldheader
-	write_fits(path_tmp+'old', oldh, oldimage)
-	with open(path_tmp+'coadd.head', 'w') as f:
-		f.write(str(refh))
-
-	## Create config file
-	SP.call('swarp -d > swarp.cfg', shell=True, cwd=path_tmp)
-	## Config param list
-	swarp_opt = ' -c swarp.cfg -SUBTRACT_BACK N '
-	if verbose==False:
-		swarp_opt += ' -VERBOSE_TYPE QUIET '
-	## Run SWarp
-	SP.call('swarp '+swarp_opt+' -RESAMPLING_TYPE LANCZOS3 '+' old.fits', \
-		shell=True, cwd=path_tmp)
-	coadd = read_fits(path_tmp+'coadd')
-	newimage = coadd.data
-	newheader = coadd.header
-
-	## Add back in the edges because LANCZOS3 kills the edges
-	## Do it in steps of less and less precision
-	if keepedge==True:
-		oldweight = read_fits(path_tmp+'coadd.weight').data
-		if np.sum(oldweight==0)!=0:
-			SP.call('swarp '+swarp_opt+' -RESAMPLING_TYPE LANCZOS2 '+' old.fits', \
-				shell=True, cwd=path_tmp)
-			edgeimage = read_fits(path_tmp+'coadd').data
-			newweight = read_fits(path_tmp+'coadd.weight').data
-			edgeidx = np.ma.array(oldweight, 
-				mask=np.logical_and(oldweight==0, newweight!=0)).mask
-			if edgeidx.any():
-				newimage[edgeidx] = edgeimage[edgeidx]
-
-			oldweight = read_fits(path_tmp+'coadd.weight').data
-			if np.sum(oldweight==0)!=0:
-				SP.call('swarp '+swarp_opt+' -RESAMPLING_TYPE BILINEAR '+' old.fits', \
-					shell=True, cwd=path_tmp)
-				edgeimage = read_fits(path_tmp+'coadd').data
-				newweight = read_fits(path_tmp+'coadd.weight').data
-				edgeidx = np.ma.array(oldweight, 
-					mask=np.logical_and(oldweight==0, newweight!=0)).mask
-				if edgeidx.any():
-					newimage[edgeidx] = edgeimage[edgeidx]
-
-				oldweight = read_fits(path_tmp+'coadd.weight').data
-				if np.sum(oldweight==0)!=0:
-					SP.call('swarp '+swarp_opt+' -RESAMPLING_TYPE NEAREST '+' old.fits', \
-						shell=True, cwd=path_tmp)
-					edgeimage = read_fits(path_tmp+'coadd').data
-					newweight = read_fits(path_tmp+'coadd.weight').data
-					edgeidx = np.ma.array(oldweight, 
-						mask=np.logical_and(oldweight==0, newweight!=0)).mask
-					if edgeidx.any():
-						newimage[edgeidx] = edgeimage[edgeidx]
-
-	## SWarp is conserving surface brightness/pixel
-	## while the pixels size changes
-	oldcdelt = pc2cd(wcs=fixwcs(header=oldh).wcs).cdelt
-	refcdelt = pc2cd(wcs=fixwcs(header=refh).wcs).cdelt
-	old_pixel_fov = abs(oldcdelt[0]*oldcdelt[1])
-	new_pixel_fov = abs(refcdelt[0]*refcdelt[1])
-	newimage = newimage * old_pixel_fov/new_pixel_fov
-	# print('-------------------')
-	# print(old_pixel_fov/new_pixel_fov)
-	# write_fits(path_tmp+'new', newheader, newimage)
-	# print('-------------------')
-
-	## Delete tmp file if tmpdir not given
-	if tmpdir is None:
-		fclean(path_tmp)
-
-	cl.image = newimage
-	cl.header = newheader
-
-	return cl
 
 ##-----------------------------------------------
 
@@ -393,7 +47,7 @@ class impro:
 		## self.hdr is a 2D (reduced) header
 		ws = fixwcs(filIN)
 		self.hdr = ws.header
-		self.w = ws.WCS
+		self.w = ws.wcs
 		self.Nx = self.hdr['NAXIS1']
 		self.Ny = self.hdr['NAXIS2']
 		self.Nw = None
@@ -482,6 +136,30 @@ class impro:
 			slist.append(f)
 			write_fits(f, self.hdr, self.im) # gauss_noise inclu
 			print('Rewritten with only random noise added (if provided).')
+
+		return slist
+
+	def slice_inv_sqrt(self, filSL, postfix=''):
+		## Inversed square cube slicing
+		inv_sqrt = 1./self.im**2
+		slist = []
+		if self.dim==3:
+			hdr = self.hdr.copy()
+			for kw in self.hdr.keys():
+				if '3' in kw:
+					del hdr[kw]
+			hdr['NAXIS'] = 2
+			for k in range(self.Nw):
+				## output filename list
+				f = filSL+'_'+'0'*(4-len(str(k)))+str(k)+postfix
+				slist.append(f)
+				write_fits(f, hdr, inv_sqrt[k,:,:]) # gauss_noise inclu
+		else:
+			f = filSL+'_0000'+postfix
+			slist.append(f)
+			write_fits(f, self.hdr, inv_sqrt) # gauss_noise inclu
+		
+		print('<impro> Inversed square cube slicing.')
 
 		return slist
 	
@@ -583,7 +261,8 @@ class islice(impro):
 
 	self: slist, path_tmp, (filIN, wmod, hdr, w, dim, Nx, Ny, Nw, im, wvl)
 	'''
-	def __init__(self, filIN, filSL=None, filUNC=None, dist='norm', postfix=''):
+	def __init__(self, filIN, filSL=None, filUNC=None, dist='norm', \
+		slicetype=None, postfix=''):
 		super().__init__(filIN)
 
 		if filSL is None:
@@ -599,7 +278,10 @@ class islice(impro):
 		elif dist=='splitnorm':
 			self.rand_splitnorm(filUNC)
 
-		self.slist = self.slice(filSL, postfix) # gauss_noise inclu
+		if slicetype is None:
+			self.slist = self.slice(filSL, postfix) # gauss_noise inclu
+		elif slicetype=='inv_sqrt':
+			self.slist = self.slice_inv_sqrt(filSL, postfix)
 
 	def image(self):
 		return self.im
@@ -646,10 +328,10 @@ class imontage(impro):
 	i means <impro>-based or initialize
 
 	------ INPUT ------
-	file                input FITS file (list, cf impro.filIN)
+	file                FITS file (list, cf impro.filIN)
 	filREF              ref file (priority if co-exist with input header)
 	hdREF               ref header
-	fmod                output file frame
+	fmod                output image frame mode
 		                  'ref' - same as ref frame (Default)
 		                  'rec' - recenter back to input frame
 		                  'ext' - cover both input and ref frame
@@ -682,14 +364,14 @@ class imontage(impro):
 		## Init ref header
 		self.hdr_ref = None
 
-	def make_header(self, file, filREF=None, hdREF=None, fmod='ref', ext_pix=0):
+	def make_header(self, filIN, filREF=None, hdREF=None, fmod='ref', ext_pix=0):
 		'''
 		Make header tool
 
 		------ INPUT ------
-		file                single FITS file
+		filIN               single FITS file
 		'''
-		super().__init__(file)
+		super().__init__(filIN)
 
 		## Prepare reprojection header
 		if filREF is not None:
@@ -709,7 +391,7 @@ class imontage(impro):
 				pix_old.append([self.Nx, self.Ny])
 				world_arr = self.w.all_pix2world(np.array(pix_old), 1)
 				## Ref WCS (new)
-				w = fixwcs(header=hdREF).WCS
+				w = fixwcs(header=hdREF).wcs
 				try:
 					pix_new = w.all_world2pix(world_arr, 1)
 				except wcs.wcs.NoConvergence as e:
@@ -741,7 +423,7 @@ class imontage(impro):
 			self.hdr_ref = hdREF
 
 			## Test hdREF (Quick check: old=new or old<new)
-			# w_new = fixwcs(header=hdREF).WCS
+			# w_new = fixwcs(header=hdREF).wcs
 			# print('old: ', w.all_world2pix(
 			# 	self.hdr['CRVAL1'], self.hdr['CRVAL2'], 1))
 			# print('new: ', w_new.all_world2pix(
@@ -768,7 +450,7 @@ class imontage(impro):
 			if fmod=='ext':
 				## Refresh self.hdr_ref in every circle
 				for f in file:
-					self.make_header(file=f, filREF=None, \
+					self.make_header(filIN=f, filREF=None, \
 						hdREF=self.hdr_ref, fmod='ext', ext_pix=ext_pix)
 		
 		tqdm.write('<imontage> Making ref header...[done]')
@@ -777,7 +459,7 @@ class imontage(impro):
 
 	def footprint(self, filOUT=None):
 		'''
-		Show reprojection footprint
+		Save reprojection footprint
 		'''
 		if filOUT is None:
 			filOUT = self.path_tmp+'footprint'
@@ -787,8 +469,7 @@ class imontage(impro):
 		im_fp = np.ones((Ny, Nx))
 		
 		comment = "<imontage> footprint"
-		write_fits(filOUT, self.hdr_ref, im_fp, None, wmod=0, \
-				COMMENT=comment)
+		write_fits(filOUT, self.hdr_ref, im_fp, COMMENT=comment)
 
 		return im_fp
 
@@ -884,7 +565,7 @@ class imontage(impro):
 
 		return dataset
 
-	def combine(self, file, filOUT=None, method='average', \
+	def combine(self, file, filOUT=None, method='avg', \
 		filUNC=None, do_rep=True, Nmc=0, dist='norm'):
 		'''
 		Stitching input files (with the same wavelengths) to the ref WCS
@@ -946,12 +627,12 @@ class imontage(impro):
 			for j in trange(Nmc+1, leave=False, \
 				desc='<imontage> Stitching'):
 				if j==0:
-					if method=='average':
+					if method=='avg':
 						im0_comb = nanavg(superim0, axis=0)
 					elif method=='wgt_avg':
 						im0_comb = nanavg(superim0, axis=0, weights=inv_var)
 				else:
-					if method=='average':
+					if method=='avg':
 						hyperim_comb.append(nanavg(superim[:,j-1], axis=0))
 					elif method=='wgt_avg':
 						hyperim_comb.append(
@@ -987,6 +668,7 @@ class imontage(impro):
 		else:
 			fclean(self.path_tmp)
 
+***
 class iconvolve(impro):
 	'''
 	Convolve 2D image or 3D cube with given kernels
@@ -1282,6 +964,349 @@ class sextract(impro):
 
 	def wave(self):
 		return self.wvl
+
+def wmask(filIN, filOUT=None):
+	'''
+	MASK Wavelengths
+
+	--- INPUT ---
+	filIN       input fits file 
+	filOUT      overwrite fits file (Default: NO)
+	--- OUTPUT ---
+	data_new    new fits data
+	wave_new    new fits wave
+	'''
+	pass
+
+def wclean(filIN, cmod='eq', cfile=None, \
+	wmod=0, filOUT=None, verbose=False):
+	'''
+	CLEAN Wavelengths
+
+	--- INPUT ---
+	filIN       input fits file
+	wmod        wave mode
+	cmod        clean mode (Default: 'eq')
+	cfile       input csv file (archived info)
+	filOUT      overwrite fits file (Default: NO)
+	verbose     display wclean info (Default: False)
+	--- OUTPUT ---
+	data_new    new fits data
+	wave_new    new fits wave
+	'''
+	ds = read_fits(filIN)
+	hdr = ds.header
+	data = ds.data
+	wave = ds.wave
+	Nw = len(wave)
+	
+	ind = [] # list of indices of wvl to remove
+	if cfile is not None:
+		indarxiv = read_csv(cfile, 'Ind')[0]
+		ind = []
+		for i in indarxiv:
+			ind.append(int(i))
+	else:
+		## Detect crossing wvl
+		##---------------------
+		for i in range(Nw-1):
+			if wave[i]>=wave[i+1]: # found wave(i+1), i_max=Nw-2
+				
+				wmin = -1 # lower limit: closest wave smaller than wave[i+1]
+				wmax = 0 # upper limit: closest wave larger than wave[i]
+				
+				for j in range(i+1):
+					dw = wave[i+1] - wave[i-j]
+					if dw>0: # found the closest smaller wave[i-j]
+						wmin = i-j
+						break # only the innermost loop
+				if wmin==-1:
+					print('WARNING: Left side fully covered! ')
+				
+				for j in range(Nw-i-1):
+					dw = wave[i+1+j] - wave[i]
+					if dw>0: # found the closest larger wave[i+1+j]
+						wmax = i+1+j
+						break
+				if wmax==0:
+					print('WARNING: right side fully covered! ')
+
+				Nw_seg = wmax-wmin-1 # number of crossing wvl in segment
+				wave_seg = [] # a segment (every detect) of wave
+				ind_seg = [] # corresponing segment for sort use
+				for k in range(Nw_seg):
+					wave_seg.append(wave[wmin+1+k])
+					ind_seg.append(wmin+1+k)
+				## index list of sorted wave_seg
+				ilist = sorted(range(len(wave_seg)), key=wave_seg.__getitem__)
+				## index of wave_seg center
+				icen = math.floor((Nw_seg-1)/2)
+
+				## Visualisation (for test use)
+				##------------------------------
+				# print('wave, i: ', wave[i], i)
+				# print('wave_seg: ', wave_seg)
+				# print('ind_seg: ', ind_seg)
+				# print('ilist: ', ilist)
+				# print('icen: ', icen)
+
+				## Remove all crossing wvl between two channels
+				##----------------------------------------------
+				if cmod=='all': # most conservative but risk having holes
+					pass
+				## Remove (almost) equal wvl (NOT nb of wvl!) for both sides
+				##-----------------------------------------------------------
+				elif cmod=='eq': # (default)
+					## Select ascendant pair closest to segment center
+					for k in range(icen):
+						if ilist[icen]>ilist[0]: # large center
+							if ilist[icen-k]<ilist[0]:
+								for p in range(ilist[icen-k]+1):
+									del ind_seg[0]
+								for q in range(Nw_seg-ilist[icen]):
+									del ind_seg[-1]
+								break
+						else: # small center
+							if ilist[icen+k]>ilist[0]:
+								for p in range(ilist[icen]+1):
+									del ind_seg[0]
+								for q in range(Nw_seg-ilist[icen+k]):
+									del ind_seg[-1]
+								break
+				## Leave 2 closest wvl not crossing
+				##----------------------------------
+				elif cmod=='closest_left':
+					for k in range(ilist[0]):
+						del ind_seg[0]
+				elif cmod=='closest_right':
+					for k in range(Nw_seg-ilist[0]):
+						del ind_seg[-1]
+				## Others
+				##--------
+				else:
+					print('ERROR: Not supported clean mode! ')
+
+				# print('ind_seg (final): ', ind_seg)
+				ind.extend(ind_seg)
+
+	## Do clean
+	##----------
+	data_new = np.delete(data, ind, axis=0)
+	wave_new = list(np.delete(np.array(wave), ind))
+
+	## Display clean detail
+	##----------------------
+	if verbose==True:
+		print('\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+		print('Number of wavelengths deleted: ', len(ind))
+		print('Ind, wavelengths: ')
+		for i in ind:
+			print(i, wave[i])
+		print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n')
+
+	## Overwrite fits file
+	##---------------------
+	if filOUT is not None:
+		# comment = 'Wavelength removal info in _wclean_info.csv'
+		write_fits(filOUT, hdr, data_new, wave_new, wmod) # hdr auto changed
+		
+		## Write csv file
+		wlist = []
+		for i in ind:
+			wlist.append([i, wave[i]])
+		write_csv(filOUT+'_wclean_info', \
+			header=['Ind', 'Wavelengths'], dataset=wlist)
+
+	return data_new, wave_new
+
+def interfill(arr, axis):
+	'''
+	FILL undersampling/artificial gap by (bspl)INTERpolation
+
+	--- INPUT ---
+	arr         array
+	axis        axis along which interpolation
+	--- OUTPUT ---
+	newarr      new array
+	'''
+	print(">> fill gaps with b-splines <<")
+
+	axsh = arr.shape
+	NAXIS = np.size(axsh)
+	newarr = np.copy(arr)
+	if NAXIS==1: # 1D array
+		x = np.arange(axsh[0])
+		for i in range(axsh[0]):
+			newarr = bsplinterpol(x, arr, x)
+	if NAXIS==2: # no wavelength
+		if axis==0: # col direction
+			y = np.arange(axsh[0])
+			for i in range(axsh[1]):
+				col = bsplinterpol(y, arr[:,i], y)
+				for j in range(axsh[0]):
+					newarr[j,i] = col[j]
+		elif axis==1: # row direction
+			x = np.arange(axsh[1])
+			for j in range(axsh[0]):
+				row = bsplinterpol(x, arr[j,:], x)
+				for i in range(axsh[1]):
+					newarr[j,i] = row[i]
+		else:
+			print('ERROR: Unkown axis! ')
+	elif NAXIS==3:
+		if axis==0: # fill wavelength
+			z = np.arange(axsh[0])
+			for i in range(axsh[2]):
+				for j in range(axsh[1]):
+					wvl = bsplinterpol(z, arr[:,j,i], z)
+					for k in range(axsh[0]):
+						newarr[k,j,i] = wvl[k]
+		elif axis==1: # col direction
+			y = np.arange(axsh[1])
+			for k in range(axsh[0]):
+				for i in range(axsh[2]):
+					col = bsplinterpol(y, arr[k,:,i], y)
+					for j in range(axsh[1]):
+						newarr[k,j,i] = col[j]
+		elif axis==2: # row direction
+			x = np.arange(axsh[2])
+			for k in range(axsh[0]):
+				for j in range(axsh[1]):
+					row = bsplinterpol(x, arr[k,j,:], x)
+					for i in range(axsh[2]):
+						newarr[k,j,i] = row[i]
+		else:
+			print('ERROR: Unkown axis! ')
+	else:
+		print('ERROR: array shape not supported! ')
+
+	return newarr
+
+def hextract(filIN, filOUT, x0, x1, y0, y1):
+	'''
+	Crop 2D image with pixel sequence numbers
+	[ref]
+	IDL lib hextract
+	https://idlastro.gsfc.nasa.gov/ftp/pro/astrom/hextract.pro
+	'''
+	ds = read_fits(filIN)
+	oldimage = ds.data
+	hdr = ds.header
+	w = fixwcs(filIN).wcs
+	# hdr['NAXIS1'] = x1 - x0 + 1
+	# hdr['NAXIS2'] = y1 - y0 + 1
+	hdr['CRPIX1'] += -x0
+	hdr['CRPIX2'] += -y0
+	newimage = oldimage[y0:y1+1, x0:x1+1]
+
+	write_fits(filOUT, hdr, newim)
+
+	return newimage
+
+def hswarp(oldimage, oldheader, refheader, \
+	keepedge=False, tmpdir=None, verbose=True):
+	'''
+	Python version of hswarp (IDL), 
+	a SWarp drop-in replacement for hastrom, 
+	created by S. Hony
+
+	------ INPUT ------
+	oldimage            ndarray
+	oldheader           header object
+	refheader           ref header
+	keepedge            default: False
+	tmpdir              default: None
+	verbose             default: True
+	------ OUTPUT ------
+	cl                  output object
+	  image               newimage
+	  header              newheader
+	'''
+	## Initialize output object
+	cl = type('', (), {})()
+
+	## Set path of tmp files
+	if tmpdir is None:
+		path_tmp = os.getcwd()+'/tmp_hswarp/'
+	else:
+		path_tmp = tmpdir
+	if not os.path.exists(path_tmp):
+		os.makedirs(path_tmp)
+
+	## Make input
+	write_fits(path_tmp+'old', oldheader, oldimage)
+	with open(path_tmp+'coadd.head', 'w') as f:
+		f.write(str(refheader))
+
+	## Create config file
+	SP.call('swarp -d > swarp.cfg', shell=True, cwd=path_tmp)
+	## Config param list
+	swarp_opt = ' -c swarp.cfg -SUBTRACT_BACK N '
+	if verbose==False:
+		swarp_opt += ' -VERBOSE_TYPE QUIET '
+	## Run SWarp
+	SP.call('swarp '+swarp_opt+' -RESAMPLING_TYPE LANCZOS3 '+' old.fits', \
+		shell=True, cwd=path_tmp)
+	coadd = read_fits(path_tmp+'coadd')
+	newimage = coadd.data
+	newheader = coadd.header
+
+	## Add back in the edges because LANCZOS3 kills the edges
+	## Do it in steps of less and less precision
+	if keepedge==True:
+		oldweight = read_fits(path_tmp+'coadd.weight').data
+		if np.sum(oldweight==0)!=0:
+			SP.call('swarp '+swarp_opt+' -RESAMPLING_TYPE LANCZOS2 '+' old.fits', \
+				shell=True, cwd=path_tmp)
+			edgeimage = read_fits(path_tmp+'coadd').data
+			newweight = read_fits(path_tmp+'coadd.weight').data
+			edgeidx = np.ma.array(oldweight, 
+				mask=np.logical_and(oldweight==0, newweight!=0)).mask
+			if edgeidx.any():
+				newimage[edgeidx] = edgeimage[edgeidx]
+
+			oldweight = read_fits(path_tmp+'coadd.weight').data
+			if np.sum(oldweight==0)!=0:
+				SP.call('swarp '+swarp_opt+' -RESAMPLING_TYPE BILINEAR '+' old.fits', \
+					shell=True, cwd=path_tmp)
+				edgeimage = read_fits(path_tmp+'coadd').data
+				newweight = read_fits(path_tmp+'coadd.weight').data
+				edgeidx = np.ma.array(oldweight, 
+					mask=np.logical_and(oldweight==0, newweight!=0)).mask
+				if edgeidx.any():
+					newimage[edgeidx] = edgeimage[edgeidx]
+
+				oldweight = read_fits(path_tmp+'coadd.weight').data
+				if np.sum(oldweight==0)!=0:
+					SP.call('swarp '+swarp_opt+' -RESAMPLING_TYPE NEAREST '+' old.fits', \
+						shell=True, cwd=path_tmp)
+					edgeimage = read_fits(path_tmp+'coadd').data
+					newweight = read_fits(path_tmp+'coadd.weight').data
+					edgeidx = np.ma.array(oldweight, 
+						mask=np.logical_and(oldweight==0, newweight!=0)).mask
+					if edgeidx.any():
+						newimage[edgeidx] = edgeimage[edgeidx]
+
+	## SWarp is conserving surface brightness/pixel
+	## while the pixels size changes
+	oldcdelt = pc2cd(wcs=fixwcs(header=oldheader).wcs).cdelt
+	refcdelt = pc2cd(wcs=fixwcs(header=refheader).wcs).cdelt
+	old_pixel_fov = abs(oldcdelt[0]*oldcdelt[1])
+	new_pixel_fov = abs(refcdelt[0]*refcdelt[1])
+	newimage = newimage * old_pixel_fov/new_pixel_fov
+	print('-------------------')
+	print(old_pixel_fov/new_pixel_fov)
+	write_fits(path_tmp+'new', newheader, newimage)
+	print('-------------------')
+
+	## Delete tmp file if tmpdir not given
+	if tmpdir is None:
+		fclean(path_tmp)
+
+	cl.image = newimage
+	cl.header = newheader
+
+	return cl
 
 def concatenate(flist, filOUT=None, comment=None, sort_wave=True):
 	'''

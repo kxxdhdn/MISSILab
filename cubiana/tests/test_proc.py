@@ -16,8 +16,8 @@ sys.path.insert(0, testdir+'/..') ## astylo path
 from astylo.bio import read_fits, write_fits
 from astylo.astrolib import fixwcs
 from astylo.proc import (
-	wclean, interfill, hswarp, 
-	sextract, imontage, concatenate, 
+	wclean, interfill, hswarp, iswarp, 
+	islice, imontage, concatenate, sextract, 
 )
 from astylo.plot import plot2d
 
@@ -26,20 +26,47 @@ datdir = testdir+'/dat/'
 outdir = testdir+'/out/'
 
 
+## TEST iswarp
+##-----------------
+## Images
+# flist = islice(datdir+'M82_04_SL2', outdir+'tmp_swp/M82_04_SL2').slist
+# flist.extend(islice(datdir+'M82_09_SL1', outdir+'tmp_swp/M82_09_SL1').slist)
+## Weights (inversed variance)
+# wlist = islice(datdir+'M82_04_SL2_unc', outdir+'tmp_swp/M82_04_SL2', \
+# 	postfix='_wgt').slist
+# wlist.extend(islice(datdir+'M82_09_SL1_unc', outdir+'tmp_swp/M82_09_SL1', \
+# 	postfix='_wgt').slist)
+##-----
+# d1 = read_fits(datdir+'M82_04_SL2').data[0]
+# h1 = fixwcs(datdir+'M82_04_SL2').header
+# write_fits(outdir+'tmp_swp/'+'1', h1, d1)
+# d2 = read_fits(datdir+'M82_LL2_fp').data[0]
+# h2 = fixwcs(datdir+'M82_LL2_fp').header
+# write_fits(outdir+'tmp_swp/'+'2', h2, d2)
+# flist = [outdir+'tmp_swp/'+'2', outdir+'tmp_swp/'+'1']
+##-----
+flist = [datdir+'M82_04_SL2', datdir+'M82_09_SL1']
+## Ref header
+# refheader = fixwcs(datdir+'M82_LL2_fp').header
+
+# isw = iswarp(flist, ref)
+isw = iswarp(flist, '9:55:52,69:40:45', '1.67', )
+	# verbose=False, tmpdir=outdir+'tmp_swp/')
+# isw.footprint(outdir+'tmp_swp/')
+isw.combine()
+
+'''
+
 ## TEST hswarp
 ##-------------
 oldimage = read_fits(datdir+'M82_09_SL1').data[0]
 oldheader = fixwcs(datdir+'M82_09_SL1').header
-refheader = fixwcs(datdir+'M82_LL1_fp').header
+refheader = fixwcs(datdir+'M82_LL2_fp').header
 
 sw = hswarp(oldimage, oldheader, refheader, \
-	fixheader=False, keepedge=False, \
-	verbose=False)#, tmpdir=outdir+'test_tmp/')
+	keepedge=False, verbose=False, tmpdir=outdir+'tmp_sw/')
 print(sw.image.shape)
-# print(sw.header)
 
-
-'''
 
 ## TEST sextract + imontage
 ##--------------------------
