@@ -4,6 +4,8 @@
 import time
 t0 = time.time()
 
+from tqdm import tqdm, trange
+
 import sys, os, logging
 testdir = os.path.dirname(os.path.abspath(__file__))
 # logging.disable(sys.maxsize)
@@ -29,31 +31,24 @@ outdir = testdir+'/out/'
 ## TEST iswarp
 ##-----------------
 ## Images
-# flist = islice(datdir+'M82_04_SL2', outdir+'tmp_swp/M82_04_SL2').slist
-# flist.extend(islice(datdir+'M82_09_SL1', outdir+'tmp_swp/M82_09_SL1').slist)
-## Weights (inversed variance)
-# wlist = islice(datdir+'M82_04_SL2_unc', outdir+'tmp_swp/M82_04_SL2', \
-# 	postfix='_wgt').slist
-# wlist.extend(islice(datdir+'M82_09_SL1_unc', outdir+'tmp_swp/M82_09_SL1', \
-# 	postfix='_wgt').slist)
-##-----
-# d1 = read_fits(datdir+'M82_04_SL2').data[0]
-# h1 = fixwcs(datdir+'M82_04_SL2').header
-# write_fits(outdir+'tmp_swp/'+'1', h1, d1)
-# d2 = read_fits(datdir+'M82_LL2_fp').data[0]
-# h2 = fixwcs(datdir+'M82_LL2_fp').header
-# write_fits(outdir+'tmp_swp/'+'2', h2, d2)
-# flist = [outdir+'tmp_swp/'+'2', outdir+'tmp_swp/'+'1']
-##-----
-flist = [datdir+'M82_04_SL2', datdir+'M82_09_SL1']
+allist = [datdir+'M82_04_SL2', datdir+'M82_08_SL2', datdir+'M82_09_SL2', datdir+'M82_09_SL1']
+SL2s = [datdir+'M82_04_SL2', datdir+'M82_08_SL2', datdir+'M82_09_SL2']
 ## Ref header
 # refheader = fixwcs(datdir+'M82_LL2_fp').header
 
-# isw = iswarp(flist, ref)
-isw = iswarp(flist, '9:55:52,69:40:45', '1.67', )
-	# verbose=False, tmpdir=outdir+'tmp_swp/')
-# isw.footprint(outdir+'tmp_swp/')
-isw.combine()
+## MC usage
+Nmc = 2
+for j in trange(Nmc+1, leave=True, 
+	desc='<iswarp> MC test'):
+	if j==0:
+		swp = iswarp(allist, '9:55:52,69:40:45', '1.67', 
+			verbose=False, tmpdir=outdir+'MC_no/')
+		comb = swp.combine(SL2s, 'wgt_avg', keepedge=True, filOUT=outdir+'MC_no')
+	else:
+		swp = iswarp(allist, '9:55:52,69:40:45', '1.67', 
+			verbose=False, tmpdir=outdir+'MC_'+str(j)+'/')
+		comb = swp.combine(SL2s, 'wgt_avg', keepedge=True, uncpdf='norm', filOUT=outdir+'MC_'+str(j))
+	tqdm.write(str(comb.image.shape))
 
 '''
 
