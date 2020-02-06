@@ -14,6 +14,7 @@ from scipy.io import readsav
 from astropy import wcs
 from reproject import reproject_interp
 import subprocess as SP
+DEVNULL = open(os.devnull, 'w')
 
 ## Local
 from bio import read_fits, write_fits, read_csv, write_csv, read_ascii
@@ -21,7 +22,6 @@ from astrolib import fixwcs, pc2cd
 from lib import fclean, nanavg, closest, bsplinterpol
 
 savext = '.sav'
-
 
 ##-----------------------------------------------
 
@@ -158,8 +158,6 @@ class impro:
 			f = filSL+'_0000'+postfix
 			slist.append(f)
 			write_fits(f, self.hdr, inv_sqrt) # gauss_noise inclu
-		
-		print('<impro> Inversed square cube slicing.')
 
 		return slist
 	
@@ -716,7 +714,8 @@ class iswarp(impro):
 			image_files += file[i]+'.fits '
 
 		## Create config file
-		SP.call('swarp -d > swarp.cfg', shell=True, cwd=path_tmp)
+		SP.call('swarp -d > swarp.cfg', \
+			shell=True, cwd=path_tmp, stdout=DEVNULL, stderr=SP.STDOUT)
 		
 		## Config param list
 		swarp_opt = ' -c swarp.cfg -HEADER_ONLY Y -IMAGEOUT_NAME coadd.head '
@@ -728,11 +727,13 @@ class iswarp(impro):
 			swarp_opt += ' -VERBOSE_TYPE QUIET '
 		
 		## Run SWarp
-		SP.call('swarp '+swarp_opt+image_files, shell=True, cwd=path_tmp)
-
+		SP.call('swarp '+swarp_opt+image_files, \
+			shell=True, cwd=path_tmp, stdout=DEVNULL, stderr=SP.STDOUT)
 		## Save ref header 
 		# self.refheader = read_fits(path_tmp+'coadd').header
 		self.refheader = None
+
+		fclean(path_tmp+'*_ref.fits')
 
 	def footprint(self, filOUT=None):
 		'''
@@ -751,7 +752,7 @@ class iswarp(impro):
 		return im_fp
 
 	def combine(self, file, combtype='med', \
-		keepedge=False, uncpdf=None, filOUT=None):
+		keepedge=False, uncpdf=None, filOUT=None, tmpdir=None):
 		'''
 		Combine 
 
@@ -768,7 +769,13 @@ class iswarp(impro):
 		cl = type('', (), {})()
 		verbose = self.verbose
 		path_tmp = self.path_tmp
-
+		if tmpdir is None:
+			path_comb = path_tmp+'comb/'
+		else:
+			path_comb = tmpdir
+		if not os.path.exists(path_comb):
+			os.makedirs(path_comb)
+			
 		## Images and weights
 		##--------------------
 		Nf = len(file)
@@ -779,6 +786,7 @@ class iswarp(impro):
 			wvl = read_fits(file[0]).wave
 		else:
 			Nw = 1
+			wvl = None
 		
 		## Build imlist & wgtlist (size=Nf)
 		imlist = []
@@ -786,10 +794,7 @@ class iswarp(impro):
 		for i in range(Nf):
 			filename = os.path.basename(file[i])
 			## Set slice file
-			path_slice = path_tmp+'slices/'
-			if not os.path.exists(path_slice):
-				os.makedirs(path_slice)
-			file_slice = path_slice+filename
+			file_slice = path_comb+filename
 			## Slice
 			super().__init__(file[i])
 			if uncpdf=='norm':
@@ -818,7 +823,8 @@ class iswarp(impro):
 					weight_files[k] += wgtlist[i][k]+'.fits '
 
 			## Create config file
-			SP.call('swarp -d > swarp.cfg', shell=True, cwd=path_tmp)
+			SP.call('swarp -d > swarp.cfg', \
+				shell=True, cwd=path_tmp, stdout=DEVNULL, stderr=SP.STDOUT)
 			## Config param list
 			swarp_opt = ' -c swarp.cfg -SUBTRACT_BACK N '
 			if combtype=='med':
@@ -834,7 +840,7 @@ class iswarp(impro):
 				swarp_opt += ' -VERBOSE_TYPE QUIET '
 			## Run SWarp
 			SP.call('swarp '+swarp_opt+' -RESAMPLING_TYPE LANCZOS3 '+image_files[k], \
-				shell=True, cwd=path_tmp)
+				shell=True, cwd=path_tmp, stdout=DEVNULL, stderr=SP.STDOUT)
 			coadd = read_fits(path_tmp+'coadd')
 			newimage = coadd.data
 			newheader = coadd.header
@@ -845,7 +851,7 @@ class iswarp(impro):
 				oldweight = read_fits(path_tmp+'coadd.weight').data
 				if np.sum(oldweight==0)!=0:
 					SP.call('swarp '+swarp_opt+' -RESAMPLING_TYPE LANCZOS2 '+image_files[k], \
-						shell=True, cwd=path_tmp)
+						shell=True, cwd=path_tmp, stdout=DEVNULL, stderr=SP.STDOUT)
 					edgeimage = read_fits(path_tmp+'coadd').data
 					newweight = read_fits(path_tmp+'coadd.weight').data
 					edgeidx = np.ma.array(oldweight, 
@@ -856,7 +862,7 @@ class iswarp(impro):
 					oldweight = read_fits(path_tmp+'coadd.weight').data
 					if np.sum(oldweight==0)!=0:
 						SP.call('swarp '+swarp_opt+' -RESAMPLING_TYPE BILINEAR '+image_files[k], \
-							shell=True, cwd=path_tmp)
+							shell=True, cwd=path_tmp, stdout=DEVNULL, stderr=SP.STDOUT)
 						edgeimage = read_fits(path_tmp+'coadd').data
 						newweight = read_fits(path_tmp+'coadd.weight').data
 						edgeidx = np.ma.array(oldweight, 
@@ -867,7 +873,7 @@ class iswarp(impro):
 						oldweight = read_fits(path_tmp+'coadd.weight').data
 						if np.sum(oldweight==0)!=0:
 							SP.call('swarp '+swarp_opt+' -RESAMPLING_TYPE NEAREST '+image_files[k], \
-								shell=True, cwd=path_tmp)
+								shell=True, cwd=path_tmp, stdout=DEVNULL, stderr=SP.STDOUT)
 							edgeimage = read_fits(path_tmp+'coadd').data
 							newweight = read_fits(path_tmp+'coadd.weight').data
 							edgeidx = np.ma.array(oldweight, 
@@ -885,15 +891,16 @@ class iswarp(impro):
 			newimage = newimage * old_pixel_fov/new_pixel_fov
 			zeroma = np.ma.array(newimage, mask=(newimage==0)).mask
 			newimage[zeroma] = np.nan
-			write_fits(path_slice+'coadd_'+str(k), newheader, newimage)
+			# write_fits(path_comb+'coadd_'+str(k), newheader, newimage)
 			hyperimage.append(newimage)
 
 		hyperimage = np.array(hyperimage)
 		if filOUT is not None:
 			write_fits(filOUT, newheader, hyperimage, wvl)
 
-		cl.image = hyperimage 
 		cl.header = newheader
+		cl.image = hyperimage
+		cl.wvl = wvl
 
 		return cl
 
@@ -1010,7 +1017,8 @@ class iconvolve(impro):
 			
 		self.choker(f2conv)
 
-		SP.call('cd '+ipath+'\nidl conv.pro', shell=True)
+		SP.call('idl conv.pro', \
+			shell=True, cwd=ipath, stdout=DEVNULL, stderr=SP.STDOUT)
 
 		## OUTPUTS
 		##---------

@@ -180,7 +180,8 @@ if b0=='y':
 			##--------------------------
 			pro = imontage(file_proj, project_ref)
 			pro.make()
-			pro_cube = pro.reproject(filTMP=file_slice)#, filOUT=file_out+'_'+str(j))
+			pro_cube = pro.reproject(filTMP=file_slice, )
+				# filOUT=file_out+'_'+str(j))
 			
 			slices.extend(pro.slist)
 			cubi.append(pro_cube)

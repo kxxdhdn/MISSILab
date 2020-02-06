@@ -3,11 +3,10 @@
 
 import time
 t0 = time.time()
-
 from tqdm import tqdm, trange
 
 import sys, os, logging
-testdir = os.path.dirname(os.path.abspath(__file__))
+testdir = os.path.dirname(os.path.abspath(__file__))+'/'
 # logging.disable(sys.maxsize)
 
 import numpy as np
@@ -24,8 +23,8 @@ from astylo.proc import (
 from astylo.plot import plot2d
 
 ## Set path
-datdir = testdir+'/dat/'
-outdir = testdir+'/out/'
+datdir = testdir+'dat/'
+outdir = testdir+'out/'
 
 
 ## TEST iswarp
@@ -37,30 +36,29 @@ SL2s = [datdir+'M82_04_SL2', datdir+'M82_08_SL2', datdir+'M82_09_SL2']
 # refheader = fixwcs(datdir+'M82_LL2_fp').header
 
 ## MC usage
+tmpdir = outdir+'tmp/'
+swp = iswarp(allist, '9:55:52,69:40:45', '1.67', 
+	verbose=False, tmpdir=tmpdir)
 Nmc = 2
 for j in trange(Nmc+1, leave=True, 
 	desc='<iswarp> MC test'):
 	if j==0:
-		swp = iswarp(allist, '9:55:52,69:40:45', '1.67', 
-			verbose=False, tmpdir=outdir+'MC_no/')
-		comb = swp.combine(SL2s, 'wgt_avg', keepedge=True, filOUT=outdir+'MC_no')
+		comb = swp.combine(SL2s, 'wgt_avg', keepedge=True, \
+			filOUT=outdir+'MC_no', tmpdir=tmpdir+'MC_no/')
 	else:
-		swp = iswarp(allist, '9:55:52,69:40:45', '1.67', 
-			verbose=False, tmpdir=outdir+'MC_'+str(j)+'/')
-		comb = swp.combine(SL2s, 'wgt_avg', keepedge=True, uncpdf='norm', filOUT=outdir+'MC_'+str(j))
+		comb = swp.combine(SL2s, 'wgt_avg', keepedge=True, uncpdf='norm', \
+			filOUT=outdir+'MC_'+str(j), tmpdir=tmpdir+'MC_'+str(j)+'/')
 	tqdm.write(str(comb.image.shape))
-
-'''
 
 ## TEST hswarp
 ##-------------
-oldimage = read_fits(datdir+'M82_09_SL1').data[0]
-oldheader = fixwcs(datdir+'M82_09_SL1').header
-refheader = fixwcs(datdir+'M82_LL2_fp').header
+# oldimage = read_fits(datdir+'M82_09_SL1').data[0]
+# oldheader = fixwcs(datdir+'M82_09_SL1').header
+# refheader = fixwcs(datdir+'M82_LL2_fp').header
 
-sw = hswarp(oldimage, oldheader, refheader, \
-	keepedge=False, verbose=False, tmpdir=outdir+'tmp_sw/')
-print(sw.image.shape)
+# sw = hswarp(oldimage, oldheader, refheader, \
+# 	keepedge=False, verbose=False, tmpdir=outdir+'tmp_sw/')
+# print(sw.image.shape)
 
 
 ## TEST sextract + imontage
@@ -249,7 +247,7 @@ plt.show()
 
 # wclean(path+file, cmod='closest_right', filOUT=path+file+'_wclean_test')
 
-'''
+
 
 t_total = time.time()
 print("****** total_time = {:.0f} seconds ******".format(t_total - t0))

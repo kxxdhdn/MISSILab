@@ -1,32 +1,33 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import time
-t0 = time.time()
+import logging, sys
+logging.disable(sys.maxsize)
+import warnings
+warnings.filterwarnings("ignore", category=RuntimeWarning) 
+
+from tqdm import tqdm, trange
 
 import os
 import numpy as np
-import matplotlib.pyplot as plt
+
 ## astylo
 from astylo.bio import read_fits, write_fits, read_ascii
-from astylo.proc import islice, icrop, iconvolve, imontage, wclean
-from astylo.calib import intercalib, phot2phot
+from astylo.proc import islice, iconvolve, iswarp, wclean
 from astylo.lib import fclean, pix2sr
-from astylo.plot import plot2d
+# from astylo.calib import intercalib, phot2phot
+# from astylo.plot import plot2d
 
+## Local
+from param import (
+	src, Nmc, path_cur, root, path_irc, fits_irc, parobs, 
+	path_out, path_tmp, path_build, path_tests, verbose, 
+)
 ##---------------------------
 ##       Initialisation
 ##---------------------------
 
-Nmc = 6
-
-src = 'M83'
-## Not useful if need to modify IDL/conv_prog.pro
-# src = input("Input source name: ")
-
-verbose = False
-
 ##---------------------------
-##         Path Store
+##        Build slits
 ##---------------------------
-
+print(parobs)
