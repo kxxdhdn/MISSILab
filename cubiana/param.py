@@ -1,7 +1,7 @@
 import os
 
 src = 'M82'
-Nmc = 60
+Nmc = 0
 
 ## Current dir
 ##-------------
@@ -28,6 +28,7 @@ fits_ll2 = []
 fits_ll3 = []
 fits_ll1 = []
 fits_irs = []
+Nch = 4 # Number of chnl used
 chnl = ['SL2', 'SL3', 'SL1', 'LL2', 'LL3', 'LL1']
 lab_sl = ['_04', '_06', '_08', '_09']
 lab_ll = ['_04', '_05', '_06', '_08', '_09']
@@ -77,9 +78,9 @@ for p in psf:
 
 ## Outputs
 ##---------
-path_out = root+'PAHpedia/'+src+'/'
+path_out = root+'PAHPedia/'+src+'/'
 ## See also IDL/conv_prog.pro
-path_tmp = root+'PAHpedia/tmp/'
+path_tmp = root+'PAHPedia/tmp/'
 if not os.path.exists(path_tmp):
 	os.makedirs(path_tmp)
 ## See also IDL/convolve_image.pro
@@ -98,10 +99,16 @@ if not os.path.exists(path_build):
 slits = ['Ns', 'Nh']
 obsid = [
 	['3390001.1','F011100297_N002'], 
-	['3390001.2','F011100338_N002'], 
+	# ['3390001.2','F011100338_N002'], 
 	['3390002.1','F011100795_N002'], 
-	['3390002.2','F011176073_N002'], 
+	# ['3390002.2','F011176073_N002'], 
 	['3390003.1','F011100379_N002'], 
+	# ['5125401.1', ]
+	# ['5125402.1', ]
+	# ['5125403.1', ]
+	# ['5125404.1', ]
+	# ['5125405.1', ]
+	# ['5125406.1', ]
 ]
 fits_irc = []
 parobs = []
@@ -112,16 +119,16 @@ for obs in obsid:
 
 ## Calibrations
 ##--------------
-phot = 'IRAC3' # syn_phot ref
-phot0 = 'IRAC3_SINGS' # phot ref
+phot = 'IRAC4' # syn_phot ref
+phot0 = 'IRAC4_SINGS' # phot ref
 path_cal = path_out+'calib/'
 if not os.path.exists(path_cal):
 	os.makedirs(path_cal)
-fits_phot = path_phot+src+'_cal_'+phot
-fits_phot0 = path_phot+src+'_cal_'+phot0
+fits_phot = path_phot+src+'_'+phot
+fits_phot0 = path_phot+src+'_'+phot0
 
 ## Tests
 ##-------
-path_tests = root+'PAHpedia/tests/'
+path_tests = root+'PAHPedia/tests/'
 
 verbose = False

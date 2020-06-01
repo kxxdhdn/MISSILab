@@ -29,7 +29,7 @@ fig = plt.figure(1, figsize=(24,10))
 
 ## WISE 12um all sky map
 ##-----------------------
-mpath = '/Users/dhu/Downloads/'
+mpath = '/Users/dhu/Downloads/WISE3/'
 mfile = mpath+'wssa_sample_'+str(Nside)+'-bintable.fits'
 
 hdul = fits.open(mfile)
@@ -37,7 +37,7 @@ all_sky_map = hdul[1].data.I12
 
 ## sample
 ##--------
-spath = '/Users/dhu/Github/MISSILES/catlas/'
+spath = '/Users/dhu/Github/MISSILab/catlas/'
 sfile = spath+'slist.txt'
 
 dat = []
@@ -63,6 +63,6 @@ hp.projscatter(data['RA'], data['DEC'], lonlat=True,
 	s=80.,
 	)
 
-fig.savefig(spath+'skymap.png', transparent=True)
+# fig.savefig(spath+'skymap.png', transparent=True)
 
-# plt.show()
+plt.show()

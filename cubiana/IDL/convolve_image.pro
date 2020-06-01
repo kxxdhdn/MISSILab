@@ -421,9 +421,9 @@ pro convolve_image
 ;convolutions_path = './../Convolved/'
 
 ;current_path = the path of this file
-images_path  = '/Users/dhu/Data/PAHpedia/tmp/slices/'
+images_path  = '/Users/dhu/Data/PAHPedia/tmp/slices/'
 kernels_path = '/Users/dhu/Data/Kernels/'
-convolutions_path = '/Users/dhu/Data/PAHpedia/tmp/slices/'
+convolutions_path = '/Users/dhu/Data/PAHPedia/tmp/slices/'
 do_we_write           = 1
 do_we_save_the_kernel = 1
 

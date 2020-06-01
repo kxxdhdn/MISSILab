@@ -141,9 +141,6 @@ PROGRAM miles
                       CHI2=chi2red(xOBS,yOBS))
                       ! STEP=step(:), RELSTEP=relstep(:), TWOSIDE=twoside(:))
 
-  !!-------------------------------------------------------
-  !!                   Preliminary Line Fit
-  !!-------------------------------------------------------
   
   !!-------------------------------------------------------
   !!                       Complete Fit

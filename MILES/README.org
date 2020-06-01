@@ -1,0 +1,9 @@
+#+TITLE: Mid-Infrared Line Extraction Software (MILES)
+#+AUTHOR: D. HU
+
+* Notices
+The Python package [[https://github.com/kxxdhdn/astylo][astylo]] is required by the MILES UI. You can install it with a single command: ~pip install astylo~
+* Version log
+** v2 (202008??, hebe beta)
+** v1 (202006??, bayes beta)
+** v0 (202005??, chi2 beta)

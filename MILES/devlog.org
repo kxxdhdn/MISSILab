@@ -1,0 +1,105 @@
+
+#+TITLE: MILES development log
+#+AUTHOR: D. HU
+#+TODO: TODO(t) WAIT(w) | DONE(d)
+#+TODO: | CNCL(c@/!)
+#+TODO: REPORT(r!) BUG(b!) KNOWNCAUSE(k!) | FIXED(f!)
+#+STARTUP: logdone
+
+Version: v0 (202005??)
+* TODO tests [2/4]
+** TODO general [2/3]
+*** TODO 
+*** DONE specModel
+CLOSED: [2020-05-25 Mon 18:17]
+*** DONE degradeRes
+CLOSED: [2020-05-28 Thu 12:55]
+** FIXED profiles
+CLOSED: [2020-04-25 Sat 19:27]
+- Note taken on [2020-05-20 Wed 23:39] \\
+  Corrected the integration in normalization tests. X grid should not be too wide or the the integration of undersampled profiles will not be 1
+- State "FIXED"      from "DONE"       [2020-05-20 Wed 23:39]
+** KNOWNCAUSE modifBB
+- Note taken on [2020-05-11 Mon 14:32] \\
+  Test chi2min with observation (M83), 3D FITS data imported via Python UI (fits2h5)
+- State "KNOWNCAUSE" from "DONE"       [2020-05-11 Mon 14:32]
+** DONE compile
+CLOSED: [2020-04-24 Fri 15:00]
+* TODO miles [62%]
+:PROPERTIES:
+:COOKIE_DATA: recursive
+:END:
+** DONE datable [3/3]
+*** TYPE, PUBLIC
+**** DONE ~instr_res~
+CLOSED: [2020-05-11 Mon 13:31]
+- res
+**** DONE ~lines_IN~
+CLOSED: [2020-05-11 Mon 13:57]
+- LIN
+**** DONE ~bands_IN~
+CLOSED: [2020-05-11 Mon 13:57]
+- BIN
+** TODO auxil (MODULE) [83%]
+*** TYPE, PUBLIC
+**** DONE ~par_str~
+CLOSED: [2020-05-11 Mon 10:52]
+- par
+**** TODO ~parinfo_list~
+**** DONE ~Qabs_str~
+CLOSED: [2020-05-11 Mon 11:47]
+- ~make_Qabs~ / nQabs
+- ~modifBB~ / Qabs
+*** SUBROUTINE
+**** DONE ~make_par~ : Create the parameter structure
+CLOSED: [2020-05-11 Mon 10:53]
+**** DONE ~make_Qabs~ : Read optical properties
+CLOSED: [2020-05-11 Mon 11:47]
+**** DONE ~chi2_INIT~ : Initialization of parameters for chi2 method
+CLOSED: [2020-05-25 Mon 18:11]
+*** FUNCTION
+**** DONE ~degradeRes~ : Automatize the degradation of the spectral resolution
+CLOSED: [2020-05-11 Mon 13:40]
+**** Analytical functions of the individual features
+***** DONE ~modifBB~ : Dust contimuum (N BB)
+CLOSED: [2020-05-11 Mon 13:16]
+***** FIXED ~gaussLine~ : Atomic & molecular unresolved lines (Gauss profile)
+CLOSED: [2020-05-20 Wed 23:36]
+- State "FIXED"      from "KNOWNCAUSE" [2020-05-20 Wed 23:36]
+- Note taken on [2020-05-12 Tue 10:51] \\
+  ~gaussLine_w~ was added to make wave-in-nu-out possible (which is the idea here), while it rose a confusion when doing normalization test. 
+  Finally, the merger of this option lead to a LOGICAL "w2nu", .TRUE. when input is wavelength, because the profiles will be used to fit the obs curves in function of nu whose intensities Fnu are in W/m2/Hz (Jy). 
+  Idem. for lorentzBand & extCurve
+- State "KNOWNCAUSE" from "DONE"       [2020-05-12 Tue 10:51]
+***** FIXED ~lorentzBand~ : Resolved aromatic bands (Asymmetric Lorentz profile)
+CLOSED: [2020-05-20 Wed 23:36]
+- State "FIXED"      from "KNOWNCAUSE" [2020-05-20 Wed 23:36]
+- State "KNOWNCAUSE" from "DONE"       [2020-05-12 Tue 10:57]
+***** FIXED ~extCurve~
+CLOSED: [2020-05-20 Wed 23:36]
+- State "FIXED"      from "KNOWNCAUSE" [2020-05-20 Wed 23:36]
+- State "KNOWNCAUSE" from "TODO"       [2020-05-12 Tue 10:57]
+***** KNOWNCAUSE ~specModel~ : Total model function for chi2 calling
+- Note taken on [2020-05-26 Tue 16:41] \\
+  Replace massStar by LnuStar (total luminosity of star), with BB normalized by Stefan-Boltzmann constant.
+- State "KNOWNCAUSE" from "DONE"       [2020-05-26 Tue 16:41]
+** TODO Init [50%]
+*** DONE input spectrum (fits2h5.py)
+CLOSED: [2020-05-11 Mon 15:21]
+*** TODO modeled spectrum
+** TODO Chi2 [0%]
+*** TODO test chi2min with modifBB
+
+
+** WAIT Bayesian [%]
+** WAIT Hierarchical Bayesian [%]
+* TODO UI (Python) [66%]
+:PROPERTIES:
+:COOKIE_DATA: recursive
+:END:
+** TODO make all
+** DONE fits2h5
+CLOSED: [2020-04-28 Tue 00:07]
+** DONE asc2h5
+CLOSED: [2020-04-27 Mon 23:35]
+* TODO plot a modeled spectrum

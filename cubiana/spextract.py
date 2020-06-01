@@ -256,7 +256,7 @@ print('\n>>>>>>>>>>>>>>>>>>\n')
 ##---------------------------
 ##      Intercalibration
 ##---------------------------
-'''
+
 ## Convert Jy/pix to MJy/sr (Optional)
 ##-------------------------------------
 hdr_s = read_fits(file_phot_s).header
@@ -307,7 +307,7 @@ plt.yscale('symlog')
 plt.xlabel(phot_p)
 plt.ylabel(phot_s)
 plt.legend()
-'''
+
 ##---------------------------
 ##           plot
 ##---------------------------

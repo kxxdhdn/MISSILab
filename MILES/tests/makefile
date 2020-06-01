@@ -1,39 +1,32 @@
-#*****************************************************************************
+#******************************************************************************
 #*
-#*             Makefile for miles, using the static library
+#*                     Makefile for the test programs
 #*
-#*****************************************************************************
+#******************************************************************************
 
 
 ## Common part
 ##-------------
-include ./make_miles.mk
+include ../make_miles.mk
 
-## Programs
-##----------
-SRCS = $(wildcard *.f90)
+## Tests
+##-------
+SRCS = $(wildcard test_*.f90)
 OBJS = $(MILMODS:.f90=.o)
 EXEC = $(SRCS:.f90=)
 
 ## Generate all executables
 ##--------------------------
-all : $(EXEC) lib
-
-## Make the library archive
-##--------------------------
-lib : $(MILIBAR)
-$(LIBAR) : $(OBJS)
-	@echo "\nCREATING THE STATIC LIBRARY...\n"
-	ar cr $(MILIBAR) $^
+all : $(EXEC)
 
 ## Linking
 # ##-------
-% : $(OBJS) %.o #$(LIBDIR)$(LIBAR)
+% : $(OBJS) %.o $(LIBDIR)$(LIBAR)
 	$(FC) $(LDFLAGS) -o $@ $^ -l$(LIB) -L$(LIBDIR) -I$(LIBDIR)
 
 ## Individual file compilation
 ##-----------------------------
-%.o : %.f90
+%.o : ../*/%.f90
 	$(FC) $(FFLAGS) -c $? -I$(LIBDIR)
 .PRECIOUS: %.o # keep intermediate object files
 

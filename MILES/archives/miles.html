@@ -1,0 +1,2055 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2020-05-11 Mon 10:02 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>&lrm;</title>
+<meta name="generator" content="Org mode" />
+<meta name="author" content="HU Dangning" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  /* Languages per Org manual */
+  pre.src-asymptote:before { content: 'Asymptote'; }
+  pre.src-awk:before { content: 'Awk'; }
+  pre.src-C:before { content: 'C'; }
+  /* pre.src-C++ doesn't work in CSS */
+  pre.src-clojure:before { content: 'Clojure'; }
+  pre.src-css:before { content: 'CSS'; }
+  pre.src-D:before { content: 'D'; }
+  pre.src-ditaa:before { content: 'ditaa'; }
+  pre.src-dot:before { content: 'Graphviz'; }
+  pre.src-calc:before { content: 'Emacs Calc'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-fortran:before { content: 'Fortran'; }
+  pre.src-gnuplot:before { content: 'gnuplot'; }
+  pre.src-haskell:before { content: 'Haskell'; }
+  pre.src-hledger:before { content: 'hledger'; }
+  pre.src-java:before { content: 'Java'; }
+  pre.src-js:before { content: 'Javascript'; }
+  pre.src-latex:before { content: 'LaTeX'; }
+  pre.src-ledger:before { content: 'Ledger'; }
+  pre.src-lisp:before { content: 'Lisp'; }
+  pre.src-lilypond:before { content: 'Lilypond'; }
+  pre.src-lua:before { content: 'Lua'; }
+  pre.src-matlab:before { content: 'MATLAB'; }
+  pre.src-mscgen:before { content: 'Mscgen'; }
+  pre.src-ocaml:before { content: 'Objective Caml'; }
+  pre.src-octave:before { content: 'Octave'; }
+  pre.src-org:before { content: 'Org mode'; }
+  pre.src-oz:before { content: 'OZ'; }
+  pre.src-plantuml:before { content: 'Plantuml'; }
+  pre.src-processing:before { content: 'Processing.js'; }
+  pre.src-python:before { content: 'Python'; }
+  pre.src-R:before { content: 'R'; }
+  pre.src-ruby:before { content: 'Ruby'; }
+  pre.src-sass:before { content: 'Sass'; }
+  pre.src-scheme:before { content: 'Scheme'; }
+  pre.src-screen:before { content: 'Gnu Screen'; }
+  pre.src-sed:before { content: 'Sed'; }
+  pre.src-sh:before { content: 'shell'; }
+  pre.src-sql:before { content: 'SQL'; }
+  pre.src-sqlite:before { content: 'SQLite'; }
+  /* additional languages in org.el's org-babel-load-languages alist */
+  pre.src-forth:before { content: 'Forth'; }
+  pre.src-io:before { content: 'IO'; }
+  pre.src-J:before { content: 'J'; }
+  pre.src-makefile:before { content: 'Makefile'; }
+  pre.src-maxima:before { content: 'Maxima'; }
+  pre.src-perl:before { content: 'Perl'; }
+  pre.src-picolisp:before { content: 'Pico Lisp'; }
+  pre.src-scala:before { content: 'Scala'; }
+  pre.src-shell:before { content: 'Shell Script'; }
+  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
+  /* additional language identifiers per "defun org-babel-execute"
+       in ob-*.el */
+  pre.src-cpp:before  { content: 'C++'; }
+  pre.src-abc:before  { content: 'ABC'; }
+  pre.src-coq:before  { content: 'Coq'; }
+  pre.src-groovy:before  { content: 'Groovy'; }
+  /* additional language identifiers from org-babel-shell-names in
+     ob-shell.el: ob-shell is the only babel language using a lambda to put
+     the execution function name together. */
+  pre.src-bash:before  { content: 'bash'; }
+  pre.src-csh:before  { content: 'csh'; }
+  pre.src-ash:before  { content: 'ash'; }
+  pre.src-dash:before  { content: 'dash'; }
+  pre.src-ksh:before  { content: 'ksh'; }
+  pre.src-mksh:before  { content: 'mksh'; }
+  pre.src-posh:before  { content: 'posh'; }
+  /* Additional Emacs modes also supported by the LaTeX listings package */
+  pre.src-ada:before { content: 'Ada'; }
+  pre.src-asm:before { content: 'Assembler'; }
+  pre.src-caml:before { content: 'Caml'; }
+  pre.src-delphi:before { content: 'Delphi'; }
+  pre.src-html:before { content: 'HTML'; }
+  pre.src-idl:before { content: 'IDL'; }
+  pre.src-mercury:before { content: 'Mercury'; }
+  pre.src-metapost:before { content: 'MetaPost'; }
+  pre.src-modula-2:before { content: 'Modula-2'; }
+  pre.src-pascal:before { content: 'Pascal'; }
+  pre.src-ps:before { content: 'PostScript'; }
+  pre.src-prolog:before { content: 'Prolog'; }
+  pre.src-simula:before { content: 'Simula'; }
+  pre.src-tcl:before { content: 'tcl'; }
+  pre.src-tex:before { content: 'TeX'; }
+  pre.src-plain-tex:before { content: 'Plain TeX'; }
+  pre.src-verilog:before { content: 'Verilog'; }
+  pre.src-vhdl:before { content: 'VHDL'; }
+  pre.src-xml:before { content: 'XML'; }
+  pre.src-nxml:before { content: 'XML'; }
+  /* add a generic configuration mode; LaTeX export needs an additional
+     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
+  pre.src-conf:before { content: 'Configuration File'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  .org-svg { width: 90%; }
+  /*]]>*/-->
+</style>
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2019 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#org04a760e">1. Make the Qabs Structure Once and For All</a>
+<ul>
+<li><a href="#orgf83baba">1.1. FUNCTION <code>make_Qabs</code>, waveIN, TYPE=type</a></li>
+</ul>
+</li>
+<li><a href="#org4dca8dc">2. Analytical Functions of the Individual Features</a>
+<ul>
+<li><a href="#orgdca11be">2.1. 1) N BB</a></li>
+<li><a href="#org7b978f3">2.2. 2) Gauss profile</a></li>
+<li><a href="#org0ffd238">2.3. 3) Asymmetric lorentz profile</a></li>
+</ul>
+</li>
+<li><a href="#org82f561a">3. Automatize the degradation of the spectral resolution</a></li>
+<li><a href="#org4545cbf">4. Create the parameter structure</a></li>
+<li><a href="#org2f70901">5. Independent Fit of the lines</a></li>
+<li><a href="#org493b7b4">6. Total model</a></li>
+<li><a href="#orgd77fbdc">7. Main program</a>
+<ul>
+<li><a href="#org6d140d2">7.1. Organize the inputs</a></li>
+<li><a href="#org53e7f18">7.2. Spectral Feature Properties and Templates</a>
+<ul>
+<li><a href="#orgda02a1b">7.2.1. Model wavelength grid</a></li>
+<li><a href="#org7debdf9">7.2.2. 1) Grain continuum</a></li>
+<li><a href="#orgb2f6ffb">7.2.3. 2) Lines</a></li>
+<li><a href="#orgc96e852">7.2.4. 3) Bands</a></li>
+<li><a href="#org93379e1">7.2.5. 4) Stellar ISRF</a></li>
+<li><a href="#org656b5a8">7.2.6. 5) Dust and ice extinction</a></li>
+</ul>
+</li>
+<li><a href="#org26be6e2">7.3. Initital Guesses and Parameter Variations</a>
+<ul>
+<li><a href="#org7f6b196">7.3.1. Parameters</a></li>
+<li><a href="#org2369724">7.3.2. BIG LOOP</a></li>
+</ul>
+</li>
+<li><a href="#orga7ff6dc">7.4. Preliminary Line Fit</a></li>
+<li><a href="#orgd4448c5">7.5. Complete Fit</a>
+<ul>
+<li><a href="#org3d2ffc7">7.5.1. Initialisation</a></li>
+<li><a href="#orgd8ce7fe">7.5.2. Fit of the SED</a></li>
+<li><a href="#orgf263028">7.5.3. Outputs</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<p>
+;;*****************************************************************************
+;;*
+;;*                                MILES
+;;*                  Mid-Infrared Line Extraction Software
+;:*
+;;*****************************************************************************
+</p>
+
+
+<div id="outline-container-org04a760e" class="outline-2">
+<h2 id="org04a760e"><span class="section-number-2">1</span> Make the Qabs Structure Once and For All</h2>
+<div class="outline-text-2" id="text-1">
+</div>
+<div id="outline-container-orgf83baba" class="outline-3">
+<h3 id="orgf83baba"><span class="section-number-3">1.1</span> FUNCTION <code>make_Qabs</code>, waveIN, TYPE=type</h3>
+<div class="outline-text-3" id="text-1-1">
+<div class="org-src-container">
+<pre class="src src-idl"><span style="color: #afd8af;">FUNCTION</span> <span style="color: #ff69b4;">make_Qabs</span>, <span style="color: #ff69b4;">waveIN</span>, <span style="color: #ff69b4;">TYPE</span>=type
+
+  ;; Structure <span style="color: #afd8af;">initilisation</span>
+  <span style="color: #ff69b4;">Nw</span> = N_ELEMENTS(waveIN)
+  nu = !MKS.clight/!MKS.micron/waveIN
+  Nbb = N_ELEMENTS(type)
+  rad = 0.01D ;; <span style="color: #afd8af;">microns</span>
+  <span style="color: #ff69b4;">units</span> = <span style="color: #61CE3C;">"w, rad [micron]; nu [Hz]; Qova [m-1]; rho [kg/m3]"</span>
+  Qabs_str = REPLICATE({Nw:Nw, w:waveIN, rad:rad, type:type, $
+                        Qova:DBLARR(Nw), rho:0.D, units:units},Nbb)
+
+  ;; Optical properties
+  <span style="color: #afd8af;">FOR</span> <span style="color: #ff69b4;">i</span>=0,<span style="color: #ff69b4;">Nbb</span>-1 DO BEGIN
+    CASE type[i] OF
+      <span style="color: #61CE3C;">"carbon_BE"</span>: typenorm = <span style="color: #61CE3C;">"crb"</span>
+      <span style="color: #61CE3C;">"amorphous carbon"</span>: typenorm = <span style="color: #61CE3C;">"crb"</span>
+      <span style="color: #61CE3C;">"silicate"</span>: typenorm = <span style="color: #61CE3C;">"sil"</span>
+      <span style="color: #61CE3C;">"astronomical silicate"</span>: typenorm = <span style="color: #61CE3C;">"sil"</span>
+      <span style="color: #61CE3C;">"graphite"</span>: typenorm = <span style="color: #61CE3C;">"gra"</span>
+      <span style="color: #61CE3C;">"alox_compact"</span>: typenorm = <span style="color: #61CE3C;">"al2o3_compact"</span>
+      <span style="color: #61CE3C;">"compact corundum"</span>: typenorm = <span style="color: #61CE3C;">"al2o3_compact"</span>
+      <span style="color: #61CE3C;">"alox_porous"</span>: typenorm = <span style="color: #61CE3C;">"al2o3_porous"</span>
+      <span style="color: #61CE3C;">"porous corundum"</span>: typenorm = <span style="color: #61CE3C;">"al2o3_porous"</span>
+      <span style="color: #61CE3C;">"alox_compact_cde"</span>: typenorm = <span style="color: #61CE3C;">"al2o3_compact_cde"</span>
+      <span style="color: #61CE3C;">"compact corundum (CDE)"</span>: typenorm = <span style="color: #61CE3C;">"al2o3_compact_cde"</span>
+      <span style="color: #61CE3C;">"alox_koike"</span>: typenorm = <span style="color: #61CE3C;">"al2o3_koike"</span>
+      <span style="color: #61CE3C;">"Koike's corundum"</span>: typenorm = <span style="color: #61CE3C;">"al2o3_koike"</span>
+      <span style="color: #61CE3C;">"alox_koike_cde"</span>: typenorm = <span style="color: #61CE3C;">"al2o3_koike_cde"</span>
+      <span style="color: #61CE3C;">"Koike's corundum (CDE)"</span>: typenorm = <span style="color: #61CE3C;">"al2o3_koike_cde"</span>
+      <span style="color: #61CE3C;">"normal silicates"</span>: typenorm = <span style="color: #61CE3C;">"sil_norm"</span>
+      <span style="color: #61CE3C;">"oxygen deficient silicates"</span>: typenorm = <span style="color: #61CE3C;">"sil_Odef"</span>
+      ELSE: typenorm = type[i]
+    ENDCASE
+    CASE typenorm OF
+      <span style="color: #61CE3C;">"crb"</span>: BEGIN
+        RESTORE, !IDLFRED+<span style="color: #61CE3C;">"Dust/Data/MIEwisc_carbon_BE.idl"</span>
+        Qabs = REFORM(Qabs_dust[CLOSEST(asize,rad),*])
+        Qabs_str[i].Qova = FINTERPOL(Qabs,wave,waveIN,/POW)/rad/!MKS.micron
+        Qabs_str[i].rho = 2.24D3
+      END
+      <span style="color: #61CE3C;">"sil"</span>: BEGIN
+        RESTORE, !IDLFRED+<span style="color: #61CE3C;">"Dust/Data/MIEwisc_silicate.idl"</span>
+        Qabs = REFORM(Qabs_sil[CLOSEST(asize,rad),*])
+        Qabs_str[i].Qova = FINTERPOL(Qabs,wave,waveIN,/POW)/rad/!MKS.micron
+        Qabs_str[i].rho = 3.5D3
+      END
+      <span style="color: #61CE3C;">"gra"</span>: BEGIN
+        RESTORE, !IDLFRED+<span style="color: #61CE3C;">"Dust/Data/MIEwisc_graphite.idl"</span>
+        Qabs = REFORM(Qabs_grf[CLOSEST(asize,rad),*])
+        Qabs_str[i].Qova = FINTERPOL(Qabs,wave,waveIN,/POW)/rad/!MKS.micron
+        Qabs_str[i].rho = 2.24D3
+      END
+      <span style="color: #61CE3C;">"al2o3_compact"</span>: BEGIN
+        RESTORE, !IDLFRED+<span style="color: #61CE3C;">"Dust/Data/Qabs_Al2O3_compact.xdr"</span>
+        Qabs = REFORM(Qabs_Al2O3[CLOSEST(asize,rad),*])
+        Qabs_str[i].Qova = FINTERPOL(Qabs,wave,waveIN,/POW)/rad/!MKS.micron
+        Qabs_str[i].rho = 3.5D3
+      END
+      <span style="color: #61CE3C;">"al2o3_porous"</span>: BEGIN
+        RESTORE, !IDLFRED+<span style="color: #61CE3C;">"Dust/Data/Qabs_Al2O3_porous.xdr"</span>
+        Qabs = REFORM(Qabs_Al2O3[CLOSEST(asize,rad),*])
+        Qabs_str[i].Qova = FINTERPOL(Qabs,wave,waveIN,/POW)/rad/!MKS.micron
+        Qabs_str[i].rho = 3.5D3
+      END
+      <span style="color: #61CE3C;">"al2o3_compact_cde"</span>: BEGIN
+        RESTORE, !IDLFRED+<span style="color: #61CE3C;">"Dust/Data/Qabs_Al2O3_compact_cde.xdr"</span>
+        Qabs = REFORM(Qabs_Al2O3[CLOSEST(asize,rad),*])
+        Qabs_str[i].Qova = FINTERPOL(Qabs,wave,waveIN,/POW)/rad/!MKS.micron
+        Qabs_str[i].rho = 3.5D3
+      END
+      <span style="color: #61CE3C;">"al2o3_koike_cde"</span>: BEGIN
+        RESTORE, !IDLFRED+<span style="color: #61CE3C;">"Dust/Data/Qabs_Al2O3_koike_cde.xdr"</span>
+        Qabs = REFORM(Qabs_Al2O3[CLOSEST(asize,rad),*])
+        Qabs_str[i].Qova = FINTERPOL(Qabs,wave,waveIN,/POW)/rad/!MKS.micron
+        Qabs_str[i].rho = 3.5D3
+      END
+      <span style="color: #61CE3C;">"al2o3_koike"</span>: BEGIN
+        RESTORE, !IDLFRED+<span style="color: #61CE3C;">"Dust/Data/Qabs_Al2O3_koike.xdr"</span>
+        Qabs = REFORM(Qabs_Al2O3[CLOSEST(asize,rad),*])
+        Qabs_str[i].Qova = FINTERPOL(Qabs,wave,waveIN,/POW)/rad/!MKS.micron
+        Qabs_str[i].rho = 3.5D3
+      END
+      <span style="color: #61CE3C;">"sil_norm"</span>: BEGIN
+        RESTORE, !IDLFRED+<span style="color: #61CE3C;">"Dust/Data/Qabs_silicate_normal.xdr"</span>
+        Qabs = REFORM(Qabs_sil[CLOSEST(asize,rad),*])
+        Qabs_str[i].Qova = FINTERPOL(Qabs,wave,waveIN,/POW)/rad/!MKS.micron
+        Qabs_str[i].rho = 3.5D3
+      END
+      <span style="color: #61CE3C;">"sil_Odef"</span>: BEGIN
+        RESTORE, !IDLFRED+<span style="color: #61CE3C;">"Dust/Data/Qabs_silicate_oxygen_deficient.xdr"</span>
+        Qabs = REFORM(Qabs_sil[CLOSEST(asize,rad),*])
+        Qabs_str[i].Qova = FINTERPOL(Qabs,wave,waveIN,/POW)/rad/!MKS.micron
+        Qabs_str[i].rho = 3.5D3
+      END
+    ENDCASE
+  ENDFOR
+
+  RETURN, <span style="color: #afd8af;">Qabs_str</span>
+
+<span style="color: #ff69b4;">END</span>
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-org4dca8dc" class="outline-2">
+<h2 id="org4dca8dc"><span class="section-number-2">2</span> Analytical Functions of the Individual Features</h2>
+<div class="outline-text-2" id="text-2">
+</div>
+<div id="outline-container-orgdca11be" class="outline-3">
+<h3 id="orgdca11be"><span class="section-number-3">2.1</span> 1) N BB</h3>
+<div class="outline-text-3" id="text-2-1">
+<div class="org-src-container">
+<pre class="src src-idl"><span style="color: #afd8af;">FUNCTION</span> <span style="color: #ff69b4;">modifBB</span>, <span style="color: #ff69b4;">Q_str</span>, <span style="color: #ff69b4;">TEMPBB</span>=temp
+
+  ;; Fnu [MJy/sr]
+  ;; <span style="color: #4c83ff;">in</span> 1 Msun/dist^2 [Msun/kpc2]
+  Fnu = !MKS.Msun/!MKS.kpc^2 * 3.D*!PI/4./Q_str.rho * Q_str.Qova $
+      * ABSOLUTEBB(Q_str.w,temp,/WAVE,/BNU,/MKS) / !MKS.Jy
+
+  RETURN, <span style="color: #afd8af;">Fnu</span>
+
+<span style="color: #ff69b4;">END</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org7b978f3" class="outline-3">
+<h3 id="org7b978f3"><span class="section-number-3">2.2</span> 2) Gauss profile</h3>
+<div class="outline-text-3" id="text-2-2">
+<div class="org-src-container">
+<pre class="src src-idl"><span style="color: #afd8af;">FUNCTION</span> <span style="color: #ff69b4;">gaussLine</span>, <span style="color: #ff69b4;">waveIN</span>, <span style="color: #ff69b4;">wave_ref</span>, <span style="color: #ff69b4;">sigma</span>
+
+  nuIN = !MKS.clight/!MKS.micron / waveIN
+
+  nucen = !MKS.clight/!MKS.micron / wave_ref
+  nusig = ( 1./(wave_ref-sigma) - 1./(wave_ref+sigma) ) $
+          * !MKS.clight/!MKS.micron / 2.D
+
+  Fnu0_norm = EXP( - (nuIN-nucen)^2 / (2.D*nusig^2) ) / SQRT(2.*!PI*nusig^2)
+
+  RETURN, <span style="color: #ff69b4;">Fnu0_norm</span>
+
+END
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org0ffd238" class="outline-3">
+<h3 id="org0ffd238"><span class="section-number-3">2.3</span> 3) Asymmetric lorentz profile</h3>
+<div class="outline-text-3" id="text-2-3">
+<div class="org-src-container">
+<pre class="src src-idl"><span style="color: #afd8af;">FUNCTION</span> <span style="color: #ff69b4;">lorentzBand</span>, <span style="color: #ff69b4;">waveIN</span>, <span style="color: #ff69b4;">wave_ref</span>, <span style="color: #ff69b4;">sigmaS</span>, <span style="color: #ff1493;">sigmaL</span>
+
+  IF (N_PARAMS() EQ 3) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">sigmaL</span> = sigmaS
+
+  Nw = N_ELEMENTS(waveIN)
+  nuIN = !MKS.clight/!MKS.micron / waveIN
+
+  nucen = !MKS.clight/!MKS.micron / wave_ref
+  nusigS = ( 1./(wave_ref-sigmaS) - 1./wave_ref ) * !MKS.clight/!MKS.micron
+  nusigL = ( 1./wave_ref - 1./(wave_ref+sigmaL) ) * !MKS.clight/!MKS.micron
+
+  whS = WHERE(waveIN <span style="color: #afd8af;">LE</span> <span style="color: #ff69b4;">wave_ref</span>, NS, COMP=whL, NCOMP=NL)
+  Fnu0_norm = DBLARR(Nw)
+
+  AS = 2.D/(1.+nusigL/nusigS)
+  AL = AS*nusigL/nusigS
+  IF (<span style="color: #afd8af;">NS</span> <span style="color: #ff69b4;">GT</span> 0) THEN $
+    Fnu0_norm[whS] = AS * nusigS/!PI / ( (nuIN[whS]-nucen)^2 + nusigS^2 )
+  IF (<span style="color: #afd8af;">NL</span> <span style="color: #ff69b4;">GT</span> 0) THEN $
+    Fnu0_norm[whL] = AL * nusigL/!PI / ( (nuIN[whL]-nucen)^2 + nusigL^2 )
+
+  RETURN, <span style="color: #ff69b4;">Fnu0_norm</span>
+
+END
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-org82f561a" class="outline-2">
+<h2 id="org82f561a"><span class="section-number-2">3</span> Automatize the degradation of the spectral resolution</h2>
+<div class="outline-text-2" id="text-3">
+<div class="org-src-container">
+<pre class="src src-idl"><span style="color: #afd8af;">FUNCTION</span> <span style="color: #ff69b4;">degradeRes</span>, <span style="color: #ff69b4;">wc</span>, <span style="color: #ff69b4;">dw</span>, <span style="color: #ff69b4;">INSTRUMENT</span>=instr
+
+  ;; Line width <span style="color: #afd8af;">fixed</span> <span style="color: #ff69b4;">by</span> the instrumental resolution
+  dw_w_CAM = 0.010373835D
+  dw_w_SL = 0.0055722841D
+  dw_w_SH = 0.00075127093D
+  dw_w_LL = 0.0057517091D
+  dw_w_LH = 0.00070906159D
+  dw_w_SWS = 0.0011044189D
+  dw_w_SWSfine = 0.00036671469D
+  dw_w_AKARI_Ns = 0.00356688D
+
+  ;; Fix the linewidth
+  CASE <span style="color: #afd8af;">instr</span> <span style="color: #ff69b4;">OF</span>
+    <span style="color: #61CE3C;">"SH"</span>: sigma = dw_w_SH * wc
+    <span style="color: #61CE3C;">"LH"</span>: sigma = dw_w_LH * wc
+    <span style="color: #61CE3C;">"SL"</span>: sigma = dw_w_SL * wc
+    <span style="color: #61CE3C;">"LL"</span>: sigma = dw_w_LL * wc
+    <span style="color: #61CE3C;">"SL-SH"</span>: BEGIN
+      IF (<span style="color: #afd8af;">wc</span> <span style="color: #ff69b4;">LT</span> 10.) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">sigma</span> = dw_w_SL * wc
+      IF (<span style="color: #afd8af;">wc</span> <span style="color: #ff69b4;">GE</span> 10.) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">sigma</span> = dw_w_SH * wc
+    END
+    <span style="color: #61CE3C;">"SL-LL"</span>: BEGIN
+      IF (<span style="color: #afd8af;">wc</span> <span style="color: #ff69b4;">LT</span> 12.) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">sigma</span> = dw_w_SL * wc
+      IF (<span style="color: #afd8af;">wc</span> <span style="color: #ff69b4;">GE</span> 12.) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">sigma</span> = dw_w_LL * wc
+    END
+    <span style="color: #61CE3C;">"Ns-SL"</span>: BEGIN
+      IF (<span style="color: #afd8af;">wc</span> <span style="color: #ff69b4;">LT</span> 5.) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">sigma</span> = dw_w_AKARI_Ns * wc
+      IF (<span style="color: #afd8af;">wc</span> <span style="color: #ff69b4;">GE</span> 5.) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">sigma</span> = dw_w_SL * wc
+    END
+    <span style="color: #61CE3C;">"CAM"</span>: sigma = dw_w_CAM * wc
+    <span style="color: #61CE3C;">"SWS"</span>: sigma = dw_w_SWS * wc
+    <span style="color: #61CE3C;">"SWSfine"</span>: sigma = dw_w_SWSfine * wc
+    ELSE: sigma = dw
+  ENDCASE
+
+  RETURN, <span style="color: #ff69b4;">sigma</span>
+
+END
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org4545cbf" class="outline-2">
+<h2 id="org4545cbf"><span class="section-number-2">4</span> Create the parameter structure</h2>
+<div class="outline-text-2" id="text-4">
+<div class="org-src-container">
+<pre class="src src-idl"><span style="color: #afd8af;">FUNCTION</span> <span style="color: #ff69b4;">parstruct</span>, <span style="color: #ff69b4;">parm</span>, <span style="color: #ff69b4;">Nbb</span>=Nbb, <span style="color: #ff69b4;">Nline</span>=Nline, <span style="color: #ff69b4;">Nband</span>=Nband, <span style="color: #ff69b4;">NAv</span>=NAv,<span style="color: #ff69b4;">Nstar</span>=Nstar
+
+  par = { massBB: DBLARR(MAXI(Nbb,1)), $
+          tempBB: DBLARR(MAXI(Nbb,1)), $
+          Iline: DBLARR(MAXI(Nline,1)), $
+          Cline: DBLARR(MAXI(Nline,1)), $
+          Wline: DBLARR(MAXI(Nline,1)), $
+          Iband: DBLARR(MAXI(Nband,1)), $
+          Cband: DBLARR(MAXI(Nband,1)), $
+          WSband: DBLARR(MAXI(Nband,1)), $
+          WLband: DBLARR(MAXI(Nband,1)), $
+          Av: DBLARR(MAXI(NAv,1)), $
+          massStar: 0.D }
+
+  ;; 1) <span style="color: #afd8af;">Continuum</span>
+  <span style="color: #ff69b4;">i0</span> = 0
+  FOR i=0,<span style="color: #ff69b4;">Nbb</span>-1 DO BEGIN
+    par.massBB[i] = parm[i0+2*i]
+    par.tempBB[i] = parm[i0+2*i+1]
+  ENDFOR
+  ;; 2) <span style="color: #afd8af;">Lines</span>
+  <span style="color: #ff69b4;">i0</span> += 2*Nbb
+  FOR i=0,<span style="color: #ff69b4;">Nline</span>-1 DO BEGIN
+    par.Iline[i] = parm[i0+3*i]
+    par.Cline[i] = parm[i0+3*i+1]
+    par.Wline[i] = parm[i0+3*i+2]
+  ENDFOR
+  ;; 3) <span style="color: #afd8af;">Bands</span>
+  <span style="color: #ff69b4;">i0</span> += 3*Nline
+  FOR i=0,<span style="color: #ff69b4;">Nband</span>-1 DO BEGIN
+    par.Iband[i] = parm[i0+4*i]
+    par.Cband[i] = parm[i0+4*i+1]
+    par.WSband[i] = parm[i0+4*i+2]
+    par.WLband[i] = parm[i0+4*i+3]
+  ENDFOR
+  ;; 4) <span style="color: #afd8af;">Av</span>
+  <span style="color: #ff69b4;">i0</span> += 4*Nband
+  FOR i=0,<span style="color: #ff69b4;">NAv</span>-1 DO par.Av[i] = parm[i0+i]
+  ;; 5) <span style="color: #afd8af;">Star</span>
+  <span style="color: #ff69b4;">i0</span> += NAv
+  IF (<span style="color: #afd8af;">Nstar</span> <span style="color: #ff69b4;">GT</span> 0) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">par</span>.massStar = parm[i0]
+
+  RETURN, <span style="color: #ff69b4;">par</span>
+
+END
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org2f70901" class="outline-2">
+<h2 id="org2f70901"><span class="section-number-2">5</span> Independent Fit of the lines</h2>
+<div class="outline-text-2" id="text-5">
+<div class="org-src-container">
+<pre class="src src-idl"><span style="color: #afd8af;">PRO</span> <span style="color: #ff69b4;">linealone</span>, <span style="color: #ff69b4;">wave</span>, <span style="color: #ff69b4;">parm</span>, <span style="color: #ff69b4;">FnuOUT</span>, <span style="color: #ff69b4;">_EXTRA</span>=extra
+
+  ;; <span style="color: #afd8af;">Line</span>
+  <span style="color: #ff69b4;">Iline</span> = parm[0]
+  Cline = parm[1]
+  Wline = parm[2]
+  Fnu_line = Iline*GAUSSLINE(wave,Cline,Wline)
+
+  ;; <span style="color: #afd8af;">Continuum</span>
+  <span style="color: #ff69b4;">a</span> = parm[3]
+  b = parm[4]
+  c = parm[5]
+  x = (wave - extra.center)/extra.center
+  Fnu_cont = a*(1+b*x+c*x^2)
+
+  ;; <span style="color: #afd8af;">Total</span>
+  <span style="color: #ff69b4;">FnuOUT</span> = Fnu_cont + Fnu_line
+
+  ;; <span style="color: #afd8af;">Display</span>
+  <span style="color: #ff1493;">IF</span> (extra.noplot LT 1) THEN <span style="color: #afd8af;">BEGIN</span>
+    <span style="color: #ff69b4;">wh</span> = WHERE(extra.FnuObs GT 0.)
+    ranFnu = [MIN(extra.FnuObs[wh])*0.9,1.05*MAX(extra.FnuObs)]
+    PLOTAXIS, <span style="color: #ff69b4;">MI</span>=extra.milli, <span style="color: #ff69b4;">XRANGE</span>=extra.ranw, <span style="color: #ff69b4;">YRANGE</span>=ranFnu, $
+              YLOG=extra.logplot, TITLE=<span style="color: #61CE3C;">"!6"</span>+extra.title, $
+              XTITLE=!PL.wmic, YTITLE=!PL.Fnu+<span style="color: #61CE3C;">" [MJy/sr]"</span>
+    OPLOT, wave, Fnu_cont, COLOR=!RED
+    OPLOT, wave, Fnu_cont+Fnu_line, COLOR=!BLUE
+    OPLOT, wave, FnuOUT, LINE=2, COLOR=!DARKGREY
+    WONDERRPLOT, extra.wavObs, extra.FnuObs, extra.wavObs*0., extra.dFnuObs, $
+                 PSYM=<span style="color: #61CE3C;">"circ"</span>, SYMSIZE=0.3*!P.SYMSIZE, BARTHICK=0.3*!P.THICK
+  ENDIF
+
+END
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org493b7b4" class="outline-2">
+<h2 id="org493b7b4"><span class="section-number-2">6</span> Total model</h2>
+<div class="outline-text-2" id="text-6">
+<div class="org-src-container">
+<pre class="src src-idl"><span style="color: #afd8af;">PRO</span> <span style="color: #ff69b4;">specmodel</span>, <span style="color: #ff69b4;">wave</span>, <span style="color: #ff69b4;">parm</span>, <span style="color: #ff69b4;">FnuOUT</span>, <span style="color: #ff69b4;">FNU_BB</span>=Fnu_cont_tab, <span style="color: #ff69b4;">PABS</span>=Pabs, $
+               FNU_BAND=Fnu_band_tab, FNU_LINE=Fnu_line, $
+               FNU_STAR=Fnu_star, _EXTRA=extra
+
+  ;; <span style="color: #afd8af;">Parameters</span>
+  <span style="color: #ff69b4;">par</span> = PARSTRUCT(parm,Nbb=extra.Nbb,Nline=extra.Nline,Nband=extra.Nband, $ 
+                       NAv=extra.NAv,Nstar=extra.Nstar)
+  w = extra.w
+  FnuOUT = DBLARR(extra.Nw)
+
+
+  ;; <span style="color: #afd8af;">Screen</span> <span style="color: #ff69b4;">extinction</span>
+  ;;------------------
+  IF (extra.NAv GT 0) THEN <span style="color: #afd8af;">BEGIN</span> 
+    <span style="color: #ff69b4;">tau_tab</span> = DBLARR(extra.NAv,extra.Nw)
+    <span style="color: #afd8af;">FOR</span> <span style="color: #ff69b4;">i</span>=0,<span style="color: #ff69b4;">extra</span>.NAv-1 DO BEGIN
+      Av = par.Av[i]
+      tau_tab[i,*] = Av/1.086*extra.extinct[i].tau0
+    ENDFOR
+    Pabs = EXP(-TOTAL(tau_tab,1))
+  ENDIF <span style="color: #afd8af;">ELSE</span> <span style="color: #ff69b4;">Pabs</span> = REPLICATE(1.D,extra.Nw)
+
+
+  ;; Continuum
+  ;;----------
+  IF (extra.Nbb GT 0) THEN <span style="color: #afd8af;">BEGIN</span>
+    <span style="color: #ff69b4;">Fnu_cont_tab</span> = DBLARR(extra.Nbb,extra.Nw)
+    <span style="color: #afd8af;">FOR</span> <span style="color: #ff69b4;">i</span>=0,<span style="color: #ff69b4;">extra</span>.Nbb-1 DO $
+      Fnu_cont_tab[i,*] =par.massBB[i]*MODIFBB(extra.Qabs[i],TEMP=par.tempBB[i])
+  ENDIF <span style="color: #afd8af;">ELSE</span> <span style="color: #ff69b4;">Fnu_cont_tab</span> = DBLARR(1,extra.Nw)
+  Fnu_cont = TOTAL(Fnu_cont_tab,1)
+
+
+  ;; Lines
+  ;;------
+  IF (extra.Nline GT 0) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">BEGIN</span>
+
+    ;; Line <span style="color: #afd8af;">profile</span>
+    <span style="color: #ff69b4;">Fnu_line</span> = DBLARR(extra.Nw)
+    IF (extra.Nline2 GT 0) <span style="color: #afd8af;">THEN</span> <span style="color: #afd8af;">BEGIN</span>
+      <span style="color: #ff69b4;">Fnu_line_tab</span> = DBLARR(extra.Nline,extra.Nw)
+      <span style="color: #afd8af;">FOR</span> <span style="color: #ff69b4;">i</span>=0,<span style="color: #ff69b4;">extra</span>.Nlinefree-1 DO $
+        Fnu_line_tab[extra.whlinefree[i],*] = par.Iline[extra.whlinefree[i]] $
+          * GAUSSLINE(w,par.Cline[extra.whlinefree[i]], $
+                      par.Wline[extra.whlinefree[i]])
+      <span style="color: #afd8af;">FOR</span> <span style="color: #ff69b4;">i</span>=0,<span style="color: #ff69b4;">extra</span>.Nlinefix-1 DO $
+        Fnu_line_tab[extra.whlinefix[i],*] = par.Iline[extra.whlinefix[i]] $
+          * extra.lines[extra.whlinefix[i]].Fnu0
+
+      Fnu_line += TOTAL(Fnu_line_tab[extra.whline2,*],1)*Pabs
+    ENDIF
+
+    ;; Lines which were computed first are <span style="color: #afd8af;">not</span> <span style="color: #ff1493;">absorbed</span>!
+    IF (extra.Nline1 GT 0) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">Fnu_line</span> += extra.Fnu0_line
+
+  ENDIF ELSE Fnu_line = DBLARR(extra.Nw)
+
+
+  ;; Bands
+  ;;------
+  IF (extra.Nband GT 0) <span style="color: #afd8af;">THEN</span> <span style="color: #afd8af;">BEGIN</span>
+    <span style="color: #ff69b4;">Fnu_band_tab</span> = DBLARR(extra.Nband,extra.Nw)
+
+    ;; Bands which are free to vary
+    <span style="color: #afd8af;">FOR</span> <span style="color: #ff69b4;">i</span>=0,<span style="color: #ff69b4;">extra</span>.Nbandfree-1 DO $
+      Fnu_band_tab[extra.whbandfree[i],*] = par.Iband[extra.whbandfree[i]] $
+        * LORENTZBAND(w,par.Cband[extra.whbandfree[i]], $
+                        par.WSband[extra.whbandfree[i]], $
+                        par.WLband[extra.whbandfree[i]])
+
+    ;; Fixed profiles
+    <span style="color: #afd8af;">FOR</span> <span style="color: #ff69b4;">i</span>=0,<span style="color: #ff69b4;">extra</span>.Nbandfix-1 DO $
+      Fnu_band_tab[extra.whbandfix[i],*] = par.Iband[extra.whbandfix[i]] $
+        * extra.bands[extra.whbandfix[i]].Fnu0
+
+  ENDIF ELSE Fnu_band_tab = DBLARR(1,extra.Nw)
+  Fnu_band = TOTAL(Fnu_band_tab,1)
+
+
+  ;; <span style="color: #afd8af;">Stellar</span> <span style="color: #ff69b4;">continuum</span>
+  ;;------------------
+  IF (extra.Nstar GT 0) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">Fnu_star</span> = par.massStar * extra.Fnu_star0 $
+                        ELSE Fnu_star = DBLARR(extra.Nw)
+
+
+  ;; <span style="color: #afd8af;">Final</span> <span style="color: #ff69b4;">fit</span> &amp; display
+  ;;--------------------
+  Fnu_tot = (Fnu_cont+Fnu_band+Fnu_star)*Pabs + Fnu_line
+  IF (extra.hires NE 1) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">FnuOUT</span> = Fnu_tot $
+                        ELSE FnuOUT = FINTERPOL(Fnu_tot,w,extra.wavobs)
+
+  IF (extra.noplot LE 1) <span style="color: #afd8af;">THEN</span> <span style="color: #afd8af;">BEGIN</span>
+
+    <span style="color: #ff69b4;">PLOTAXIS</span>, <span style="color: #ff69b4;">OO</span>=extra.logplot, <span style="color: #ff69b4;">MI</span>=extra.milli, $
+              XRANGE=extra.ranw, YRANGE=extra.ranFnu, $
+              TITLE=<span style="color: #61CE3C;">"!6"</span>+extra.title, $
+              XTITLE=!PL.wmic, YTITLE=!PL.Fnu+<span style="color: #61CE3C;">" [MJy/sr]"</span>
+
+      Nw_thresh = 800
+      IF (extra.Nw LT Nw_thresh) <span style="color: #afd8af;">THEN</span> <span style="color: #afd8af;">BEGIN</span>
+        <span style="color: #ff69b4;">OPLOT</span>, <span style="color: #ff69b4;">extra</span>.wavOBS, <span style="color: #ff69b4;">extra</span>.FnuOBS
+        WONDERRPLOT, <span style="color: #ff69b4;">extra</span>.wavOBS, <span style="color: #ff69b4;">extra</span>.FnuOBS, $
+                     extra.wavOBS*0., extra.dFnuOBS, $
+                     PSYM=<span style="color: #61CE3C;">"circ"</span>, SYMSIZE=0.1*!P.SYMSIZE, $
+                     BARTHICK=0.1*!P.THICK, COLOR=!DARKGREY
+      ENDIF ELSE BEGIN
+        CURVEFILL, extra.wavOBS, extra.FnuOBS-extra.dFnuOBS, $
+                   extra.wavOBS, extra.FnuOBS+extra.dFnuOBS, $
+                   COLOR=!SHADEGREY, XRANGE=MINMAX(extra.wavOBS)
+      <span style="color: #afd8af;">ENDELSE</span>
+
+      <span style="color: #ff69b4;">OPLOT</span>, <span style="color: #ff69b4;">w</span>, <span style="color: #ff69b4;">Fnu_star</span>*Pabs, <span style="color: #ff69b4;">COLOR</span>=!YELLOW
+      FOR i=0,<span style="color: #ff69b4;">extra</span>.Nbb-1 DO BEGIN
+        CASE extra.cont[i].type OF
+          <span style="color: #61CE3C;">"sil"</span>: col = !ROSE
+          <span style="color: #61CE3C;">"sil_norm"</span>: col = !ROSE
+          <span style="color: #61CE3C;">"sil_Odef"</span>: col = !ROSE
+          <span style="color: #61CE3C;">"al2o3"</span>: col = !RED
+          <span style="color: #61CE3C;">"al2o3_compact"</span>: col = !RED
+          <span style="color: #61CE3C;">"al2o3_porous"</span>: col = !RED
+          <span style="color: #61CE3C;">"al2o3_compact_cde"</span>: col = !RED
+          <span style="color: #61CE3C;">"al2o3_koike_cde"</span>: col = !RED
+          <span style="color: #61CE3C;">"al2o3_koike"</span>: col = !RED
+          ELSE: col = !ORANGE
+        ENDCASE
+        OPLOT, <span style="color: #ff69b4;">w</span>, <span style="color: #ff1493;">REFORM</span>(Fnu_cont_tab[i,*])*Pabs, COLOR=col
+      ENDFOR
+
+      FOR i=0,extra.Nline-1 DO $
+        OPLOT, w, (Fnu_star+Fnu_cont)*Pabs+Fnu_line, COLOR=!FORREST
+
+      FOR i=0,extra.Nband-1 DO $
+        OPLOT, w, (Fnu_star+Fnu_cont+REFORM(Fnu_band_tab[i,*]))*Pabs, $
+               COLOR=!BLUE
+
+      IF (extra.Nw LT Nw_thresh) THEN $
+        OPLOT, extra.wavOBS, extra.FnuOBS, PSYM=SYMB(<span style="color: #61CE3C;">"circ"</span>), $
+               SYMSIZE=0.1*!P.SYMSIZE $
+        ELSE OPLOT, extra.wavOBS, extra.FnuOBS, LINE=2
+      OPLOT, w, Fnu_tot, COLOR=!LIGHTGREY, THICK=1.3*!P.THICK
+
+    PLOTAXIS, OO=extra.logplot, MI=extra.milli, $
+              XRANGE=extra.ranw, YRANGE=extra.ranFnu, $
+              TITLE=<span style="color: #61CE3C;">"!6"</span>+extra.title, $
+              XTITLE=!PL.wmic, YTITLE=!PL.Fnu+<span style="color: #61CE3C;">" [MJy/sr]"</span>, $
+              /NOERASE
+
+ ENDIF
+
+
+END
+</pre>
+</div>
+
+
+<p>
+;;=========================================================================
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgd77fbdc" class="outline-2">
+<h2 id="orgd77fbdc"><span class="section-number-2">7</span> Main program</h2>
+<div class="outline-text-2" id="text-7">
+<div class="org-src-container">
+<pre class="src src-idl"><span style="color: #afd8af;">PRO</span> <span style="color: #ff69b4;">MILES</span>, <span style="color: #ff69b4;">wavobsIN</span>, <span style="color: #ff69b4;">FnuobsIN</span>, <span style="color: #ff69b4;">dFnuobsIN</span>, <span style="color: #ff69b4;">WEIGHTS</span>=weightsIN, <span style="color: #ff69b4;">MASK</span>=maskIN, $
+    INSTRUMENT=instrumentIN, $
+    ;; Printings and <span style="color: #afd8af;">savings</span>
+    <span style="color: #ff69b4;">COPY</span>=filepsIN, <span style="color: #ff69b4;">PDF</span>=pdfIN, <span style="color: #ff69b4;">EPS</span>=epsIN, <span style="color: #ff69b4;">SAVE</span>=filexdrIN, <span style="color: #ff69b4;">MODELSAVE</span>=modsaveIN, $
+    NOPLOT=noplotIN, LOGPLOT=logplotIN, QUIET=quietIN, MILLI=milliIN, $
+    TITLE=titleIN, RANGEWAVELENGTH=rangewaveIN, RANGEFLUX=rangefluxIN, $
+    HIGHRESOLUTION=hiresIN, COPLINE=coplineIN, $
+    ;; Tolerance and <span style="color: #afd8af;">iteration</span>
+    <span style="color: #ff69b4;">FTOL</span>=ftolIN, <span style="color: #ff69b4;">NITER</span>=NiterIN, <span style="color: #ff69b4;">RESTART</span>=restartIN, $
+    ;; Physical <span style="color: #afd8af;">components</span>
+    <span style="color: #ff69b4;">BBTYPE</span>=BBtypeIN, <span style="color: #ff69b4;">LINES</span>=linesIN, <span style="color: #ff69b4;">BANDS</span>=bandsIN, <span style="color: #ff69b4;">EXTINCTION</span>=extinctionIN, $
+    OLD_STARS=old_starIN, LINE_FIRST=line_firstIN, $
+    BB_STRUCTURE=bb_structIN, BAND_STRUCTURE=band_structIN, $
+    ;; BB <span style="color: #afd8af;">parameters</span>
+    <span style="color: #ff69b4;">TEMPBB</span>=tempBBIN, <span style="color: #ff69b4;">FIXTEMPBB</span>=fixtempBBIN, <span style="color: #ff69b4;">TMINBB</span>=TminBBIN, <span style="color: #ff69b4;">TMAXBB</span>=TmaxBBIN, $
+    ;; <span style="color: #afd8af;">Lines</span>
+    <span style="color: #ff69b4;">FIXCENTERLINE</span>=fixcenterlineIN, <span style="color: #ff69b4;">FIXSIGMALINE</span>=fixsigmalineIN, $
+    ;; <span style="color: #afd8af;">Bands</span>
+    <span style="color: #ff69b4;">FIXCENTERBAND</span>=fixcenterbandIN, <span style="color: #ff69b4;">FIXSIGMABAND</span>=fixsigmabandIN, $
+    UNTIESIGMABAND=untiesigmabandIN, $
+    ;; <span style="color: #afd8af;">Extinction</span>
+    <span style="color: #ff69b4;">Av</span>=AvIN, <span style="color: #ff69b4;">FIXAV</span>=fixAvIN, <span style="color: #ff69b4;">MAXAV</span>=AvmaxIN, <span style="color: #ff69b4;">TCO2</span>=TCO2IN, $
+    ;; Field <span style="color: #afd8af;">stars</span>
+    <span style="color: #ff69b4;">MASSSTAR</span>=massStarIN, <span style="color: #ff69b4;">FIXMASSSTAR</span>=fixmassStarIN, $
+    RANGEMASSSTAR=ranmassStarIN, $
+    ;; <span style="color: #afd8af;">Outputs</span>
+    <span style="color: #ff69b4;">PARSTR</span>=parstrOUT, <span style="color: #ff69b4;">ERRPARSTR</span>=errparstrOUT, <span style="color: #ff69b4;">PARINFO</span>=parinfoOUT, $
+    FIT=fitOUT, STATUS=statusOUT, CHI2=chi2OUT, NOX=noX
+
+
+  !EXCEPT = 0
+</pre>
+</div>
+</div>
+<div id="outline-container-org6d140d2" class="outline-3">
+<h3 id="org6d140d2"><span class="section-number-3">7.1</span> Organize the inputs</h3>
+<div class="outline-text-3" id="text-7-1">
+<div class="org-src-container">
+<pre class="src src-idl">;; Banners
+;;--------
+;; <span style="color: #afd8af;">Info</span>
+<span style="color: #ff69b4;">banner</span> = [STRJOIN(REPLICATE(<span style="color: #61CE3C;">"-"</span>,80)), $
+          STRJOIN(REPLICATE(<span style="color: #61CE3C;">" "</span>,15))+<span style="color: #61CE3C;">"MILES: "</span>+ $
+          <span style="color: #61CE3C;">"Mid-Infrared Line Extraction Software."</span>,$
+          <span style="color: #61CE3C;">"It belongs to the SWING (SoftWares for Interpreting Nebulae and "</span> $
+          +<span style="color: #61CE3C;">"Galaxies) package"</span>, $
+          STRJOIN(REPLICATE(<span style="color: #61CE3C;">" "</span>,30))+<span style="color: #61CE3C;">"(written by F. G.)."</span>, $
+          STRJOIN(REPLICATE(<span style="color: #61CE3C;">" "</span>,80))]
+
+;; <span style="color: #afd8af;">Manual</span>
+<span style="color: #ff69b4;">manual</span> = $
+[<span style="color: #61CE3C;">"MILES, wavOBS[N], FnuOBS[N][Nx,Ny,N], dFnuOBS[N][Nx,Ny,N], INSTRUMENT=[N],"</span>$
+ +<span style="color: #61CE3C;">" WEIGHTS=[N][Nx,Ny,N],"</span>, $
+ <span style="color: #61CE3C;">"   MASK=mask[Nx,Ny],"</span>, $
+ <span style="color: #61CE3C;">"        (wave in microns is supposed to be sorted, Fnu in MJy/sr)"</span>, $
+ <span style="color: #61CE3C;">"   COPY=fileps, /PDF, /EPS, SAVE=filexdr, /MODELSAVE, /NOPLOT, /LOGPLOT,"</span>$
+ +<span style="color: #61CE3C;">" /QUIET, TITLE=''[Nx,Ny]], "</span>, $
+ <span style="color: #61CE3C;">"   /MILLI, RANGEWAVELENGTH=[,], /HIGHRES, FTOL=1.D-5, NITER=250, "</span>$
+ +<span style="color: #61CE3C;">"/RESTART, /COPLINE"</span>, $
+ <span style="color: #61CE3C;">"        (Physical components)"</span>, $
+ <span style="color: #61CE3C;">"   BBTYPE={1,['crb','gra','sil_norm','al2o3_koike',etc.]}, "</span>, $
+ <span style="color: #61CE3C;">"   LINES={1,['[ArII]','[SIV]',etc.]},"</span>, $
+ <span style="color: #61CE3C;">"   BANDS={1,['PAH6.2','PAH7.4',etc.]}, "</span>, $
+ <span style="color: #61CE3C;">"   EXTINCTION={1,['Dudley','CO2']},"</span>, $
+ <span style="color: #61CE3C;">"   LINE_FIRST={1,['[ArII]',etc.]},"</span>, $
+ <span style="color: #61CE3C;">"        (BB parameters)"</span>, $
+ <span style="color: #61CE3C;">"   TEMPBB=[Nbb], FIXTEMPBB={1,[Nbb]}, TMINBB={T,[Nbb]}, TMAXBB={T,[Nbb]},"</span>,$
+ <span style="color: #61CE3C;">"        (Field stars)"</span>, $
+ <span style="color: #61CE3C;">"   MASSSTAR=, /FIXMASSSTAR, RANGEMASSSTAR=[,], "</span>, $
+ <span style="color: #61CE3C;">"        (Line parameters)"</span>, $
+ <span style="color: #61CE3C;">"   FIXCENTERLINE={1,[Nline]}, FIXSIGMALINE={1,[Nline]}, "</span>, $
+ <span style="color: #61CE3C;">"        (band parameters)"</span>, $
+ <span style="color: #61CE3C;">"   FIXCENTERBAND={1,[Nband]}, FIXSIGMABAND={1,[Nband]}, /UNTIESIGMABAND, "</span>,$
+ <span style="color: #61CE3C;">"        (Extinction)"</span>, $
+ <span style="color: #61CE3C;">"   Av=, /FIXAV, RANGEAV=[,],"</span>, $
+ <span style="color: #61CE3C;">"        (Outputs)"</span>, $
+ <span style="color: #61CE3C;">"   PARSTR=, ERRPARSTR=, PARINFO=, FIT=, STATUS=, CHI2=,"</span> $
+ +<span style="color: #61CE3C;">" BAND_STRUCTURE=bandIN, BB_STRUCTURE=bbIN, /NOX"</span>]
+IF (N_PARAMS() LE 1) THEN BEGIN
+  <span style="color: #afd8af;">FOR</span> <span style="color: #ff69b4;">i</span>=0,<span style="color: #ff1493;">N_ELEMENTS</span>(manual)-1 DO PRINT, manual[i]
+  RETURN
+ENDIF
+t0 = SYSTIME(1)
+
+
+;; <span style="color: #afd8af;">Input</span> <span style="color: #ff69b4;">parameters</span>
+;;-----------------
+;; <span style="color: #afd8af;">Observed</span> <span style="color: #ff1493;">SED</span> (wave is supposed to be sorted <span style="color: #afd8af;">and</span> <span style="color: #ff69b4;">uniqued</span>)
+wavobs = wavobsIN
+nuobs = !MKS.clight/(wavobs*!MKS.micron)
+IF (<span style="color: #afd8af;">NOT</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">rangewaveIN</span>)) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">ranw</span> = [ MAXI(1.D,0.9*MIN(wavobs)),$
+                                                MINI(40.D,1.1*MAX(wavobs)) ] $
+                                  ELSE ranw = rangewaveIN
+IF (N_PARAMS() EQ 2) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">dFnuobsIN</span> = 0.05*FnuobsIN
+siz = SIZE(FnuOBSIN)
+<span style="color: #afd8af;">CASE</span> <span style="color: #ff69b4;">siz</span>[0] OF
+  1: BEGIN
+    Nx = 1
+    Ny = 1
+    Nobs = siz[1]
+  END
+  2: BEGIN
+    Nx = siz[1] 
+    Ny = 1
+    Nobs = siz[2]
+  END
+  3: BEGIN
+    Nx = siz[1] 
+    Ny = siz[2] 
+    Nobs = siz[3]
+  END
+ENDCASE
+IF (Nobs <span style="color: #afd8af;">NE</span> <span style="color: #ff1493;">N_ELEMENTS</span>(<span style="color: #afd8af;">wavobs</span>)) <span style="color: #afd8af;">THEN</span> <span style="color: #afd8af;">BEGIN</span>
+  <span style="color: #ff69b4;">PRINT</span>, <span style="color: #61CE3C;">"!!! MILES: WAVOBS and FNUOBS have incompatible sizes..."</span>
+  RETURN
+ENDIF
+Fnuobs = REFORM(FnuobsIN,Nx,Ny,Nobs)
+dFnuobs = REFORM(dFnuobsIN,Nx,Ny,Nobs)
+IF (<span style="color: #afd8af;">NOT</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">maskIN</span>)) <span style="color: #afd8af;">THEN</span> <span style="color: #afd8af;">BEGIN</span>
+  <span style="color: #ff69b4;">mask</span> = BYTARR(Nx,Ny)
+  wh0 = WHERE(TOTAL(Fnuobs,3) EQ 0.D OR FINITE(TOTAL(Fnuobs,3)) EQ 0,N0)
+  IF (<span style="color: #afd8af;">N0</span> <span style="color: #ff69b4;">GT</span> 0) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">mask</span>[wh0] = 1
+ENDIF ELSE mask = REFORM(maskIN,Nx,Ny)
+
+;; Chi square <span style="color: #afd8af;">weighting</span>
+<span style="color: #ff1493;">IF</span> (<span style="color: #afd8af;">NOT</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">weightsIN</span>)) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">weights</span> = 1/dFnuobs^2 $
+                                ELSE weights = REFORM(weightsIN,Nx,Ny,Nobs)
+
+;; <span style="color: #afd8af;">Instrument</span>
+<span style="color: #ff1493;">IF</span> (<span style="color: #afd8af;">NOT</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">instrumentIN</span>)) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">instrument</span> = REPLICATE(<span style="color: #61CE3C;">""</span>,Nobs) $
+  ELSE IF (N_ELEMENTS(instrument) <span style="color: #afd8af;">EQ</span> <span style="color: #ff69b4;">Nobs</span>) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">instrument</span> = instrumentIN $
+          ELSE instrument = REPLICATE(instrumentIN[0],Nobs)
+
+;; EPS files
+<span style="color: #afd8af;">IF</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">filepsIN</span>) <span style="color: #afd8af;">THEN</span> <span style="color: #afd8af;">BEGIN</span>
+  <span style="color: #ff1493;">IF</span> (N_ELEMENTS(<span style="color: #afd8af;">filepsIN</span>) EQ 1) <span style="color: #afd8af;">THEN</span> <span style="color: #afd8af;">BEGIN</span>
+    <span style="color: #ff69b4;">filepsrad</span> = STRREPLACE(filepsIN,[<span style="color: #61CE3C;">".eps"</span>],[<span style="color: #61CE3C;">""</span>])
+    IF (<span style="color: #afd8af;">Ny</span> <span style="color: #ff69b4;">EQ</span> 1) THEN $
+      IF (<span style="color: #afd8af;">Nx</span> <span style="color: #ff69b4;">EQ</span> 1) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">fileps</span> = filepsrad+<span style="color: #61CE3C;">".eps"</span> $
+                   ELSE fileps = filepsrad+<span style="color: #61CE3C;">"_"</span>+PRING(INDGEN(Nx)+1)+<span style="color: #61CE3C;">".eps"</span> $
+    ELSE BEGIN
+      fileps = STRARR(Nx,Ny)
+      <span style="color: #afd8af;">FOR</span> <span style="color: #ff69b4;">x</span>=0,<span style="color: #ff69b4;">Nx</span>-1 DO $
+        fileps[x,*] = filepsrad+<span style="color: #61CE3C;">"_"</span>+PRING(x+1)+<span style="color: #61CE3C;">"_"</span>+PRING(INDGEN(Ny)+1)+<span style="color: #61CE3C;">".eps"</span>
+    ENDELSE
+  ENDIF ELSE fileps = filepsIN
+ENDIF ELSE fileps = 0
+
+
+;; Fit <span style="color: #afd8af;">control</span> <span style="color: #ff69b4;">parameters</span>
+;;-----------------------
+;; Tolerance, iteration, <span style="color: #afd8af;">printing</span>
+<span style="color: #ff1493;">IF</span> (<span style="color: #afd8af;">NOT</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">milliIN</span>)) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">milli</span> = 0 ELSE milli = milliIN
+IF (<span style="color: #afd8af;">NOT</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">titleIN</span>)) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">title</span> = <span style="color: #61CE3C;">""</span> ELSE title = titleIN+<span style="color: #61CE3C;">" "</span>
+IF (<span style="color: #afd8af;">NOT</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">noplotIN</span>)) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">noplot</span> = 0 ELSE noplot = noplotIN
+IF (<span style="color: #afd8af;">NOT</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">logplotIN</span>)) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">logplot</span> = 0 ELSE logplot = logplotIN
+IF (<span style="color: #afd8af;">NOT</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">quietIN</span>)) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">quiet</span> = 0 ELSE quiet = quietIN
+IF (<span style="color: #afd8af;">NOT</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">ftolIN</span>)) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">ftol</span> = 1.D-10 ELSE ftol = ftolIN
+IF (<span style="color: #afd8af;">NOT</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">NiterIN</span>)) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">Niter</span> = 250 ELSE Niter = NiterIN
+IF (<span style="color: #afd8af;">NOT</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">restartIN</span>)) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">restart</span> = 0 ELSE restart = restartIN
+IF (<span style="color: #afd8af;">NOT</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">hiresIN</span>)) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">hires</span> = 0 ELSE hires = hiresIN
+
+;; <span style="color: #afd8af;">Banner</span>
+<span style="color: #ff1493;">IF</span> (<span style="color: #afd8af;">quiet</span> <span style="color: #ff69b4;">LE</span> 2) <span style="color: #afd8af;">THEN</span> <span style="color: #afd8af;">BEGIN</span>
+  <span style="color: #ff69b4;">PRINT</span>, <span style="color: #ff69b4;">banner</span>
+ENDIF
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org53e7f18" class="outline-3">
+<h3 id="org53e7f18"><span class="section-number-3">7.2</span> Spectral Feature Properties and Templates</h3>
+<div class="outline-text-3" id="text-7-2">
+</div>
+<div id="outline-container-orgda02a1b" class="outline-4">
+<h4 id="orgda02a1b"><span class="section-number-4">7.2.1</span> Model wavelength grid</h4>
+<div class="outline-text-4" id="text-7-2-1">
+<div class="org-src-container">
+<pre class="src src-idl">IF (<span style="color: #afd8af;">NOT</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">hiresIN</span>)) THEN <span style="color: #afd8af;">BEGIN</span>
+  <span style="color: #ff69b4;">wmod</span> = wavOBS
+  Nwmod = Nobs
+ENDIF ELSE BEGIN
+  Nmin = 10 ;; <span style="color: #afd8af;">minimum</span> <span style="color: #ff69b4;">number</span> <span style="color: #4c83ff;">of</span> <span style="color: #afd8af;">wavelengths</span>
+  Nw_mic = 100 ;; number <span style="color: #4c83ff;">of</span> <span style="color: #afd8af;">wavelengths</span> per micron
+  N_mic = ranw[1]-ranw[0] ;; number <span style="color: #4c83ff;">of</span> <span style="color: #afd8af;">microns</span>
+  Nwmod = MAXI(ROUND(Nw_mic*N_mic),Nmin)
+  wmod = [RAMP(Nwmod,ranw[0],ranw[1]),wavOBS]
+  ;; Reorder and remove <span style="color: #afd8af;">duplicates</span>
+  <span style="color: #ff69b4;">wmod</span> = wmod[UNIQ(wmod)]
+  wmod = wmod[SORT(wmod)]
+  Nwmod = N_ELEMENTS(wmod)
+<span style="color: #afd8af;">ENDELSE</span>
+<span style="color: #ff69b4;">numod</span> = !MKS.clight/!MKS.micron/wmod
+
+;; Average interval between two consecutive <span style="color: #afd8af;">wavelengths</span>
+<span style="color: #ff69b4;">dwOBS</span> = (MAX(wavOBS)-MIN(wavOBS)) / Nobs
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org7debdf9" class="outline-4">
+<h4 id="org7debdf9"><span class="section-number-4">7.2.2</span> 1) Grain continuum</h4>
+<div class="outline-text-4" id="text-7-2-2">
+<div class="org-src-container">
+<pre class="src src-idl">contstr = {type:<span style="color: #61CE3C;">"crb"</span>, T:50.D, Tmin:10.D, Tmax:3000.D, $
+           Mfixed:0, Tfixed:0, Fnu0:DBLARR(Nwmod)}
+<span style="color: #afd8af;">IF</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">BBtypeIN</span>) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">BEGIN</span>
+
+  ;; <span style="color: #afd8af;">Dust</span> <span style="color: #4c83ff;">composition</span>
+  <span style="color: #96CBFE;">BBtype</span> = BBtypeIN  
+  IF (PRING(BBtypeIN[0]) EQ <span style="color: #61CE3C;">'1'</span>) THEN $
+    BBtype = [<span style="color: #61CE3C;">"crb"</span>,<span style="color: #61CE3C;">"crb"</span>,<span style="color: #61CE3C;">"sil_norm"</span>,<span style="color: #61CE3C;">"al2o3_koike"</span>]
+  Nbb = N_ELEMENTS(BBtype)
+  cont = REPLICATE(contstr,Nbb)
+  cont.type = BBtype
+  Qabs_str = MAKE_QABS(wmod,TYPE=cont.type)
+
+  ;; Initial temperatures
+  <span style="color: #afd8af;">IF</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">tempBBIN</span>) <span style="color: #afd8af;">THEN</span> <span style="color: #afd8af;">BEGIN</span>
+    <span style="color: #ff1493;">IF</span> (N_ELEMENTS(<span style="color: #afd8af;">tempBBIN</span>) <span style="color: #afd8af;">NE</span> <span style="color: #ff69b4;">Nbb</span>) <span style="color: #afd8af;">THEN</span> <span style="color: #afd8af;">BEGIN</span>
+      <span style="color: #ff69b4;">PRINT</span>, <span style="color: #61CE3C;">"!!! MILES: wrong TEMPBB keyword..."</span>
+      RETURN
+    ENDIF ELSE cont.T = tempBBIN
+  ENDIF ELSE BEGIN
+    IF (PRING(BBtypeIN[0]) EQ <span style="color: #61CE3C;">'1'</span>) <span style="color: #afd8af;">THEN</span> <span style="color: #afd8af;">BEGIN</span>
+      <span style="color: #ff69b4;">cont</span>.T = [300.D,80.D,150.D,180.D]
+    ENDIF ELSE cont.T = 40.D + DINDGEN(Nbb)*30.D
+  ENDELSE
+
+  ;; Temperature variation
+  <span style="color: #afd8af;">IF</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">fixtempBBIN</span>) <span style="color: #afd8af;">THEN</span> <span style="color: #afd8af;">BEGIN</span>
+    <span style="color: #afd8af;">CASE</span> <span style="color: #ff1493;">N_ELEMENTS</span>(<span style="color: #afd8af;">fixtempBBIN</span>) OF
+      1: cont.Tfixed = REPLICATE(fixtempBBIN,Nbb)
+      Nbb: cont.Tfixed = fixtempBBIN
+      ELSE: BEGIN
+        PRINT, <span style="color: #61CE3C;">"!!! MILES: wrong FIXTEMPBB keyword..."</span>
+        RETURN
+      END
+    ENDCASE
+  ENDIF
+
+  ;; Minimum temperature
+  <span style="color: #afd8af;">IF</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">TminBBIN</span>) <span style="color: #afd8af;">THEN</span> <span style="color: #afd8af;">BEGIN</span>
+    <span style="color: #afd8af;">CASE</span> <span style="color: #ff1493;">N_ELEMENTS</span>(<span style="color: #afd8af;">TminBBIN</span>) OF
+      1: cont.Tmin = REPLICATE(TminBBIN,Nbb)
+      Nbb: cont.Tmin = TminBBIN
+      ELSE: BEGIN
+        PRINT, <span style="color: #61CE3C;">"!!! MILES: wrong TMINBB keyword..."</span>
+        RETURN
+      END
+    ENDCASE      
+  ENDIF
+
+  ;; Maximum temperature
+  <span style="color: #afd8af;">IF</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">TmaxBBIN</span>) <span style="color: #afd8af;">THEN</span> <span style="color: #afd8af;">BEGIN</span>
+    <span style="color: #afd8af;">CASE</span> <span style="color: #ff1493;">N_ELEMENTS</span>(<span style="color: #afd8af;">TmaxBBIN</span>) OF
+      1: cont.Tmax = REPLICATE(TmaxBBIN,Nbb)
+      Nbb: cont.Tmax = TmaxBBIN
+      ELSE: BEGIN
+        PRINT, <span style="color: #61CE3C;">"!!! MILES: wrong TMAXBB keyword..."</span>
+        RETURN
+      END
+    ENDCASE      
+  ENDIF
+
+  ;; Normalized <span style="color: #4c83ff;">component</span>
+  <span style="color: #afd8af;">FOR</span> <span style="color: #afd8af;">i</span>=0,<span style="color: #afd8af;">Nbb</span>-1 DO cont[i].Fnu0 = MODIFBB(Qabs_str[i],TEMPBB=cont[i].T)
+
+ENDIF <span style="color: #afd8af;">ELSE</span> <span style="color: #ff69b4;">BEGIN</span>
+
+  ;; No <span style="color: #afd8af;">continuum</span>
+  <span style="color: #ff69b4;">Nbb</span> = 0 
+  BBtype = 0
+  cont = 0
+
+ENDELSE
+
+;; Special BB structure
+<span style="color: #afd8af;">IF</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">BB_structIN</span>) <span style="color: #afd8af;">THEN</span> <span style="color: #afd8af;">BEGIN</span>
+  <span style="color: #ff69b4;">cont</span> = BB_structIN
+  Nbb = N_ELEMENTS(cont)
+  BBtype = cont.type
+  Qabs_str = MAKE_QABS(wmod,TYPE=cont.type)
+  <span style="color: #afd8af;">FOR</span> <span style="color: #ff69b4;">i</span>=0,<span style="color: #ff69b4;">Nbb</span>-1 DO cont[i].Fnu0 = MODIFBB(Qabs_str[i],TEMPBB=cont[i].T)
+ENDIF
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgb2f6ffb" class="outline-4">
+<h4 id="orgb2f6ffb"><span class="section-number-4">7.2.3</span> 2) Lines</h4>
+<div class="outline-text-4" id="text-7-2-3">
+<div class="org-src-container">
+<pre class="src src-idl">;; Bernard-Salas et al. (2001)
+<span style="color: #afd8af;">IF</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">linesIN</span>) THEN <span style="color: #afd8af;">BEGIN</span>
+
+  <span style="color: #ff69b4;">lines</span> = REPLICATE( {wave:0.D, label:<span style="color: #61CE3C;">""</span>, type:<span style="color: #61CE3C;">""</span>, sigma:0.D, $
+                      Ifixed:0, Wfixed:0, Cfixed:0, degpoly:0, $
+                      Wlimits:[0.D,0.D], Climits:[0.D,0.D], $
+                      Fnu0:DBLARR(Nwmod)}, 51)
+
+  il = 0
+  lines[il].wave = 4.052D    &amp;  lines[il].label = <span style="color: #61CE3C;">"Bra"</span>
+    lines[il].type = <span style="color: #61CE3C;">"Bracket alpha"</span>   &amp;  il += 1
+  lines[il].wave = 5.128657D    &amp;  lines[il].label = <span style="color: #61CE3C;">"HI6-10"</span>
+    lines[il].type = <span style="color: #61CE3C;">"H!E !NI 6-10"</span>   &amp;  il += 1
+  lines[il].wave = 5.51116D    &amp;  lines[il].label = <span style="color: #61CE3C;">"H2S7"</span>
+    lines[il].type = <span style="color: #61CE3C;">"H!D2!N 0-0 S(7)"</span>   &amp;  il += 1
+  lines[il].wave = 5.6098D    &amp;  lines[il].label = <span style="color: #61CE3C;">"MgV"</span>
+    lines[il].type = <span style="color: #61CE3C;">"[Mg!E !NV] 3P!U2!N-3P!U1!N"</span>   &amp;  il += 1
+  lines[il].wave = 5.908213D   &amp;  lines[il].label = <span style="color: #61CE3C;">"Huc"</span>
+    lines[il].type = <span style="color: #61CE3C;">"Humphreys gamma"</span>   &amp;  il += 1
+  lines[il].wave = 5.981D   &amp;  lines[il].label = <span style="color: #61CE3C;">"KIV"</span>
+    lines[il].type = <span style="color: #61CE3C;">"[K!E !NIV]"</span>   &amp;  il += 1
+  lines[il].wave = 6.10856D    &amp;  lines[il].label = <span style="color: #61CE3C;">"H2S6"</span>
+    lines[il].type = <span style="color: #61CE3C;">"H!D2!N 0-0 S(6)"</span>   &amp;  il += 1
+  lines[il].wave = 6.709D    &amp;  lines[il].label = <span style="color: #61CE3C;">"ClV"</span>
+    lines[il].type = <span style="color: #61CE3C;">"[Cl!E !NV] 2P!U0!N-2P!U0!N"</span>   &amp;  il += 1
+  lines[il].wave = 6.90952D    &amp;  lines[il].label = <span style="color: #61CE3C;">"H2S5"</span>
+    lines[il].type = <span style="color: #61CE3C;">"H!D2!N 0-0 S(5)"</span>   &amp;  il += 1
+  lines[il].wave = 6.947984D    &amp;  lines[il].label = <span style="color: #61CE3C;">"HeII1"</span>
+    lines[il].type = <span style="color: #61CE3C;">"HeII 8-9"</span>   &amp;  il += 1
+  lines[il].wave = 6.985274D   &amp;  lines[il].label = <span style="color: #61CE3C;">"ArII"</span>
+    lines[il].type = <span style="color: #61CE3C;">"[Ar!E !NII] 2P!D3/2!N-2P!D1/2!N"</span>   &amp;  il += 1
+  lines[il].wave = 7.3178D    &amp;  lines[il].label = <span style="color: #61CE3C;">"NaIII"</span>
+    lines[il].type = <span style="color: #61CE3C;">"[Na!E !NIII] 2P!U0!N-2P!U0!N"</span>   &amp;  il += 1
+  lines[il].wave = 7.459858D   &amp;  lines[il].label = <span style="color: #61CE3C;">"Pfa"</span>
+    lines[il].type = <span style="color: #61CE3C;">"Pfund alpha"</span>   &amp;  il += 1
+  lines[il].wave = 7.502493D   &amp;  lines[il].label = <span style="color: #61CE3C;">"Hub"</span>
+    lines[il].type = <span style="color: #61CE3C;">"Humphreys beta"</span>  &amp;  il += 1
+  lines[il].wave = 7.6524D   &amp;  lines[il].label = <span style="color: #61CE3C;">"NeVI"</span>
+    lines[il].type = <span style="color: #61CE3C;">"[Ne!E !NVI] 2P!U0!N-2P!U0!N"</span>  &amp;  il += 1
+  lines[il].wave = 7.8145D   &amp;  lines[il].label = <span style="color: #61CE3C;">"FeVII"</span>
+    lines[il].type = <span style="color: #61CE3C;">"[Fe!E !NVII] 3F!U3!N-3F!U4!N"</span>  &amp;  il += 1
+  lines[il].wave = 7.90158D   &amp;  lines[il].label = <span style="color: #61CE3C;">"ArV"</span>
+    lines[il].type = <span style="color: #61CE3C;">"[Ar!E !NV] 3P!U1!N-3P!U2!N"</span>  &amp;  il += 1
+  lines[il].wave = 8.02505D    &amp;  lines[il].label = <span style="color: #61CE3C;">"H2S4"</span>
+    lines[il].type = <span style="color: #61CE3C;">"H!D2!N 0-0 S(4)"</span>  &amp;  il += 1
+  lines[il].wave = 8.760064D    &amp;  lines[il].label = <span style="color: #61CE3C;">"HI7-10"</span>
+    lines[il].type = <span style="color: #61CE3C;">"H!E !NI 7-10"</span>  &amp;  il += 1
+  lines[il].wave = 8.99103D    &amp;  lines[il].label = <span style="color: #61CE3C;">"ArIII1"</span>
+    lines[il].type = <span style="color: #61CE3C;">"[Ar!E !NIII] 3P!D2!N-3P!D1!N"</span>  &amp;  il += 1
+  lines[il].wave = 9.042D    &amp;  lines[il].label = <span style="color: #61CE3C;">"NiVI"</span>
+    lines[il].type = <span style="color: #61CE3C;">"[Ni!E !NVI] 4P!U5/2!N-4F!U5/2!N"</span>  &amp;  il += 1
+  lines[il].wave = 9.5267D    &amp;  lines[il].label = <span style="color: #61CE3C;">"FeVII"</span>
+    lines[il].type = <span style="color: #61CE3C;">"[Fe!E !NVII] 3F!D2!N-3F!D3!N"</span>  &amp;  il += 1
+  lines[il].wave = 9.66491D    &amp;  lines[il].label = <span style="color: #61CE3C;">"H2S3"</span>
+    lines[il].type = <span style="color: #61CE3C;">"H!D2!N 0-0 S(3)"</span>  &amp;  il += 1
+  lines[il].wave = 9.713475D    &amp;  lines[il].label = <span style="color: #61CE3C;">"HeII2"</span>
+    lines[il].type = <span style="color: #61CE3C;">"He!E !NII 9-10"</span>  &amp;  il += 1
+  lines[il].wave = 10.3385D    &amp;  lines[il].label = <span style="color: #61CE3C;">"SiI"</span>
+    lines[il].type = <span style="color: #61CE3C;">"[Si!E !NI] 1P!D1!N-1P!D2!N"</span>  &amp;  il += 1
+  lines[il].wave = 10.5105D    &amp;  lines[il].label = <span style="color: #61CE3C;">"SIV"</span>
+    lines[il].type = <span style="color: #61CE3C;">"[S!E !NIV] 2P!D3/2!N-2P!D1/2!N"</span>  &amp;  il += 1
+  lines[il].wave = 12.27861D   &amp;  lines[il].label = <span style="color: #61CE3C;">"H2S2"</span>
+    lines[il].type = <span style="color: #61CE3C;">"H!D2!N 0-0 S(2)"</span>  &amp;  il += 1
+  lines[il].wave = 12.368527D  &amp;  lines[il].label = <span style="color: #61CE3C;">"Hua"</span>
+    lines[il].type = <span style="color: #61CE3C;">"Humphreys alpha"</span>  &amp;  il += 1
+  lines[il].wave = 12.81355D   &amp;  lines[il].label = <span style="color: #61CE3C;">"NeII"</span>
+    lines[il].type = <span style="color: #61CE3C;">"[Ne!E !NII] 2P!D3/2!N-2P!D1/2!N"</span>  &amp;  il += 1
+  lines[il].wave = 13.10219D   &amp;  lines[il].label = <span style="color: #61CE3C;">"ArV"</span>
+    lines[il].type = <span style="color: #61CE3C;">"[Ar!E !NV] 3P!D0!N-3P!D1!N"</span>  &amp;  il += 1
+  lines[il].wave = 13.521D   &amp;  lines[il].label = <span style="color: #61CE3C;">"MgV"</span>
+    lines[il].type = <span style="color: #61CE3C;">"[Mg!E !NV] 3P!D1!N-3P!D0!N"</span>  &amp;  il += 1
+  lines[il].wave = 14.32168D   &amp;  lines[il].label = <span style="color: #61CE3C;">"NeV1"</span>
+    lines[il].type = <span style="color: #61CE3C;">"[Ne!E !NV] 3P!D1!N-3P!D2!N"</span>  &amp;  il += 1
+  lines[il].wave = 15.555D     &amp;  lines[il].label = <span style="color: #61CE3C;">"NeIII1"</span>
+    lines[il].type = <span style="color: #61CE3C;">"[Ne!E !NIII] 3P!D2!N-3P!D1!N"</span>  &amp;  il += 1
+  lines[il].wave = 17.03483D   &amp;  lines[il].label = <span style="color: #61CE3C;">"H2S1"</span>
+    lines[il].type = <span style="color: #61CE3C;">"H!D2!N 0-0 S(1)"</span>  &amp;  il += 1
+  lines[il].wave = 17.608246D   &amp;  lines[il].label = <span style="color: #61CE3C;">"HI11-18"</span>
+    lines[il].type = <span style="color: #61CE3C;">"H!E !NI 11-18"</span>  &amp;  il += 1
+  lines[il].wave = 18.7129D    &amp;  lines[il].label = <span style="color: #61CE3C;">"SIII1"</span>
+    lines[il].type = <span style="color: #61CE3C;">"[S!E !NIII] 3P!D2!N-3P!D1!N"</span>  &amp;  il += 1
+  lines[il].wave = 19.061898D    &amp;  lines[il].label = <span style="color: #61CE3C;">"HI7-8"</span>
+    lines[il].type = <span style="color: #61CE3C;">"H!E !NI 7-8"</span>  &amp;  il += 1
+  lines[il].wave = 21.8291D    &amp;  lines[il].label = <span style="color: #61CE3C;">"ArIII2"</span>
+    lines[il].type = <span style="color: #61CE3C;">"[Ar!E !NIII] 3P!U1!N-3P!U0!N"</span>  &amp;  il += 1
+  lines[il].wave = 24.3175D    &amp;  lines[il].label = <span style="color: #61CE3C;">"NeV2"</span>
+    lines[il].type = <span style="color: #61CE3C;">"[Ne!E !NV] 3P!U0!N-3P!U1!N"</span>  &amp;  il += 1
+  lines[il].wave = 25.8903D    &amp;  lines[il].label = <span style="color: #61CE3C;">"OIV"</span>
+    lines[il].type = <span style="color: #61CE3C;">"[O!E !NIV] 2P!D3/2!N-2P!D1/2!N"</span>  &amp;  il += 1
+  lines[il].wave = 25.9882D    &amp;  lines[il].label = <span style="color: #61CE3C;">"FeII1"</span>
+    lines[il].type = <span style="color: #61CE3C;">"[Fe!E !NII] 6D!D7/2!N-6D!D9/2!N"</span>
+  lines[il].wave = 28.21883D   &amp;  lines[il].label = <span style="color: #61CE3C;">"H2S0"</span>
+    lines[il].type = <span style="color: #61CE3C;">"H!D2!N 0-0 S(0)"</span>  &amp;  il += 1
+  lines[il].wave = 33.4810D    &amp;  lines[il].label = <span style="color: #61CE3C;">"SIII2"</span>
+    lines[il].type = <span style="color: #61CE3C;">"[S!E !NIII] 3P!D1!N-3P!D0!N"</span>  &amp;  il += 1
+  lines[il].wave = 34.8152D    &amp;  lines[il].label = <span style="color: #61CE3C;">"SiII"</span>
+    lines[il].type = <span style="color: #61CE3C;">"[Si!E !NII] 2P!D3/2!N-2P!D1/2!N"</span>  &amp;  il += 1
+  lines[il].wave = 35.3491D    &amp;  lines[il].label = <span style="color: #61CE3C;">"FeII2"</span>
+    lines[il].type = <span style="color: #61CE3C;">"[Fe!E !NII] 6D!D5/2!N-6D!D7/2!N"</span>  &amp;  il += 1
+  lines[il].wave = 36.0135D    &amp;  lines[il].label = <span style="color: #61CE3C;">"NeIII2"</span>
+    lines[il].type = <span style="color: #61CE3C;">"[Ne!E !NIII] 3P!D1!N-3P!D0!N"</span>  &amp;  il += 1
+
+  ;; Reduce the wavelength range to the observed <span style="color: #afd8af;">wavelengths</span>
+  <span style="color: #ff69b4;">lines</span> = lines[WHERE(lines.wave GT MIN(wavOBS) $
+                      AND lines.wave LT MAX(wavOBS))]
+  Nline = N_ELEMENTS(lines)
+
+  ;; Input line <span style="color: #afd8af;">list</span>
+  <span style="color: #ff1493;">IF</span> (PRING(<span style="color: #afd8af;">linesIN</span>[0]) NE <span style="color: #61CE3C;">'1'</span>) THEN <span style="color: #afd8af;">BEGIN</span>
+    <span style="color: #ff69b4;">Nline</span> = N_ELEMENTS(linesIN)
+    whline = INTARR(Nline)
+    <span style="color: #afd8af;">FOR</span> <span style="color: #ff69b4;">i</span>=0,<span style="color: #ff69b4;">Nline</span>-1 DO whline[i] = WHERE(lines.label EQ linesIN[i])
+    lines = lines[whline]
+  ENDIF ELSE lines = lines[WHERE(lines.wave GT 0.,Nline)]
+
+  ;; Normalised components
+  <span style="color: #afd8af;">FOR</span> <span style="color: #ff69b4;">i</span>=0,<span style="color: #ff69b4;">Nline</span>-1 DO BEGIN
+    lines[i].sigma = DEGRADERES(lines[i].wave,dwOBS, $
+                       INSTRUMENT=instrument[CLOSEST(wavOBS,lines[i].wave)])
+    lines[i].Wlimits = [0.67D,1.5D]*lines[i].sigma
+    lines[i].Climits = lines[i].wave + [-0.5,0.5]*dwOBS
+    lines[i].Fnu0 = GAUSSLINE(wmod,lines[i].wave,lines[i].sigma)
+  ENDFOR
+
+  ;; Constraints
+  <span style="color: #afd8af;">IF</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">fixcenterlineIN</span>) THEN <span style="color: #afd8af;">BEGIN</span>
+    <span style="color: #afd8af;">CASE</span> <span style="color: #ff1493;">N_ELEMENTS</span>(<span style="color: #afd8af;">fixcenterlineIN</span>) OF
+      1: lines.Cfixed = REPLICATE(fixcenterlineIN,Nline)
+      Nline: lines.Cfixed = fixcenterlineIN
+      ELSE: BEGIN
+        PRINT, <span style="color: #61CE3C;">"!!! MILES: wrong FIXCENTERLINE keyword..."</span>
+        RETURN
+      END
+    ENDCASE      
+  ENDIF
+  IF KEYWORD_SET(fixsigmalineIN) THEN <span style="color: #afd8af;">BEGIN</span>
+    <span style="color: #afd8af;">CASE</span> <span style="color: #ff1493;">N_ELEMENTS</span>(<span style="color: #afd8af;">fixsigmalineIN</span>) OF
+      1: lines.Wfixed = REPLICATE(fixsigmalineIN,Nline)
+      Nline: lines.Wfixed = fixsigmalineIN
+      ELSE: BEGIN
+        PRINT, <span style="color: #61CE3C;">"!!! MILES: wrong FIXSIGMALINE keyword..."</span>
+        RETURN
+      END
+    ENDCASE
+  ENDIF
+
+  ;; First line fit
+  <span style="color: #afd8af;">IF</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">line_firstIN</span>) THEN <span style="color: #afd8af;">BEGIN</span>
+    <span style="color: #ff1493;">IF</span> (PRING(<span style="color: #afd8af;">line_firstIN</span>[0]) EQ <span style="color: #61CE3C;">'1'</span>) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">lines</span>.degpoly = 2 ELSE BEGIN
+      FOR i=0,<span style="color: #ff69b4;">Nline</span>-1 DO BEGIN
+        wh = WHERE(lines[i].label EQ line_firstIN.label,N)
+        IF (<span style="color: #afd8af;">N</span> <span style="color: #ff69b4;">EQ</span> 1) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">lines</span>[i].degpoly = 2
+      ENDFOR
+    ENDELSE
+  ENDIF
+
+ENDIF ELSE BEGIN
+
+  Nline = 0
+  lines = 0    
+
+ENDELSE
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgc96e852" class="outline-4">
+<h4 id="orgc96e852"><span class="section-number-4">7.2.4</span> 3) Bands</h4>
+<div class="outline-text-4" id="text-7-2-4">
+<div class="org-src-container">
+<pre class="src src-idl"><span style="color: #afd8af;">IF</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">bandsIN</span>) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">BEGIN</span>
+
+  ;; The limits are <span style="color: #afd8af;">relative</span> <span style="color: #ff69b4;">Wlimits</span>*sigma
+  bands = REPLICATE( {wave:0.D, label:<span style="color: #61CE3C;">''</span>, type:<span style="color: #61CE3C;">''</span>, sigmaS:0.D, sigmaL:0.D, $
+                      Ifixed:0, Wfixed:0, Cfixed:0, tiesigma:1, $
+                      Wlimits:[0.5D,2.D], Climits:[0.D,0.D], $
+                      Fnu0:DBLARR(Nwmod)}, 33)
+
+  bands[0].wave = 3.3  &amp; bands[0].label = <span style="color: #61CE3C;">'Main 3.3'</span>
+    bands[0].sigmaS = 0.04  &amp; bands[0].sigmaL = 0.04
+  bands[1].wave = 3.45  &amp; bands[1].label = <span style="color: #61CE3C;">'Main 3.4'</span>
+    bands[1].sigmaS = 0.04  &amp; bands[1].sigmaL = 0.04
+  bands[2].wave = 5.2394667  &amp; bands[2].label = <span style="color: #61CE3C;">'Small 5.2'</span>
+    bands[2].sigmaS = 0.025218240  &amp; bands[2].sigmaL = 0.058333420
+  bands[3].wave = 5.6437461  &amp; bands[3].label = <span style="color: #61CE3C;">'Small 5.7 (1)'</span>
+    bands[3].sigmaS = 0.040000000  &amp; bands[3].sigmaL = 0.080000000
+  bands[4].wave = 5.7490305  &amp; bands[4].label = <span style="color: #61CE3C;">'Small 5.7 (2)'</span>
+    bands[4].sigmaS = 0.040000000  &amp; bands[4].sigmaL = 0.080000000
+  bands[5].wave = 6.0106598  &amp; bands[5].label = <span style="color: #61CE3C;">'Small 6.0'</span>
+    bands[5].sigmaS = 0.040000000  &amp; bands[5].sigmaL = 0.066646401
+  bands[6].wave = 6.2034273  &amp; bands[6].label = <span style="color: #61CE3C;">'Main 6.2 (1)'</span>
+    bands[6].sigmaS = 0.031300317  &amp; bands[6].sigmaL = 0.060000000
+  bands[7].wave = 6.2672596  &amp; bands[7].label = <span style="color: #61CE3C;">'Main 6.2 (2)'</span>
+    bands[7].sigmaS = 0.036922155  &amp; bands[7].sigmaL = 0.11633640
+  bands[8].wave = 6.6273788  &amp; bands[8].label = <span style="color: #61CE3C;">'Small 6.6'</span>
+    bands[8].sigmaS = 0.12000000  &amp; bands[8].sigmaL = 0.12000000
+  bands[9].wave = 6.8548833  &amp; bands[9].label = <span style="color: #61CE3C;">'Small 6.8'</span>
+    bands[9].sigmaS = 0.080000000  &amp; bands[9].sigmaL = 0.080000000
+  bands[10].wave = 7.0791725  &amp; bands[10].label = <span style="color: #61CE3C;">'Small 7.1'</span>
+    bands[10].sigmaS = 0.080000000  &amp; bands[10].sigmaL = 0.080000000
+  bands[11].wave = 7.6000000  &amp; bands[11].label = <span style="color: #61CE3C;">'Plateau 7.7'</span>
+    bands[11].sigmaS = 0.48000000  &amp; bands[11].sigmaL = 0.50247515
+  bands[12].wave = 7.6171123  &amp; bands[12].label = <span style="color: #61CE3C;">'Main 7.7 (1)'</span>
+    bands[12].sigmaS = 0.11856752  &amp; bands[12].sigmaL = 0.14531480
+  bands[13].wave = 7.8704769  &amp; bands[13].label = <span style="color: #61CE3C;">'Main 7.7 (2)'</span>
+    bands[13].sigmaS = 0.16998357  &amp; bands[13].sigmaL = 0.24523967
+  bands[14].wave = 8.3623706  &amp; bands[14].label = <span style="color: #61CE3C;">'Small 8.3'</span>
+    bands[14].sigmaS = 0.016256724  &amp; bands[14].sigmaL = 0.016256724
+  bands[15].wave = 8.6204540  &amp; bands[15].label = <span style="color: #61CE3C;">'Main 8.6'</span>
+    bands[15].sigmaS = 0.18340577  &amp; bands[15].sigmaL = 0.13337054
+  bands[16].wave = 9.5244838  &amp; bands[16].label = <span style="color: #61CE3C;">'Small 9.5'</span>
+    bands[16].sigmaS = 0.10766965  &amp; bands[16].sigmaL = 0.60000000
+  bands[17].wave = 10.707132  &amp; bands[17].label = <span style="color: #61CE3C;">'Small 10.7'</span>
+    bands[17].sigmaS = 0.10000000  &amp; bands[17].sigmaL = 0.10000000
+  bands[18].wave = 11.038349  &amp; bands[18].label = <span style="color: #61CE3C;">'Small 11.0'</span>
+    bands[18].sigmaS = 0.026989462  &amp; bands[18].sigmaL = 0.073146141
+  bands[19].wave = 11.237893  &amp; bands[19].label = <span style="color: #61CE3C;">'Main 11.2'</span>
+    bands[19].sigmaS = 0.053507232  &amp; bands[19].sigmaL = 0.15254629
+  bands[20].wave = 11.400432  &amp; bands[20].label = <span style="color: #61CE3C;">'Plateau 11.3'</span>
+    bands[20].sigmaS = 0.72000000  &amp; bands[20].sigmaL = 0.63657944
+  bands[21].wave = 11.796389  &amp; bands[21].label = <span style="color: #61CE3C;">'Small 11.8'</span>
+    bands[21].sigmaS = 0.020813349  &amp; bands[21].sigmaL = 0.020813349
+  bands[22].wave = 11.949674  &amp; bands[22].label = <span style="color: #61CE3C;">'Small 11.9'</span>
+    bands[22].sigmaS = 0.080352283  &amp; bands[22].sigmaL = 0.22192473
+  bands[23].wave = 12.626842  &amp; bands[23].label = <span style="color: #61CE3C;">'Main 12.7 (1)'</span>
+    bands[23].sigmaS = 0.20000000  &amp; bands[23].sigmaL = 0.094424464
+  bands[24].wave = 12.760273  &amp; bands[24].label = <span style="color: #61CE3C;">'Main 12.7 (2)'</span>
+    bands[24].sigmaS = 0.080436118  &amp; bands[24].sigmaL = 0.14000000
+  bands[25].wave = 13.559342  &amp; bands[25].label = <span style="color: #61CE3C;">'Small 13.6'</span>
+    bands[25].sigmaS = 0.15954880  &amp; bands[25].sigmaL = 0.16054015
+  bands[26].wave = 14.257133  &amp; bands[26].label = <span style="color: #61CE3C;">'Small 14.2'</span>
+    bands[26].sigmaS = 0.15208135  &amp; bands[26].sigmaL = 0.058951597
+  bands[27].wave = 15.893117  &amp; bands[27].label = <span style="color: #61CE3C;">'Small 15.6'</span>
+    bands[27].sigmaS = 0.17857214  &amp; bands[27].sigmaL = 0.20000000
+  bands[28].wave = 16.482868  &amp; bands[28].label = <span style="color: #61CE3C;">'Small 16.4'</span>
+    bands[28].sigmaS = 0.10000000  &amp; bands[28].sigmaL = 0.058462024
+  bands[29].wave = 17.082868  &amp; bands[29].label = <span style="color: #61CE3C;">'Plateau 17.0'</span>
+    bands[29].sigmaS = 0.49775906  &amp; bands[29].sigmaL = 0.56119197
+  bands[30].wave = 17.428485  &amp; bands[30].label = <span style="color: #61CE3C;">'Small 17.4'</span>
+    bands[30].sigmaS = 0.10000000  &amp; bands[30].sigmaL = 0.10000000
+  bands[31].wave = 17.771096  &amp; bands[31].label = <span style="color: #61CE3C;">'Small 17.8'</span>
+    bands[31].sigmaS = 0.030799172  &amp; bands[31].sigmaL = 0.075249330
+  bands[32].wave = 18.925630  &amp; bands[32].label = <span style="color: #61CE3C;">'Small 18.9'</span>
+    bands[32].sigmaS = 0.034553879  &amp; bands[32].sigmaL = 0.11570587
+
+  ;; Input band <span style="color: #afd8af;">list</span>
+  <span style="color: #ff1493;">IF</span> (PRING(<span style="color: #afd8af;">bandsIN</span>[0]) NE <span style="color: #61CE3C;">'1'</span>) <span style="color: #afd8af;">THEN</span> <span style="color: #afd8af;">BEGIN</span>
+    <span style="color: #ff69b4;">Nband</span> = N_ELEMENTS(bandsIN)
+    whband = INTARR(Nband)
+    <span style="color: #afd8af;">FOR</span> <span style="color: #ff69b4;">i</span>=0,<span style="color: #ff69b4;">Nband</span>-1 DO whband[i] = WHERE(bands.label EQ bandsIN[i])
+    bands = bands[whband]
+  ENDIF ELSE bands = bands[WHERE(bands.wave GT 0.,Nband)]
+
+  ;; Normalised components
+  <span style="color: #afd8af;">FOR</span> <span style="color: #ff69b4;">i</span>=0,<span style="color: #ff69b4;">Nband</span>-1 DO BEGIN
+    bands[i].sigmaS += DEGRADERES(bands[i].wave,dwOBS, $
+                         INSTRUMENT=instrument[CLOSEST(wavOBS,bands[i].wave)])
+    bands[i].sigmaL += DEGRADERES(bands[i].wave,dwOBS, $
+                         INSTRUMENT=instrument[CLOSEST(wavOBS,bands[i].wave)])
+    bands[i].Climits = bands[i].wave + [-1.,1.]*dwOBS
+    bands[i].Fnu0 = LORENTZBAND(wmod,bands[i].wave,bands[i].sigmaS, $
+                                bands[i].sigmaL)
+  ENDFOR
+
+  ;; Constraints
+  <span style="color: #afd8af;">IF</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">fixcenterbandIN</span>) <span style="color: #afd8af;">THEN</span> <span style="color: #afd8af;">BEGIN</span>
+    <span style="color: #afd8af;">CASE</span> <span style="color: #ff1493;">N_ELEMENTS</span>(<span style="color: #afd8af;">fixcenterbandIN</span>) OF
+      1: bands.Cfixed = REPLICATE(fixcenterbandIN,Nband)
+      Nband: bands.Cfixed = fixcenterbandIN
+      ELSE: BEGIN
+        PRINT, <span style="color: #61CE3C;">"!!! MILES: wrong FIXCENTERBAND keyword..."</span>
+        RETURN
+      END
+    ENDCASE      
+  ENDIF
+  IF KEYWORD_SET(fixsigmabandIN) <span style="color: #afd8af;">THEN</span> <span style="color: #afd8af;">BEGIN</span>
+    <span style="color: #afd8af;">CASE</span> <span style="color: #ff1493;">N_ELEMENTS</span>(<span style="color: #afd8af;">fixsigmabandIN</span>) OF
+      1: bands.Wfixed = REPLICATE(fixsigmabandIN,Nband)
+      Nband: bands.Wfixed = fixsigmabandIN
+      ELSE: BEGIN
+        PRINT, <span style="color: #61CE3C;">"!!! MILES: wrong FIXSIGMABAND keyword..."</span>
+        RETURN
+      END
+    ENDCASE
+  ENDIF
+  IF KEYWORD_SET(untieWbandIN) THEN $
+    IF (N_ELEMENTS(untieWbandIN) <span style="color: #afd8af;">EQ</span> <span style="color: #ff69b4;">Nband</span>) THEN $
+      bands.tiesigma = 1-untieWbandIN ELSE bands.tiesigma = 1-untieWbandIN[0]
+
+  ;; Reduce the wavelength range to the observed <span style="color: #afd8af;">wavelengths</span>
+  <span style="color: #ff69b4;">bands</span> = bands[WHERE(bands.wave GT MIN(wavOBS) $
+                      AND bands.wave LT MAX(wavOBS))]
+  Nband = N_ELEMENTS(bands)
+
+ENDIF ELSE <span style="color: #afd8af;">BEGIN</span>
+
+  <span style="color: #ff69b4;">Nband</span> = 0
+  bands = 0
+
+ENDELSE
+
+;; Special band structure
+<span style="color: #afd8af;">IF</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">band_structIN</span>) <span style="color: #afd8af;">THEN</span> <span style="color: #afd8af;">BEGIN</span>
+  <span style="color: #ff69b4;">bands</span> = band_structIN
+  Nband = N_ELEMENTS(bands)
+  <span style="color: #afd8af;">FOR</span> <span style="color: #ff69b4;">i</span>=0,<span style="color: #ff69b4;">Nband</span>-1 DO $
+    bands[i].Fnu0 = LORENTZBAND(wmod,bands[i].wave,bands[i].sigmaS, $
+                                bands[i].sigmaL)
+ENDIF
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org93379e1" class="outline-4">
+<h4 id="org93379e1"><span class="section-number-4">7.2.5</span> 4) Stellar ISRF</h4>
+<div class="outline-text-4" id="text-7-2-5">
+<div class="org-src-container">
+<pre class="src src-idl">;; [Lsun/Hz/Msun]
+IF KEYWORD_SET(old_starIN) THEN <span style="color: #afd8af;">BEGIN</span>
+  <span style="color: #ff69b4;">Fnu_star0</span> = ISRFpegase(wmod,AGE=5.D3,/INTERP,/WAVE,/LNU,/MKS,/NOVERB) $
+            / !MKS.Lsun
+  Nstar = 1
+  IF KEYWORD_SET(fixmassStarIN) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">fixmassStar</span> = fixmassStarIN $
+                                ELSE fixmassStar = 0
+  IF KEYWORD_SET(ranmassStarIN) <span style="color: #afd8af;">THEN</span> <span style="color: #afd8af;">BEGIN</span>
+    <span style="color: #ff69b4;">ranmassStar</span> = ranmassStarIN
+    limitedmassStar = [1,1]
+  ENDIF ELSE BEGIN
+    ranmassStar = [0.D,0.D]
+    limitedmassStar = [1,0]
+  ENDELSE
+ENDIF ELSE BEGIN
+  Nstar = 0
+  Fnu_star0 = 0
+ENDELSE
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org656b5a8" class="outline-4">
+<h4 id="org656b5a8"><span class="section-number-4">7.2.6</span> 5) Dust and ice extinction</h4>
+<div class="outline-text-4" id="text-7-2-6">
+<div class="org-src-container">
+<pre class="src src-idl">;; Constraints
+<span style="color: #afd8af;">IF</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">extinctionIN</span>) THEN <span style="color: #afd8af;">BEGIN</span>
+
+  <span style="color: #ff69b4;">NAv</span> = N_ELEMENTS(extinctionIN)
+
+  IF (PRING(extinctionIN[0]) NE <span style="color: #61CE3C;">'1'</span>) THEN <span style="color: #afd8af;">BEGIN</span>
+    <span style="color: #afd8af;">IF</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">AvIN</span>) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">Av</span> = AvIN ELSE Av = REPLICATE(1.D,NAv)
+    <span style="color: #afd8af;">IF</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">fixAvIN</span>) THEN $
+      IF (N_ELEMENTS(fixAvIN) EQ 1) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">fixAv</span> = REPLICATE(fixAvIN,NAv) $
+                                    ELSE fixAv = fixAvIN $
+    ELSE fixAv = REPLICATE(0,NAv)
+    <span style="color: #afd8af;">IF</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">AvmaxIN</span>) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">Avmax</span> = AvmaxIN $
+                            ELSE Avmax = REPLICATE(100.D,NAv)
+    extinction = extinctionIN
+  ENDIF ELSE BEGIN
+    IF KEYWORD_SET(AvIN) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">Av</span> = AvIN ELSE Av = 1.D
+    IF KEYWORD_SET(fixAvIN) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">fixAv</span> = fixAvIN ELSE fixAv = 0
+    IF KEYWORD_SET(AvmaxIN) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">Avmax</span> = AvmaxIN ELSE Avmax = 100.D
+    extinction = <span style="color: #61CE3C;">"dust"</span>
+  ENDELSE
+
+ENDIF ELSE BEGIN
+
+  Av = 0.D   &amp;  fixAv = 1         &amp;   Avmax = 0.D 
+  NAv = 0    &amp;  extinction = 0
+
+ENDELSE
+
+;; - a) Dust <span style="color: #afd8af;">absorption</span> 
+<span style="color: #ff1493;">IF</span> (PRING(<span style="color: #afd8af;">extinction</span>[0]) NE <span style="color: #61CE3C;">'0'</span>) <span style="color: #afd8af;">THEN</span> <span style="color: #afd8af;">BEGIN</span>
+  <span style="color: #ff69b4;">extinction</span>[WHERE(<span style="color: #afd8af;">extinction</span> <span style="color: #ff69b4;">EQ</span> <span style="color: #61CE3C;">"dust"</span>)] = <span style="color: #61CE3C;">"Dudley"</span>
+  ext_law = [<span style="color: #61CE3C;">"Dudley"</span>,<span style="color: #61CE3C;">"GC"</span>,<span style="color: #61CE3C;">"Mathis"</span>,<span style="color: #61CE3C;">"chiar05"</span>,<span style="color: #61CE3C;">"chiar05_GC"</span>]
+  FOR i=0,<span style="color: #ff1493;">NAv</span>-1 DO BEGIN
+    IF (WHERE(ext_law <span style="color: #afd8af;">EQ</span> <span style="color: #ff69b4;">extinction</span>[i]) GE 0) <span style="color: #afd8af;">THEN</span> <span style="color: #afd8af;">BEGIN</span>
+      <span style="color: #ff69b4;">extfile</span> = !IDLFRED+<span style="color: #61CE3C;">"Dust/Extinction/law_Av_"</span>+extinction[i]+<span style="color: #61CE3C;">".dat"</span>
+      READCOL, <span style="color: #ff69b4;">extfile</span>, <span style="color: #ff69b4;">wave_tab</span>, <span style="color: #ff69b4;">Av_tab</span>
+      ;; Normalization <span style="color: #afd8af;">to</span> <span style="color: #ff69b4;">Av</span>=1
+      Av_tab = Av_tab / FINTERPOL(Av_tab,wave_tab,!BAND.V,/POW)
+      tau_tab = Av_tab / 1.086
+      tau_dust = FINTERPOL(tau_tab,wave_tab,wmod)
+      wh0 = WHERE(<span style="color: #afd8af;">tau_dust</span> <span style="color: #ff69b4;">LT</span> 0.,N0)
+      IF (<span style="color: #afd8af;">N0</span> <span style="color: #ff69b4;">GT</span> 0) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">tau_dust</span>[wh0] = 0.
+    ENDIF
+  ENDFOR
+ENDIF ELSE tau_dust = DBLARR(Nwmod)
+
+;; - b) CO2 ice <span style="color: #afd8af;">absorption</span>
+<span style="color: #afd8af;">IF</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">TCO2IN</span>) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">TCO2</span> = TCO2IN ELSE TCO2 = 75.D ;; <span style="color: #afd8af;">K</span>
+<span style="color: #ff69b4;">RESTORE</span>, !IDLFRED+<span style="color: #61CE3C;">"Dust/Data/tau_CO2_all.xdr"</span>
+tau_ice = $
+  REFORM(tau_CO2[WHERE(<span style="color: #afd8af;">fH2O</span> <span style="color: #ff69b4;">EQ</span> 1. AND fCH3OH EQ 0.),CLOSEST(T_CO2,TCO2),*])
+whIN = WHERE(ISINE(wmod,MINMAX(wave_CO2)) EQ 1,NIN)
+tau_CO2 = DBLARR(Nwmod)
+IF (<span style="color: #afd8af;">NIN</span> <span style="color: #ff69b4;">GT</span> 0) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">tau_CO2</span>[whIN] = FINTERPOL(tau_ice,wave_CO2,wmod[whIN])
+
+;; All the <span style="color: #afd8af;">components</span>
+<span style="color: #ff69b4;">extinctstr</span> = {w_ref: 0.D, type: <span style="color: #61CE3C;">""</span>, tau0: DBLARR(Nwmod), <span style="color: #afd8af;">fixed</span>: 0, $
+              temperature: 0.D, tempfixed: 1, Avmax:0.D }
+IF (<span style="color: #afd8af;">NAv</span> <span style="color: #ff69b4;">GT</span> 0) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">extinct</span> = REPLICATE(extinctstr,NAv) <span style="color: #afd8af;">ELSE</span> <span style="color: #ff69b4;">extinct</span> = 0
+FOR i=0,<span style="color: #ff1493;">NAv</span>-1 DO BEGIN
+  IF (extinction[i] EQ <span style="color: #61CE3C;">"CO2"</span>) <span style="color: #afd8af;">THEN</span> <span style="color: #afd8af;">BEGIN</span>
+    <span style="color: #ff69b4;">extinct</span>[i].w_ref = 15.2D
+    extinct[i].tau0 = tau_CO2
+    extinct[i].temperature = TCO2
+    extinct[i].tempfixed = 1
+  ENDIF ELSE BEGIN
+    extinct[i].w_ref = !BAND.V 
+    extinct[i].tau0 = tau_dust
+  ENDELSE
+  extinct[i].<span style="color: #afd8af;">fixed</span> = fixAV[i]
+  extinct[i].type = extinction[i]
+  extinct[i].Avmax = Avmax[i]
+ENDFOR
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-org26be6e2" class="outline-3">
+<h3 id="org26be6e2"><span class="section-number-3">7.3</span> Initital Guesses and Parameter Variations</h3>
+<div class="outline-text-3" id="text-7-3">
+</div>
+<div id="outline-container-org7f6b196" class="outline-4">
+<h4 id="org7f6b196"><span class="section-number-4">7.3.1</span> Parameters</h4>
+<div class="outline-text-4" id="text-7-3-1">
+<div class="org-src-container">
+<pre class="src src-idl">Nparm = 2*Nbb + 3*Nline + 4*Nband + NAv + Nstar
+parinfo = REPLICATE({<span style="color: #afd8af;">fixed</span>:0,limited:[0,0],limits:[0.D,0.D],parname:<span style="color: #61CE3C;">""</span>, $
+                     value:0.D,tied:<span style="color: #61CE3C;">""</span>,mpprint:1},Nx,Ny,Nparm)
+
+
+;; Output <span style="color: #afd8af;">arrays</span>
+<span style="color: #ff69b4;">parstrOUT</span> = REPLICATE(PARSTRUCT(DBLARR(Nparm),Nbb=Nbb,Nline=Nline, $
+                      Nband=Nband,NAv=NAv,Nstar=Nstar),Nx,Ny) 
+errparstrOUT = parstrOUT
+statusOUT = INTARR(Nx,Ny)
+chi2OUT = DBLARR(Nx,Ny)
+timin = DBLARR(Nx,Ny)
+<span style="color: #afd8af;">IF</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">modsaveIN</span>) THEN <span style="color: #afd8af;">BEGIN</span>
+  <span style="color: #ff69b4;">Fnu_tot</span> = DBLARR(Nx,Ny,Nwmod)
+  IF (<span style="color: #afd8af;">Nbb</span> <span style="color: #ff69b4;">GT</span> 0) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">Fnu_BB</span> = DBLARR(Nx,Ny,Nbb,Nwmod) $
+                ELSE Fnu_BB = DBLARR(Nx,Ny,1,Nwmod)
+  Fnu_Line = DBLARR(Nx,Ny,Nwmod)
+  IF (<span style="color: #afd8af;">Nband</span> <span style="color: #ff69b4;">GT</span> 0) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">Fnu_Band</span> = DBLARR(Nx,Ny,Nband,Nwmod) $
+                  ELSE Fnu_Band = DBLARR(Nx,Ny,1,Nwmod)
+  Pabs = DBLARR(Nx,Ny,Nwmod)
+  Fnu_star = DBLARR(Nx,Ny,Nwmod)
+<span style="color: #afd8af;">ENDIF</span>
+<span style="color: #ff69b4;">fitOUT</span> = 0
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org2369724" class="outline-4">
+<h4 id="org2369724"><span class="section-number-4">7.3.2</span> BIG LOOP</h4>
+<div class="outline-text-4" id="text-7-3-2">
+<div class="org-src-container">
+<pre class="src src-idl"><span style="color: #afd8af;">FOR</span> <span style="color: #ff69b4;">x</span>=0,<span style="color: #ff69b4;">Nx</span>-1 DO BEGIN
+FOR y=0,<span style="color: #ff1493;">Ny</span>-1 DO BEGIN
+IF (mask[x,y] EQ 0) THEN <span style="color: #afd8af;">BEGIN</span>
+  <span style="color: #ff69b4;">t1</span> = SYSTIME(1)
+
+  Fnuobs0 = REFORM(Fnuobs[x,y,*])
+  dFnuobs0 = REFORM(dFnuobs[x,y,*])
+  weights0 = REFORM(weights[x,y,*])
+
+  IF (<span style="color: #afd8af;">quiet</span> <span style="color: #ff69b4;">LE</span> 2) <span style="color: #afd8af;">THEN</span> <span style="color: #ff1493;">IF</span> (<span style="color: #afd8af;">Nx</span> <span style="color: #ff69b4;">GT</span> 1) <span style="color: #afd8af;">THEN</span> <span style="color: #ff1493;">IF</span> (<span style="color: #afd8af;">Ny</span> <span style="color: #ff69b4;">GT</span> 1) THEN $
+    PRINT, <span style="color: #61CE3C;">" - x="</span>+PRING(x+1)+<span style="color: #61CE3C;">"/"</span>+PRING(Nx)+<span style="color: #61CE3C;">", y="</span>+PRING(y+1)+<span style="color: #61CE3C;">"/"</span>+PRING(Ny) $
+                                    ELSE PRINT, <span style="color: #61CE3C;">" - x="</span>+PRING(x+1)+<span style="color: #61CE3C;">"/"</span>+PRING(Nx)
+
+  ;; Plotting range
+  <span style="color: #afd8af;">IF</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">rangefluxIN</span>) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">ranFnu</span> = rangefluxIN ELSE BEGIN
+    wh = WHERE(FnuOBS0-dFnuOBS0 GT 0.,N0)
+    IF (<span style="color: #afd8af;">N0</span> <span style="color: #ff69b4;">GE</span> 10) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">minOBS</span> = MIN((SMOOTH(FnuOBS0-dFnuOBS0,10))[wh]) $
+                  ELSE minOBS = 0.
+    maxOBS = ABS(MAX(FnuOBS0+dFnuOBS0))
+    IF (<span style="color: #afd8af;">minOBS</span> <span style="color: #ff69b4;">LT</span> 1.D-3*maxOBS) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">minOBS</span> = 1.D-3*maxOBS
+    IF (<span style="color: #afd8af;">logplot</span> <span style="color: #ff69b4;">EQ</span> 0) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">ranFnu</span> = [0.,1.1*maxOBS] $
+                      ELSE ranFnu = [0.5*minOBS,1.1*maxOBS]
+  ENDELSE
+
+
+  ;; Extra <span style="color: #afd8af;">parameters</span>
+  <span style="color: #ff69b4;">title_plot</span> = title
+  IF (<span style="color: #afd8af;">Nx</span> <span style="color: #ff69b4;">GT</span> 1) THEN $
+    IF (<span style="color: #afd8af;">Ny</span> <span style="color: #ff69b4;">GT</span> 1) THEN $
+      title_plot += <span style="color: #61CE3C;">"[x="</span>+PRING(x+1)+<span style="color: #61CE3C;">"/"</span>+PRING(Nx)+<span style="color: #61CE3C;">",y="</span> $
+                    +PRING(y+1)+<span style="color: #61CE3C;">"/"</span>+PRING(Ny)+<span style="color: #61CE3C;">"]"</span> $
+    ELSE title_plot += <span style="color: #61CE3C;">" [x="</span>+PRING(x+1)+<span style="color: #61CE3C;">"/"</span>+PRING(Nx)+<span style="color: #61CE3C;">"]"</span>
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-orga7ff6dc" class="outline-3">
+<h3 id="orga7ff6dc"><span class="section-number-3">7.4</span> Preliminary Line Fit</h3>
+<div class="outline-text-3" id="text-7-4">
+<div class="org-src-container">
+<pre class="src src-idl"><span style="color: #afd8af;">IF</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">line_firstIN</span>) THEN <span style="color: #afd8af;">BEGIN</span>
+  <span style="color: #ff69b4;">PRINT</span>, <span style="color: #61CE3C;">" Preliminary line fit..."</span>
+  Iline_first = DBLARR(Nline)
+  dIline_first = DBLARR(Nline)
+  Cline_first = DBLARR(Nline)
+  Wline_first = DBLARR(Nline)
+  <span style="color: #afd8af;">FOR</span> <span style="color: #ff69b4;">i</span>=0,<span style="color: #ff1493;">Nline</span>-1 DO BEGIN
+    IF (lines[i].degpoly GT 0) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">BEGIN</span>
+
+      ;; Preparation
+      ;;------------
+      ;; Structure passed by the _EXTRA <span style="color: #afd8af;">mechanism</span>
+      <span style="color: #ff69b4;">ranw0</span> = lines[i].wave + [-6.D,6.D]*lines[i].sigma
+      whObs = WHERE(ISINE(wavObs,ranw0),Nobs0)
+      whMod = WHERE(ISINE(wmod,ranw0),Nwmod0)
+      extra0 = { $
+                ;; Observations
+                <span style="color: #afd8af;">Nobs</span>:Nobs0, wavobs:wavobs[whObs], nuobs:nuobs[whObs], $
+                Fnuobs:Fnuobs0[whObs], dFnuobs:dFnuobs0[whObs], $
+                ;; Plot settings
+                <span style="color: #afd8af;">title</span>:title_plot+<span style="color: #61CE3C;">" "</span>+lines[i].label, noplot:noplot, $
+                milli:milli, hires:hires, logplot:logplot, $
+                ;; Fit settings
+                <span style="color: #afd8af;">ranw</span>:ranw0, $
+                ;; Fit templates
+                <span style="color: #afd8af;">Nw</span>:Nwmod0, w:wmod[whMod], nu:numod[whMod], $
+                center:lines[i].wave } 
+
+      ;; Initial <span style="color: #afd8af;">guesses</span>
+      <span style="color: #ff69b4;">Nparm0</span> = 6
+      parm0 = DBLARR(Nparm0)
+      parinf0 = REPLICATE(parinfo[0,0,0],Nparm0)
+      ;; 1) <span style="color: #afd8af;">Lines</span>
+      <span style="color: #ff69b4;">whc</span> = CLOSEST(wavOBS,extra0.center)
+      intens = ABS(Fnuobs0[whc])/lines[i].Fnu0[whc] / 2.
+      parm0[0:2] = [ intens, lines[i].wave, lines[i].sigma ]
+      parinf0[0:2].value = parm0[0:2]
+      parinf0[0:2].<span style="color: #afd8af;">fixed</span> = [lines[i].Ifixed,lines[i].Cfixed,lines[i].Wfixed]
+      parinf0[0].limited = [1,0] 
+      parinf0[0].limits = [0.D,0.D]
+      parinf0[1].limited = [1,1]
+      parinf0[1].limits = lines[i].Climits
+      parinf0[2].limited = [1,1]
+      parinf0[2].limits = lines[i].Wlimits
+      parinf0[0:2].parname = [ <span style="color: #61CE3C;">"I("</span>+lines[i].label+<span style="color: #61CE3C;">")"</span>, $
+                               <span style="color: #61CE3C;">"C("</span>+lines[i].label+<span style="color: #61CE3C;">")"</span>, $
+                               <span style="color: #61CE3C;">"W("</span>+lines[i].label+<span style="color: #61CE3C;">")"</span> ]
+      ;; 2) Grain <span style="color: #afd8af;">continuum</span>
+      <span style="color: #ff69b4;">mask0</span> = (INDGEN(3) <span style="color: #afd8af;">LE</span> <span style="color: #ff69b4;">lines</span>[i].degpoly)
+      parm0[3:5] = [ Fnuobs0[whc], 10.D, 10.D ]*mask0
+      parinf0[3:5].value = parm0[3:5]
+      parinf0[3:5].<span style="color: #afd8af;">fixed</span> = 1-mask0
+      parinf0[3].limited = [1,0]
+      parinf0[3].limits = [0.D,0.D]
+      parinf0[3:5].parname = [<span style="color: #61CE3C;">"a"</span>,<span style="color: #61CE3C;">"b"</span>,<span style="color: #61CE3C;">"c"</span>]
+
+      ;; Make sure the <span style="color: #afd8af;">parameters</span> <span style="color: #ff69b4;">don</span><span style="color: #ff69b4;">'</span><span style="color: #61CE3C;">t excess the limits</span>
+<span style="color: #61CE3C;">      FOR j=0,Nparm0-1 DO BEGIN</span>
+<span style="color: #61CE3C;">        IF (parinf0[j].fixed EQ 0) THEN BEGIN</span>
+<span style="color: #61CE3C;">          IF (parinf0[j].limited[0] EQ 1 $</span>
+<span style="color: #61CE3C;">              AND parm0[j] LT parinf0[j].limits[0]) THEN BEGIN</span>
+<span style="color: #61CE3C;">            IF (quiet EQ 0) THEN $</span>
+<span style="color: #61CE3C;">              PRINT, "!!! MILES: parameter "+parinf0[j].parname $</span>
+<span style="color: #61CE3C;">                   + " is lower than limit..."</span>
+<span style="color: #61CE3C;">            parm0[j] = parinf0[j].limits[0]</span>
+<span style="color: #61CE3C;">          ENDIF</span>
+<span style="color: #61CE3C;">          IF (parinf0[j].limited[1] EQ 1 $</span>
+<span style="color: #61CE3C;">              AND parm0[j] GT parinf0[j].limits[1]) THEN BEGIN</span>
+<span style="color: #61CE3C;">            IF (quiet EQ 0) THEN $</span>
+<span style="color: #61CE3C;">              PRINT, "!!! MILES: parameter "+parinf0[j].parname $</span>
+<span style="color: #61CE3C;">                   + " is higher than limit..."</span>
+<span style="color: #61CE3C;">            parm0[j] = parinf0[j].limits[1]</span>
+<span style="color: #61CE3C;">          ENDIF</span>
+<span style="color: #61CE3C;">        ENDIF</span>
+<span style="color: #61CE3C;">      ENDFOR</span>
+
+<span style="color: #61CE3C;">      ;; Printing</span>
+<span style="color: #61CE3C;">      whnoprint = WHERE(parinf0.tied NE "" OR parinf0.fixed EQ 1,Nnoprint)</span>
+<span style="color: #61CE3C;">      IF (Nnoprint GT 0) THEN parinf0[whnoprint].mpprint = 0</span>
+
+
+<span style="color: #61CE3C;">      ;; Fit of the lines</span>
+<span style="color: #61CE3C;">      ;;-----------------</span>
+<span style="color: #61CE3C;">      IF (N_ELEMENTS(WHERE(parinf0.fixed EQ 0 $</span>
+<span style="color: #61CE3C;">                           AND parinf0.tied EQ "")) GT Nobs0) THEN BEGIN</span>
+<span style="color: #61CE3C;">        PRINT, "!!! MILES: Number of parameters is higher than number of " $</span>
+<span style="color: #61CE3C;">             + "observations for the separate line fit..."</span>
+<span style="color: #61CE3C;">        RETURN</span>
+<span style="color: #61CE3C;">      ENDIF</span>
+<span style="color: #61CE3C;">      IF (quiet GE 1) THEN quietFIT = 1 ELSE quietFIT = 0</span>
+
+<span style="color: #61CE3C;">      ;; Actual fit</span>
+<span style="color: #61CE3C;">      weiline = weights0[whObs]</span>
+<span style="color: #61CE3C;">      fit = MPCURVEFIT(extra0.wavObs,extra0.Fnuobs,weiline,parm0, $</span>
+<span style="color: #61CE3C;">                       FUNCTION_NAME="linealone",PARINFO=parinf0, $</span>
+<span style="color: #61CE3C;">                       /NODERIVATIVE,FUNCTARGS=extra0,FTOL=ftol, $</span>
+<span style="color: #61CE3C;">                       XTOL=1.D-50, GTOL=1.D-50,QUIET=quietFIT,COVAR=covar0)</span>
+
+<span style="color: #61CE3C;">      ;; Error</span>
+<span style="color: #61CE3C;">      sigpar0 = DBLARR(Nparm0)</span>
+<span style="color: #61CE3C;">      FOR j=0,Nparm0-1 DO sigpar0[j] = SQRT(covar0[j,j])</span>
+
+<span style="color: #61CE3C;">      ;; Final parameters</span>
+<span style="color: #61CE3C;">      Iline_first[i] = parm0[0]</span>
+<span style="color: #61CE3C;">      Cline_first[i] = parm0[1]</span>
+<span style="color: #61CE3C;">      Wline_first[i] = parm0[2]</span>
+<span style="color: #61CE3C;">      dIline_first[i] = sigpar0[0]</span>
+<span style="color: #61CE3C;">      IF (quiet LE 2) THEN $</span>
+<span style="color: #61CE3C;">        PRINT, STRING(lines[i].label,F="(A15)")+"   I="+PRING(Iline_first[i])</span>
+
+<span style="color: #61CE3C;">      ;; Update the template for the complete fit</span>
+<span style="color: #61CE3C;">      lines[i].Fnu0 = GAUSSLINE(wmod,Cline_first[i],Wline_first[i])</span>
+
+<span style="color: #61CE3C;">      ;; Save the plot</span>
+<span style="color: #61CE3C;">      IF KEYWORD_SET(coplineIN) THEN BEGIN</span>
+<span style="color: #61CE3C;">        extra0.noplot = 0</span>
+<span style="color: #61CE3C;">        fileps0 = STRREPLACE(fileps[x,y],".eps","_"+lines[i].label+".eps")</span>
+<span style="color: #61CE3C;">        SETPLOT_PS, /TeX, FILE=fileps0, /DEMI</span>
+<span style="color: #61CE3C;">        LINEALONE, extra0.wavObs, parm0, Fnu0, _EXTRA=extra0</span>
+<span style="color: #61CE3C;">        ENDPS, FILE=fileps0, /PDF, NOX=KEYWORD_SET(noX)</span>
+<span style="color: #61CE3C;">      ENDIF</span>
+
+<span style="color: #61CE3C;">    ENDIF</span>
+<span style="color: #61CE3C;">  ENDFOR</span>
+
+<span style="color: #61CE3C;">  ;; Final template for the line fit</span>
+<span style="color: #61CE3C;">  whtemplate = WHERE(lines.degpoly GT 0,Ntemplate)</span>
+<span style="color: #61CE3C;">  Fnu0_line = DBLARR(Nwmod)</span>
+<span style="color: #61CE3C;">  FOR i=0,Ntemplate-1 DO $</span>
+<span style="color: #61CE3C;">    Fnu0_line += Iline_first[whtemplate[i]]*lines[whtemplate[i]].Fnu0</span>
+
+<span style="color: #61CE3C;">ENDIF ELSE Fnu0_line = DBLARR(Nwmod)</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgd4448c5" class="outline-3">
+<h3 id="orgd4448c5"><span class="section-number-3">7.5</span> Complete Fit</h3>
+<div class="outline-text-3" id="text-7-5">
+</div>
+<div id="outline-container-org3d2ffc7" class="outline-4">
+<h4 id="org3d2ffc7"><span class="section-number-4">7.5.1</span> Initialisation</h4>
+<div class="outline-text-4" id="text-7-5-1">
+<div class="org-src-container">
+<pre class="src src-idl"><span style="color: #afd8af;">IF</span> <span style="color: #ff1493;">KEYWORD_SET</span>(<span style="color: #afd8af;">line_firstIN</span>) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">PRINT</span>, <span style="color: #61CE3C;">" Complete fit..."</span>
+parm = DBLARR(Nparm)
+;; 1) Grain <span style="color: #afd8af;">continuum</span>
+<span style="color: #ff69b4;">i0</span> = 0
+FOR i=0,<span style="color: #ff69b4;">Nbb</span>-1 DO BEGIN
+  whmax = WHERE(cont[i].Fnu0 EQ MAX(cont[i].Fnu0),Nmax)
+  mass = ABS(Fnuobs0[whmax])/cont[i].Fnu0[whmax] / 2.
+  i1 = 2*i
+  i2 = 2*i+1
+  parm[i1:i2] = [mass,cont[i].T]
+  parinfo[x,y,i1:i2].value = REFORM(parm[i1:i2],1,1,2)
+  parinfo[x,y,i1:i2].<span style="color: #afd8af;">fixed</span> = REFORM([cont[i].Mfixed,cont[i].Tfixed],1,1,2)
+  parinfo[x,y,i1].limited = [1,0] 
+  parinfo[x,y,i1].limits = [0.D,0.D]
+  parinfo[x,y,i2].limited = [1,1]
+  parinfo[x,y,i2].limits = [cont[i].Tmin,cont[i].Tmax]
+  parinfo[x,y,i1:i2].parname = $
+    REFORM([ <span style="color: #61CE3C;">"Mass("</span>+BBtype[i]+<span style="color: #61CE3C;">"["</span>+PRING(i+1)+<span style="color: #61CE3C;">"])"</span>, $
+             <span style="color: #61CE3C;">"Temp("</span>+BBtype[i]+<span style="color: #61CE3C;">"["</span>+PRING(i+1)+<span style="color: #61CE3C;">"])"</span> ],1,1,2)
+ENDFOR
+;; 2) <span style="color: #afd8af;">Lines</span>
+<span style="color: #ff69b4;">i0</span> += 2*Nbb
+FOR i=0,<span style="color: #ff69b4;">Nline</span>-1 DO BEGIN
+  i1 = i0+3*i
+  i2 = i0+3*i+2
+  IF (lines[i].degpoly EQ 0) <span style="color: #afd8af;">THEN</span> <span style="color: #afd8af;">BEGIN</span>
+    <span style="color: #ff69b4;">whc</span> = CLOSEST(wavOBS,lines[i].wave)
+    intens = ABS(Fnuobs0[whc])/lines[i].Fnu0[whc] / 2.
+    parm[i1:i2] = [ intens, lines[i].wave, lines[i].sigma ]
+    parinfo[x,y,i1:i2].<span style="color: #afd8af;">fixed</span> = REFORM([lines[i].Ifixed,lines[i].Cfixed, $
+                                       lines[i].Wfixed],1,1,3)
+    parinfo[x,y,i1].limited = [1,0] 
+    parinfo[x,y,i1].limits = [0.D,0.D]
+    parinfo[x,y,i1+1].limited = [1,1]
+    parinfo[x,y,i1+1].limits = lines[i].Climits
+    parinfo[x,y,i1+2].limited = [1,1]
+    parinfo[x,y,i1+2].limits = lines[i].Wlimits
+  ENDIF ELSE BEGIN
+    whc = CLOSEST(wavOBS,lines[i].wave)
+    intens = ABS(Fnuobs0[whc])/lines[i].Fnu0[whc] / 2.
+    parm[i1:i2] = [ Iline_first[i], Cline_first[i], Wline_first[i] ]
+    parinfo[x,y,i1:i2].<span style="color: #afd8af;">fixed</span> = REFORM([1,1,1],1,1,3)
+  <span style="color: #afd8af;">ENDELSE</span>
+  <span style="color: #ff69b4;">parinfo</span>[x,<span style="color: #afd8af;">y</span>,i1:i2].value = REFORM(parm[i1:i2],1,1,3)
+  parinfo[x,y,i1:i2].parname = REFORM([ <span style="color: #61CE3C;">"I("</span>+lines[i].label+<span style="color: #61CE3C;">")"</span>, $
+                                        <span style="color: #61CE3C;">"C("</span>+lines[i].label+<span style="color: #61CE3C;">")"</span>, $
+                                        <span style="color: #61CE3C;">"W("</span>+lines[i].label+<span style="color: #61CE3C;">")"</span> ],1,1,3)
+ENDFOR
+;; 3) <span style="color: #afd8af;">Bands</span>
+<span style="color: #ff69b4;">i0</span> += 3*Nline
+FOR i=0,<span style="color: #ff69b4;">Nband</span>-1 DO BEGIN
+  i1 = i0+4*i
+  i2 = i0+4*i+3
+  whc = CLOSEST(wavOBS,bands[i].wave)
+  intens = ABS(Fnuobs0[whc])/bands[i].Fnu0[whc] / 2.
+  parm[i1:i2] = REFORM([ intens, bands[i].wave, bands[i].sigmaS, $
+                         bands[i].sigmaL ],1,1,4)
+  parinfo[x,y,i1:i2].value = REFORM(parm[i1:i2],1,1,4)
+  parinfo[x,y,i1:i2].<span style="color: #afd8af;">fixed</span> = REFORM([bands[i].Ifixed,bands[i].Cfixed, $
+                                     bands[i].Wfixed,bands[i].Wfixed],1,1,4)
+  parinfo[x,y,i1].limited = [1,0] 
+  parinfo[x,y,i1].limits = [0.D,0.D]
+  parinfo[x,y,i1+1].limited = [1,1]
+  parinfo[x,y,i1+1].limits = bands[i].Climits
+  parinfo[x,y,i1+2].limited = [1,1]
+  parinfo[x,y,i1+2].limits = bands[i].Wlimits*bands[i].sigmaS
+  parinfo[x,y,i1+3].limited = [1,1]
+  parinfo[x,y,i1+3].limits = bands[i].Wlimits*bands[i].sigmaL
+  IF (bands[i].tiesigma) <span style="color: #afd8af;">THEN</span> <span style="color: #afd8af;">BEGIN</span>
+    <span style="color: #ff69b4;">parinfo</span>[x,<span style="color: #afd8af;">y</span>,i1+3].tied = PRING(parm[i1+3]/parm[i1+2]) $
+                             +<span style="color: #61CE3C;">"*P["</span>+PRING(i1+2)+<span style="color: #61CE3C;">"]"</span>
+  ENDIF
+  parinfo[x,y,i1:i2].parname = REFORM([ <span style="color: #61CE3C;">"I("</span>+bands[i].label+<span style="color: #61CE3C;">")"</span>, $
+                                        <span style="color: #61CE3C;">"C("</span>+bands[i].label+<span style="color: #61CE3C;">")"</span>, $
+                                        <span style="color: #61CE3C;">"WS("</span>+bands[i].label+<span style="color: #61CE3C;">")"</span>, $
+                                        <span style="color: #61CE3C;">"WL("</span>+bands[i].label+<span style="color: #61CE3C;">")"</span> ],1,1,4)
+ENDFOR
+;; 4) Dust <span style="color: #afd8af;">extinction</span>
+<span style="color: #ff69b4;">i0</span> += 4*Nband
+FOR i=0,<span style="color: #ff69b4;">NAv</span>-1 DO BEGIN
+  i1 = i0+i
+  parm[i1] = 1.D
+  parinfo[x,y,i1].value = parm[i1]
+  parinfo[x,y,i1].<span style="color: #afd8af;">fixed</span> = extinct[i].<span style="color: #afd8af;">fixed</span>
+  parinfo[x,y,i1].limits = [0.D,extinct[i].Avmax]
+  parinfo[x,y,i1].limited = [1,1]
+  IF (extinct[i].type EQ <span style="color: #61CE3C;">"CO2"</span>) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">parinfo</span>[x,<span style="color: #afd8af;">y</span>,i1].parname = <span style="color: #61CE3C;">"A(CO2)"</span> $
+                                ELSE parinfo[x,y,i1].parname = <span style="color: #61CE3C;">"Av(dust)"</span>
+ENDFOR
+;; 5) Stellar <span style="color: #afd8af;">continuum</span>
+<span style="color: #ff69b4;">i0</span> += NAv
+IF (<span style="color: #afd8af;">Nstar</span> <span style="color: #ff69b4;">EQ</span> 1) <span style="color: #afd8af;">THEN</span> <span style="color: #afd8af;">BEGIN</span>
+  <span style="color: #ff69b4;">whmax</span> = WHERE(Fnu_star0 <span style="color: #afd8af;">EQ</span> <span style="color: #ff1493;">MAX</span>(<span style="color: #afd8af;">Fnu_star0</span>),Nmax)
+  mass = ABS(Fnuobs0[whmax])/Fnu_star0[whmax] / 2.
+  parm[i0] = mass
+  parinfo[x,y,i0].value = mass
+  parinfo[x,y,i0].<span style="color: #afd8af;">fixed</span> = fixmassStar
+  parinfo[x,y,i0].limited = limitedmassStar
+  parinfo[x,y,i0].limits = ranmassStar
+  parinfo[x,y,i0].parname = <span style="color: #61CE3C;">"Mass(star)"</span>
+ENDIF
+
+;; Make sure the <span style="color: #afd8af;">parameters</span> <span style="color: #ff69b4;">don</span><span style="color: #ff69b4;">'</span><span style="color: #61CE3C;">t excess the limits</span>
+<span style="color: #61CE3C;">FOR i=0,Nparm-1 DO BEGIN</span>
+<span style="color: #61CE3C;">  IF (parinfo[x,y,i].fixed EQ 0) THEN BEGIN</span>
+<span style="color: #61CE3C;">    IF (parinfo[x,y,i].limited[0] EQ 1 $</span>
+<span style="color: #61CE3C;">        AND parm[i] LT parinfo[x,y,i].limits[0]) THEN BEGIN</span>
+<span style="color: #61CE3C;">      IF (quiet EQ 0) THEN $</span>
+<span style="color: #61CE3C;">        PRINT, "!!! MILES: parameter "+parname[i]+" is lower than limit..."</span>
+<span style="color: #61CE3C;">      parm[i] = parinfo[x,y,i].limits[0]</span>
+<span style="color: #61CE3C;">    ENDIF</span>
+<span style="color: #61CE3C;">    IF (parinfo[x,y,i].limited[1] EQ 1 $</span>
+<span style="color: #61CE3C;">        AND parm[i] GT parinfo[x,y,i].limits[1]) THEN BEGIN</span>
+<span style="color: #61CE3C;">      IF (quiet EQ 0) THEN $</span>
+<span style="color: #61CE3C;">        PRINT, "!!! MILES: parameter "+parname[i]+" is higher than limit..."</span>
+<span style="color: #61CE3C;">      parm[i] = parinfo[x,y,i].limits[1]</span>
+<span style="color: #61CE3C;">    ENDIF</span>
+<span style="color: #61CE3C;">  ENDIF</span>
+<span style="color: #61CE3C;">ENDFOR</span>
+
+<span style="color: #61CE3C;">;; Printing</span>
+<span style="color: #61CE3C;">parinfo[x,y,WHERE(parinfo[x,y,*].tied NE "" $</span>
+<span style="color: #61CE3C;">                  OR parinfo[x,y,*].fixed EQ 1)].mpprint = 0</span>
+
+<span style="color: #61CE3C;">;; Separate the treatment of the various lines and bands</span>
+<span style="color: #61CE3C;">IF (Nline GT 0) THEN BEGIN</span>
+<span style="color: #61CE3C;">  ;; - Lines that were computed previously (for the absorption):</span>
+<span style="color: #61CE3C;">  whline1 = WHERE(lines.degpoly GT 0,Nline1,COMP=whline2,NCOMP=Nline2)</span>
+<span style="color: #61CE3C;">  ;; - Lines where the center and the width are fixed and not</span>
+<span style="color: #61CE3C;">  ;;   previously computed:</span>
+<span style="color: #61CE3C;">  whlinefix = WHERE(lines.degpoly EQ 0 AND $</span>
+<span style="color: #61CE3C;">                    lines.Cfixed EQ 1 AND lines.Wfixed EQ 1 $</span>
+<span style="color: #61CE3C;">                    AND lines.degpoly EQ 0,Nlinefix)</span>
+<span style="color: #61CE3C;">  whlinefree = WHERE(lines.degpoly EQ 0 AND $</span>
+<span style="color: #61CE3C;">                     (lines.Cfixed EQ 0 OR lines.Wfixed EQ 0) $</span>
+<span style="color: #61CE3C;">                     AND lines.degpoly EQ 0,Nlinefree)</span>
+<span style="color: #61CE3C;">ENDIF ELSE BEGIN</span>
+<span style="color: #61CE3C;">  whline1 = 0</span>
+<span style="color: #61CE3C;">  whline2 = 0 </span>
+<span style="color: #61CE3C;">  whlinefix = 0</span>
+<span style="color: #61CE3C;">  whlinefree = 0</span>
+<span style="color: #61CE3C;">  Nline1 = 0</span>
+<span style="color: #61CE3C;">  Nline2 = 0</span>
+<span style="color: #61CE3C;">  Nlinefix = 0</span>
+<span style="color: #61CE3C;">  Nlinefree = 0</span>
+<span style="color: #61CE3C;">ENDELSE</span>
+<span style="color: #61CE3C;">;; - Bands fixed:</span>
+<span style="color: #61CE3C;">whbandfix = WHERE(bands.Cfixed EQ 1 AND bands.Wfixed EQ 1,Nbandfix, $</span>
+<span style="color: #61CE3C;">                  COMP=whbandfree,NCOMP=Nbandfree)</span>
+
+<span style="color: #61CE3C;">;; Structure passed by the _EXTRA mechanism</span>
+<span style="color: #61CE3C;">extra = { $</span>
+<span style="color: #61CE3C;">          ;; Observations</span>
+<span style="color: #61CE3C;">          Nobs:Nobs, wavobs:wavobs, nuobs:nuobs, $</span>
+<span style="color: #61CE3C;">          Fnuobs:Fnuobs0, dFnuobs:dFnuobs0, $</span>
+<span style="color: #61CE3C;">          ;; Plot settings</span>
+<span style="color: #61CE3C;">          title:title_plot, noplot:noplot, milli:milli, hires:hires, $</span>
+<span style="color: #61CE3C;">          ranw:ranw, ranFnu:ranFnu, logplot:logplot, $</span>
+<span style="color: #61CE3C;">          ;; Fit settings</span>
+<span style="color: #61CE3C;">          Nbb:Nbb, Nline:Nline, Nband:Nband, NAv:NAv, Nstar:Nstar, $</span>
+<span style="color: #61CE3C;">          ;; Fit templates</span>
+<span style="color: #61CE3C;">          Nw:Nwmod, w:wmod, nu:numod, cont:cont, lines:lines, bands:bands, $</span>
+<span style="color: #61CE3C;">          extinct:extinct, Fnu_star0:Fnu_star0, Qabs:Qabs_str, $</span>
+<span style="color: #61CE3C;">          Nline1:Nline1, whline1:whline1, Nline2:Nline2, whline2:whline2, $</span>
+<span style="color: #61CE3C;">          Nlinefix:Nlinefix, whlinefix:whlinefix, Nlinefree:Nlinefree, $</span>
+<span style="color: #61CE3C;">          whlinefree:whlinefree, Fnu0_line:Fnu0_line, $</span>
+<span style="color: #61CE3C;">          whbandfix:whbandfix, Nbandfix:Nbandfix, whbandfree:whbandfree, $</span>
+<span style="color: #61CE3C;">          Nbandfree:Nbandfree } </span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgd8ce7fe" class="outline-4">
+<h4 id="orgd8ce7fe"><span class="section-number-4">7.5.2</span> Fit of the SED</h4>
+<div class="outline-text-4" id="text-7-5-2">
+<div class="org-src-container">
+<pre class="src src-idl">  IF (N_ELEMENTS(WHERE(parinfo[x,y,*].<span style="color: #afd8af;">fixed</span> EQ 0 $
+                       AND parinfo[x,y,*].tied EQ <span style="color: #61CE3C;">""</span>)) <span style="color: #afd8af;">GT</span> <span style="color: #ff69b4;">Nobs</span>) THEN <span style="color: #afd8af;">BEGIN</span>
+    <span style="color: #ff69b4;">PRINT</span>, <span style="color: #61CE3C;">"!!! MILES: Number of parameters is higher than number of "</span> $
+         + <span style="color: #61CE3C;">"observations..."</span>
+    RETURN
+  ENDIF
+  IF (<span style="color: #afd8af;">quiet</span> <span style="color: #ff69b4;">GT</span> 1) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">quietFIT</span> = 1 ELSE quietFIT = 0
+  IF (<span style="color: #afd8af;">Niter</span> <span style="color: #ff69b4;">GT</span> 1) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">BEGIN</span>
+    ;; Actual <span style="color: #afd8af;">fit</span>
+    <span style="color: #ff69b4;">fit</span> = MPCURVEFIT( wavobs,Fnuobs0,weights0,parm,$
+                  FUNCTION_NAME=<span style="color: #61CE3C;">"specmodel"</span>,PARINFO=REFORM(parinfo[x,y,*]), $
+                  STATUS=status1D,/NODERIVATIVE,FUNCTARGS=extra,FTOL=ftol, $
+                  XTOL=1.D-50, GTOL=1.D-50,QUIET=quietFIT,COVAR=covar, $
+                  CHI=chi21D,ITMAX=Niter )
+
+    ;; <span style="color: #afd8af;">Iteration</span> 
+    <span style="color: #ff1493;">IF</span> (<span style="color: #afd8af;">restart</span> <span style="color: #ff69b4;">GE</span> 1) <span style="color: #afd8af;">THEN</span> <span style="color: #afd8af;">BEGIN</span>
+pc
+stop
+      <span style="color: #afd8af;">FOR</span> <span style="color: #ff69b4;">k</span>=0,<span style="color: #ff1493;">restart</span>-1 DO BEGIN
+        IF (<span style="color: #afd8af;">quiet</span> <span style="color: #ff69b4;">LE</span> 1) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">PRINT</span>, <span style="color: #61CE3C;">" Iteration..."</span>
+        parinf = REFORM(parinfo[x,y,*])
+        parinf.parname = <span style="color: #61CE3C;">"Iter "</span>+PRING(k+1)+<span style="color: #61CE3C;">": "</span>+parinf.parname
+        whbad = WHERE(<span style="color: #afd8af;">parm</span> <span style="color: #ff69b4;">LT</span> 1.D-4*parinfo[x,y,*].value $
+                      AND STRPOS(parinfo[x,y,*].parname,<span style="color: #61CE3C;">"I("</span>) EQ 0 $ ;; <span style="color: #afd8af;">a</span> <span style="color: #ff69b4;">modifier</span> !!!
+                      AND parinfo[x,y,*].<span style="color: #afd8af;">fixed</span> EQ 0,<span style="color: #ff69b4;">Nbad</span>) ;; <span style="color: #afd8af;">a</span> <span style="color: #ff69b4;">modifier</span> !!!
+;; Faire un <span style="color: #afd8af;">restart</span> <span style="color: #ff1493;">selectif</span>...
+       IF (<span style="color: #afd8af;">Nbad</span> <span style="color: #ff69b4;">GT</span> 0) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">parm</span>[whbad] = parinfo[x,y,whbad].value
+       fit = MPCURVEFIT( wavobs,Fnuobs0,weights0, $
+                          parm,FUNCTION_NAME=<span style="color: #61CE3C;">"specmodel"</span>,PARINFO=parinf, $
+                          STATUS=status1D,/NODERIVATIVE,FUNCTARGS=extra, $
+                          FTOL=ftol,XTOL=1.D-50,GTOL=1.D-50,QUIET=quietFIT, $
+                          COVAR=covar,CHI=chi21D,ITMAX=Niter)
+      ENDFOR
+    <span style="color: #afd8af;">ENDIF</span>
+    <span style="color: #ff69b4;">parstrOUT</span>[x,y] = PARSTRUCT(parm,Nbb=Nbb,Nline=Nline,Nband=Nband,NAv=NAv, $
+                               Nstar=Nstar)
+
+    ;; <span style="color: #afd8af;">Error</span>
+    <span style="color: #ff69b4;">sigpar</span> = DBLARR(Nparm)
+    <span style="color: #afd8af;">FOR</span> <span style="color: #ff69b4;">i</span>=0,<span style="color: #ff69b4;">Nparm</span>-1 DO sigpar[i] = SQRT(covar[i,i])
+
+    ;; Final <span style="color: #afd8af;">printing</span>
+    <span style="color: #ff69b4;">timin</span>[x,y] = (SYSTIME(1)-t1)/60.
+    IF (<span style="color: #afd8af;">quiet</span> <span style="color: #ff69b4;">LE</span> 2) <span style="color: #afd8af;">THEN</span> <span style="color: #afd8af;">BEGIN</span>
+      <span style="color: #afd8af;">FOR</span> <span style="color: #ff69b4;">i</span>=0,<span style="color: #ff1493;">Nparm</span>-1 DO IF (parinfo[x,y,i].mpprint EQ 1) THEN $
+        PRINT, STRING(parinfo[x,y,i].parname,<span style="color: #61CE3C;">"(A20)"</span>)+<span style="color: #61CE3C;">" = "</span>, parm[i], <span style="color: #61CE3C;">" +- "</span>, $
+               sigpar[i]
+      PRINT, <span style="color: #61CE3C;">" - status="</span>+PRING(status1D)+<span style="color: #61CE3C;">", "</span> $
+             +PRING((SYSTIME(1)-t0)/60.,F=<span style="color: #61CE3C;">"(F8.1)"</span>)+<span style="color: #61CE3C;">" minutes elapsed."</span>
+    ENDIF
+
+  ENDIF ELSE BEGIN
+
+    ;; No <span style="color: #afd8af;">fit</span>
+    <span style="color: #ff69b4;">sigpar</span> = DBLARR(Nparm)
+    status = -1
+    chi2 = 0.D
+
+  ENDELSE
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgf263028" class="outline-4">
+<h4 id="orgf263028"><span class="section-number-4">7.5.3</span> Outputs</h4>
+<div class="outline-text-4" id="text-7-5-3">
+<div class="org-src-container">
+<pre class="src src-idl">  ;; Final <span style="color: #afd8af;">parameters</span>
+  <span style="color: #ff69b4;">errparstrOUT</span>[x,y] = PARSTRUCT(sigpar,Nbb=Nbb,Nline=Nline,Nband=Nband, $
+                                NAv=NAv,Nstar=Nstar)
+  parinfoOUT = parinfo
+  statusOUT[x,y] = status1D
+  chi2OUT[x,y] = chi21D
+
+  ;; Save the <span style="color: #afd8af;">model</span>
+  <span style="color: #ff69b4;">SPECMODEL</span>, <span style="color: #ff69b4;">wmod</span>, <span style="color: #ff69b4;">parm</span>, <span style="color: #ff69b4;">Fnu_tot1D</span>, <span style="color: #ff69b4;">FNU_BB</span>=Fnu_BB1D, <span style="color: #ff69b4;">FNU_STAR</span>=Fnu_star1D, $
+             FNU_LINE=Fnu_line1D, FNU_BAND=Fnu_band1D, PABS=Pabs1D, $
+             _EXTRA=extra
+  IF KEYWORD_SET(modsaveIN) THEN <span style="color: #afd8af;">BEGIN</span>
+    <span style="color: #ff69b4;">Fnu_tot</span>[x,<span style="color: #afd8af;">y</span>,*] = Fnu_tot1D
+    Fnu_BB[x,y,*,*] = Fnu_BB1D
+    Fnu_line[x,y,*] = Fnu_line1D
+    Fnu_band[x,y,*,*] = Fnu_band1D
+    Fnu_star[x,y,*] = Fnu_star1D
+    Pabs[x,y,*] = Pabs1D
+    fitOUT = {Nw:Nwmod, w:wmod, nu:numod, Fnu_tot:REFORM(Fnu_tot), $
+              Fnu_BB:Fnu_BB, Fnu_star:Fnu_star, Fnu_line:Fnu_line, $
+              Fnu_band:Fnu_band, Pabs:Pabs}
+  ENDIF <span style="color: #afd8af;">ELSE</span> <span style="color: #ff69b4;">fitOUT</span> = 0
+
+  ;; Correct for <span style="color: #afd8af;">the</span> <span style="color: #ff69b4;">absorption</span> <span style="color: #4c83ff;">of</span> <span style="color: #afd8af;">the</span> lines that were fitted first
+  FOR i=0,<span style="color: #ff69b4;">Nline1</span>-1 DO BEGIN
+    Pabsline = Pabs1D[CLOSEST(wmod,lines[whline1[i]].wave)]
+    parstrOUT[x,y].Iline[whline1[i]] /= Pabsline
+    errparstrOUT[x,y].Iline[whline1[i]] /= Pabsline
+  ENDFOR
+
+  ;; Plottings
+  <span style="color: #afd8af;">FOR</span> <span style="color: #ff69b4;">k</span>=(<span style="color: #afd8af;">noplot</span> <span style="color: #ff69b4;">GE</span> 1),<span style="color: #ff1493;">KEYWORD_SET</span>(filepsIN) DO <span style="color: #afd8af;">BEGIN</span>
+    <span style="color: #ff69b4;">extra</span>.noplot = 0
+    IF (<span style="color: #afd8af;">k</span> <span style="color: #ff69b4;">EQ</span> 1) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">SETPLOT_PS</span>, /TeX, FILE=fileps[x,y]
+      SPECMODEL, wmod, parm, Fnu_tot1D, FNU_BB=Fnu_BB1D, FNU_STAR=Fnu_star1D, $
+                 FNU_LINE=Fnu_line1D, FNU_BAND=Fnu_band1D, PABS=Pabs1D, $
+                 _EXTRA=extra
+    IF (<span style="color: #afd8af;">k</span> <span style="color: #ff69b4;">EQ</span> 1) THEN $
+      ENDPS, FILE=fileps[x,y], PDF=KEYWORD_SET(pdfIN), EPS=KEYWORD_SET(epsIN), $
+             NOX=KEYWORD_SET(noX) 
+  ENDFOR
+
+<span style="color: #afd8af;">ENDIF</span>
+<span style="color: #ff69b4;">ENDFOR</span>
+
+  ;; Savings (once <span style="color: #afd8af;">every</span> <span style="color: #ff69b4;">column</span>)
+  IF (KEYWORD_SET(filexdrIN)) <span style="color: #afd8af;">THEN</span> <span style="color: #afd8af;">BEGIN</span>
+    <span style="color: #ff69b4;">parstr</span> = REFORM(parstrOUT)
+    errparstr = REFORM(errparstrOUT)
+    fit = fitOUT
+    status = REFORM(statusOUT)
+    chi2 = REFORM(chi2OUT)
+    SAVE, <span style="color: #ff69b4;">FILE</span>=filexdrIN, <span style="color: #ff69b4;">Nx</span>, <span style="color: #ff69b4;">Ny</span>, <span style="color: #ff69b4;">Nobs</span>, <span style="color: #ff69b4;">wavobs</span>, <span style="color: #ff69b4;">nuobs</span>, <span style="color: #ff69b4;">Fnuobs</span>, <span style="color: #ff69b4;">dFnuobs</span>, $
+                          weights, mask, parstr, errparstr, parinfo, $
+                          status, chi2, fit, instrument, timin, cont, lines, $
+                          bands, <span style="color: #afd8af;">extinct</span>
+    <span style="color: #ff69b4;">PRINT</span>, <span style="color: #61CE3C;">" - File "</span>+filexdrIN+<span style="color: #61CE3C;">" has been written."</span>
+  ENDIF 
+
+ENDFOR
+;; BIG <span style="color: #afd8af;">LOOP</span>
+
+<span style="color: #ff1493;">IF</span> (<span style="color: #afd8af;">quiet</span> <span style="color: #ff69b4;">LE</span> 1) <span style="color: #afd8af;">THEN</span> <span style="color: #ff69b4;">PRINT</span>, <span style="color: #ff1493;">STRJOIN</span>(REPLICATE(<span style="color: #61CE3C;">"-"</span>,80))
+
+
+END
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: HU Dangning</p>
+<p class="date">Created: 2020-05-11 Mon 10:02</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>
