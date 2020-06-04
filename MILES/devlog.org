@@ -1,4 +1,3 @@
-
 #+TITLE: MILES development log
 #+AUTHOR: D. HU
 #+TODO: TODO(t) WAIT(w) | DONE(d)
@@ -6,10 +5,11 @@
 #+TODO: REPORT(r!) BUG(b!) KNOWNCAUSE(k!) | FIXED(f!)
 #+STARTUP: logdone
 
-Version: v0 (202005??)
-* TODO tests [2/4]
-** TODO general [2/3]
-*** TODO 
+Version: v0 (202006??)
+* TODO tests [3/4]
+** DONE general [3/3]
+*** DONE synthetic 
+CLOSED: [2020-06-03 Wed 23:11]
 *** DONE specModel
 CLOSED: [2020-05-25 Mon 18:17]
 *** DONE degradeRes
@@ -25,7 +25,7 @@ CLOSED: [2020-04-25 Sat 19:27]
 - State "KNOWNCAUSE" from "DONE"       [2020-05-11 Mon 14:32]
 ** DONE compile
 CLOSED: [2020-04-24 Fri 15:00]
-* TODO miles [62%]
+* TODO miles [61%]
 :PROPERTIES:
 :COOKIE_DATA: recursive
 :END:
@@ -40,7 +40,7 @@ CLOSED: [2020-05-11 Mon 13:57]
 **** DONE ~bands_IN~
 CLOSED: [2020-05-11 Mon 13:57]
 - BIN
-** TODO auxil (MODULE) [83%]
+** TODO auxil (MODULE) [91%]
 *** TYPE, PUBLIC
 **** DONE ~par_str~
 CLOSED: [2020-05-11 Mon 10:52]
@@ -55,8 +55,10 @@ CLOSED: [2020-05-11 Mon 11:47]
 CLOSED: [2020-05-11 Mon 10:53]
 **** DONE ~make_Qabs~ : Read optical properties
 CLOSED: [2020-05-11 Mon 11:47]
-**** DONE ~chi2_INIT~ : Initialization of parameters for chi2 method
+**** CNCL ~chi2_INIT~ : Initialization of parameters for chi2 method
 CLOSED: [2020-05-25 Mon 18:11]
+- State "CNCL"       from "DONE"       [2020-06-02 Tue 10:23] \\
+  Removed. Parameters stored in a separate module/file.
 *** FUNCTION
 **** DONE ~degradeRes~ : Automatize the degradation of the spectral resolution
 CLOSED: [2020-05-11 Mon 13:40]
@@ -79,18 +81,24 @@ CLOSED: [2020-05-20 Wed 23:36]
 CLOSED: [2020-05-20 Wed 23:36]
 - State "FIXED"      from "KNOWNCAUSE" [2020-05-20 Wed 23:36]
 - State "KNOWNCAUSE" from "TODO"       [2020-05-12 Tue 10:57]
-***** KNOWNCAUSE ~specModel~ : Total model function for chi2 calling
+***** FIXED ~specModel~ : Total model function for chi2 calling
+CLOSED: [2020-06-03 Wed 17:20]
+- State "FIXED"      from "BUG"        [2020-06-03 Wed 17:20]
+- Note taken on [2020-06-03 Wed 17:19] \\
+  optional output should not be allocated out of IF (PRESENT) loop
+- State "BUG"        from "FIXED"      [2020-06-03 Wed 17:19]
+- State "FIXED"      from "KNOWNCAUSE" [2020-05-29 Fri 15:15]
 - Note taken on [2020-05-26 Tue 16:41] \\
-  Replace massStar by LnuStar (total luminosity of star), with BB normalized by Stefan-Boltzmann constant.
+  Replace massStar by Fstar (total surface brightness or luminosity of star), with BB normalized by Stefan-Boltzmann constant.
 - State "KNOWNCAUSE" from "DONE"       [2020-05-26 Tue 16:41]
 ** TODO Init [50%]
 *** DONE input spectrum (fits2h5.py)
 CLOSED: [2020-05-11 Mon 15:21]
 *** TODO modeled spectrum
 ** TODO Chi2 [0%]
-*** TODO test chi2min with modifBB
-
-
+*** TODO test chi2min with specModel (synthetic spectrum)
+*** TODO test chi2min with modifBB (input 3D data)
+*** TODO total model chi2 fit
 ** WAIT Bayesian [%]
 ** WAIT Hierarchical Bayesian [%]
 * TODO UI (Python) [66%]
@@ -102,4 +110,3 @@ CLOSED: [2020-05-11 Mon 15:21]
 CLOSED: [2020-04-28 Tue 00:07]
 ** DONE asc2h5
 CLOSED: [2020-04-27 Mon 23:35]
-* TODO plot a modeled spectrum

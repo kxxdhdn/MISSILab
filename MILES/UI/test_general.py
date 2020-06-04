@@ -20,15 +20,17 @@ path_out = mroot+'tests/out/'
 filename = 'test_total'
 
 ## Read h5 file
-wvl, Fnu, FnuBB, FnuLINE, FnuBAND, FnuSTAR  = read_hdf5(path_out+filename, \
-    'Wavelength (micron)', 'Fnu (MJyovsr)', 'FnuBB (MJyovsr)', \
-	'FnuLINE (MJyovsr)', 'FnuBAND (MJyovsr)', 'FnuSTAR (MJyovsr)')
+wvl, FnuOBS, FnuMOD, FnuBB, FnuLINE, FnuBAND, FnuSTAR = \
+    read_hdf5(path_out+filename, 
+    'Wavelength (micron)', 'FnuOBS (MJyovsr)', 'FnuMOD (MJyovsr)', 
+    'FnuBB (MJyovsr)', 'FnuLINE (MJyovsr)', 'FnuBAND (MJyovsr)', 
+    'FnuSTAR (MJyovsr)')
 
-p = plot2d_m(wvl, [Fnu, FnuBB, FnuLINE, FnuBAND, FnuSTAR], xall=wvl, 
-	         xlog=1, ylog=1, xlim=(2., 40.), #ylim=(0,5), 
+p = plot2d_m(wvl, [FnuOBS, FnuMOD, FnuBB, FnuLINE, FnuBAND, FnuSTAR], 
+	         xall=wvl, xlog=1, ylog=1, xlim=(2., 40.), #ylim=(0,5), 
              xlab=r'$\lambda\,(micron)$', ylab=r'$F_{\nu} \,(MJy/sr)$', 
-             lablist=['Total', 'cont', 'lines', 'bands', 'star'], 
-             legend='best', cl=['k', 'pink', 'g', 'b', 'orange'])
+             lablist=['Obs', 'Total', 'cont', 'lines', 'bands', 'star'], 
+             legend='best', cl=['y', 'k', 'pink', 'g', 'b', 'orange'])
 p.save(path_out+filename+'.png')
 p.show()
 

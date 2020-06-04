@@ -21,7 +21,7 @@ MODULE auxil
  
   TYPE(par_str), SAVE, PUBLIC :: par
 
-  TYPE, PUBLIC :: parinfo_list
+  TYPE, PUBLIC :: parinfo
     CHARACTER(30) :: name = "" !!!
     CHARACTER(30) :: comp = "" !!!
     REAL(DP) :: value = 0._DP
@@ -35,7 +35,7 @@ MODULE auxil
     REAL(DP) :: mean = 0._DP
     REAL(DP) :: sigma = 0._DP
     INTEGER :: ind = -1
-  END TYPE parinfo_list
+  END TYPE parinfo
 
   TYPE, PUBLIC :: Qabs_str
     !! rho(kg/m3); wave(micron); nu(Hz); Qova(m-2)
@@ -44,7 +44,7 @@ MODULE auxil
     REAL(DP), DIMENSION(:), ALLOCATABLE :: Qova ! a0=1.E-2_DP micron
   END TYPE Qabs_str
 
-  PUBLIC :: make_par, make_Qabs, chi2_INIT
+  PUBLIC :: make_par, make_Qabs
   PUBLIC :: degradeRes, modifBB, gaussLine, lorentzBand, extCurve, specModel
  
 CONTAINS
@@ -383,7 +383,7 @@ CONTAINS
   !!---------------------------------------
   !! Total model function for chi2 calling
   !!---------------------------------------
-  FUNCTION specModel(waveIN, parr, nQabs, NAv, Nbb, Nline, Nband, Nstar, &
+  FUNCTION specModel(waveIN, parr, nQabs, Nbb, Nline, Nband, NAv, Nstar, &
                      tau_tab, Fnu_cont_tab, Fnu_line_tab, Fnu_band_tab, &
                      Pabs, Fnu_cont, Fnu_line, Fnu_band, Fnu_star)
     !! Nstar = 0 or 1
@@ -394,41 +394,43 @@ CONTAINS
     USE statistical_physics, ONLY: blackbody
     IMPLICIT NONE
 
-    INTEGER, INTENT(IN) :: NAv, Nbb, Nline, Nband, Nstar
-    REAL(DP), DIMENSION(:), INTENT(IN)                             :: waveIN
-    REAL(DP), DIMENSION(:), INTENT(IN)                             :: parr
-    TYPE(Qabs_str), DIMENSION(:), INTENT(IN)                       :: nQabs
-    INTEGER                                                        :: i, Nw
-    TYPE(par_str)                                                  :: par
-    REAL(DP)                                                       :: Tstar
-    REAL(DP), DIMENSION(SIZE(waveIN))                              :: nu
-    REAL(DP), DIMENSION(:,:), ALLOCATABLE                          :: tau_tab0
-    REAL(DP), DIMENSION(:,:), ALLOCATABLE                          :: Fnu_cont_tab0
-    REAL(DP), DIMENSION(:,:), ALLOCATABLE                          :: Fnu_line_tab0
-    REAL(DP), DIMENSION(:,:), ALLOCATABLE                          :: Fnu_band_tab0
-    REAL(DP), DIMENSION(SIZE(waveIN))                              :: Pabs0
-    REAL(DP), DIMENSION(SIZE(waveIN))                              :: Fnu_cont0
-    REAL(DP), DIMENSION(SIZE(waveIN))                              :: Fnu_line0
-    REAL(DP), DIMENSION(SIZE(waveIN))                              :: Fnu_band0
-    REAL(DP), DIMENSION(SIZE(waveIN))                              :: Fnu_star0
-    REAL(DP), DIMENSION(NAv,SIZE(waveIN)), INTENT(OUT), OPTIONAL   :: tau_tab
-    REAL(DP), DIMENSION(Nbb,SIZE(waveIN)), INTENT(OUT), OPTIONAL   :: Fnu_cont_tab
+    REAL(DP), DIMENSION(:), INTENT(IN)       :: waveIN
+    REAL(DP), DIMENSION(:), INTENT(IN)       :: parr
+    TYPE(Qabs_str), DIMENSION(:), INTENT(IN) :: nQabs
+    INTEGER, INTENT(IN)                      :: Nbb, Nline, Nband, NAv, Nstar
+    TYPE(par_str)                                                :: par
+    INTEGER                                                      :: i, Nw
+    REAL(DP)                                                     :: Tstar
+    REAL(DP), DIMENSION(SIZE(waveIN))                            :: nu
+    REAL(DP), DIMENSION(:,:), ALLOCATABLE                        :: tau_tab0
+    REAL(DP), DIMENSION(:,:), ALLOCATABLE                        :: Fnu_cont_tab0
+    REAL(DP), DIMENSION(:,:), ALLOCATABLE                        :: Fnu_line_tab0
+    REAL(DP), DIMENSION(:,:), ALLOCATABLE                        :: Fnu_band_tab0
+    REAL(DP), DIMENSION(:), ALLOCATABLE                          :: Pabs0
+    REAL(DP), DIMENSION(:), ALLOCATABLE                          :: Fnu_cont0
+    REAL(DP), DIMENSION(:), ALLOCATABLE                          :: Fnu_line0
+    REAL(DP), DIMENSION(:), ALLOCATABLE                          :: Fnu_band0
+    REAL(DP), DIMENSION(:), ALLOCATABLE                          :: Fnu_star0
+    REAL(DP), DIMENSION(NAv,SIZE(waveIN)), INTENT(OUT), OPTIONAL :: tau_tab
+    REAL(DP), DIMENSION(Nbb,SIZE(waveIN)), INTENT(OUT), OPTIONAL :: Fnu_cont_tab
     REAL(DP), DIMENSION(Nline,SIZE(waveIN)), INTENT(OUT), OPTIONAL :: Fnu_line_tab
     REAL(DP), DIMENSION(Nband,SIZE(waveIN)), INTENT(OUT), OPTIONAL :: Fnu_band_tab
-    REAL(DP), DIMENSION(SIZE(waveIN)), INTENT(OUT), OPTIONAL       :: Pabs
-    REAL(DP), DIMENSION(SIZE(waveIN)), INTENT(OUT), OPTIONAL       :: Fnu_cont
-    REAL(DP), DIMENSION(SIZE(waveIN)), INTENT(OUT), OPTIONAL       :: Fnu_line
-    REAL(DP), DIMENSION(SIZE(waveIN)), INTENT(OUT), OPTIONAL       :: Fnu_band
-    REAL(DP), DIMENSION(SIZE(waveIN)), INTENT(OUT), OPTIONAL       :: Fnu_star
-    REAL(DP), DIMENSION(SIZE(waveIN))                              :: specModel
+    REAL(DP), DIMENSION(SIZE(waveIN)), INTENT(OUT), OPTIONAL   :: Pabs
+    REAL(DP), DIMENSION(SIZE(waveIN)), INTENT(OUT), OPTIONAL   :: Fnu_cont
+    REAL(DP), DIMENSION(SIZE(waveIN)), INTENT(OUT), OPTIONAL   :: Fnu_line
+    REAL(DP), DIMENSION(SIZE(waveIN)), INTENT(OUT), OPTIONAL   :: Fnu_band
+    REAL(DP), DIMENSION(SIZE(waveIN)), INTENT(OUT), OPTIONAL   :: Fnu_star
+    REAL(DP), DIMENSION(:), ALLOCATABLE                          :: specModel
 
     !! Preliminaries
     !!---------------
-    !! Total model parameters
-    CALL make_par(parr, Nbb, Nline, Nband, NAv, Nstar, par)
-    !! Other parameters
     Nw = SIZE(waveIN)
     nu = MKS%clight/MKS%micron / waveIN
+
+    CALL make_par(parr, Nbb, Nline, Nband, NAv, Nstar, par)
+
+    ALLOCATE(Pabs0(Nw), Fnu_cont0(Nw), Fnu_line0(Nw), Fnu_band0(Nw), Fnu_star0(Nw))
+    ALLOCATE(specModel(Nw))
 
     !! Screen extinction
     !!-------------------
@@ -524,54 +526,11 @@ CONTAINS
 
     !! Total
     !!-------
-    specModel = (Fnu_cont0+Fnu_band0+Fnu_star0)*Pabs0 + Fnu_line0
+    specModel(:) = (Fnu_cont0+Fnu_band0+Fnu_star0)*Pabs0 + Fnu_line0
 
     DEALLOCATE(tau_tab0, Fnu_cont_tab0, Fnu_line_tab0, Fnu_band_tab0)
+    DEALLOCATE(Pabs0, Fnu_cont0, Fnu_line0, Fnu_band0, Fnu_star0)
 
   END FUNCTION specModel
-
-  !!----------------------------------------------
-  !! Initialization of parameters for chi2 method
-  !!----------------------------------------------
-  SUBROUTINE chi2_INIT(label, parr, NAv, Nbb, Nline, Nband, Nstar)
-
-    USE datable, ONLY: LIN, BIN
-    USE utilities, ONLY: DP
-    USE constants, ONLY: MKS
-    IMPLICIT NONE
-
-    INTEGER :: Npar
-    INTEGER, INTENT(OUT) :: Nbb, Nline, Nband, NAv, Nstar
-    CHARACTER(*), DIMENSION(:), ALLOCATABLE, INTENT(OUT)  :: label
-    REAL(DP), DIMENSION(:), ALLOCATABLE, INTENT(OUT)      :: parr
-
-    Nbb = 3
-    label = ['ACH2_Z96             ', &
-             'BE_Z96               ', &
-             'Sil_D03              ']
-    ! Nbb = SIZE(label)
- 
-    NAv = 1
-    Nline = 3
-    Nband = 2
-    Nstar = 1
-    Npar = 2*Nbb + 3*Nline + 4*Nband + NAv + Nstar
-
-    ALLOCATE(parr(Npar))
-    !! parr = [massBB [Msun/pc2], tempBB [T], &
-    !!         Iline, Cline, Wline, &
-    !!         Iband, Cband, WSband, WLband, &
-    !!         Av [mag], &
-    !!         Fstar [Lsun/pc2]]
-    parr = [1.E-2_DP, 100._DP, 5.E-2_DP, 100._DP, 3.E-2_DP, 100._DP, & ! M [Msun/pc2]
-            2.E-9_DP, LIN(5)%wave, degradeRes(LIN(5)%wave, .01_DP, 'SL-LL'), &
-            2.E-9_DP, LIN(10)%wave, degradeRes(LIN(10)%wave, .01_DP, 'SL-LL'), &
-            1.E-9_DP, LIN(25)%wave, degradeRes(LIN(25)%wave, .01_DP, 'SL-LL'), &
-            10.E-9_DP, BIN(10)%wave, BIN(10)%sigmaS, BIN(10)%sigmaL, &
-            .5E-9_DP, BIN(15)%wave, BIN(15)%sigmaS, BIN(15)%sigmaL, &
-            0._DP, & ! Av [mag]
-            1.E4_DP] ! Fstar [Lsun/pc2]
-
-  END SUBROUTINE chi2_INIT
 
 END MODULE auxil
