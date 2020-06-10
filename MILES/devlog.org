@@ -25,7 +25,7 @@ CLOSED: [2020-04-25 Sat 19:27]
 - State "KNOWNCAUSE" from "DONE"       [2020-05-11 Mon 14:32]
 ** DONE compile
 CLOSED: [2020-04-24 Fri 15:00]
-* TODO miles [61%]
+* TODO miles [80%]
 :PROPERTIES:
 :COOKIE_DATA: recursive
 :END:
@@ -40,19 +40,24 @@ CLOSED: [2020-05-11 Mon 13:57]
 **** DONE ~bands_IN~
 CLOSED: [2020-05-11 Mon 13:57]
 - BIN
-** TODO auxil (MODULE) [91%]
+** DONE auxil (MODULE) [100%]
 *** TYPE, PUBLIC
 **** DONE ~par_str~
 CLOSED: [2020-05-11 Mon 10:52]
 - par
-**** TODO ~parinfo_list~
+**** DONE ~parinfo_str~
+CLOSED: [2020-06-09 Tue 18:51]
 **** DONE ~Qabs_str~
 CLOSED: [2020-05-11 Mon 11:47]
 - ~make_Qabs~ / nQabs
 - ~modifBB~ / Qabs
 *** SUBROUTINE
-**** DONE ~make_par~ : Create the parameter structure
-CLOSED: [2020-05-11 Mon 10:53]
+**** FIXED ~make_par~ : Create the parameter structure
+CLOSED: [2020-06-09 Tue 09:53]
+- State "FIXED"      from "KNOWNCAUSE" [2020-06-10 Wed 09:53]
+- Note taken on [2020-06-09 Tue 09:52] \\
+  Add Npar and parinfo as output option; par turns to be optional
+- State "KNOWNCAUSE" from "DONE"       [2020-06-09 Tue 09:51]
 **** DONE ~make_Qabs~ : Read optical properties
 CLOSED: [2020-05-11 Mon 11:47]
 **** CNCL ~chi2_INIT~ : Initialization of parameters for chi2 method
@@ -91,12 +96,14 @@ CLOSED: [2020-06-03 Wed 17:20]
 - Note taken on [2020-05-26 Tue 16:41] \\
   Replace massStar by Fstar (total surface brightness or luminosity of star), with BB normalized by Stefan-Boltzmann constant.
 - State "KNOWNCAUSE" from "DONE"       [2020-05-26 Tue 16:41]
-** TODO Init [50%]
+** DONE Init [100%]
 *** DONE input spectrum (fits2h5.py)
 CLOSED: [2020-05-11 Mon 15:21]
-*** TODO modeled spectrum
-** TODO Chi2 [0%]
-*** TODO test chi2min with specModel (synthetic spectrum)
+*** DONE modeled spectrum
+CLOSED: [2020-06-09 Tue 18:51]
+** TODO Chi2 [33%]
+*** DONE test chi2min with specModel (synthetic spectrum)
+CLOSED: [2020-06-04 Thu 11:27]
 *** TODO test chi2min with modifBB (input 3D data)
 *** TODO total model chi2 fit
 ** WAIT Bayesian [%]

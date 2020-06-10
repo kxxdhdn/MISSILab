@@ -1,5 +1,6 @@
 MODULE gen_external
 
+  USE auxil, ONLY: parinfo_str, Qabs_str
   USE utilities, ONLY: DP
   IMPLICIT NONE
   PRIVATE
@@ -14,16 +15,12 @@ MODULE gen_external
   REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: Fnu_band
   REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: Fnu_star
 
-  !!------------
   !! Init param
   !!------------
-  INTEGER, PARAMETER, PUBLIC :: Nbb=3, Nline=3, Nband=2, NAv=1, Nstar=1
-  !! Npar = 2*Nbb + 3*Nline + 4*Nband + NAv + Nstar
-  INTEGER, PARAMETER, PUBLIC :: Npar=25
-  CHARACTER(*), PARAMETER, DIMENSION(Nbb), PUBLIC :: &
-    compdust = ['ACH2_Z96             ', &
-                'BE_Z96               ', &
-                'Sil_D03              ']
+  INTEGER, SAVE, PUBLIC :: Nbb, Nline, Nband, NAv, Nstar, Npar
+  TYPE(parinfo_str), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: parinfo
+  CHARACTER(30), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: compdust
+  TYPE(Qabs_str), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: nQabs
   
   PUBLIC :: funcResid
 
@@ -33,29 +30,27 @@ CONTAINS
   !!-----------------------
   FUNCTION funcResid(parr, NwOBS0)
     
-    USE auxil, ONLY: Qabs_str, make_Qabs, specModel
+    USE auxil, ONLY: specModel
     USE utilities, ONLY: DP
     IMPLICIT NONE
 
     INTEGER, INTENT(IN)                        :: NwOBS0
     REAL(DP), DIMENSION(:), INTENT(IN)         :: parr
-    TYPE(Qabs_str), DIMENSION(Nbb)             :: nQabs
     REAL(DP), DIMENSION(NwOBS0)                :: funcResid
 
-    CALL make_Qabs(compdust, nQabs)
     FnuMOD = specModel(wOBS, parr, nQabs, Nbb, Nline, Nband, NAv, Nstar)
     
     funcResid = FnuOBS(:) - FnuMOD(:)
 
   END FUNCTION funcResid
-  
+
 END MODULE gen_external
 
 !!==========================================================================
 
 PROGRAM test_general
 
-  USE auxil, ONLY: par_str, Qabs_str, make_Qabs, degradeRes, specModel
+  USE auxil, ONLY: make_par, make_Qabs, specModel, degradeRes
   USE datable, ONLY: res, LIN, BIN
   USE arrays, ONLY: ramp
   USE random, ONLY: rand_norm
@@ -66,65 +61,95 @@ PROGRAM test_general
   USE gen_external, ONLY: funcResid, NwOBS, wOBS, nuOBS, &
                           FnuOBS, dFnuOBS, FnuMOD, resid, &
                           Pabs, Fnu_cont, Fnu_line, Fnu_band, Fnu_star, &
-                          Nbb, Nline, Nband, NAv, Nstar, Npar, compdust
+                          Nbb, Nline, Nband, NAv, Nstar, Npar, parinfo, compdust, nQabs
   IMPLICIT NONE
 
-  CHARACTER(30)                             :: filOUT
-  INTEGER                                   :: i
-  REAL(DP), DIMENSION(:,:), ALLOCATABLE     :: tau_tab, Fnu_cont_tab
-  REAL(DP), DIMENSION(:,:), ALLOCATABLE     :: Fnu_line_tab, Fnu_band_tab
-  REAL(DP), DIMENSION(:), ALLOCATABLE       :: Fnu
+  CHARACTER(30)                            :: filOUT
+  INTEGER                                  :: i
+  REAL(DP), DIMENSION(:), ALLOCATABLE      :: Fnu
 
-  INTEGER, PARAMETER                        :: Nt=1000
-  REAL(DP), DIMENSION(Npar)                 :: parr, parr0
-  TYPE(par_str)                             :: par
-  TYPE(Qabs_str), DIMENSION(Nbb)            :: nQabs
-  REAL(DP)                                  :: a
+  INTEGER, PARAMETER                       :: Nt=1000
+  REAL(DP), DIMENSION(:), ALLOCATABLE      :: parr, parr0
+  REAL(DP)                                 :: a
 
   !! chi2min_LM parinfo
   !!--------------------
-  LOGICAL, DIMENSION(Npar)                  :: fixed
-  LOGICAL, DIMENSION(Npar,2)                :: limited
-  CHARACTER(20), DIMENSION(Npar)            :: parname
-  INTEGER                                   :: status, Nparfree
-  INTEGER, DIMENSION(Npar)                  :: itied
-  REAL(DP), PARAMETER                       :: tol = 1.E-10_DP
-  REAL(DP)                                  :: chi2red
-  REAL(DP), DIMENSION(Npar)                 :: parerr
-  REAL(DP), DIMENSION(Npar,2)               :: limits
-  REAL(DP), DIMENSION(Npar,Npar)            :: covar
+  ! LOGICAL, DIMENSION(:), ALLOCATABLE       :: fixed
+  LOGICAL, DIMENSION(:,:), ALLOCATABLE      :: limited
+  ! CHARACTER(20), DIMENSION(:), ALLOCATABLE :: parname
+  INTEGER                                  :: status, Nparfree
+  ! INTEGER, DIMENSION(:), ALLOCATABLE       :: itied
+  REAL(DP), PARAMETER                      :: tol = 1.E-10_DP
+  REAL(DP)                                 :: chi2red
+  REAL(DP), DIMENSION(:), ALLOCATABLE      :: parerr
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE    :: limits
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE    :: covar
 
-  wOBS = ramp(Nt, 1._DP, 40._DP, xlog=.TRUE.)
-  NwOBS = SIZE(wOBS)
-  nuOBS = MKS%clight/MKS%micron / wOBS
-
-  ALLOCATE(Fnu(NwOBS), FnuOBS(NwOBS), dFnuOBS(NwOBS), FnuMOD(NwOBS))
-  ALLOCATE(Pabs(NwOBS), Fnu_cont(NwOBS), Fnu_line(NwOBS), &
-           Fnu_band(NwOBS), Fnu_star(NwOBS))
-  ALLOCATE(tau_tab(NAv, NwOBS), Fnu_cont_tab(Nbb,NwOBS), &
-           Fnu_line_tab(Nline,NwOBS), Fnu_band_tab(Nband,NwOBS))
+  !!------------
+  !! Init param
+  !!------------  
+  Nbb=3
+  Nline=12
+  Nband=14
+  NAv=1
+  Nstar=1
   
+  ALLOCATE(compdust(Nbb), nQabs(Nbb))
+  
+  compdust = ['ACH2_Z96             ', &
+              'BE_Z96               ', &
+              'Sil_D03              ']
+  CALL make_Qabs(compdust, nQabs)
+
   !! parr = [massBB [Msun/pc2], tempBB [T], &
   parr = [2.E-2_DP, 100._DP, 5.E-2_DP, 100._DP, 3.E-2_DP, 100._DP, & 
   !!      Iline, Cline, Wline, &
-          2.E-9_DP, LIN(5)%wave, degradeRes(LIN(5)%wave, .01_DP, 'SL-LL'), & 
-          2.E-9_DP, LIN(10)%wave, degradeRes(LIN(10)%wave, .01_DP, 'SL-LL'), &
-          1.5E-9_DP, LIN(25)%wave, degradeRes(LIN(25)%wave, .01_DP, 'SL-LL'), &
+          1.E-9_DP, LIN(3)%wave, degradeRes(LIN(3)%wave, .01_DP, 'SL-LL'), & 
+          2.5E-9_DP, LIN(9)%wave, degradeRes(LIN(9)%wave, .01_DP, 'SL-LL'), & 
+          3.E-9_DP, LIN(11)%wave, degradeRes(LIN(11)%wave, .01_DP, 'SL-LL'), &
+          1.5E-9_DP, LIN(20)%wave, degradeRes(LIN(20)%wave, .01_DP, 'SL-LL'), &
+          1.5E-9_DP, LIN(23)%wave, degradeRes(LIN(23)%wave, .01_DP, 'SL-LL'), &
+          2.5E-9_DP, LIN(24)%wave, degradeRes(LIN(24)%wave, .01_DP, 'SL-LL'), &
+          1.5E-9_DP, LIN(26)%wave, degradeRes(LIN(26)%wave, .01_DP, 'SL-LL'), &
+          3.E-9_DP, LIN(27)%wave, degradeRes(LIN(27)%wave, .01_DP, 'SL-LL'), &
+          3.5E-9_DP, LIN(29)%wave, degradeRes(LIN(29)%wave, .01_DP, 'SL-LL'), &
+          4.5E-9_DP, LIN(33)%wave, degradeRes(LIN(33)%wave, .01_DP, 'SL-LL'), &
+          1.5E-9_DP, LIN(34)%wave, degradeRes(LIN(34)%wave, .01_DP, 'SL-LL'), &
+          1.E-9_DP, LIN(36)%wave, degradeRes(LIN(36)%wave, .01_DP, 'SL-LL'), &
   !!      Iband, Cband, WSband, WLband, &
-          9.E-9_DP, BIN(10)%wave, BIN(10)%sigmaS, BIN(10)%sigmaL, & 
-          7.E-9_DP, BIN(15)%wave, BIN(15)%sigmaS, BIN(15)%sigmaL, &
+          1.E-9_DP, BIN(1)%wave, BIN(1)%sigmaS, BIN(1)%sigmaL, & 
+          .8E-9_DP, BIN(2)%wave, BIN(2)%sigmaS, BIN(2)%sigmaL, & 
+          .5E-9_DP, BIN(7)%wave, BIN(7)%sigmaS, BIN(7)%sigmaL, & 
+          .7E-9_DP, BIN(8)%wave, BIN(8)%sigmaS, BIN(8)%sigmaL, & 
+          .3E-9_DP, BIN(12)%wave, BIN(12)%sigmaS, BIN(12)%sigmaL, & 
+          .5E-9_DP, BIN(13)%wave, BIN(13)%sigmaS, BIN(13)%sigmaL, & 
+          .4E-9_DP, BIN(14)%wave, BIN(14)%sigmaS, BIN(14)%sigmaL, & 
+          1.E-9_DP, BIN(16)%wave, BIN(16)%sigmaS, BIN(16)%sigmaL, & 
+          .3E-9_DP, BIN(19)%wave, BIN(19)%sigmaS, BIN(19)%sigmaL, & 
+          .7E-9_DP, BIN(20)%wave, BIN(20)%sigmaS, BIN(20)%sigmaL, &
+          .6E-9_DP, BIN(21)%wave, BIN(21)%sigmaS, BIN(21)%sigmaL, & 
+          .5E-9_DP, BIN(24)%wave, BIN(24)%sigmaS, BIN(24)%sigmaL, & 
+          .5E-9_DP, BIN(25)%wave, BIN(25)%sigmaS, BIN(25)%sigmaL, & 
+          .9E-9_DP, BIN(30)%wave, BIN(30)%sigmaS, BIN(30)%sigmaL, & 
   !!      Av [mag], &
           0._DP, & 
   !!      Fstar [Lsun/pc2]]
           1.E4_DP]
+  
+  !!-------------
+  !! Create grid
+  !!-------------
+  wOBS = ramp(Nt, 1._DP, 40._DP, xlog=.TRUE.)
+  NwOBS = SIZE(wOBS)
+  nuOBS = MKS%clight/MKS%micron / wOBS
+  
+  ALLOCATE(Fnu(NwOBS), FnuOBS(NwOBS), dFnuOBS(NwOBS), FnuMOD(NwOBS))
+  ALLOCATE(Pabs(NwOBS), Fnu_cont(NwOBS), Fnu_line(NwOBS), &
+           Fnu_band(NwOBS), Fnu_star(NwOBS))
 
-  CALL make_Qabs(compdust, nQabs)
-  print*, 'coucou1'
   FnuOBS(:) = specModel(wOBS, parr, nQabs, Nbb, Nline, Nband, NAv, Nstar)!, &
-                     ! tau_tab, Fnu_cont_tab, Fnu_line_tab, Fnu_band_tab, &
                      ! Pabs, Fnu_cont, Fnu_line, Fnu_band, Fnu_star)
   dFnuOBS = rand_norm(NwOBS) * 0.01_DP*MAXVAL(FnuOBS)
-  print*, 'coucou2'
   FnuOBS = FnuOBS + dFnuOBS
   ! print*, 'MAX(cont) = ', MAXVAL(Fnu_cont*Pabs)
   ! print*, 'MAX(line) = ', MAXVAL(Fnu_line)
@@ -154,50 +179,54 @@ PROGRAM test_general
 
   print*, '=================================================='
   
-  !! Parameter constraints
-  !! parr = [massBB [Msun/pc2], tempBB [T], &
-  fixed(:) = [0,1, 0,1, 0,1, & 
-  !!          Iline, Cline, Wline, &
-              0,1,1, 0,1,1, 0,1,1, &
-  !!          Iband, Cband, WSband, WLband, &
-              0,1,1,1, 0,1,1,1, &
-  !!          Av [mag], &
-              1, & 
-  !!          Fstar [Lsun/pc2]]
-              0]
-  ! fixed(:) = 0
-  ! fixed(24) = 1 ! Av
-  itied(:) = 0
-  limited(:,:) = 0
-  limits(:,:) = 0._DP
-  Nparfree = COUNT((.NOT. fixed(:)) .AND. (itied(:) <= 0))
-  parname = ['massBB1', 'tempBB1', 'massBB2', 'tempBB2', 'massBB3', 'tempBB3', &
-             'Iline1 ', 'Cline1 ', 'Wline1 ', &
-             'Iline2 ', 'Cline2 ', 'Wline2 ', &
-             'Iline3 ', 'Cline3 ', 'Wline3 ', &
-             'Iband1 ', 'Cband1 ', 'WSband1', 'WLband1', &
-             'Iband2 ', 'Cband2 ', 'WSband2', 'WLband2', &
-             'Av     ', &
-             'Fstar  ']
-
   !! parr0 = [massBB [Msun/pc2], tempBB [T], &
-  parr0 = [1._DP, 100._DP, 1._DP, 100._DP, 1._DP, 100._DP, & 
-  !!       Iline, Cline, Wline, &
-           1._DP, LIN(5)%wave, degradeRes(LIN(5)%wave, .01_DP, 'SL-LL'), & 
-           1._DP, LIN(10)%wave, degradeRes(LIN(10)%wave, .01_DP, 'SL-LL'), &
-           1._DP, LIN(25)%wave, degradeRes(LIN(25)%wave, .01_DP, 'SL-LL'), &
-  !!       Iband, Cband, WSband, WLband, &
-           1._DP, BIN(10)%wave, BIN(10)%sigmaS, BIN(10)%sigmaL, & 
-           1._DP, BIN(15)%wave, BIN(15)%sigmaS, BIN(15)%sigmaL, &
-  !!       Av [mag], &
-           0._DP, & 
-  !!       Fstar [Lsun/pc2]]
-           1._DP]
+  parr0 = [1._DP, 50._DP, 1._DP, 50._DP, 1._DP, 50._DP, & 
+  !!      Iline, Cline, Wline, &
+          1._DP, LIN(3)%wave, degradeRes(LIN(3)%wave, .01_DP, 'SL-LL'), & 
+          1._DP, LIN(9)%wave, degradeRes(LIN(9)%wave, .01_DP, 'SL-LL'), & 
+          1._DP, LIN(11)%wave, degradeRes(LIN(11)%wave, .01_DP, 'SL-LL'), &
+          1._DP, LIN(20)%wave, degradeRes(LIN(20)%wave, .01_DP, 'SL-LL'), &
+          1._DP, LIN(23)%wave, degradeRes(LIN(23)%wave, .01_DP, 'SL-LL'), &
+          1._DP, LIN(24)%wave, degradeRes(LIN(24)%wave, .01_DP, 'SL-LL'), &
+          1._DP, LIN(26)%wave, degradeRes(LIN(26)%wave, .01_DP, 'SL-LL'), &
+          1._DP, LIN(27)%wave, degradeRes(LIN(27)%wave, .01_DP, 'SL-LL'), &
+          1._DP, LIN(29)%wave, degradeRes(LIN(29)%wave, .01_DP, 'SL-LL'), &
+          1._DP, LIN(33)%wave, degradeRes(LIN(33)%wave, .01_DP, 'SL-LL'), &
+          1._DP, LIN(34)%wave, degradeRes(LIN(34)%wave, .01_DP, 'SL-LL'), &
+          1._DP, LIN(36)%wave, degradeRes(LIN(36)%wave, .01_DP, 'SL-LL'), &
+  !!      Iband, Cband, WSband, WLband, &
+          1._DP, BIN(1)%wave, BIN(1)%sigmaS, BIN(1)%sigmaL, & 
+          1._DP, BIN(2)%wave, BIN(2)%sigmaS, BIN(2)%sigmaL, & 
+          1._DP, BIN(7)%wave, BIN(7)%sigmaS, BIN(7)%sigmaL, & 
+          1._DP, BIN(8)%wave, BIN(8)%sigmaS, BIN(8)%sigmaL, & 
+          1._DP, BIN(12)%wave, BIN(12)%sigmaS, BIN(12)%sigmaL, & 
+          1._DP, BIN(13)%wave, BIN(13)%sigmaS, BIN(13)%sigmaL, & 
+          1._DP, BIN(14)%wave, BIN(14)%sigmaS, BIN(14)%sigmaL, & 
+          1._DP, BIN(16)%wave, BIN(16)%sigmaS, BIN(16)%sigmaL, & 
+          1._DP, BIN(19)%wave, BIN(19)%sigmaS, BIN(19)%sigmaL, & 
+          1._DP, BIN(20)%wave, BIN(20)%sigmaS, BIN(20)%sigmaL, &
+          1._DP, BIN(21)%wave, BIN(21)%sigmaS, BIN(21)%sigmaL, & 
+          1._DP, BIN(24)%wave, BIN(24)%sigmaS, BIN(24)%sigmaL, & 
+          1._DP, BIN(25)%wave, BIN(25)%sigmaS, BIN(25)%sigmaL, & 
+          1._DP, BIN(30)%wave, BIN(30)%sigmaS, BIN(30)%sigmaL, & 
+  !!      Av [mag], &
+          0._DP, & 
+  !!      Fstar [Lsun/pc2]]
+          1._DP]
 
+  CALL make_par(parr0, Nbb, Nline, Nband, NAv, Nstar, NPAR=Npar, PARINFO=parinfo)
+  Nparfree = COUNT((.NOT. parinfo(:)%fixed) .AND. (parinfo(:)%itied <= 0))
+  ALLOCATE(limits(Npar,2), limited(Npar,2))
+  FORALL (i=1:Npar)
+    limits(i,:) = parinfo(i)%limits(:)
+    limited(i,:) = parinfo(i)%limited(:)
+  END FORALL
+  
   !! Run the fitter
   CALL chi2min_LM (funcResid, NwOBS, parr0, tol, resid, status, VERBOSE=.True., &
-                   LIMITED=limited, LIMITS=limits, FIXED=fixed, ITIED=itied, &
-                   PARNAME=parname, CHI2RED=chi2red, PARERR=parerr, COVAR=covar)
+                   LIMITED=limited, LIMITS=limits, &
+                   FIXED=parinfo(:)%fixed, ITIED=parinfo(:)%itied, &
+                   PARNAME=parinfo(:)%name, CHI2RED=chi2red, PARERR=parerr, COVAR=covar)
 
   !! Compute model result
   PRINT*
@@ -208,13 +237,12 @@ PROGRAM test_general
   CALL write_ascii(VEC1=parr0,VEC2=parerr,FILE="out/chi2min.txt")
   PRINT*
   PRINT*, "Covariance matrix:"
-  DO i=1,Npar
-    PRINT*, REAL(covar(:,i), KIND(0.))
-  END DO
+  ! DO i=1,Npar
+  !   PRINT*, REAL(covar(:,i), KIND(0.))
+  ! END DO
   PRINT*
 
   FnuMOD = specModel(wOBS, parr0, nQabs, Nbb, Nline, Nband, NAv, Nstar, &
-                     tau_tab, Fnu_cont_tab, Fnu_line_tab, Fnu_band_tab, &
                      PABS=Pabs, FNU_CONT=Fnu_cont, &
                      FNU_LINE=Fnu_line, FNU_BAND=Fnu_band, &
                      FNU_STAR=Fnu_star)

@@ -4,11 +4,20 @@ MODULE modifBB_external
   IMPLICIT NONE
   PRIVATE
 
-  INTEGER, SAVE, PUBLIC :: Npar, NwOBS, Nx, Ny, xOBS, yOBS
-  CHARACTER(30), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: label
-  REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC      :: wOBS, nuOBS
-  REAL(DP), DIMENSION(:,:,:), ALLOCATABLE, SAVE, PUBLIC  :: LnuOBS, dLnuOBS
+  INTEGER, SAVE, PUBLIC                             :: NwOBS
+  REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: wOBS, nuOBS
+  REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: FnuOBS, dFnuOBS
+  REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: FnuMOD, resid
+  REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: Fnu_cont
 
+  !!------------
+  !! Init param
+  !!------------
+  INTEGER, PARAMETER, PUBLIC :: Npar=
+  CHARACTER(*), PARAMETER, DIMENSION(Npar), PUBLIC :: &
+    compdust = ['ACH2_Z96             ', &
+                'BE_Z96               ', &
+                'Sil_D03              ']
   PUBLIC :: funcResid
 
 CONTAINS
