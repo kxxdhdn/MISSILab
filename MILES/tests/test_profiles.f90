@@ -89,7 +89,7 @@ PROGRAM test_profiles
 
   !! GET PARAM
   !!-----------
-  CALL make_Qabs(label, nQabs)
+  CALL make_Qabs(label, NQABS=nQabs)
 
   !! Calculate Fnu
   !!---------------
@@ -119,7 +119,7 @@ PROGRAM test_profiles
   !! OUTPUTS
   !!---------
   path = 'out/test_profiles'
-  CALL write_hdf5(wave, NAME="Wavelength (micron)", &
+  CALL write_hdf5(wave, NAME="Wavelength (microns)", &
                   COMPRESS=.False., APPEND=.False., &
                   FILE=TRIMLR(path)//h5ext)
   CALL write_hdf5(nu, NAME="Wavelength (Hz)", &

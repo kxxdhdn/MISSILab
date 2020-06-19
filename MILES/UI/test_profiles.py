@@ -21,7 +21,7 @@ filename = 'test_profiles'
 
 ## Read h5 file
 wvl, nu, FnuBB, FnuLINE, FnuBAND, Fnu, y, x = read_hdf5(path_out+filename, \
-    'Wavelength (micron)', 'Wavelength (Hz)', \
+    'Wavelength (microns)', 'Wavelength (Hz)', \
     'FnuBB (MJyovsr)', 'FnuLINE (MJyovsr)', 'FnuBAND (MJyovsr)', \
     'Fnu (MJyovsr)', 'FnuTEST (MJyovsr)', 'x')
 
