@@ -15,11 +15,11 @@ from scipy.stats import gmean
 import matplotlib.pyplot as plt
 from matplotlib.ticker import ScalarFormatter, LogFormatter, NullFormatter
 ## astylo
-from astylo.bio import read_fits, write_fits
-from astylo.proc import hextract, hswarp, iconvolve, iswarp, concatenate
+from astylo.iolib import fclean, read_fits, write_fits
+from astylo.ipro import hextract, hswarp, iconvolve, iswarp, concatenate
 from astylo.calib import intercalib
-from astylo.lib import fclean, f_lin, f_lin0
-from astylo.astrolib import pix2sr, get_pc, fixwcs
+from astylo.mlib import f_lin, f_lin0
+from astylo.alib import pix2sr, get_pc, fixwcs
 
 ## Local
 from param import (

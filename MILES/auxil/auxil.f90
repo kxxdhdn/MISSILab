@@ -1,242 +1,319 @@
 MODULE auxil
 
   USE utilities, ONLY: DP, STRIKE, WARNING
-  USE constants, ONLY: pi, MKS
+  USE constants, ONLY: 
+  USE inout, ONLY: lenpar
   IMPLICIT NONE
   PRIVATE
 
-  TYPE, PUBLIC :: par_str
-    REAL(DP), DIMENSION(:), ALLOCATABLE :: massBB ! dust mass (Modified BlackBody) [Msun]
-    REAL(DP), DIMENSION(:), ALLOCATABLE :: tempBB ! dust temperature (MBB) [K]
-    REAL(DP), DIMENSION(:), ALLOCATABLE :: Iline ! line Intensity [W/m2/Hz]
+  INTEGER, PARAMETER, PUBLIC :: NparCONT = 2, NparLINE = 3, NparBAND = 4 ! set_indpar
+  INTEGER, PARAMETER, PUBLIC :: Ncont_max = 31, Nline_max = 46, Nband_max = 33
+  ! INTEGER, PARAMETER :: Npabs_max = 
+  ! INTEGER, PARAMETER :: Nstar_max =
+  
+  PUBLIC :: set_indpar, read_master!, initparam
+  PUBLIC :: degradeRes, modifBB, gaussLine, lorentzBand, extCurve, specModel
+
+  INTERFACE modifBB
+    MODULE PROCEDURE modifBB_0, modifBB_1
+  END INTERFACE modifBB
+
+  INTERFACE gaussLine
+    MODULE PROCEDURE gaussLine_0, gaussLine_1
+  END INTERFACE gaussLine
+
+  INTERFACE lorentzBand
+    MODULE PROCEDURE lorentzBand_0, lorentzBand_1
+  END INTERFACE lorentzBand
+  
+  INTERFACE specModel
+    MODULE PROCEDURE specModel_3D, specModel_2D, specModel_1D
+    MODULE PROCEDURE specModel_gen, specModel_scl
+  END INTERFACE specModel
+  
+  !! [OBSOLETE] repalced by indpar_type
+  TYPE, PUBLIC :: par_type
+    REAL(DP), DIMENSION(:), ALLOCATABLE :: Mcont ! dust mass (Modified BlackBody) [Msun]
+    REAL(DP), DIMENSION(:), ALLOCATABLE :: Tcont ! dust temperature (MBB) [K]
+    REAL(DP), DIMENSION(:), ALLOCATABLE :: Iline ! line Intensity [W/m2/sr]
     REAL(DP), DIMENSION(:), ALLOCATABLE :: Cline ! Center [um]
     REAL(DP), DIMENSION(:), ALLOCATABLE :: Wline ! Width [um]
-    REAL(DP), DIMENSION(:), ALLOCATABLE :: Iband ! band Intensity [W/m2/Hz]
+    REAL(DP), DIMENSION(:), ALLOCATABLE :: Iband ! band Intensity [W/m2/sr]
     REAL(DP), DIMENSION(:), ALLOCATABLE :: Cband ! Center (pic) [um]
     REAL(DP), DIMENSION(:), ALLOCATABLE :: WSband ! Width Short nu side [um]
     REAL(DP), DIMENSION(:), ALLOCATABLE :: WLband ! Width Long nu side [um]
-    REAL(DP), DIMENSION(:), ALLOCATABLE :: Av ! Attenuation in the V band [mag]
-    REAL(DP), DIMENSION(:), ALLOCATABLE :: Fstar ! Total star luminosity [Lsun]
-  END TYPE par_str
+    REAL(DP) :: Av ! Attenuation in the V band [mag]
+    REAL(DP) :: Fstar ! Total star luminosity [Lsun/pc2]
+  END TYPE par_type
  
-  TYPE, PUBLIC :: parinfo_str
-    CHARACTER(30) :: name = "" !!!
-    CHARACTER(30) :: comp = "" !!!
+  TYPE, PUBLIC :: parinfo_type
+    CHARACTER(lenpar) :: name = ""
+    CHARACTER(lenpar) :: comp = ""
     REAL(DP) :: value = 0._DP
-    REAL(DP), DIMENSION(2) :: limits = [0._DP,0._DP]
-    LOGICAL, DIMENSION(2) :: limited = [.False.,.False.]
-    LOGICAL :: fixed = .False.
-    LOGICAL :: hyper = .True.
-    LOGICAL :: asis = .True.
-    LOGICAL :: model = .True.
-    CHARACTER(30) :: tied = ""
+    REAL(DP), DIMENSION(2) :: limits = [0._DP, 0._DP]
+    LOGICAL, DIMENSION(2) :: limited = [.FALSE., .FALSE.]
+    LOGICAL :: fixed = .TRUE.
+    LOGICAL :: hyper = .FALSE.
+    LOGICAL :: model = .TRUE.
+    CHARACTER(lenpar) :: tied = ""
     INTEGER :: itied = 0
     REAL(DP) :: mean = 0._DP
     REAL(DP) :: sigma = 0._DP
     INTEGER :: ind = -1
-  END TYPE parinfo_str
+  END TYPE parinfo_type
 
-  TYPE, PUBLIC :: Qabs_str
+  TYPE, PUBLIC :: indpar_type
+    INTEGER, DIMENSION(Ncont_max) :: Mcont = -1
+    INTEGER, DIMENSION(Ncont_max) :: Tcont = -1
+    INTEGER, DIMENSION(Nline_max) :: Iline = -1
+    INTEGER, DIMENSION(Nline_max) :: Cline = -1
+    INTEGER, DIMENSION(Nline_max) :: Wline = -1
+    INTEGER, DIMENSION(Nband_max) :: Iband = -1
+    INTEGER, DIMENSION(Nband_max) :: Cband = -1
+    INTEGER, DIMENSION(Nband_max) :: WSband = -1
+    INTEGER, DIMENSION(Nband_max) :: WLband = -1
+    INTEGER :: Av = -1
+    INTEGER :: Fstar = -1
+    INTEGER, DIMENSION(:), ALLOCATABLE :: extra
+  END TYPE indpar_type
+
+  TYPE, PUBLIC :: Qabs_type
     !! rho(kg/m3); wave(micron); nu(Hz); Qova(m-2)
     REAL(DP)                            :: rho
     REAL(DP), DIMENSION(:), ALLOCATABLE :: wave, nu
     REAL(DP), DIMENSION(:), ALLOCATABLE :: Qova ! a0=1.E-2_DP micron
-  END TYPE Qabs_str
-
-  PUBLIC :: make_par, make_Qabs
-  PUBLIC :: degradeRes, modifBB, gaussLine, lorentzBand, extCurve, specModel
-
-  INTERFACE specModel
-    MODULE PROCEDURE specModel_gen
-    MODULE PROCEDURE specModel_2D, specModel_3D
-  END INTERFACE specModel
+    REAL(DP), DIMENSION(:), ALLOCATABLE :: coeffMBB
+  END TYPE Qabs_type
  
 CONTAINS
 
   !!-------------------------------------------------------
   !!
-  !!             Create the parameter structure
+  !! Fill the INDPAR_TYPE structure, from a PARINFO_TYPE structure
   !!
   !!-------------------------------------------------------
-  SUBROUTINE make_par(parr, Nbb, Nline, Nband, NAv, Nstar, &
-                      par, Npar, parinfo)
-
-    USE utilities, ONLY: DP, PRING, TRIMLR
+  SUBROUTINE set_indpar(indpar, parinfo)
+    
+    USE utilities, ONLY: trimeq, trimlr, pring
+    USE arrays, ONLY: iwhere
     IMPLICIT NONE
 
-    INTEGER, INTENT(IN) :: Nbb, Nline, Nband, NAv, Nstar
-    REAL(DP), DIMENSION(:), INTENT(IN) :: parr ! par array
-    INTEGER i, i0, Npar0
-    TYPE(par_str) :: par0
-    TYPE(par_str), INTENT(OUT), OPTIONAL :: par
-    INTEGER, INTENT(OUT), OPTIONAL :: Npar
-    TYPE(parinfo_str), DIMENSION(:), ALLOCATABLE, INTENT(OUT), OPTIONAL :: parinfo
+    TYPE(indpar_type), INTENT(OUT) :: indpar
+    TYPE(parinfo_type), DIMENSION(:), INTENT(IN) :: parinfo
 
-    Npar0 = 2*Nbb + 3*Nline + 4*Nband + NAv + Nstar
-    IF (PRESENT(Npar)) Npar = Npar0
-    IF (PRESENT(parinfo)) ALLOCATE(parinfo(Npar0))
+    INTEGER :: i, Ncont, Nline, Nband, Nextra
+    LOGICAL :: CONTset, LINEset, BANDset, PABSset, STARset, extraset
 
-    ALLOCATE(par0%massBB(Nbb), par0%tempBB(Nbb))
-    ALLOCATE(par0%Iline(Nline), par0%Cline(Nline), par0%Wline(Nline)) ! Nline*3
-    ALLOCATE(par0%Iband(Nband), par0%Cband(Nband), &
-             par0%WSband(Nband), par0%WLband(Nband)) ! Nband*4
-    ALLOCATE(par0%Av(NAv)) ! NAv*1
-    ALLOCATE(par0%Fstar(Nstar)) ! Nstar*1
+    CONTset = ( ANY(TRIMEQ(parinfo(:)%comp, "CONT")) )
+    LINEset = ( ANY(TRIMEQ(parinfo(:)%comp, "LINE")) )
+    BANDset = ( ANY(TRIMEQ(parinfo(:)%comp, "BAND")) )
+    PABSset = ( ANY(TRIMEQ(parinfo(:)%comp, "PABS")) )
+    STARset = ( ANY(TRIMEQ(parinfo(:)%comp, "STAR")) )
+    extraset = ( ANY(TRIMEQ(parinfo(:)%comp, "extra")) )
 
-    !! 1) Continuum
-    i0 = 0
-    DO i=1,Nbb
-      par0%massBB(i) = parr(i0+2*i-1) ! i0 + 2*(i-1) + 1
-      par0%tempBB(i) = parr(i0+2*i)
-
-      IF (PRESENT(parinfo)) THEN
-        parinfo(i0+2*i-1)%name = 'massBB'//TRIMLR(PRING(i))
-        parinfo(i0+2*i-1)%limits = [0._DP,1._DP]
-        parinfo(i0+2*i-1)%limited = [.True.,.False.]
-        parinfo(i0+2*i)%name = 'tempBB'//TRIMLR(PRING(i))
-        parinfo(i0+2*i)%limits = [50._DP,500._DP]
-        parinfo(i0+2*i)%limited = [.True.,.True.]
+    IF (CONTset) THEN
+      Ncont = SIZE( PACK(parinfo(:), TRIMEQ(parinfo(:)%comp, "CONT")) ) / NparCONT
+      DO i=1,Ncont
+        CALL IWHERE( TRIMEQ(parinfo%name(:), "Mcont"//TRIMLR(PRING(i))), indpar%Mcont(i) )
+        CALL IWHERE( TRIMEQ(parinfo%name(:), "Tcont"//TRIMLR(PRING(i))), indpar%Tcont(i) )
         
-      END IF
-      
-    END DO
+      END DO
+    END IF
+    
+    IF (LINEset) THEN
+      Nline = SIZE( PACK(parinfo(:), TRIMEQ(parinfo(:)%comp, "LINE")) ) / NparLINE
+      DO i=1,Nline
+        CALL IWHERE( TRIMEQ(parinfo%name(:), "Iline"//TRIMLR(PRING(i))), indpar%Iline(i) )
+        CALL IWHERE( TRIMEQ(parinfo%name(:), "Cline"//TRIMLR(PRING(i))), indpar%Cline(i) )
+        CALL IWHERE( TRIMEQ(parinfo%name(:), "Wline"//TRIMLR(PRING(i))), indpar%Wline(i) )
 
-    !! 2) Lines
-    i0 = i0 + 2*Nbb
-    DO i=1,Nline
-      par0%Iline(i) = parr(i0+3*i-2)
-      par0%Cline(i) = parr(i0+3*i-1)
-      par0%Wline(i) = parr(i0+3*i)
+      END DO
+    END IF
 
-      IF (PRESENT(parinfo)) THEN
-        parinfo(i0+3*i-2)%name = 'Iline'//TRIMLR(PRING(i))
-        parinfo(i0+3*i-2)%limits = [0._DP,1._DP]
-        parinfo(i0+3*i-2)%limited = [.True.,.False.]
-        parinfo(i0+3*i-1)%name = 'Cline'//TRIMLR(PRING(i))
-        parinfo(i0+3*i-1)%limits = &
-          [ par0%Cline(i) - par0%Wline(i)/par0%Cline(i)/2._DP, &
-            par0%Cline(i) + par0%Wline(i)/par0%Cline(i)/2._DP]
-        parinfo(i0+3*i-1)%limited = [.True.,.True.]
-        parinfo(i0+3*i)%name = 'Wline'//TRIMLR(PRING(i))
-        parinfo(i0+3*i)%fixed = .True.
-        
-      END IF
-      
-    END DO
-
-    !! 3) Bands
-    i0 = i0 + 3*Nline
-    DO i=1,Nband
-      par0%Iband(i) = parr(i0+4*i-3)
-      par0%Cband(i) = parr(i0+4*i-2)
-      par0%WSband(i) = parr(i0+4*i-1)
-      par0%WLband(i) = parr(i0+4*i)
-
-      IF (PRESENT(parinfo)) THEN
-        parinfo(i0+4*i-3)%name = 'Iband'//TRIMLR(PRING(i))
-        parinfo(i0+4*i-3)%limits = [0._DP,1._DP]
-        parinfo(i0+4*i-3)%limited = [.True.,.False.]
-        parinfo(i0+4*i-2)%name = 'Cband'//TRIMLR(PRING(i))
-        parinfo(i0+4*i-2)%fixed = .True.
-        parinfo(i0+4*i-1)%name = 'WSband'//TRIMLR(PRING(i))
-        parinfo(i0+4*i-1)%fixed = .True.
-        parinfo(i0+4*i)%name = 'WLband'//TRIMLR(PRING(i))
-        parinfo(i0+4*i)%fixed = .True.
-
-      END IF
-      
-    END DO
-
-    !! 4) Av
-    i0 = i0 + 4*Nband
-    DO i=1,NAv
-      par0%Av(i) = parr(i0+i)
-
-      IF (PRESENT(parinfo)) THEN
-        parinfo(i0+i)%name = 'Av'
-        parinfo(i0+i)%fixed = .True.
-
-      END IF
-
-    END DO
-
-    !! 5) Star
-    i0 = i0 + NAv
-    IF (Nstar .GT. 0) THEN
-      DO i=1,Nstar
-        par0%Fstar(i) = parr(i0+1)
-
-        IF (PRESENT(parinfo)) THEN
-          parinfo(i0+i)%name = 'Fstar'
-          parinfo(i0+i)%limits = [0._DP,1._DP]
-          parinfo(i0+i)%limited = [.True.,.False.]
-
-        END IF
+    IF (BANDset) THEN
+      Nband = SIZE( PACK(parinfo(:), TRIMEQ(parinfo(:)%comp, "BAND")) ) / NparBAND
+      DO i=1,Nband
+        CALL IWHERE( TRIMEQ(parinfo%name(:), "Iband"//TRIMLR(PRING(i))), indpar%Iband(i) )
+        CALL IWHERE( TRIMEQ(parinfo%name(:), "Cband"//TRIMLR(PRING(i))), indpar%Cband(i) )
+        CALL IWHERE( TRIMEQ(parinfo%name(:), "WSband"//TRIMLR(PRING(i))), indpar%WSband(i) )
+        CALL IWHERE( TRIMEQ(parinfo%name(:), "WLband"//TRIMLR(PRING(i))), indpar%WLband(i) )
         
       END DO
     END IF
 
-    IF (PRESENT(par)) par = par0
-  
-  END SUBROUTINE make_par
+    IF (PABSset) THEN
+      CALL IWHERE(TRIMEQ(parinfo%name(:),"Av"), indpar%Av)
+      
+    END IF
+    
+    IF (STARset) THEN
+      CALL IWHERE(TRIMEQ(parinfo%name(:),"Fstar"),indpar%Fstar)
+      
+    END IF
+
+    IF (extraset) THEN
+      Nextra = COUNT(TRIMEQ(parinfo(:)%comp, "extra"))
+      IF (Nextra > 0) CALL IWHERE(TRIMEQ(parinfo(:)%comp,"extra"),indpar%extra)
+      
+    END IF
+    
+  END SUBROUTINE set_indpar
 
   !!-------------------------------------------------------
   !!
-  !!                 Read optical properties
+  !! Read the input master file for the Chi2/Bayesian run
   !!
   !!-------------------------------------------------------
-  SUBROUTINE make_Qabs(label, nQabs, waveall)
-    !! wave [um], nu [Hz], Qova [m^-1], rho [kg/m^3]
-    USE utilities, ONLY: DP
-    USE constants, ONLY: MKS
-    USE arrays, ONLY: closest
+  SUBROUTINE read_master(labQ, labBIN, labLIN, waveall, &
+                         Qabs, indBIN, indLIN)
+                        ! Nmcmc, verbose)
+
+    USE datable, ONLY: BIN, LIN
+    USE utilities, ONLY: DP, strike, trimeq, trimlr, pring
+    USE inout, ONLY: lenpar, lenline
+    USE constants, ONLY: pi, MKS
+    USE arrays, ONLY: closest, iwhere, reallocate
     USE interpolation, ONLY: interp_lin_sorted
     USE grain_optics, ONLY: rho_grain, read_optics
     IMPLICIT NONE
 
-    CHARACTER(*), DIMENSION(:), INTENT(IN)              :: label
-    REAL(DP), DIMENSION(:), INTENT(IN), OPTIONAL        :: waveall
-    INTEGER                                             :: i, Nspec, Nr, Nw
-    INTEGER, DIMENSION(SIZE(label))                     :: rind ! radius index
-    REAL(DP), PARAMETER                                 :: a0 = 1.E-2_DP ! grain radius
-    REAL(DP), DIMENSION(:), ALLOCATABLE                 :: wave0
-    REAL(DP), DIMENSION(:,:), ALLOCATABLE               :: radius
-    REAL(DP), DIMENSION(:,:,:), ALLOCATABLE             :: Q ! (Nspec, Nr, Nw)
-    TYPE(Qabs_str), DIMENSION(SIZE(label)), INTENT(OUT) :: nQabs
+    !! Temporary inputs
+    CHARACTER(*), DIMENSION(:), INTENT(IN)               :: labQ
+    CHARACTER(*), DIMENSION(:), INTENT(IN), OPTIONAL     :: labBIN, labLIN
+    REAL(DP), DIMENSION(:), INTENT(IN), OPTIONAL         :: waveall
     
-    CALL read_optics(label, WAVE=wave0, RADIUSALL=radius, QABSALL=Q)
+    ! INTEGER, PARAMETER :: unit = 1
+    INTEGER :: i!, iostat
+    ! CHARACTER(lenline) :: inpn, inpv
+    ! CHARACTER(lenline), DIMENSION(:), ALLOCATABLE :: inpname, inpval
 
-    Nspec = SIZE(label)
-    Nw = SIZE(wave0)
+    INTEGER                                              :: Nspec, Nr, Nw, Nband, Nline
+    INTEGER, DIMENSION(SIZE(labQ))                       :: indr ! radius index
+    REAL(DP), PARAMETER                                  :: a0 = 1.E-2_DP ! grain radius
+    REAL(DP), DIMENSION(:), ALLOCATABLE                  :: wave0
+    REAL(DP), DIMENSION(:,:), ALLOCATABLE                :: radius
+    REAL(DP), DIMENSION(:,:,:), ALLOCATABLE              :: Q ! (Nspec, Nr, Nw)
+    
+    ! INTEGER, INTENT(OUT), OPTIONAL :: Nmcmc
+    ! LOGICAL, INTENT(OUT), OPTIONAL :: verbose
+    TYPE(Qabs_type), DIMENSION(:), ALLOCATABLE, INTENT(OUT), OPTIONAL :: Qabs
+    INTEGER, DIMENSION(:), ALLOCATABLE, INTENT(OUT), OPTIONAL         :: indBIN
+    INTEGER, DIMENSION(:), ALLOCATABLE, INTENT(OUT), OPTIONAL         :: indLIN
 
-    DO i=1,Nspec
+    !!----------------------------
+    !! Read the input master file
+    !!----------------------------
+    ! OPEN (unit, FILE="./input_fitMIR_master.txt", &
+    !       STATUS="OLD", ACTION="READ", IOSTAT=iostat)
+    !   DO 
+    !     IF (iostat /= 0) EXIT
+    !     CALL READ_INPUT_LINE(unit,inpn,inpv,IOSTAT=iostat)
+    !     CALL INCRARR(inpname,inpn)
+    !     CALL INCRARR(inpval,inpv)
+        
+    !   END DO
+    ! CLOSE (unit)
+
+    !!--------------------------------
+    !! Read optical properties (Qabs)
+    !!--------------------------------
+    IF (PRESENT(Qabs)) THEN
+      !! Qabs % wave [um], nu [Hz], Qova [m^-1], rho [kg/m^3]
+      CALL read_optics(labQ, WAVE=wave0, RADIUSALL=radius, QABSALL=Q)    
       
-      ALLOCATE(nQabs(i)%Qova(Nw))
+      Nspec = SIZE(labQ)
+      Nw = SIZE(wave0)
+
+      ALLOCATE(Qabs(SIZE(labQ)))
       
-      Nr = SIZE(radius(i,:))
-      nQabs(i)%rho = rho_grain(label(i))
-      nQabs(i)%wave = wave0
-      nQabs(i)%nu = MKS%clight/MKS%micron / wave0
-      rind(i) = closest(radius(i,:), a0)
-      nQabs(i)%Qova = Q(i,rind(i),:)/radius(i,rind(i))
-      ! PRINT*, 'Radius of ', label(i), ': ', radius(i,rind(i)), '->', rind(i)
+      DO i=1,Nspec
+        
+        ALLOCATE(Qabs(i)%Qova(Nw), Qabs(i)%coeffMBB(Nw))
+        
+        Nr = SIZE(radius(i,:))
+        Qabs(i)%rho = rho_grain(labQ(i))
+        Qabs(i)%wave = wave0
+        Qabs(i)%nu = MKS%clight/MKS%micron / wave0
+        indr(i) = closest(radius(i,:), a0)
+        Qabs(i)%Qova = Q(i,indr(i),:)/radius(i,indr(i))
+        ! PRINT*, 'Radius of ', labQ(i), ': ', radius(i,indr(i)), '->', indr(i)
+        Qabs(i)%coeffMBB = 3._DP*pi/4._DP/rho_grain(labQ(i)) * Q(i,indr(i),:)/radius(i,indr(i))
+        
+        !! [Optional] Interpolate Qabs to input wave grid
+        IF (PRESENT(waveall)) THEN
+          Qabs(i)%wave = waveall
+          Qabs(i)%nu = MKS%clight/MKS%micron / waveall
+          Qabs(i)%Qova = interp_lin_sorted(Qabs(i)%Qova, wave0, waveall, &
+                                            XLOG=.TRUE., YLOG=.TRUE., FORCE=.TRUE.)
+          Qabs(i)%coeffMBB = interp_lin_sorted(Qabs(i)%coeffMBB, wave0, waveall, &
+                                                XLOG=.TRUE., YLOG=.TRUE., FORCE=.TRUE.)
+          
+        END IF
+      END DO
+      !! Free memory space
+      DEALLOCATE(wave0, radius, Q)
+      
+    END IF
 
-      !! [Optional] Interpolate nQabs to input wave grid
-      IF (PRESENT(waveall)) THEN
-        nQabs(i)%wave = waveall
-        nQabs(i)%nu = MKS%clight/MKS%micron / waveall
-        nQabs(i)%Qova = interp_lin_sorted(nQabs(i)%Qova, wave0, waveall, &
-                                          XLOG=.TRUE., YLOG=.TRUE., FORCE=.TRUE.)
-
+    !!----------------------
+    !! Read bands and lines
+    !!----------------------
+    IF (PRESENT(indBIN)) THEN
+      IF (PRESENT(labBIN)) THEN
+        Nband = SIZE(labBIN)
+        ALLOCATE(indBIN(Nband))
+        DO i=1,Nband
+          CALL IWHERE( TRIMEQ(BIN(:)%label, labBIN(i)), indBIN(i) )
+          
+        END DO
+      ELSE
+        Nband = Nband_max
+        ALLOCATE(indBIN(Nband))
+        indBIN(:) = (/ (i, i=1,Nband) /)
       END IF
-      
-    END DO
+    END IF
 
-    !! Free memory space
-    DEALLOCATE(wave0, radius, Q)
+    IF (PRESENT(indLIN)) THEN
+      IF (PRESENT(labLIN)) THEN
+        Nline = SIZE(labLIN)
+        ALLOCATE(indLIN(Nline))
+        DO i=1,Nline
+          CALL IWHERE( TRIMEQ(LIN(:)%label, labLIN(i)), indLIN(i) )
+          
+        END DO
+      ELSE
+        Nline = Nline_max
+        ALLOCATE(indLIN(Nline))
+        indLIN(:) = (/ (i, i=1,Nline) /)
+      END IF
+    END IF
 
-  END SUBROUTINE make_Qabs
+  END SUBROUTINE read_master
 
+  !!-------------------------------------------------------
+  !!
+  !!     Automatic initialization of model parameters
+  !!
+  !!-------------------------------------------------------
+  ! SUBROUTINE initparam(NiniMC, par, mask)
+    
+  !   USE utilities, ONLY: DP, trimeq, trimlr, pring, isNaN
+  !   IMPLICIT NONE
+
+  !   INTEGER, INTENT(IN) :: NiniMC
+  !   LOGICAL, DIMENSION(:,:,:), INTENT(IN) :: mask
+  !   REAL(DP), DIMENSION(:,:,:,:), INTENT(INOUT) :: par
+  !   INTEGER :: i, j, ipar, x, y, Nx, Ny, Npar, Nextra, Nmc
+  !   LOGICAL, DIMENSION(:,:), ALLOCATABLE :: maskxy
+    
+  !   !! Preliminary
+  !   Nx = SIZE(par(:,:,:,:),1)
+  !   Ny = SIZE(par(:,:,:,:),2)
+  !   ALLOCATE(maskxy(Nx,Ny))
+  !   FORALL (x=1:Nx,y=1:Ny) maskxy(x,y) = ANY(mask(x,y,:))
+
+  ! END SUBROUTINE initparam
+  
   !!-------------------------------------------------------
   !!
   !! Automatize the degradation of the spectral resolution
@@ -298,11 +375,11 @@ CONTAINS
   !!    Analytical functions of the individual features
   !!
   !!-------------------------------------------------------
-
+  
   !!-----------------------
   !! Dust contimuum (N BB)
   !!-----------------------
-  PURE FUNCTION modifBB(temp, Qabs)
+  PURE FUNCTION modifBB_gen(dblarr, temp, Qabs)
     !! temp [K]; blackbody [W/m2/sr/Hz]; 
     !! output array [MJy/sr]
     USE utilities, ONLY: DP
@@ -310,63 +387,116 @@ CONTAINS
     USE statistical_physics, ONLY: blackbody
     IMPLICIT NONE
     
-    TYPE(Qabs_str), INTENT(IN)          :: Qabs
-    REAL(DP), INTENT(IN)                :: temp
-    INTEGER                             :: Nw
-    REAL(DP), DIMENSION(:), ALLOCATABLE :: modifBB
+    REAL(DP), DIMENSION(:), INTENT(IN)           :: dblarr
+    REAL(DP), DIMENSION(:), INTENT(IN)           :: temp
+    TYPE(Qabs_type), INTENT(IN), DIMENSION(:)    :: Qabs
+    INTEGER :: Nt, it
+    REAL(DP), DIMENSION(SIZE(dblarr))            :: nu
+    REAL(DP), DIMENSION(SIZE(temp),SIZE(dblarr)) :: modifBB_gen
 
-    Nw = SIZE(Qabs%nu)
+    Nt = SIZE(temp)
+    nu(:) = MKS%clight/MKS%micron / dblarr(:) ! should be the same with Qabs%nu
 
-    ALLOCATE(modifBB(Nw))
-
-    modifBB = 3._DP*pi/4._DP/Qabs%rho * Qabs%Qova &
-              * blackbody(Qabs%nu, temp) ! in W/m2/sr/Hz
+    FORALL (it=1:Nt) &
+      modifBB_gen(it,:) = Qabs(it)%coeffMBB * BLACKBODY(nu(:), temp(it)) ! in W/m2/sr/Hz
     !! Unit onversion ([W/m2/sr/Hz] to [MJy/sr])
-    modifBB = modifBB /MKS%Jy/1.E6
+    modifBB_gen(:,:) = modifBB_gen(:,:) /MKS%Jy/1.E6
     
-  END FUNCTION modifBB
+  END FUNCTION modifBB_gen
+
+  PURE FUNCTION modifBB_0(dblarr, temp, Qabs)
+    USE utilities, ONLY: DP
+    IMPLICIT NONE
+    REAL(DP), DIMENSION(:), INTENT(IN)           :: dblarr
+    REAL(DP), INTENT(IN)                         :: temp
+    TYPE(Qabs_type), INTENT(IN)                  :: Qabs
+    REAL(DP), DIMENSION(SIZE(dblarr))            :: modifBB_0
+    modifBB_0(:) = RESHAPE(modifBB_gen(dblarr(:), [temp], [Qabs]), [SIZE(dblarr(:))])
+  END FUNCTION modifBB_0
+
+  PURE FUNCTION modifBB_1(dblarr, temp, Qabs)
+    USE utilities, ONLY: DP
+    IMPLICIT NONE
+    REAL(DP), DIMENSION(:), INTENT(IN)           :: dblarr
+    REAL(DP), DIMENSION(:), INTENT(IN)           :: temp
+    TYPE(Qabs_type), INTENT(IN), DIMENSION(:)    :: Qabs
+    REAL(DP), DIMENSION(SIZE(temp),SIZE(dblarr)) :: modifBB_1
+    modifBB_1(:,:) = RESHAPE(modifBB_gen(dblarr(:), temp(:), Qabs(:)), &
+                             [SIZE(temp(:)), SIZE(dblarr(:))])
+  END FUNCTION modifBB_1
 
   !!-----------------------------------------------------
   !! Atomic & molecular unresolved lines (Gauss profile)
   !!-----------------------------------------------------
-  PURE FUNCTION gaussLine(dblarr, ref, sig, w2nu)
+  PURE FUNCTION gaussLine_gen(dblarr, ref, sig, w2nu)
     !! w2nu=.TRUE. if input is in wavelength
     !! Output array [Hz^-1]
     USE utilities, ONLY: DP
     USE constants, ONLY: pi, MKS
-    USE statistics, ONLY: mean, median, sigma
     USE distributions, ONLY: dist_gauss
     IMPLICIT NONE
 
-    LOGICAL, INTENT(IN), OPTIONAL      :: w2nu
-    REAL(DP), INTENT(IN)               :: ref, sig
-    REAL(DP), DIMENSION(:), INTENT(IN) :: dblarr
-    REAL(DP)                           :: nuref, nusig
-    REAL(DP), DIMENSION(SIZE(dblarr))  :: nuIN
-    REAL(DP), DIMENSION(SIZE(dblarr))  :: gaussLine
+    REAL(DP), DIMENSION(:), INTENT(IN)          :: dblarr
+    REAL(DP), DIMENSION(:), INTENT(IN)          :: ref, sig
+    LOGICAL, INTENT(IN), OPTIONAL               :: w2nu
+    INTEGER :: N, i
+    REAL(DP), DIMENSION(SIZE(dblarr))           :: nuIN
+    REAL(DP), DIMENSION(SIZE(ref))              :: nuref, nusig
+    REAL(DP), DIMENSION(SIZE(ref),SIZE(dblarr)) :: gaussLine_gen
 
+    N = SIZE(ref)
+    nuIN(:) = dblarr(:)
+    nuref(:) = ref(:)
+    nusig(:) = sig(:)
     IF (PRESENT(w2nu)) THEN
       IF (w2nu) THEN
-        nuIN = MKS%clight/MKS%micron / dblarr
-        nuref = MKS%clight/MKS%micron / ref
-        nusig = MKS%clight/MKS%micron * (1./(ref-sig) - 1./(ref+sig)) / 2._DP
+        nuIN(:) = MKS%clight/MKS%micron / dblarr(:)
+        nuref(:) = MKS%clight/MKS%micron / ref(:)
+        nusig(:) = MKS%clight/MKS%micron * (1./(ref(:)-sig(:)) - 1./(ref(:)+sig(:))) / 2._DP
 
       END IF
-    ELSE
-      nuIN = dblarr
-      nuref = ref
-      nusig = sig
-      ! print*, dblarr(582), SIZE(dblarr) ! remove PURE for printing tests
-      
     END IF
-    gaussLine = dist_gauss(nuIN, nuref, nusig)
+    FORALL (i=1:N) &
+      gaussLine_gen(i,:) = DIST_GAUSS(nuIN(:), nuref(i), nusig(i))
 
-  END FUNCTION gaussLine
+  END FUNCTION gaussLine_gen
 
+  PURE FUNCTION gaussLine_0(dblarr, ref, sig, w2nu)
+    USE utilities, ONLY: DP
+    IMPLICIT NONE
+    REAL(DP), DIMENSION(:), INTENT(IN) :: dblarr
+    REAL(DP), INTENT(IN)               :: ref, sig
+    LOGICAL, INTENT(IN), OPTIONAL      :: w2nu
+    REAL(DP), DIMENSION(SIZE(dblarr))  :: gaussLine_0
+    IF (PRESENT(w2nu)) THEN
+      gaussLine_0(:) = RESHAPE(gaussLine_gen(dblarr(:), [ref], [sig], w2nu), &
+                               [SIZE(dblarr(:))])
+    ELSE
+      gaussLine_0(:) = RESHAPE(gaussLine_gen(dblarr(:), [ref], [sig]), [SIZE(dblarr(:))])
+    END IF
+  END FUNCTION gaussLine_0
+
+
+  PURE FUNCTION gaussLine_1(dblarr, ref, sig, w2nu)
+    USE utilities, ONLY: DP
+    IMPLICIT NONE
+    REAL(DP), DIMENSION(:), INTENT(IN)          :: dblarr
+    REAL(DP), DIMENSION(:), INTENT(IN)          :: ref, sig
+    LOGICAL, INTENT(IN), OPTIONAL               :: w2nu
+    REAL(DP), DIMENSION(SIZE(ref),SIZE(dblarr)) :: gaussLine_1
+    IF (PRESENT(w2nu)) THEN
+      gaussLine_1(:,:) = RESHAPE(gaussLine_gen(dblarr(:), ref(:), sig(:), w2nu), &
+                                 [SIZE(ref(:)), SIZE(dblarr(:))])
+    ELSE
+      gaussLine_1(:,:) = RESHAPE(gaussLine_gen(dblarr(:), ref(:), sig(:)), &
+                                 [SIZE(ref(:)), SIZE(dblarr(:))])
+    END IF
+  END FUNCTION gaussLine_1
+  
   !!------------------------------------------------------
   !! Resolved aromatic bands (Asymmetric Lorentz profile)
   !!------------------------------------------------------
-  PURE FUNCTION lorentzBand(dblarr, ref, sigS, sigL, w2nu)
+  PURE FUNCTION lorentzBand_gen(dblarr, ref, sigS, sigL, w2nu)
     !! w2nu=.TRUE. if input is in wavelength
     !! Output array [Hz^-1]
     USE utilities, ONLY: DP
@@ -374,28 +504,37 @@ CONTAINS
     USE distributions, ONLY: dist_splitlorentz
     IMPLICIT NONE
 
-    LOGICAL, INTENT(IN), OPTIONAL      :: w2nu
-    REAL(DP), INTENT(IN)               :: ref, sigS, sigL
-    REAL(DP), DIMENSION(:), INTENT(IN) :: dblarr
-    REAL(DP)                           :: nuref, nusigS, nusigL
-    REAL(DP), DIMENSION(SIZE(dblarr))  :: nuIN
-    REAL(DP)                           :: lambda, tau
-    REAL(DP), DIMENSION(SIZE(dblarr))  :: lorentzBand
+    REAL(DP), DIMENSION(:), INTENT(IN)          :: dblarr
+    REAL(DP), DIMENSION(:), INTENT(IN)          :: ref, sigS, sigL
+    LOGICAL, INTENT(IN), OPTIONAL               :: w2nu
+    INTEGER :: N, i
+    REAL(DP), DIMENSION(SIZE(dblarr))           :: nuIN
+    REAL(DP), DIMENSION(SIZE(ref))              :: nuref, nusigS, nusigL
+    REAL(DP), DIMENSION(SIZE(ref))              :: lambda, tau
+    REAL(DP), DIMENSION(SIZE(ref),SIZE(dblarr)) :: lorentzBand_gen
 
+    N = SIZE(ref)
+    
     nusigS = 1._DP
     nusigL = 1._DP
     IF (PRESENT(w2nu)) THEN
       IF (w2nu) THEN
-        nuIN = MKS%clight/MKS%micron / dblarr
-        nuref = MKS%clight/MKS%micron / ref
-        nusigS = MKS%clight/MKS%micron * (1./(ref-sigS) - 1./ref)
-        nusigL = MKS%clight/MKS%micron * (1./ref - 1./(ref+sigL))
+        nuIN(:) = MKS%clight/MKS%micron / dblarr(:)
+        nuref(:) = MKS%clight/MKS%micron / ref(:)
+        nusigS(:) = MKS%clight/MKS%micron * (1./(ref(:)-sigS(:)) - 1./ref(:))
+        nusigL(:) = MKS%clight/MKS%micron * (1./ref(:) - 1./(ref(:)+sigL(:)))
+      ELSE
+        nuIN(:) = dblarr(:)
+        nuref(:) = ref(:)
+        nusigS(:) = sigS(:)
+        nusigL(:) = sigL(:)
+        
       END IF
     ELSE
-      nuIN = dblarr
-      nuref = ref
-      nusigS = sigS
-      nusigL = sigL
+      nuIN(:) = dblarr(:)
+      nuref(:) = ref(:)
+      nusigS(:) = sigS(:)
+      nusigL(:) = sigL(:)
       
     END IF
     !! The SwING library adopted the arbitary parameters such that 
@@ -405,12 +544,45 @@ CONTAINS
     !! This is analogue of (split) normal distribution.
     !! In addition we denote lambda=2*dnu_long (analogue of FWHM)
     !! and tau=dnu_short/dnu_long (shape param).
-    lambda = 2*nusigL ! nusigL = lambda/2 (lambda -> width param)
-    tau = nusigS/nusigL ! nusigS = tau * nusigL (tau -> shape param)
+    lambda(:) = 2*nusigL(:) ! nusigL = lambda/2 (lambda -> width param)
+    tau(:) = nusigS(:)/nusigL(:) ! nusigS = tau * nusigL (tau -> shape param)
     !! norm = lambda / (1+tau) / pi
-    lorentzBand = dist_splitlorentz(nuIN, nuref, lambda, tau)
+    FORALL (i=1:N) &
+      lorentzBand_gen(i,:) = DIST_SPLITLORENTZ(nuIN(:), nuref(i), lambda(i), tau(i))
 
-  END FUNCTION lorentzBand
+  END FUNCTION lorentzBand_gen
+
+  PURE FUNCTION lorentzBand_0(dblarr, ref, sigS, sigL, w2nu)
+    USE utilities, ONLY: DP
+    IMPLICIT NONE
+    REAL(DP), DIMENSION(:), INTENT(IN) :: dblarr
+    REAL(DP), INTENT(IN)               :: ref, sigS, sigL
+    LOGICAL, INTENT(IN), OPTIONAL      :: w2nu
+    REAL(DP), DIMENSION(SIZE(dblarr))  :: lorentzBand_0
+    IF (PRESENT(w2nu)) THEN
+      lorentzBand_0(:) = RESHAPE(lorentzBand_gen(dblarr(:), [ref], [sigS], [sigL], w2nu), &
+                                 [SIZE(dblarr(:))])
+    ELSE
+      lorentzBand_0(:) = RESHAPE(lorentzBand_gen(dblarr(:), [ref], [sigS], [sigL]), &
+                                 [SIZE(dblarr(:))])
+    END IF
+  END FUNCTION lorentzBand_0
+
+  PURE FUNCTION lorentzBand_1(dblarr, ref, sigS, sigL, w2nu)
+    USE utilities, ONLY: DP
+    IMPLICIT NONE
+    REAL(DP), DIMENSION(:), INTENT(IN)          :: dblarr
+    REAL(DP), DIMENSION(:), INTENT(IN)          :: ref, sigS, sigL
+    LOGICAL, INTENT(IN), OPTIONAL               :: w2nu
+    REAL(DP), DIMENSION(SIZE(ref),SIZE(dblarr)) :: lorentzBand_1
+    IF (PRESENT(w2nu)) THEN
+      lorentzBand_1(:,:) = RESHAPE(lorentzBand_gen(dblarr(:), ref(:), sigS(:), sigL(:), w2nu), &
+                                   [SIZE(ref(:)), SIZE(dblarr(:))])
+    ELSE
+      lorentzBand_1(:,:) = RESHAPE(lorentzBand_gen(dblarr(:), ref(:), sigS(:), sigL(:)), &
+                                   [SIZE(ref(:)), SIZE(dblarr(:))])
+    END IF
+  END FUNCTION lorentzBand_1
 
   !!------------------
   !! Extinction curve
@@ -463,512 +635,677 @@ CONTAINS
 
   !! 3D version
   !!============
-  FUNCTION specModel_3D(wv, parr, nQabs, Nbb, Nline, Nband, NAv, Nstar, &
-                        Npar, parinfo, &
-                        tau_tab, Fnu_cont_tab, Fnu_line_tab, Fnu_band_tab, &
-                        Pabs, Fnu_cont, Fnu_line, Fnu_band, Fnu_star)
-    !! Nstar = 0 or 1
-    USE utilities, ONLY: DP
+  FUNCTION specModel_3D(wvl, indpar, parval, Qabs, &
+                        FnuCONT, FnuBAND, FnuSTAR, Pabs, FnuLINE)
+
+    USE utilities, ONLY: DP, trimeq, trimlr, pring
     USE constants, ONLY: pi, MKS
-    USE arrays, ONLY: REALLOCATE
+    USE arrays, ONLY: reallocate
     USE statistical_physics, ONLY: blackbody
     IMPLICIT NONE
 
-    REAL(DP), DIMENSION(:), INTENT(IN)       :: wv
-    REAL(DP), DIMENSION(:,:,:), INTENT(IN)   :: parr
-    TYPE(Qabs_str), DIMENSION(:), INTENT(IN) :: nQabs
-    INTEGER, INTENT(IN)                      :: Nbb, Nline, Nband, NAv, Nstar
-    INTEGER                                  :: i, x, y, Nx, Ny, Nw, Npar0
-    REAL(DP)                                 :: Tstar
-    REAL(DP), DIMENSION(SIZE(wv))            :: nu, extinction
-    REAL(DP), DIMENSION(:,:), ALLOCATABLE    :: tau_tab0
-    REAL(DP), DIMENSION(:,:), ALLOCATABLE    :: Fnu_cont_tab0
-    REAL(DP), DIMENSION(:,:), ALLOCATABLE    :: Fnu_line_tab0
-    REAL(DP), DIMENSION(:,:), ALLOCATABLE    :: Fnu_band_tab0
-    REAL(DP), DIMENSION(:), ALLOCATABLE      :: Pabs0
-    REAL(DP), DIMENSION(:), ALLOCATABLE      :: Fnu_cont0
-    REAL(DP), DIMENSION(:), ALLOCATABLE      :: Fnu_line0
-    REAL(DP), DIMENSION(:), ALLOCATABLE      :: Fnu_band0
-    REAL(DP), DIMENSION(:), ALLOCATABLE      :: Fnu_star0
-    TYPE(par_str)                            :: par
-    INTEGER, INTENT(OUT), OPTIONAL                                     :: Npar
-    TYPE(parinfo_str), DIMENSION(:),INTENT(OUT), ALLOCATABLE, OPTIONAL :: parinfo
-    REAL(DP), DIMENSION(SIZE(parr,1),SIZE(parr,2), &
-                        NAv,SIZE(wv)), INTENT(OUT), OPTIONAL           :: tau_tab
-    REAL(DP), DIMENSION(SIZE(parr,1),SIZE(parr,2), &
-                        Nbb,SIZE(wv)), INTENT(OUT), OPTIONAL           :: Fnu_cont_tab
-    REAL(DP), DIMENSION(SIZE(parr,1),SIZE(parr,2), &
-                        Nline,SIZE(wv)), INTENT(OUT), OPTIONAL         :: Fnu_line_tab
-    REAL(DP), DIMENSION(SIZE(parr,1),SIZE(parr,2), &
-                        Nband,SIZE(wv)), INTENT(OUT), OPTIONAL         :: Fnu_band_tab
-    REAL(DP), DIMENSION(SIZE(parr,1),SIZE(parr,2), &
-                        SIZE(wv)), INTENT(OUT), OPTIONAL               :: Pabs
-    REAL(DP), DIMENSION(SIZE(parr,1),SIZE(parr,2), &
-                        SIZE(wv)), INTENT(OUT), OPTIONAL               :: Fnu_cont
-    REAL(DP), DIMENSION(SIZE(parr,1),SIZE(parr,2), &
-                        SIZE(wv)), INTENT(OUT), OPTIONAL               :: Fnu_line
-    REAL(DP), DIMENSION(SIZE(parr,1),SIZE(parr,2), &
-                        SIZE(wv)), INTENT(OUT), OPTIONAL               :: Fnu_band
-    REAL(DP), DIMENSION(SIZE(parr,1),SIZE(parr,2), &
-                        SIZE(wv)), INTENT(OUT), OPTIONAL               :: Fnu_star
-    REAL(DP), DIMENSION(SIZE(parr,1),SIZE(parr,2), &
-                        SIZE(wv))                                      :: specModel_3D
+    REAL(DP), DIMENSION(:), INTENT(IN)                           :: wvl
+    TYPE(indpar_type), INTENT(IN)                                :: indpar
+    REAL(DP), DIMENSION(:,:,:), INTENT(IN)                       :: parval ! 3D (Nx,Ny,*Npar)
+    TYPE(Qabs_type), DIMENSION(:), INTENT(IN)                    :: Qabs
+    INTEGER :: Nw, Nx, Ny, Ncont, Nline, Nband
+    INTEGER :: x, y, i
+    REAL(DP)                                                     :: Tstar
+    REAL(DP), DIMENSION(SIZE(wvl))                               :: nu, extinction
+    REAL(DP), DIMENSION(:,:,:,:), ALLOCATABLE                    :: Const4D ! (Nx,Ny,Nw,Ncomp)
+    REAL(DP), DIMENSION(SIZE(parval,1),SIZE(parval,2),SIZE(wvl)) :: FnuCONT0, &
+      FnuBAND0, FnuSTAR0, Pabs0, FnuLINE0
+    REAL(DP), DIMENSION(:,:,:), ALLOCATABLE, INTENT(OUT), OPTIONAL :: FnuCONT, &
+      FnuBAND, FnuSTAR, Pabs, FnuLINE
+    REAL(DP), DIMENSION(SIZE(parval,1),SIZE(parval,2),SIZE(wvl)) :: specModel_3D
 
     !! Preliminaries
     !!---------------
-    Nx = SIZE(parr,1)
-    Ny = SIZE(parr,2)
-    Nw = SIZE(wv)
-    nu(:) = MKS%clight/MKS%micron / wv(:)
-    extinction(:) = extCurve(wv(:))
+    Nw = SIZE(wvl(:))
+    Nx = SIZE(parval(:,:,:),1)
+    Ny = SIZE(parval(:,:,:),2)
+    Ncont = SIZE(Qabs(:))
+    Nband = COUNT(indpar%Iband(:) .NE. -1)
+    Tstar = 5.E4_DP ! high enough to stay in Rayleigh-Jeans limit [K]
+    Nline = COUNT(indpar%Iline(:) .NE. -1)
+    nu(:) = MKS%clight/MKS%micron / wvl(:)
+    extinction(:) = extCurve(wvl(:))
+
+    !! Initialization
+    specModel_3D(:,:,:) = 0._DP
     
-    IF (PRESENT(parinfo)) &
-      CALL make_par(parr(1,1,:), Nbb, Nline, Nband, NAv, Nstar, &
-                    NPAR=Npar0, PARINFO=parinfo)
+    !! 1. Continuum
+    !!--------------
+    CALL REALLOCATE(Const4D,Nx,Ny,Nw,Ncont)
+    FORALL (x=1:Nx,y=1:Ny,i=1:Ncont) &
+      Const4D(x,y,:,i) = parval(x,y,indpar%Mcont(i)) * MKS%Msun/MKS%pc**2 * &
+                         modifBB(wvl(:), parval(x,y,indpar%Tcont(i)), Qabs(i))
+    FnuCONT0(:,:,:) = SUM(Const4D(:,:,:,:),DIM=4)
 
-    IF (PRESENT(Npar)) Npar = Npar0
+    IF (PRESENT(FnuCONT)) THEN
+      ALLOCATE(FnuCONT(Nx,Ny,Nw))
+      FnuCONT(:,:,:) = FnuCONT0(:,:,:)
+    END IF
+    
+    !! 2. Bands
+    !!----------
+    CALL REALLOCATE(Const4D,Nx,Ny,Nw,Nband)
+    FORALL (x=1:Nx,y=1:Ny,i=1:Nband) &
+      Const4D(x,y,:,i) = parval(x,y,indpar%Iband(i)) /MKS%Jy/1.E6 * &
+                         lorentzBand(wvl(:), parval(x,y,indpar%Cband(i)), &
+                           parval(x,y,indpar%WSband(i)), parval(x,y,indpar%WLband(i)), .TRUE.)
+    FnuBAND0(:,:,:) = SUM(Const4D(:,:,:,:),DIM=4)
 
-    DO x=1,Nx
-      DO y=1,Ny
-        CALL make_par(parr(x,y,:), Nbb, Nline, Nband, NAv, Nstar, par)
-        
-        ALLOCATE(Pabs0(Nw), Fnu_cont0(Nw), Fnu_line0(Nw), Fnu_band0(Nw), Fnu_star0(Nw))
-        
-        !! Screen extinction
-        !!-------------------
-        IF (NAv.GT.0) THEN
-          ALLOCATE(tau_tab0(NAv, Nw))
-          DO i=1,NAv
-            tau_tab0(i,:) = par%Av(i)/1.086_DP * extinction(:)
-        
-          END DO
-        ELSE
-          CALL REALLOCATE(tau_tab0, 1, Nw)
-        
-        END IF
-        Pabs0 = EXP(-SUM(tau_tab0(:,:), DIM=1))
-        !! output option
-        IF (PRESENT(tau_tab)) tau_tab(x,y,:,:) = tau_tab0
-        IF (PRESENT(Pabs)) Pabs(x,y,:) = Pabs0
-        
-        !! Continuum
-        !!-----------
-        IF (Nbb.GT.0) THEN
-          ALLOCATE(Fnu_cont_tab0(Nbb, Nw))
-          DO i=1,Nbb
-            !! massBB in unit of [Msun/pc2]
-            Fnu_cont_tab0(i,:) = par%massBB(i) * MKS%Msun/MKS%pc**2 * &
-                                 modifBB(par%tempBB(i), nQabs(i))
-        
-          END DO
-        ELSE
-          CALL REALLOCATE(Fnu_cont_tab0, 1, Nw)
-        
-        END IF
-        Fnu_cont0 = SUM(Fnu_cont_tab0(:,:), DIM=1)
-        !! output option
-        IF (PRESENT(Fnu_cont_tab)) Fnu_cont_tab(x,y,:,:) = Fnu_cont_tab0
-        IF (PRESENT(Fnu_cont)) Fnu_cont(x,y,:) = Fnu_cont0
-        
-        !! Lines
-        !!-------
-        IF (Nline.GT.0) THEN
-          ALLOCATE(Fnu_line_tab0(Nline, Nw))
-          DO i=1,Nline
-            Fnu_line_tab0(i,:) = par%Iline(i) /MKS%Jy/1.E6 * &
-                                 gaussLine(wv, par%Cline(i), par%Wline(i), .TRUE.)
-        
-          END DO
-        ELSE
-          CALL REALLOCATE(Fnu_line_tab0, 1, Nw)
-        
-        END IF
-        Fnu_line0 = SUM(Fnu_line_tab0(:,:), DIM=1)
-        !! output option
-        IF (PRESENT(Fnu_line_tab)) Fnu_line_tab(x,y,:,:) = Fnu_line_tab0
-        IF (PRESENT(Fnu_line)) Fnu_line(x,y,:) = Fnu_line0
-        
-        !! Bands
-        !!-------
-        IF (Nband.GT.0) THEN
-          ALLOCATE(Fnu_band_tab0(Nband, Nw))
-          DO i=1,Nband
-            Fnu_band_tab0(i,:) = par%Iband(i) /MKS%Jy/1.E6 * &
-                                 lorentzBand(wv, par%Cband(i), &
-                                 par%WSband(i), par%WLband(i), .TRUE.)
-        
-          END DO
-        ELSE
-          CALL REALLOCATE(Fnu_band_tab0, 1, Nw)
-        
-        END IF
-        Fnu_band0 = SUM(Fnu_band_tab0(:,:), DIM=1)
-        !! output option
-        IF (PRESENT(Fnu_band_tab)) Fnu_band_tab(x,y,:,:) = Fnu_band_tab0
-        IF (PRESENT(Fnu_band)) Fnu_band(x,y,:) = Fnu_band0
-        
-        !! Stellar Continuum
-        !!-------------------
-        IF (Nstar.GT.0) THEN
-          DO i=1,Nstar
-            Tstar = 5.E4_DP ! high enough to stay in Rayleigh-Jeans limit [K]
-            !! Fstar in unit of [Lsun/pc2] & Fnu_star [MJy/sr] with notations as follows: 
-            !! Fnu [W/m2/Hz] = pi * Bnu [W/m2/sr/Hz] (isotropically emitting surface)
-            !! F [W/m2] = integ(Fnudnu) = pi * integ(Bnudnu) = pi * B [W/m2] = sig * T^4
-            !! cf. energy flux (luminosity) [W]; surface brightness [W/m2] (or [mag]); 
-            !! flux density (irradiance) [W/m2]; radiant flux density (intensity) [W/m2/sr]
-            Fnu_star0 = par%Fstar(i) * MKS%Lsun/4._DP/pi/MKS%pc**2 * &
-                        pi * blackbody(nu, Tstar) /MKS%stefan/Tstar**4 /MKS%Jy/1.E6
-        
-          END DO
-          
-        END IF
-        !! output option
-        IF (PRESENT(Fnu_star)) Fnu_star(x,y,:) = Fnu_star0
-        
-        !! Total
-        !!-------
-        specModel_3D(x,y,:) = (Fnu_cont0+Fnu_band0+Fnu_star0)*Pabs0 + Fnu_line0
+    IF (PRESENT(FnuBAND)) THEN
+      ALLOCATE(FnuBAND(Nx,Ny,Nw))
+      FnuBAND(:,:,:) = FnuBAND0(:,:,:)
+    END IF
+    
+    !! 3. Stellar Continuum
+    !!----------------------
+    FORALL (x=1:Nx,y=1:Ny) &
+      FnuSTAR0(x,y,:) = parval(x,y,indpar%Fstar) * MKS%Lsun/4._DP/pi/MKS%pc**2 * &
+                         pi * BLACKBODY(nu(:), Tstar) /MKS%stefan/Tstar**4 /MKS%Jy/1.E6
 
-        DEALLOCATE(tau_tab0, Fnu_cont_tab0, Fnu_line_tab0, Fnu_band_tab0, &
-                   Pabs0, Fnu_cont0, Fnu_line0, Fnu_band0, Fnu_star0)
+    IF (PRESENT(FnuSTAR)) THEN
+      ALLOCATE(FnuSTAR(Nx,Ny,Nw))
+      FnuSTAR(:,:,:) = FnuSTAR0(:,:,:)
+    END IF
+    
+    !! 4. Screen extinction
+    !!----------------------
+    FORALL (x=1:Nx,y=1:Ny) &
+      Pabs0(x,y,:) = EXP(-parval(x,y,indpar%Av)/1.086_DP * extinction(:))
 
-      END DO
-      
-    END DO
+    IF (PRESENT(Pabs)) THEN
+      ALLOCATE(Pabs(Nx,Ny,Nw))
+      Pabs(:,:,:) = Pabs0(:,:,:)
+    END IF
+    
+    !! 5. Lines
+    !!----------
+    CALL REALLOCATE(Const4D,Nx,Ny,Nw,Nline)
+    FORALL (x=1:Nx,y=1:Ny,i=1:Nline) &
+      Const4D(x,y,:,i) = parval(x,y,indpar%Iline(i)) /MKS%Jy/1.E6 * &
+                         gaussLine(wvl(:), parval(x,y,indpar%Cline(i)), &
+                           parval(x,y,indpar%Wline(i)), .TRUE.)
+    FnuLINE0(:,:,:) = SUM(Const4D(:,:,:,:),DIM=4)
+
+    IF (PRESENT(FnuLINE)) THEN
+      ALLOCATE(FnuLINE(Nx,Ny,Nw))
+      FnuLINE(:,:,:) = FnuLINE0(:,:,:)
+    END IF
+    
+    !! Total model
+    !!-------------
+    specModel_3D(:,:,:) = (FnuCONT0(:,:,:) + FnuBAND0(:,:,:) + FnuSTAR0(:,:,:)) * &
+                          Pabs0(:,:,:) + FnuLINE0(:,:,:)
 
   END FUNCTION specModel_3D
 
   !! 2D version
   !!============
-  FUNCTION specModel_2D(wv, parr, nQabs, Nbb, Nline, Nband, NAv, Nstar, &
-                        Npar, parinfo, &
-                        tau_tab, Fnu_cont_tab, Fnu_line_tab, Fnu_band_tab, &
-                        Pabs, Fnu_cont, Fnu_line, Fnu_band, Fnu_star)
-    !! Nstar = 0 or 1
-    USE utilities, ONLY: DP
+  FUNCTION specModel_2D(wvl, indpar, parval, Qabs)
+
+    USE utilities, ONLY: DP, trimeq, trimlr, pring
     USE constants, ONLY: pi, MKS
-    USE arrays, ONLY: REALLOCATE
+    USE arrays, ONLY: reallocate
     USE statistical_physics, ONLY: blackbody
     IMPLICIT NONE
 
-    REAL(DP), DIMENSION(:), INTENT(IN)       :: wv
-    REAL(DP), DIMENSION(:,:), INTENT(IN)     :: parr
-    TYPE(Qabs_str), DIMENSION(:), INTENT(IN) :: nQabs
-    INTEGER, INTENT(IN)                      :: Nbb, Nline, Nband, NAv, Nstar
-    INTEGER                                  :: i, x, Nx, Nw, Npar0
-    REAL(DP)                                 :: Tstar
-    REAL(DP), DIMENSION(SIZE(wv))            :: nu, extinction
-    REAL(DP), DIMENSION(:,:), ALLOCATABLE    :: tau_tab0
-    REAL(DP), DIMENSION(:,:), ALLOCATABLE    :: Fnu_cont_tab0
-    REAL(DP), DIMENSION(:,:), ALLOCATABLE    :: Fnu_line_tab0
-    REAL(DP), DIMENSION(:,:), ALLOCATABLE    :: Fnu_band_tab0
-    REAL(DP), DIMENSION(:), ALLOCATABLE      :: Pabs0
-    REAL(DP), DIMENSION(:), ALLOCATABLE      :: Fnu_cont0
-    REAL(DP), DIMENSION(:), ALLOCATABLE      :: Fnu_line0
-    REAL(DP), DIMENSION(:), ALLOCATABLE      :: Fnu_band0
-    REAL(DP), DIMENSION(:), ALLOCATABLE      :: Fnu_star0
-    TYPE(par_str)                            :: par
-    INTEGER, INTENT(OUT), OPTIONAL                                     :: Npar
-    TYPE(parinfo_str), DIMENSION(:),INTENT(OUT), ALLOCATABLE, OPTIONAL :: parinfo
-    REAL(DP), DIMENSION(SIZE(parr,1), &
-                        NAv,SIZE(wv)), INTENT(OUT), OPTIONAL           :: tau_tab
-    REAL(DP), DIMENSION(SIZE(parr,1), &
-                        Nbb,SIZE(wv)), INTENT(OUT), OPTIONAL           :: Fnu_cont_tab
-    REAL(DP), DIMENSION(SIZE(parr,1), &
-                        Nline,SIZE(wv)), INTENT(OUT), OPTIONAL         :: Fnu_line_tab
-    REAL(DP), DIMENSION(SIZE(parr,1), &
-                        Nband,SIZE(wv)), INTENT(OUT), OPTIONAL         :: Fnu_band_tab
-    REAL(DP), DIMENSION(SIZE(parr,1), &
-                        SIZE(wv)), INTENT(OUT), OPTIONAL               :: Pabs
-    REAL(DP), DIMENSION(SIZE(parr,1), &
-                        SIZE(wv)), INTENT(OUT), OPTIONAL               :: Fnu_cont
-    REAL(DP), DIMENSION(SIZE(parr,1), &
-                        SIZE(wv)), INTENT(OUT), OPTIONAL               :: Fnu_line
-    REAL(DP), DIMENSION(SIZE(parr,1), &
-                        SIZE(wv)), INTENT(OUT), OPTIONAL               :: Fnu_band
-    REAL(DP), DIMENSION(SIZE(parr,1), &
-                        SIZE(wv)), INTENT(OUT), OPTIONAL               :: Fnu_star
-    REAL(DP), DIMENSION(SIZE(parr,1), &
-                        SIZE(wv))                                      :: specModel_2D
+    REAL(DP), DIMENSION(:), INTENT(IN)            :: wvl
+    TYPE(indpar_type), INTENT(IN)                 :: indpar
+    REAL(DP), DIMENSION(:,:), INTENT(IN)          :: parval ! 2D (*Npar,Npar)
+    TYPE(Qabs_type), DIMENSION(:), INTENT(IN)     :: Qabs
+    INTEGER :: Nw, Npar, Ncont, Nline, Nband
+    INTEGER :: ipar, i
+    REAL(DP)                                      :: Tstar
+    REAL(DP), DIMENSION(SIZE(wvl))                :: nu, extinction
+    REAL(DP), DIMENSION(:,:,:), ALLOCATABLE       :: Const3D ! (Npar,Nw,Ncomp)
+    REAL(DP), DIMENSION(SIZE(parval,2),SIZE(wvl)) :: FnuCONT0, &
+      FnuBAND0, FnuSTAR0, Pabs0, FnuLINE0
+    REAL(DP), DIMENSION(SIZE(parval,2),SIZE(wvl)) :: specModel_2D
 
     !! Preliminaries
     !!---------------
-    Nx = SIZE(parr,1)
-    Nw = SIZE(wv)
-    nu(:) = MKS%clight/MKS%micron / wv(:)
-    extinction(:) = extCurve(wv(:))
-     
-    IF (PRESENT(parinfo)) &
-      CALL make_par(parr(1,:), Nbb, Nline, Nband, NAv, Nstar, &
-                    NPAR=Npar0, PARINFO=parinfo)
+    Nw = SIZE(wvl(:))
+    Npar = SIZE(parval(:,:),2)
+    Ncont = SIZE(Qabs(:))
+    Nband = COUNT(indpar%Iband(:) .NE. -1)
+    Tstar = 5.E4_DP ! high enough to stay in Rayleigh-Jeans limit [K]
+    Nline = COUNT(indpar%Iline(:) .NE. -1)
+    nu(:) = MKS%clight/MKS%micron / wvl(:)
+    extinction(:) = extCurve(wvl(:))
 
-    IF (PRESENT(Npar)) Npar = Npar0
+    !! Initialization
+    specModel_2D(:,:) = 0._DP
+    
+    !! 1. Continuum
+    !!--------------
+    CALL REALLOCATE(Const3D,Npar,Nw,Ncont)
+    FORALL (ipar=1:Npar, i=1:Ncont) &
+      Const3D(ipar,:,i) = parval(indpar%Mcont(i),ipar) * MKS%Msun/MKS%pc**2 * &
+                          modifBB(wvl(:), parval(indpar%Tcont(i),ipar), Qabs(i))
+    FnuCONT0(:,:) = SUM(Const3D(:,:,:),DIM=3)
+    
+    !! 2. Bands
+    !!----------
+    CALL REALLOCATE(Const3D,Npar,Nw,Nband)
+    FORALL (ipar=1:Npar, i=1:Nband) &
+      Const3D(ipar,:,i) = parval(indpar%Iband(i),ipar) /MKS%Jy/1.E6 * &
+                          lorentzBand(wvl(:), parval(indpar%Cband(i),ipar), &
+                            parval(indpar%WSband(i),ipar), parval(indpar%WLband(i),ipar), .TRUE.)
+    FnuBAND0(:,:) = SUM(Const3D(:,:,:),DIM=3)
+    
+    !! 3. Stellar Continuum
+    !!----------------------
+    FORALL (ipar=1:Npar) &
+      FnuSTAR0(ipar,:) = parval(indpar%Fstar,ipar) * MKS%Lsun/4._DP/pi/MKS%pc**2 * &
+                         pi * BLACKBODY(nu(:), Tstar) /MKS%stefan/Tstar**4 /MKS%Jy/1.E6
 
-    DO x=1,Nx
-      CALL make_par(parr(x,:), Nbb, Nline, Nband, NAv, Nstar, par)
-      
-      ALLOCATE(Pabs0(Nw), Fnu_cont0(Nw), Fnu_line0(Nw), Fnu_band0(Nw), Fnu_star0(Nw))
-      
-      !! Screen extinction
-      !!-------------------
-      IF (NAv.GT.0) THEN
-        ALLOCATE(tau_tab0(NAv, Nw))
-        DO i=1,NAv
-          tau_tab0(i,:) = par%Av(i)/1.086_DP * extinction(:)
-      
-        END DO
-      ELSE
-        CALL REALLOCATE(tau_tab0, 1, Nw)
-      
-      END IF
-      Pabs0 = EXP(-SUM(tau_tab0(:,:), DIM=1))
-      !! output option
-      IF (PRESENT(tau_tab)) tau_tab(x,:,:) = tau_tab0
-      IF (PRESENT(Pabs)) Pabs(x,:) = Pabs0
-      
-      !! Continuum
-      !!-----------
-      IF (Nbb.GT.0) THEN
-        ALLOCATE(Fnu_cont_tab0(Nbb, Nw))
-        DO i=1,Nbb
-          !! massBB in unit of [Msun/pc2]
-          Fnu_cont_tab0(i,:) = par%massBB(i) * MKS%Msun/MKS%pc**2 * &
-                               modifBB(par%tempBB(i), nQabs(i))
-      
-        END DO
-      ELSE
-        CALL REALLOCATE(Fnu_cont_tab0, 1, Nw)
-      
-      END IF
-      Fnu_cont0 = SUM(Fnu_cont_tab0(:,:), DIM=1)
-      !! output option
-      IF (PRESENT(Fnu_cont_tab)) Fnu_cont_tab(x,:,:) = Fnu_cont_tab0
-      IF (PRESENT(Fnu_cont)) Fnu_cont(x,:) = Fnu_cont0
-      
-      !! Lines
-      !!-------
-      IF (Nline.GT.0) THEN
-        ALLOCATE(Fnu_line_tab0(Nline, Nw))
-        DO i=1,Nline
-          Fnu_line_tab0(i,:) = par%Iline(i) /MKS%Jy/1.E6 * &
-                               gaussLine(wv, par%Cline(i), par%Wline(i), .TRUE.)
-      
-        END DO
-      ELSE
-        CALL REALLOCATE(Fnu_line_tab0, 1, Nw)
-      
-      END IF
-      Fnu_line0 = SUM(Fnu_line_tab0(:,:), DIM=1)
-      !! output option
-      IF (PRESENT(Fnu_line_tab)) Fnu_line_tab(x,:,:) = Fnu_line_tab0
-      IF (PRESENT(Fnu_line)) Fnu_line(x,:) = Fnu_line0
-      
-      !! Bands
-      !!-------
-      IF (Nband.GT.0) THEN
-        ALLOCATE(Fnu_band_tab0(Nband, Nw))
-        DO i=1,Nband
-          Fnu_band_tab0(i,:) = par%Iband(i) /MKS%Jy/1.E6 * &
-                               lorentzBand(wv, par%Cband(i), &
-                               par%WSband(i), par%WLband(i), .TRUE.)
-      
-        END DO
-      ELSE
-        CALL REALLOCATE(Fnu_band_tab0, 1, Nw)
-      
-      END IF
-      Fnu_band0 = SUM(Fnu_band_tab0(:,:), DIM=1)
-      !! output option
-      IF (PRESENT(Fnu_band_tab)) Fnu_band_tab(x,:,:) = Fnu_band_tab0
-      IF (PRESENT(Fnu_band)) Fnu_band(x,:) = Fnu_band0
-      
-      !! Stellar Continuum
-      !!-------------------
-      IF (Nstar.GT.0) THEN
-        DO i=1,Nstar
-          Tstar = 5.E4_DP ! high enough to stay in Rayleigh-Jeans limit [K]
-          !! Fstar in unit of [Lsun/pc2] & Fnu_star [MJy/sr] with notations as follows: 
-          !! Fnu [W/m2/Hz] = pi * Bnu [W/m2/sr/Hz] (isotropically emitting surface)
-          !! F [W/m2] = integ(Fnudnu) = pi * integ(Bnudnu) = pi * B [W/m2] = sig * T^4
-          !! cf. energy flux (luminosity) [W]; surface brightness [W/m2] (or [mag]); 
-          !! flux density (irradiance) [W/m2]; radiant flux density (intensity) [W/m2/sr]
-          Fnu_star0 = par%Fstar(i) * MKS%Lsun/4._DP/pi/MKS%pc**2 * &
-                      pi * blackbody(nu, Tstar) /MKS%stefan/Tstar**4 /MKS%Jy/1.E6
-      
-        END DO
-        
-      END IF
-      !! output option
-      IF (PRESENT(Fnu_star)) Fnu_star(x,:) = Fnu_star0
+    !! 4. Screen extinction
+    !!----------------------
+    FORALL (ipar=1:Npar) &
+      Pabs0(ipar,:) = EXP(-parval(indpar%Av,ipar)/1.086_DP * extinction(:))
 
-      !! Total
-      !!-------
-      specModel_2D(x,:) = (Fnu_cont0+Fnu_band0+Fnu_star0)*Pabs0 + Fnu_line0
+    !! 5. Lines
+    !!----------
+    CALL REALLOCATE(Const3D,Npar,Nw,Nline)
+    FORALL (ipar=1:Npar, i=1:Nline) &
+      Const3D(ipar,:,i) = parval(indpar%Iline(i),ipar) /MKS%Jy/1.E6 * &
+                          gaussLine(wvl(:), parval(indpar%Cline(i),ipar), &
+                            parval(indpar%Wline(i),ipar), .TRUE.)
+    FnuLINE0(:,:) = SUM(Const3D(:,:,:),DIM=3)
 
-      DEALLOCATE(tau_tab0, Fnu_cont_tab0, Fnu_line_tab0, Fnu_band_tab0, &
-                 Pabs0, Fnu_cont0, Fnu_line0, Fnu_band0, Fnu_star0)
-    END DO
+    !! Total model
+    !!-------------
+    specModel_2D(:,:) = (FnuCONT0(:,:) + FnuBAND0(:,:) + FnuSTAR0(:,:)) * &
+                        Pabs0(:,:) + FnuLINE0(:,:)
 
   END FUNCTION specModel_2D
+
+  !! 1D version
+  !!============
+  ! FUNCTION specModel_1D(wvl, indpar, parval, Qabs, &
+  !                       FnuCONT, FnuBAND, FnuSTAR, Pabs, FnuLINE)
+  !   USE utilities, ONLY: DP
+  !   IMPLICIT NONE
+  !   REAL(DP), DIMENSION(:), INTENT(IN)        :: wvl
+  !   TYPE(indpar_type), INTENT(IN)             :: indpar
+  !   REAL(DP), DIMENSION(:), INTENT(IN)        :: parval ! 1D (*Npar)
+  !   TYPE(Qabs_type), DIMENSION(:), INTENT(IN) :: Qabs
+  !   REAL(DP), DIMENSION(:), ALLOCATABLE, INTENT(OUT), OPTIONAL :: FnuCONT, &
+  !     FnuBAND, FnuSTAR, Pabs, FnuLINE
+  !   REAL(DP), DIMENSION(SIZE(wvl))            :: specModel_1D
+  !   specModel_1D(:) = RESHAPE( specModel_3D(wvl(:), INDPAR=indpar, &
+  !                                PARVAL=parval, QABS=Qabs, &
+  !                                FNUCONT=FnuCONT, FNUBAND=FnuBAND, FNUSTAR=FnuSTAR, &
+  !                                PABS=Pabs, FNULINE=FnuLINE), [SIZE(wvl(:))] )
+  ! END FUNCTION specModel_1D
   
-  !! Gen ?
-  !!-------
-  FUNCTION specModel_gen(wv, parr, nQabs, Nbb, Nline, Nband, NAv, Nstar, &
-                         Npar, parinfo, &
-                         tau_tab, Fnu_cont_tab, Fnu_line_tab, Fnu_band_tab, &
-                         Pabs, Fnu_cont, Fnu_line, Fnu_band, Fnu_star)
-    !! Nstar = 0 or 1
-    USE utilities, ONLY: DP
+  FUNCTION specModel_1D(wvl, indpar, parval, Qabs, &
+                        FnuCONT, FnuBAND, FnuSTAR, Pabs, FnuLINE)
+
+    USE utilities, ONLY: DP, trimeq, trimlr, pring
     USE constants, ONLY: pi, MKS
-    USE arrays, ONLY: REALLOCATE
+    USE arrays, ONLY: reallocate
     USE statistical_physics, ONLY: blackbody
     IMPLICIT NONE
-
-    REAL(DP), DIMENSION(:), INTENT(IN)       :: wv
-    REAL(DP), DIMENSION(:), INTENT(IN)       :: parr
-    TYPE(Qabs_str), DIMENSION(:), INTENT(IN) :: nQabs
-    INTEGER, INTENT(IN)                      :: Nbb, Nline, Nband, NAv, Nstar
-    TYPE(par_str)                            :: par
-    INTEGER                                  :: i, Nw, Npar0
-    REAL(DP)                                 :: Tstar
-    REAL(DP), DIMENSION(SIZE(wv))            :: nu, extinction
-    REAL(DP), DIMENSION(:,:), ALLOCATABLE    :: tau_tab0
-    REAL(DP), DIMENSION(:,:), ALLOCATABLE    :: Fnu_cont_tab0
-    REAL(DP), DIMENSION(:,:), ALLOCATABLE    :: Fnu_line_tab0
-    REAL(DP), DIMENSION(:,:), ALLOCATABLE    :: Fnu_band_tab0
-    REAL(DP), DIMENSION(:), ALLOCATABLE      :: Pabs0
-    REAL(DP), DIMENSION(:), ALLOCATABLE      :: Fnu_cont0
-    REAL(DP), DIMENSION(:), ALLOCATABLE      :: Fnu_line0
-    REAL(DP), DIMENSION(:), ALLOCATABLE      :: Fnu_band0
-    REAL(DP), DIMENSION(:), ALLOCATABLE      :: Fnu_star0
-    INTEGER, INTENT(OUT), OPTIONAL                                     :: Npar
-    TYPE(parinfo_str), DIMENSION(:),INTENT(OUT), ALLOCATABLE, OPTIONAL :: parinfo
-    REAL(DP), DIMENSION(NAv,SIZE(wv)), INTENT(OUT), OPTIONAL           :: tau_tab
-    REAL(DP), DIMENSION(Nbb,SIZE(wv)), INTENT(OUT), OPTIONAL           :: Fnu_cont_tab
-    REAL(DP), DIMENSION(Nline,SIZE(wv)), INTENT(OUT), OPTIONAL         :: Fnu_line_tab
-    REAL(DP), DIMENSION(Nband,SIZE(wv)), INTENT(OUT), OPTIONAL         :: Fnu_band_tab
-    REAL(DP), DIMENSION(SIZE(wv)), INTENT(OUT), OPTIONAL               :: Pabs
-    REAL(DP), DIMENSION(SIZE(wv)), INTENT(OUT), OPTIONAL               :: Fnu_cont
-    REAL(DP), DIMENSION(SIZE(wv)), INTENT(OUT), OPTIONAL               :: Fnu_line
-    REAL(DP), DIMENSION(SIZE(wv)), INTENT(OUT), OPTIONAL               :: Fnu_band
-    REAL(DP), DIMENSION(SIZE(wv)), INTENT(OUT), OPTIONAL               :: Fnu_star
-    REAL(DP), DIMENSION(SIZE(wv))                                      :: specModel_gen
+  
+    REAL(DP), DIMENSION(:), INTENT(IN)        :: wvl
+    TYPE(indpar_type), INTENT(IN)             :: indpar
+    REAL(DP), DIMENSION(:), INTENT(IN)        :: parval ! 1D (*Npar)
+    TYPE(Qabs_type), DIMENSION(:), INTENT(IN) :: Qabs
+    INTEGER :: Nw, Ncont, Nline, Nband
+    INTEGER :: i
+    REAL(DP)                                  :: Tstar
+    REAL(DP), DIMENSION(SIZE(wvl))            :: nu, extinction
+    REAL(DP), DIMENSION(:,:), ALLOCATABLE     :: Const2D ! (Nw,Ncomp)
+    REAL(DP), DIMENSION(SIZE(wvl))            :: FnuCONT0, &
+      FnuBAND0, FnuSTAR0, Pabs0, FnuLINE0
+    REAL(DP), DIMENSION(:), ALLOCATABLE, INTENT(OUT), OPTIONAL :: FnuCONT, &
+      FnuBAND, FnuSTAR, Pabs, FnuLINE
+    REAL(DP), DIMENSION(SIZE(wvl))            :: specModel_1D
 
     !! Preliminaries
     !!---------------
-    Nw = SIZE(wv)
-    nu(:) = MKS%clight/MKS%micron / wv(:)
-    extinction(:) = extCurve(wv(:))
+    Nw = SIZE(wvl(:))
+    Ncont = SIZE(Qabs(:))
+    Nband = COUNT(indpar%Iband(:) .NE. -1)
+    Tstar = 5.E4_DP ! high enough to stay in Rayleigh-Jeans limit [K]
+    Nline = COUNT(indpar%Iline(:) .NE. -1)
+    nu(:) = MKS%clight/MKS%micron / wvl(:)
+    extinction(:) = extCurve(wvl(:))
 
-    IF (PRESENT(parinfo)) THEN
-      CALL make_par(parr, Nbb, Nline, Nband, NAv, Nstar, par, Npar0, parinfo)
-    ELSE
-      CALL make_par(parr, Nbb, Nline, Nband, NAv, Nstar, par, Npar0)
+    !! Initialization
+    specModel_1D(:) = 0._DP
+  
+    !! 1. Continuum
+    !!--------------
+    CALL REALLOCATE(Const2D,Nw,Ncont)
+    FORALL (i=1:Ncont) &
+      Const2D(:,i) = parval(indpar%Mcont(i)) * MKS%Msun/MKS%pc**2 * &
+                     modifBB(wvl(:), parval(indpar%Tcont(i)), Qabs(i))
+    FnuCONT0(:) = SUM(Const2D,DIM=2)
+
+    IF (PRESENT(FnuCONT)) THEN
+      ALLOCATE(FnuCONT(Nw))
+      FnuCONT(:) = FnuCONT0(:)
+    END IF
+  
+    !! 2. Bands
+    !!----------
+    CALL REALLOCATE(Const2D,Nw,Nband)
+    FORALL (i=1:Nband) &
+      Const2D(:,i) = parval(indpar%Iband(i)) /MKS%Jy/1.E6 * &
+                     lorentzBand(wvl(:), parval(indpar%Cband(i)), &
+                       parval(indpar%WSband(i)), parval(indpar%WLband(i)), .TRUE.)
+    FnuBAND0(:) = SUM(Const2D,DIM=2)
+
+    IF (PRESENT(FnuBAND)) THEN
+      ALLOCATE(FnuBAND(Nw))
+      FnuBAND(:) = FnuBAND0(:)
+    END IF
+  
+    !! 3. Stellar Continuum
+    !!----------------------
+    FnuSTAR0(:) = parval(indpar%Fstar) * MKS%Lsun/4._DP/pi/MKS%pc**2 * &
+                  pi * BLACKBODY(nu(:), Tstar) /MKS%stefan/Tstar**4 /MKS%Jy/1.E6
+
+    IF (PRESENT(FnuSTAR)) THEN
+      ALLOCATE(FnuSTAR(Nw))
+      FnuSTAR(:) = FnuSTAR0(:)
+    END IF
+
+    !! 4. Screen extinction
+    !!----------------------
+    Pabs0(:) = EXP(-parval(indpar%Av)/1.086_DP * extinction(:))
+
+    IF (PRESENT(Pabs)) THEN
+      ALLOCATE(Pabs(Nw))
+      Pabs(:) = Pabs0(:)
+    END IF
+
+    !! 5. Lines
+    !!----------
+    CALL REALLOCATE(Const2D,Nw,Nline)
+    FORALL (i=1:Nline) &
+      Const2D(:,i) = parval(indpar%Iline(i)) /MKS%Jy/1.E6 * &
+                     gaussLine(wvl(:), parval(indpar%Cline(i)), &
+                       parval(indpar%Wline(i)), .TRUE.)
+    FnuLINE0(:) = SUM(Const2D,DIM=2)
+
+    IF (PRESENT(FnuLINE)) THEN
+      ALLOCATE(FnuLINE(Nw))
+      FnuLINE(:) = FnuLINE0(:)
+    END IF
+
+    !! Total model
+    !!-------------
+    specModel_1D(:) = (FnuCONT0(:) + FnuBAND0(:) + FnuSTAR0(:)) * &
+                      Pabs0(:) + FnuLINE0(:)
+
+  
+  END FUNCTION specModel_1D
+  
+  !! Generic intertface
+  !!====================
+  FUNCTION specModel_gen(wvl, parvec, parname, parinfo, indpar, &
+                         parval, Qabs, indBIN, indLIN)
+    !! Nstar = 0 or 1
+    USE utilities, ONLY: DP, trimeq, trimlr, pring
+    USE constants, ONLY: pi, MKS
+    USE arrays, ONLY: reallocate
+    USE statistical_physics, ONLY: blackbody
+    IMPLICIT NONE
+
+    REAL(DP), DIMENSION(:), INTENT(IN)           :: wvl
+    REAL(DP), DIMENSION(:), INTENT(IN)           :: parvec
+    CHARACTER(*), INTENT(IN)                     :: parname
+    TYPE(parinfo_type), DIMENSION(:), INTENT(IN) :: parinfo
+    TYPE(indpar_type), INTENT(IN)                :: indpar
+    REAL(DP), DIMENSION(:), INTENT(IN)           :: parval ! 1D
+    TYPE(Qabs_type), DIMENSION(:), INTENT(IN)    :: Qabs
+    INTEGER, DIMENSION(:), INTENT(IN)            :: indBIN, indLIN
+    INTEGER :: Nw, Npar, Ncont, Nline, Nband
+    INTEGER :: i, ipar, iw, i1, i2, i3!, itied
+    REAL(DP)                                     :: Tstar
+    REAL(DP), DIMENSION(SIZE(wvl))               :: nu, extinction
+    LOGICAL :: CONTset, LINEset, BANDset, PABSset, STARset
+    LOGICAL :: gridMcont, gridTcont, gridIline, gridCline, gridWline
+    LOGICAL :: gridIband, gridCband, gridWSband, gridWLband, gridAv, gridFstar
+    REAL(DP), DIMENSION(SIZE(parvec),SIZE(wvl)) :: FnuCONT0, FnuBAND0, FnuSTAR0
+    REAL(DP), DIMENSION(SIZE(parvec),SIZE(wvl)) :: Pabs0, FnuLINE0
+    REAL(DP) :: Const
+    REAL(DP), DIMENSION(SIZE(wvl)) :: Const1D
+    ! REAL(DP), DIMENSION(SIZE(parvec),SIZE(wvl)) :: Const2D
+    ! REAL(DP), DIMENSION(:), ALLOCATABLE, INTENT(OUT), OPTIONAL   :: Pabs
+    ! REAL(DP), DIMENSION(:,:), ALLOCATABLE, INTENT(OUT), OPTIONAL :: FnuCONT
+    ! REAL(DP), DIMENSION(:,:), ALLOCATABLE, INTENT(OUT), OPTIONAL :: FnuBAND
+    ! REAL(DP), DIMENSION(:), ALLOCATABLE, INTENT(OUT), OPTIONAL   :: FnuSTAR
+    ! REAL(DP), DIMENSION(:,:), ALLOCATABLE, INTENT(OUT), OPTIONAL :: FnuLINE
+    REAL(DP), DIMENSION(SIZE(parvec),SIZE(wvl)) :: specModel_gen
+
+    !! Preliminaries
+    !!---------------
+    Nw = SIZE(wvl(:))
+    Npar = SIZE(parvec(:))
+    Ncont = SIZE(Qabs(:))
+    Nband = SIZE(indBIN(:))
+    Tstar = 5.E4_DP ! high enough to stay in Rayleigh-Jeans limit [K]
+    Nline = SIZE(indLIN(:))
+    nu(:) = MKS%clight/MKS%micron / wvl(:)
+    extinction(:) = extCurve(wvl(:))
+
+    !! Component settings
+    CONTset = ANY(TRIMEQ(parinfo(:)%comp, "CONT"))
+    LINEset = ANY(TRIMEQ(parinfo(:)%comp, "LINE"))
+    BANDset = ANY(TRIMEQ(parinfo(:)%comp, "BAND"))
+    PABSset = ANY(TRIMEQ(parinfo(:)%comp, "PABS"))
+    STARset = ANY(TRIMEQ(parinfo(:)%comp, "STAR"))
+
+    !! Is the parameter tied to another one?
+    ! tied = ANY(TRIMEQ(parinfo(:)%tied, parname))
+    ! IF (tied) CALL IWHERE( TRIMEQ(parinfo(:)%tied, parname), itied )
+
+    !! Initialization
+    specModel_gen(:,:) = 0._DP
+    
+    !! 1. Continuum
+    !!--------------
+    loopCONT: DO i=1,Ncont
+      gridMcont = TRIMEQ(parname, "Mcont"//TRIMLR(PRING(i)))
+      gridTcont = TRIMEQ(parname, "Tcont"//TRIMLR(PRING(i)))
+      IF (gridMcont) THEN
+      !! CONT *Mcont
+        Const1D(:) = MKS%Msun/MKS%pc**2 * modifBB(wvl(:), parval(indpar%Tcont(i)), Qabs(i))
+        FORALL (ipar=1:Npar) &
+          FnuCONT0(ipar,:) = parvec(ipar) * Const1D(:)
+      ELSE IF (gridTcont) THEN
+      !! CONT *Tcont
+        Const = parval(indpar%Mcont(i)) * MKS%Msun/MKS%pc**2
+        FORALL (ipar=1:Npar) &
+             FnuCONT0(ipar,:) = Const * modifBB(wvl(:), parvec(ipar), Qabs(i))
+
+      END IF
+      !! CONT
+      Const1D(:) = 0._DP
+      DO i1=1,Ncont
+        IF (i1.NE.i) &
+          Const1D(:) = Const1D(:) + parval(indpar%Mcont(i1)) * MKS%Msun/MKS%pc**2 * &
+                       modifBB(wvl(:), parval(indpar%Tcont(i1)), Qabs(i1))
+
+      END DO
+      FORALL (iw=1:Nw) FnuCONT0(:,iw) = FnuCONT0(:,iw) + Const1D(iw)
+      !! BAND
+      Const1D(:) = 0._DP
+      DO i2=1,Nband
+        Const1D(:) = Const1D(:) + parval(indpar%Iband(i2)) /MKS%Jy/1.E6 * &
+                     lorentzBand(wvl(:), parval(indpar%Cband(i2)), &
+                       parval(indpar%WSband(i2)), parval(indpar%WLband(i2)), .TRUE.)
+        
+      END DO
+      FORALL (iw=1:Nw) FnuBAND0(:,iw) = Const1D(iw)
+      !! STAR
+      Const1D(:) = parval(indpar%Fstar) * MKS%Lsun/4._DP/pi/MKS%pc**2 * &
+                   pi * BLACKBODY(nu(:), Tstar) /MKS%stefan/Tstar**4 /MKS%Jy/1.E6
+      FORALL (iw=1:Nw) FnuSTAR0(:,iw) = Const1D(iw)
+      !! LINE
+      Const1D(:) = 0._DP
+      DO i3=1,Nline
+        Const1D(:) = Const1D(:) + parval(indpar%Iline(i3)) /MKS%Jy/1.E6 * &
+                     gaussLine(wvl(:), parval(indpar%Cline(i3)), &
+                       parval(indpar%Wline(i3)), .TRUE.)
       
-    END IF
-    IF (PRESENT(Npar)) Npar = Npar0
+      END DO
+      FORALL (iw=1:Nw) FnuLINE0(:,iw) = Const1D(iw)
+      !! PABS
+      FORALL (iw=1:Nw) Pabs0(:,iw) = EXP(-parval(indpar%Av)/1.086_DP * extinction(iw))
+      !! Total model
+      specModel_gen(:,:) = (FnuCONT0(:,:) + FnuBAND0(:,:) + FnuSTAR0(:,:)) * &
+                           Pabs0(:,:) + FnuLINE0(:,:)
 
-    ALLOCATE(Pabs0(Nw), Fnu_cont0(Nw), Fnu_line0(Nw), Fnu_band0(Nw), Fnu_star0(Nw))
+    END DO loopCONT
+    
+    !! 2. Bands
+    !!----------
+    loopBAND: DO i=1,Nband
+      gridIband = TRIMEQ(parname, "Iband"//TRIMLR(PRING(i)))
+      gridCband = TRIMEQ(parname, "Cband"//TRIMLR(PRING(i)))
+      gridWSband = TRIMEQ(parname, "WSband"//TRIMLR(PRING(i)))
+      gridWLband = TRIMEQ(parname, "WLband"//TRIMLR(PRING(i)))
+      !! CONT
+      Const1D(:) = 0._DP
+      DO i1=1,Ncont
+        Const1D(:) = Const1D(:) + parval(indpar%Mcont(i1)) * MKS%Msun/MKS%pc**2 * &
+                     modifBB(wvl(:), parval(indpar%Tcont(i1)), Qabs(i1))
+      
+      END DO
+      FORALL (iw=1:Nw) FnuCONT0(:,iw) = Const1D(iw)
+      IF (gridIband) THEN
+      !! BAND *Iband
+        Const1D(:) = 1._DP /MKS%Jy/1.E6 * &
+                     lorentzBand(wvl(:), parval(indpar%Cband(i)), &
+                       parval(indpar%WSband(i)), parval(indpar%WLband(i)), .TRUE.)
+        FORALL (ipar=1:Npar) &
+          FnuBAND0(ipar,:) = parvec(ipar) * Const1D(:)
+      ELSE IF (gridCband) THEN
+      !! BAND *Cband
+        Const = parval(indpar%Iband(i)) /MKS%Jy/1.E6
+        FORALL (ipar=i:Npar) &
+          FnuBAND0(ipar,:) = Const * lorentzBand(wvl(:), parvec(ipar), &
+                                       parval(indpar%WSband(i)), parval(indpar%WLband(i)), .TRUE.)
+      ELSE IF (gridWSband) THEN
+      !! BAND *WSband
+        Const = parval(indpar%Iband(i)) /MKS%Jy/1.E6
+        FORALL (ipar=i:Npar) &
+          FnuBAND0(ipar,:) = Const * lorentzBand(wvl(:), parval(indpar%Cband(i)), &
+                                       parvec(ipar), parval(indpar%WLband(i)), .TRUE.)
+      ELSE IF (gridWLband) THEN
+      !! BAND *WLband
+        Const = parval(indpar%Iband(i)) /MKS%Jy/1.E6
+        FORALL (ipar=i:Npar) &
+          FnuBAND0(ipar,:) = Const * lorentzBand(wvl(:), parval(indpar%Cband(i)), &
+                                       parval(indpar%WSband(i)), parvec(ipar), .TRUE.)
 
-    !! Screen extinction
-    !!-------------------
-    IF (NAv.GT.0) THEN
-      ALLOCATE(tau_tab0(NAv, Nw))
-      DO i=1,NAv
-        tau_tab0(i,:) = par%Av(i)/1.086_DP * extinction(:)
+      END IF
+      !! BAND
+      Const1D(:) = 0._DP
+      DO i2=1,Nband
+        IF (i2.NE.i) &
+          Const1D(:) = Const1D(:) + parval(indpar%Iband(i2)) /MKS%Jy/1.E6 * &
+                       lorentzBand(wvl(:), parval(indpar%Cband(i2)), &
+                         parval(indpar%WSband(i2)), parval(indpar%WLband(i2)), .TRUE.)
 
       END DO
-    ELSE
-      CALL REALLOCATE(tau_tab0, 1, Nw)
+      FORALL (iw=1:Nw) FnuBAND0(:,iw) = FnuBAND0(:,iw) + Const1D(iw)
+      !! STAR
+      Const1D(:) = parval(indpar%Fstar) * MKS%Lsun/4._DP/pi/MKS%pc**2 * &
+                   pi * BLACKBODY(nu(:), Tstar) /MKS%stefan/Tstar**4 /MKS%Jy/1.E6
+      FORALL (iw=1:Nw) FnuSTAR0(:,iw) = Const1D(iw)
+      !! LINE
+      Const1D(:) = 0._DP
+      DO i3=1,Nline
+        Const1D(:) = Const1D(:) + parval(indpar%Iline(i3)) /MKS%Jy/1.E6 * &
+                     gaussLine(wvl(:), parval(indpar%Cline(i3)), &
+                       parval(indpar%Wline(i3)), .TRUE.)
+      
+      END DO
+      FORALL (iw=1:Nw) FnuLINE0(:,iw) = Const1D(iw)
+      !! PABS
+      FORALL (iw=1:Nw) Pabs0(:,iw) = EXP(-parval(indpar%Av)/1.086_DP * extinction(iw))
+      !! Total model
+      specModel_gen(:,:) = (FnuCONT0(:,:) + FnuBAND0(:,:) + FnuSTAR0(:,:)) * &
+                           Pabs0(:,:) + FnuLINE0(:,:)
 
-    END IF
-    Pabs0 = EXP(-SUM(tau_tab0(:,:), DIM=1))
-    !! output option
-    IF (PRESENT(tau_tab)) tau_tab = tau_tab0
-    IF (PRESENT(Pabs)) Pabs = Pabs0
-
-    !! Continuum
-    !!-----------
-    IF (Nbb.GT.0) THEN
-      ALLOCATE(Fnu_cont_tab0(Nbb, Nw))
-      DO i=1,Nbb
-        !! massBB in unit of [Msun/pc2]
-        Fnu_cont_tab0(i,:) = par%massBB(i) * MKS%Msun/MKS%pc**2 * &
-                             modifBB(par%tempBB(i), nQabs(i))
+    END DO loopBAND
+    
+    !! 3. Stellar Continuum
+    !!----------------------
+    gridFstar = TRIMEQ(parname, "Fstar")
+    IF (gridFstar) THEN
+      !! CONT
+      Const1D(:) = 0._DP
+      DO i1=1,Ncont
+        Const1D(:) = Const1D(:) + parval(indpar%Mcont(i1)) * MKS%Msun/MKS%pc**2 * &
+                     modifBB(wvl(:), parval(indpar%Tcont(i1)), Qabs(i1))
 
       END DO
-    ELSE
-      CALL REALLOCATE(Fnu_cont_tab0, 1, Nw)
-
-    END IF
-    Fnu_cont0 = SUM(Fnu_cont_tab0(:,:), DIM=1)
-    !! output option
-    IF (PRESENT(Fnu_cont_tab)) Fnu_cont_tab = Fnu_cont_tab0
-    IF (PRESENT(Fnu_cont)) Fnu_cont = Fnu_cont0
-
-    !! Lines
-    !!-------
-    IF (Nline.GT.0) THEN
-      ALLOCATE(Fnu_line_tab0(Nline, Nw))
-      DO i=1,Nline
-        Fnu_line_tab0(i,:) = par%Iline(i) /MKS%Jy/1.E6 * &
-                             gaussLine(wv, par%Cline(i), par%Wline(i), .TRUE.)
+      FORALL (iw=1:Nw) FnuCONT0(:,iw) = Const1D(iw)
+      !! BAND
+      Const1D(:) = 0._DP
+      DO i2=1,Nband
+        Const1D(:) = Const1D(:) + parval(indpar%Iband(i2)) /MKS%Jy/1.E6 * &
+                     lorentzBand(wvl(:), parval(indpar%Cband(i2)), &
+                       parval(indpar%WSband(i2)), parval(indpar%WLband(i2)), .TRUE.)
+        
+      END DO
+      FORALL (iw=1:Nw) FnuBAND0(:,iw) = Const1D(iw)
+      !! STAR *Fstar
+      FORALL (ipar=1:Npar) &
+        FnuSTAR0(ipar,:) = parvec(ipar) * MKS%Lsun/4._DP/pi/MKS%pc**2 * &
+                           pi * BLACKBODY(nu(:), Tstar) /MKS%stefan/Tstar**4 /MKS%Jy/1.E6
+      !! LINE
+      Const1D(:) = 0._DP
+      DO i3=1,Nline
+        Const1D(:) = Const1D(:) + parval(indpar%Iline(i3)) /MKS%Jy/1.E6 * &
+                     gaussLine(wvl(:), parval(indpar%Cline(i3)), &
+                       parval(indpar%Wline(i3)), .TRUE.)
 
       END DO
-    ELSE
-      CALL REALLOCATE(Fnu_line_tab0, 1, Nw)
+      FORALL (iw=1:Nw) FnuLINE0(:,iw) = Const1D(iw)
+      !! PABS
+      FORALL (iw=1:Nw) Pabs0(:,iw) = EXP(-parval(indpar%Av)/1.086_DP * extinction(iw))
+      !! Total model
+      specModel_gen(:,:) = (FnuCONT0(:,:) + FnuBAND0(:,:) + FnuSTAR0(:,:)) * &
+                           Pabs0(:,:) + FnuLINE0(:,:)
 
     END IF
-    Fnu_line0 = SUM(Fnu_line_tab0(:,:), DIM=1)
-    !! output option
-    IF (PRESENT(Fnu_line_tab)) Fnu_line_tab = Fnu_line_tab0
-    IF (PRESENT(Fnu_line)) Fnu_line = Fnu_line0
-
-    !! Bands
-    !!-------
-    IF (Nband.GT.0) THEN
-      ALLOCATE(Fnu_band_tab0(Nband, Nw))
-      DO i=1,Nband
-        Fnu_band_tab0(i,:) = par%Iband(i) /MKS%Jy/1.E6 * &
-                             lorentzBand(wv, par%Cband(i), &
-                             par%WSband(i), par%WLband(i), .TRUE.)
+    
+    !! 4. Screen extinction
+    !!----------------------
+    gridAv = TRIMEQ(parname, "Av")
+    IF (gridAv) THEN
+      !! CONT
+      Const1D(:) = 0._DP
+      DO i1=1,Ncont
+        Const1D(:) = Const1D(:) + parval(indpar%Mcont(i1)) * MKS%Msun/MKS%pc**2 * &
+                     modifBB(wvl(:), parval(indpar%Tcont(i1)), Qabs(i1))
 
       END DO
-    ELSE
-      CALL REALLOCATE(Fnu_band_tab0, 1, Nw)
-
-    END IF
-    Fnu_band0 = SUM(Fnu_band_tab0(:,:), DIM=1)
-    !! output option
-    IF (PRESENT(Fnu_band_tab)) Fnu_band_tab = Fnu_band_tab0
-    IF (PRESENT(Fnu_band)) Fnu_band = Fnu_band0
-
-    !! Stellar Continuum
-    !!-------------------
-    IF (Nstar.GT.0) THEN
-      DO i=1,Nstar
-        Tstar = 5.E4_DP ! high enough to stay in Rayleigh-Jeans limit [K]
-        !! Fstar in unit of [Lsun/pc2] & Fnu_star [MJy/sr] with notations as follows: 
-        !! Fnu [W/m2/Hz] = pi * Bnu [W/m2/sr/Hz] (isotropically emitting surface)
-        !! F [W/m2] = integ(Fnudnu) = pi * integ(Bnudnu) = pi * B [W/m2] = sig * T^4
-        !! cf. energy flux (luminosity) [W]; surface brightness [W/m2] (or [mag]); 
-        !! flux density (irradiance) [W/m2]; radiant flux density (intensity) [W/m2/sr]
-        Fnu_star0 = par%Fstar(i) * MKS%Lsun/4._DP/pi/MKS%pc**2 * &
-                    pi * blackbody(nu, Tstar) /MKS%stefan/Tstar**4 /MKS%Jy/1.E6
+      FORALL (iw=1:Nw) FnuCONT0(:,iw) = Const1D(iw)
+      !! BAND
+      Const1D(:) = 0._DP
+      DO i2=1,Nband
+        Const1D(:) = Const1D(:) + parval(indpar%Iband(i2)) /MKS%Jy/1.E6 * &
+                     lorentzBand(wvl(:), parval(indpar%Cband(i2)), &
+                       parval(indpar%WSband(i2)), parval(indpar%WLband(i2)), .TRUE.)
+        
+      END DO
+      FORALL (iw=1:Nw) FnuBAND0(:,iw) = Const1D(iw)
+      !! STAR
+      Const1D(:) = parval(indpar%Fstar) * MKS%Lsun/4._DP/pi/MKS%pc**2 * &
+                   pi * BLACKBODY(nu(:), Tstar) /MKS%stefan/Tstar**4 /MKS%Jy/1.E6
+      FORALL (iw=1:Nw) FnuSTAR0(:,iw) = Const1D(iw)
+      !! LINE
+      Const1D(:) = 0._DP
+      DO i3=1,Nline
+        Const1D(:) = Const1D(:) + parval(indpar%Iline(i3)) /MKS%Jy/1.E6 * &
+                     gaussLine(wvl(:), parval(indpar%Cline(i3)), &
+                       parval(indpar%Wline(i3)), .TRUE.)
 
       END DO
+      FORALL (iw=1:Nw) FnuLINE0(:,iw) = Const1D(iw)
+      !! PABS *Av
+      FORALL (ipar=1:Npar) &
+        Pabs0(ipar,:) = EXP(-parvec(ipar)/1.086_DP * extinction(:))
+      !! Total model
+      specModel_gen(:,:) = (FnuCONT0(:,:) + FnuBAND0(:,:) + FnuSTAR0(:,:)) * &
+                           Pabs0(:,:) + FnuLINE0(:,:)
+
     END IF
-    !! output option
-    IF (PRESENT(Fnu_star)) Fnu_star = Fnu_star0
+    
+    !! 5. Lines
+    !!----------
+    loopLINE: DO i=1,Nline
+      gridIline = TRIMEQ(parname, "Iline"//TRIMLR(PRING(i)))
+      gridCline = TRIMEQ(parname, "Cline"//TRIMLR(PRING(i)))
+      gridWline = TRIMEQ(parname, "Wline"//TRIMLR(PRING(i)))
+      !! CONT
+      Const1D(:) = 0._DP
+      DO i1=1,Ncont
+        Const1D(:) = Const1D(:) + parval(indpar%Mcont(i1)) * MKS%Msun/MKS%pc**2 * &
+                     modifBB(wvl(:), parval(indpar%Tcont(i1)), Qabs(i1))
+      
+      END DO
+      FORALL (iw=1:Nw) FnuCONT0(:,iw) = Const1D(iw)
+      !! BAND
+      Const1D(:) = 0._DP
+      DO i2=1,Nband
+        Const1D(:) = Const1D(:) + parval(indpar%Iband(i2)) /MKS%Jy/1.E6 * &
+                     lorentzBand(wvl(:), parval(indpar%Cband(i2)), &
+                       parval(indpar%WSband(i2)), parval(indpar%WLband(i2)), .TRUE.)
+        
+      END DO
+      FORALL (iw=1:Nw) FnuBAND0(:,iw) = Const1D(iw)
+      !! STAR
+      Const1D(:) = parval(indpar%Fstar) * MKS%Lsun/4._DP/pi/MKS%pc**2 * &
+                   pi * BLACKBODY(nu(:), Tstar) /MKS%stefan/Tstar**4 /MKS%Jy/1.E6
+      FORALL (iw=1:Nw) FnuSTAR0(:,iw) = Const1D(iw)
+      IF (gridIline) THEN
+      !! LINE *Iline
+        Const1D(:) =  1._DP /MKS%Jy/1.E6 * &
+                      gaussLine(wvl(:), parval(indpar%Cline(i)), &
+                        parval(indpar%Wline(i)), .TRUE.)
+        FORALL (ipar=1:Npar) &
+          FnuLINE0(ipar,:) = parvec(ipar) * Const1D(:)
+      ELSE IF (gridCline) THEN
+      !! LINE *Cline
+        Const = parval(indpar%Iline(i)) /MKS%Jy/1.E6
+        FORALL (ipar=1:Npar) &
+          FnuBAND0(ipar,:) = Const * gaussLine(wvl(:), parvec(ipar), &
+                                       parval(indpar%Wline(i)), .TRUE.)
+      ELSE IF (gridWline) THEN
+      !! LINE *Wline
+        Const = parval(indpar%Iline(i)) /MKS%Jy/1.E6
+        FORALL (ipar=1:Npar) &
+          FnuBAND0(ipar,:) = Const * gaussLine(wvl(:), parvec(ipar), &
+                                       parval(indpar%Wline(i)), .TRUE.)
 
-    !! Total
-    !!-------
-    specModel_gen = (Fnu_cont0+Fnu_band0+Fnu_star0)*Pabs0 + Fnu_line0
+      END IF
+      !! LINE
+      Const1D(:) = 0._DP
+      DO i3=1,Nline
+        IF (i3.NE.i) &
+        Const1D(:) = Const1D(:) + parval(indpar%Iline(i3)) /MKS%Jy/1.E6 * &
+                     gaussLine(wvl(:), parval(indpar%Cline(i3)), &
+                       parval(indpar%Wline(i3)), .TRUE.)
+      
+      END DO
+      FORALL (iw=1:Nw) FnuLINE0(:,iw) = FnuLINE0(:,iw) + Const1D(iw)
+      !! PABS
+      FORALL (iw=1:Nw) Pabs0(:,iw) = EXP(-parval(indpar%Av)/1.086_DP * extinction(iw))
+      !! Total model
+      specModel_gen(:,:) = (FnuCONT0(:,:) + FnuBAND0(:,:) + FnuSTAR0(:,:)) * &
+                           Pabs0(:,:) + FnuLINE0(:,:)
 
-    DEALLOCATE(tau_tab0, Fnu_cont_tab0, Fnu_line_tab0, Fnu_band_tab0)
-    DEALLOCATE(Pabs0, Fnu_cont0, Fnu_line0, Fnu_band0, Fnu_star0)
+    END DO loopLINE
 
   END FUNCTION specModel_gen
 
+  FUNCTION specModel_scl(wvl, parinfo, indpar, parval, Qabs, indBIN, indLIN)
+    USE utilities, ONLY: DP
+    IMPLICIT NONE
+    REAL(DP), DIMENSION(:), INTENT(IN)           :: wvl
+    TYPE(parinfo_type), DIMENSION(:), INTENT(IN) :: parinfo
+    TYPE(indpar_type), INTENT(IN)                :: indpar
+    REAL(DP), DIMENSION(:), INTENT(IN)           :: parval ! 1D
+    TYPE(Qabs_type), DIMENSION(:), INTENT(IN)    :: Qabs
+    INTEGER, DIMENSION(:), INTENT(IN)            :: indBIN, indLIN
+    REAL(DP), DIMENSION(SIZE(wvl))               :: specModel_scl
+    specModel_scl(:) = RESHAPE( specModel_gen(wvl(:), PARVEC=[0._DP],PARNAME="", &
+                                  PARINFO=parinfo, INDPAR=indpar, PARVAL=parval(:), &
+                                  QABS=Qabs(:), INDBIN=indBIN(:), INDLIN=indLIN(:)), [SIZE(wvl(:))] )
+  END FUNCTION specModel_scl
+  
 END MODULE auxil

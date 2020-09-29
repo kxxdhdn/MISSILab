@@ -7,7 +7,7 @@ print("           -=-=-=-=-=-=-=-=-=-")
 print("          |      cubiana      |")
 print("           -=-=-=-=-=-=-=-=-=-")
 print("\n          Developed by D. HU")
-print("          Version 0.1 (20191017)")
+print("          Version 0.2 (202007??)")
 print("\n---------------------------------------------")
 
 

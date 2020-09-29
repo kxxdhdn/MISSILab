@@ -1,0 +1,16 @@
+#TITLE: cubiana development log
+#+AUTHOR: D. HU
+#+TODO: TODO(t) WAIT(w) | DONE(d)
+#+TODO: | CNCL(c@/!)
+#+TODO: REPORT(r!) BUG(b!) KNOWNCAUSE(k!) | FIXED(f!)
+#+STARTUP: logdone
+
+Version: v0.2 (202007??)
+Check ~__init_.py~
+* vlog
+** v0.2 (202007??)
+- Add ~Y12spec.py~ for reproducing Yamagishi12 results
+** v0.1.1 (20200422)
+- Extract ~irs_snippet_v0.zip~ for Andre
+** v0.1 (20191017)
+- including ~param.py~ ~irs_spec.py~, ~irc_spec.py~, ~all_spec.py~

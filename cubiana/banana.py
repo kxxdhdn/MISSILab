@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 
 ## astylo
 from astylo.bio import read_fits, write_fits
-from astylo.astrolib import fixwcs
+from astylo.alib import fixwcs
 from astylo.plot import plot2d
 
 ## Local

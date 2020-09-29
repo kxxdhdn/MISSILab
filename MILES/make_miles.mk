@@ -20,7 +20,7 @@ include $(MKSW)
 ## MILES modules
 ##---------------
 MILMODS = datable.f90 \
-          auxil.f90
+          auxil.f90 \
 
 ## Name of the library and its paths
 ##-----------------------------------

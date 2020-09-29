@@ -4,6 +4,22 @@
 * Notices
 The Python package [[https://github.com/kxxdhdn/astylo][astylo]] is required by the MILES UI. You can install it with a single command: ~pip install astylo~
 * Version log
-** v2 (202008??, hebe beta)
-** v1 (202006??, bayes beta)
-** v0 (202006??, chi2 beta)
+** v2 (202009??, Hebe beta)
+** v1 (202009??, Bayes beta)
+Adaptation for Bayesian method: 
+- Add generic interface
+  + add parvec for Gibbs sampling
+  + parr -> parval
+  + add indpar
+- ~par_type~ -> ~set_indpar~
+- ~make_par~ -> ~read_master~ (update inspired by HerBIE)
+- Add initparam
+- parname changes
+  + massBB -> Mcont
+  + tempBB -> Tcont
+** v0.1 (202009??, Chi2 release)
+- Input separated spectra (of each module)
+- Add MC test for chi2 convergence
+- Fractional date saving during program running
+- Create Python UI
+** v0 (20200619, Chi2 beta)

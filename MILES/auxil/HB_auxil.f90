@@ -1,0 +1,9 @@
+MODULE HB_auxil
+
+  USE utilities, ONLY: DP
+  IMPLICIT NONE
+  PRIVATE
+
+CONTAINS
+
+END MODULE HB_auxil

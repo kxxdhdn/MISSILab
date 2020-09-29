@@ -5,19 +5,28 @@
 #+TODO: REPORT(r!) BUG(b!) KNOWNCAUSE(k!) | FIXED(f!)
 #+STARTUP: logdone
 
-Version: v0 (202006??)
-* TODO tests [4/5]
-** KNOWNCAUSE fitM83
+Version: v1 (202009??)
+* TODO tests [5/8]
+** TODO fitHB
+** DONE gsamp
+CLOSED: [2020-09-28 Mon 15:06]
+** REPORT fitHBsyn
+- Note taken on [2020-09-24 Thu 17:39] \\
+  Bad fit, probably due to the problem of ~specModel_gen~ \rarr add ~test_gsamp~
+- State "REPORT"     from "DONE"       [2020-09-24 Thu 17:39]
+** KNOWNCAUSE fitChi2
 - Note taken on [2020-06-18 Thu 16:50] \\
-  Pb: 1. very slow; 2. can block at a certain pixel; 3. discontinuity at 20 microns; 4. ALL(mask(x,y,:)) or ANY(mask(x,y,:)) ? 5. diagonal covar matrix used (for now); 6. calib error not yet added
+  1. Very slow, should add timers; 
+  2. Should be able to block and retake at a certain pixel; 
+  3. Discontinuity at 20 microns; 
+  4. ALL(mask(x,y,:)) or ANY(mask(x,y,:)) ? should allow lacking of isolated wvl (diff from the case of lacking the whole module); 
+  5. Diagonal covar matrix used (for now); 
+  6. Add calib error
+  7. Check if there is at least one wvl available in center \pm width/2 region for every line/band
+  8. Save all param (incl. fixed ones) in h5 file
 - State "KNOWNCAUSE" from "TODO"       [2020-06-18 Thu 16:50]
-** DONE total [3/3]
-*** DONE synthetic 
+** DONE fitChi2syn
 CLOSED: [2020-06-03 Wed 23:11]
-*** DONE specModel
-CLOSED: [2020-05-25 Mon 18:17]
-*** DONE degradeRes
-CLOSED: [2020-05-28 Thu 12:55]
 ** FIXED profiles
 CLOSED: [2020-04-25 Sat 19:27]
 - Note taken on [2020-05-20 Wed 23:39] \\
@@ -26,13 +35,13 @@ CLOSED: [2020-04-25 Sat 19:27]
 ** CNCL modifBB
 CLOSED: [2020-06-10 Wed 12:06]
 - State "CNCL"       from "KNOWNCAUSE" [2020-06-10 Wed 12:06] \\
-  Transfer to complete fit test of M83 (~test_fitM83~)
+  Transfer to complete fit test of M83 (~test_fitChi2~)
 - Note taken on [2020-05-11 Mon 14:32] \\
   Test chi2min with observation (M83), 3D FITS data imported via Python UI (fits2h5)
 - State "KNOWNCAUSE" from "DONE"       [2020-05-11 Mon 14:32]
 ** DONE compile
 CLOSED: [2020-04-24 Fri 15:00]
-* TODO miles [81%]
+* TODO miles [63%]
 :PROPERTIES:
 :COOKIE_DATA: recursive
 :END:
@@ -47,38 +56,51 @@ CLOSED: [2020-05-11 Mon 13:57]
 **** DONE ~bands_IN~
 CLOSED: [2020-05-11 Mon 13:57]
 - BIN
-** DONE auxil (MODULE) [100%]
+** TODO auxil (MODULE) [87%]
 *** TYPE, PUBLIC
-**** DONE ~par_str~
+**** DONE ~par_type~
 CLOSED: [2020-05-11 Mon 10:52]
-- par
-**** DONE ~parinfo_str~
+**** DONE ~parinfo_type~
 CLOSED: [2020-06-09 Tue 18:51]
-**** DONE ~Qabs_str~
+**** DONE ~indpar_type~
+CLOSED: [2020-09-23 Wed 10:58]
+**** DONE ~Qabs_type~
 CLOSED: [2020-05-11 Mon 11:47]
-- ~make_Qabs~ / nQabs
-- ~modifBB~ / Qabs
+- Note taken on [2020-09-23 Wed 10:54] \\
+  Add coeffMBB (simplify calculation)
 *** SUBROUTINE
-**** FIXED ~make_par~ : Create the parameter structure
+**** DONE ~set_indpar~ : Fill the INDPAR_TYPE structure, from a ~PARINFO_TYPE~ structure
+CLOSED: [2020-09-23 Wed 10:58]
+**** TODO ~initparam~ : Automatic initialization of model parameters
+**** TODO ~read_master~ : Read the input master file for the Chi2/HB run
+**** CNCL ~make_Qabs~ : Read optical properties
+CLOSED: [2020-05-11 Mon 11:47]
+- State "CNCL"       from "DONE"       [2020-09-23 Wed 10:57] \\
+  Merged to ~read_master~
+**** CNCL ~make_par~ : Create the parameter structure (obsolete)
 CLOSED: [2020-06-09 Tue 09:53]
+- State "CNCL"       from "FIXED"      [2020-09-04 Fri 10:26] \\
+  Update to ~read_master~
 - State "FIXED"      from "KNOWNCAUSE" [2020-06-10 Wed 09:53]
 - Note taken on [2020-06-09 Tue 09:52] \\
   Add Npar and parinfo as output option; par turns to be optional
 - State "KNOWNCAUSE" from "DONE"       [2020-06-09 Tue 09:51]
-**** DONE ~make_Qabs~ : Read optical properties
-CLOSED: [2020-05-11 Mon 11:47]
-**** CNCL ~chi2_INIT~ : Initialization of parameters for chi2 method
+**** CNCL ~chi2_INIT~ : Initialization of parameters for Chi2 method
 CLOSED: [2020-05-25 Mon 18:11]
 - State "CNCL"       from "DONE"       [2020-06-02 Tue 10:23] \\
-  Removed. Parameters stored in a separate module/file.
+  Removed. Parameters stored in a separate module/file
 *** FUNCTION
 **** DONE ~degradeRes~ : Automatize the degradation of the spectral resolution
 CLOSED: [2020-05-11 Mon 13:40]
 **** Analytical functions of the individual features
 ***** DONE ~modifBB~ : Dust contimuum (N BB)
 CLOSED: [2020-05-11 Mon 13:16]
+- Note taken on [2020-09-23 Wed 10:53] \\
+  Add generic interface for HB method
 ***** FIXED ~gaussLine~ : Atomic & molecular unresolved lines (Gauss profile)
 CLOSED: [2020-05-20 Wed 23:36]
+- Note taken on [2020-09-23 Wed 10:53] \\
+  Add generic interface for HB method
 - State "FIXED"      from "KNOWNCAUSE" [2020-05-20 Wed 23:36]
 - Note taken on [2020-05-12 Tue 10:51] \\
   ~gaussLine_w~ was added to make wave-in-nu-out possible (which is the idea here), while it rose a confusion when doing normalization test. 
@@ -87,23 +109,31 @@ CLOSED: [2020-05-20 Wed 23:36]
 - State "KNOWNCAUSE" from "DONE"       [2020-05-12 Tue 10:51]
 ***** FIXED ~lorentzBand~ : Resolved aromatic bands (Asymmetric Lorentz profile)
 CLOSED: [2020-05-20 Wed 23:36]
+- Note taken on [2020-09-23 Wed 10:53] \\
+  Add generic interface for HB method
 - State "FIXED"      from "KNOWNCAUSE" [2020-05-20 Wed 23:36]
 - State "KNOWNCAUSE" from "DONE"       [2020-05-12 Tue 10:57]
 ***** FIXED ~extCurve~
 CLOSED: [2020-05-20 Wed 23:36]
 - State "FIXED"      from "KNOWNCAUSE" [2020-05-20 Wed 23:36]
 - State "KNOWNCAUSE" from "TODO"       [2020-05-12 Tue 10:57]
-**** FIXED ~specModel~ : Total model function for chi2 calling
-CLOSED: [2020-06-17 Wed 01:56]
+**** DONE ~specModel~ : Total model function for Chi2/HB calling
+CLOSED: [2020-09-22 Tue 16:00]
+- Note taken on [2020-09-22 Tue 16:00] \\
+  1. Do NOT include ~CALL make_Qabs~ in the model, which will can repeat exponential times in Bayesian/Mont-Carlo processes
+  2. ~specModel_nD~
+- Note taken on [2020-09-02 Wed 10:58] \\
+  Adaptation for Bayesian method: add generic interface
+- State "KNOWNCAUSE" from "FIXED"      [2020-09-02 Wed 10:58]
 - State "FIXED"      from "REPORT"     [2020-06-17 Wed 01:56]
 - Note taken on [2020-06-16 Tue 19:36] \\
   [via Fred]
   1. Do not read extcurve file everytime -> call it only once at the beginning
-  2. Do not do interpolation in func modifBB -> interpolate Qabs once and for all (add optional input "waveall" in ~make_Qabs~ 
+  2. Do not do interpolation in func modifBB -> interpolate Qabs once and for all (add optional input "waveall" in ~make_Qabs~)
 - State "REPORT"     from "FIXED"      [2020-06-17 Wed 01:52]
 - State "FIXED"      from "KNOWNCAUSE" [2020-06-16 Tue 15:22]
 - Note taken on [2020-06-13 Sat 23:12] \\
-  Create interface for 3D, 2D & scalar (gen) models
+  Create interface for 3D, 2D, etc. models
 - State "KNOWNCAUSE" from "FIXED"      [2020-06-13 Sat 23:12]
 - State "FIXED"      from "KNOWNCAUSE" [2020-06-09 Tue 10:26]
 - Note taken on [2020-06-09 Tue 10:25] \\
@@ -122,25 +152,35 @@ CLOSED: [2020-06-17 Wed 01:56]
 CLOSED: [2020-05-11 Mon 15:21]
 *** DONE modeled spectrum
 CLOSED: [2020-06-09 Tue 18:51]
-** TODO Chi2 [66%]
+** TODO Chi2 [40%]
 *** DONE test chi2min with synthetic spectrum
 CLOSED: [2020-06-04 Thu 11:27]
 *** DONE test chi2min with M83 (input 3D data)
 CLOSED: [2020-06-18 Thu 16:50]
 *** TODO Python UI for the inputs
-** TODO Bayesian [0%]
-*** TODO build structure according to ~fitSED_HB~ code
-** WAIT Hierarchical Bayesian [%]
+*** TODO add Monte Carlo test for Chi2 convergence
+*** TODO seperate spectra from diff modules and add calib error param
+** TODO Bayesian [25%]
+*** DONE build structure according to ~fitSED_HB~ code
+CLOSED: [2020-09-03 Thu 17:30]
+*** TODO test homogeneous prior dist. with synthetic spectrum
+*** TODO automatize ~read_master~ and ~initparam~
+*** TODO test with M83 spectra (init param via Chi2 results)
+** TODO Hierarchical Bayesian [0%]
+*** TODO add hyper param
+*** TODO test HB with synthetic spectrum
 * TODO UI (Python) [75%]
 :PROPERTIES:
 :COOKIE_DATA: recursive
 :END:
 ** TODO ~make_HB~
-** TODO ~make_chi2~
+** TODO ~make_Chi2~
 ** DONE show results [3/3]
-*** DONE ~test_fitM83~ (chi2)
+*** TODO ~test_fitHBsyn~
+*** TODO ~extract_test_fit~ (Chi2)
+*** DONE ~plot_test_fit~ (Chi2)
 CLOSED: [2020-06-19 Fri 00:24]
-*** DONE ~test_total~
+*** DONE ~test_fitChi2syn~
 CLOSED: [2020-06-19 Fri 00:21]
 *** DONE ~test_profiles~
 CLOSED: [2020-06-19 Fri 00:21]

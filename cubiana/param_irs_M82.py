@@ -13,10 +13,11 @@ Nmc = 60
 ## Current dir
 ##-------------
 path_cur = os.getcwd()+'/'
+path_par = os.path.dirname(os.path.abspath(__file__))+'/' # param file path
 
 ## IDL dir
 ##---------
-path_idl = '/Users/dhu/ownCloud/irs_snippet/idlib/'
+path_idl = path_par+'idlib/'
 
 ## Root dir
 ##----------
@@ -90,16 +91,14 @@ for p in psf:
 path_tmp = path_root+'PAHPedia/tmp/'
 if not os.path.exists(path_tmp):
 	os.makedirs(path_tmp)
-## See also IDL/convolve_image.pro
-path_conv = path_tmp+'conv/' # idlib/convolve_image
+path_conv = path_tmp+'conv/' # idlib/convolve_image.pro
 if not os.path.exists(path_conv):
 	os.makedirs(path_conv)
 csv_ker = path_tmp+'kernelist' # idlib/conv_prog.pro
 
 ## Outputs
 ##---------
-path_out = path_root+'PAHPedia/'+src+'/'
-## See also IDL/conv_prog.pro
+path_out = path_root+'PAHPedia/'+src+'/' # idlib/conv_prog.pro
 
 ## Calibrations
 phot = 'IRAC4' # photometry filter

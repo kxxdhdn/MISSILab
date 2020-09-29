@@ -1,26 +1,27 @@
 PROGRAM test_profiles
 
-  USE auxil
+  USE auxil, ONLY: Qabs_type, read_master, modifBB, gaussLine, lorentzBand, extCurve
   USE arrays, ONLY: ramp, reverse
   USE utilities, ONLY: DP, TRIMLR
   USE constants, ONLY: MKS
   USE integration, ONLY: integ_tabulated
   USE interpolation, ONLY: interp_lin_sorted
-  USE inout, ONLY: write_hdf5, h5ext, write_ascii, ascext
+  USE inout, ONLY: lenpath, write_hdf5, h5ext, write_ascii, ascext
+  USE grain_optics, ONLY: lendustQ
   IMPLICIT NONE
 
   ! INTEGER i
-  CHARACTER(30)                             :: path
-  CHARACTER(30), DIMENSION(:), ALLOCATABLE  :: label
-  TYPE(Qabs_STR), DIMENSION(:), ALLOCATABLE :: nQabs
+  CHARACTER(lenpath)                             :: path
+  CHARACTER(lendustQ), DIMENSION(:), ALLOCATABLE :: labQ
+  TYPE(Qabs_type), DIMENSION(:), ALLOCATABLE     :: Qabs
   REAL(DP) :: sigma, sigmaS, sigmaL, ref1, ref2, Iline, Iband
-  INTEGER, PARAMETER                        :: Nw = 1000
-  REAL(DP), DIMENSION(:), ALLOCATABLE       :: wave, nu
-  REAL(DP), DIMENSION(:), ALLOCATABLE       :: Pabs
-  REAL(DP), DIMENSION(:), ALLOCATABLE       :: massBB, tempBB
-  REAL(DP), DIMENSION(:), ALLOCATABLE       :: FnuLINE, FnuBAND
-  REAL(DP), DIMENSION(:), ALLOCATABLE       :: FnuBB, Fnu
-  REAL(DP), DIMENSION(:), ALLOCATABLE       :: FnuTEST
+  INTEGER, PARAMETER                             :: Nw = 1000
+  REAL(DP), DIMENSION(:), ALLOCATABLE            :: wave, nu
+  REAL(DP), DIMENSION(:), ALLOCATABLE            :: Pabs
+  REAL(DP), DIMENSION(:), ALLOCATABLE            :: massBB, tempBB
+  REAL(DP), DIMENSION(:), ALLOCATABLE            :: FnuLINE, FnuBAND
+  REAL(DP), DIMENSION(:), ALLOCATABLE            :: FnuBB, Fnu
+  REAL(DP), DIMENSION(:), ALLOCATABLE            :: FnuTEST
 
   !! QUICK INPUTS
   !!--------------
@@ -58,8 +59,8 @@ PROGRAM test_profiles
 
   !! w -> nu
   !!---------
-  ! wTEST(:) = ramp(NwTEST, 1._DP, 40._DP)
-  wTEST(:) = ramp(NwTEST, 1.E-2_DP, 3.E4_DP, .true.) ! try larger NwTEST
+  wTEST(:) = ramp(NwTEST, 1._DP, 40._DP)
+  ! wTEST(:) = ramp(NwTEST, 1.E-2_DP, 3.E4_DP, .true.) ! try larger NwTEST
   nuTEST = MKS%clight/MKS%micron / wTEST ! as reciprocal of wTEST, nuTEST is not in log
   FnuTEST = gaussLine(wTEST, 15.555_DP, 15.555_DP*0.0055722841_DP, .TRUE.) ! /Hz
   ! FnuTEST = lorentzBand(wTEST, 6.2_DP, 0.060000000_DP, 0.031300317_DP, .TRUE.) ! /Hz
@@ -74,9 +75,11 @@ PROGRAM test_profiles
   ! PRINT*, "Number of lines: ", Nline
   ! PRINT*, "Number of bands: ", Nband
   
-  ALLOCATE(label(Nbb), nQabs(Nbb), massBB(Nbb), tempBB(Nbb))
+  ALLOCATE(labQ(Nbb), Qabs(Nbb), massBB(Nbb), tempBB(Nbb))
   
-  label = (/'Sil_D03 ', 'ACAR_Z96'/)
+  wave = ramp(Nw, 1._DP, 40._DP)
+  nu = MKS%clight/MKS%micron / wave
+  labQ = (/'Sil_D03 ', 'ACAR_Z96'/)
   massBB = 3.E-2_DP ! Msun/pc2
   tempBB = 200._DP
   Iline = 1.E-7 ! W/m2
@@ -89,19 +92,17 @@ PROGRAM test_profiles
 
   !! GET PARAM
   !!-----------
-  CALL make_Qabs(label, NQABS=nQabs)
+  CALL READ_MASTER(labQ, WAVEALL=wave, QABS=Qabs)
 
   !! Calculate Fnu
   !!---------------
-  wave = ramp(Nw, 1._DP, 40._DP)
-  nu = MKS%clight/MKS%micron / wave
   !! extinction
   Pabs = EXP(-.1_DP/1.086_DP * extCurve(wave))
   !! mbb
-  FnuBB = interp_lin_sorted(modifBB(tempBB(1), nQabs(1)), &
-          nQabs(1)%nu, nu, xlog=.True., ylog=.True.) * massBB(1) * MKS%Msun/MKS%pc**2
-  FnuBB = FnuBB + interp_lin_sorted(modifBB(tempBB(2), nQabs(2)), &
-          nQabs(2)%nu, nu, xlog=.True., ylog=.True.) * massBB(2) * MKS%Msun/MKS%pc**2
+  FnuBB = interp_lin_sorted(modifBB(wave, tempBB(1), Qabs(1)), &
+          Qabs(1)%nu, nu, xlog=.True., ylog=.True.) * massBB(1) * MKS%Msun/MKS%pc**2
+  FnuBB = FnuBB + interp_lin_sorted(modifBB(wave, tempBB(2), Qabs(2)), &
+          Qabs(2)%nu, nu, xlog=.True., ylog=.True.) * massBB(2) * MKS%Msun/MKS%pc**2
   !! gauss line
   FnuLINE = gaussLine(wave, ref1, sigma, .TRUE.)
   PRINT*, 'I(gauss) = ', integ_tabulated(reverse(nu), reverse(FnuLINE))
@@ -145,7 +146,7 @@ PROGRAM test_profiles
                   FILE=TRIMLR(path)//h5ext)
 
   !! Free memory space
-  DEALLOCATE(wave, nu, Pabs, label, massBB, tempBB, &
+  DEALLOCATE(wave, nu, Pabs, labQ, massBB, tempBB, &
              FnuLINE, FnuBAND, FnuBB, Fnu, FnuTEST)
 
 END PROGRAM test_profiles
