@@ -1,6 +1,6 @@
 PROGRAM test_read
 
-  USE auxil, ONLY: read_master, Qabs_type
+  USE auxil, ONLY: read_master, Qabs_type, parinfo_type, indpar_type
   USE utilities, ONLY: DP
   USE arrays, ONLY: ramp
   USE inout, ONLY: lenpar
@@ -8,53 +8,36 @@ PROGRAM test_read
   IMPLICIT NONE
 
   INTEGER, PARAMETER :: Ngrid = 1000
-  INTEGER :: Nband, Nline
-  INTEGER, DIMENSION(:), ALLOCATABLE :: indBIN, indLIN
+  INTEGER :: Nmcmc, NiniMC, Npar
+  INTEGER :: Ncont, Nband, Nline
   REAL(DP), DIMENSION(:), ALLOCATABLE :: wave
-  CHARACTER(lenpar), DIMENSION(:), ALLOCATABLE :: labBIN, labLIN
+  CHARACTER(lenpar) :: spec_unit
+  CHARACTER(lenpar), DIMENSION(:), ALLOCATABLE :: labB, labL
   CHARACTER(lendustQ), DIMENSION(:), ALLOCATABLE :: labQ
+  LOGICAL :: verbose, calib, newseed, newinit, dostop
   TYPE(Qabs_type), DIMENSION(:), ALLOCATABLE :: Qabs
+  TYPE(parinfo_type), DIMENSION(:), ALLOCATABLE :: parinfo
+  TYPE(indpar_type) :: ind
 
   wave = RAMP(Ngrid, 1._DP, 40._DP, XLOG=.TRUE.)
 
-  ! ALLOCATE(labQ(2), Qabs(2))
-  labQ = (/'Sil_D03 ', 'ACAR_Z96'/)
-  labBIN = (/'Main 6.2 (1) ', & ! 7
-             'Main 6.2 (2) ', & ! 8
-             'Plateau 7.7  ', & ! 12
-             'Main 7.7 (1) ', & ! 13
-             'Main 7.7 (2) ', & ! 14
-             'Main 8.6     ', & ! 16
-             'Small 11.0   ', & ! 19
-             'Main 11.2    ', & ! 20
-             'Plateau 11.3 ', & !21
-             'Main 12.7 (1)', & ! 24
-             'Main 12.7 (2)', & ! 25
-             'Plateau 17.0 '/) ! 30
-  labLIN = (/'H2S7  ', & ! 3
-             'H2S5  ', & ! 9
-             'ArII  ', & ! 11
-             'ArIII1', & ! 20
-             'H2S3  ', & ! 23
-             'SIV   ', & ! 26
-             'H2S2  ', & ! 27
-             'NeII  ', & ! 29
-             'NeIII1', & ! 33
-             'H2S1  ', & ! 34
-             'SIII1 '/) ! 36
-  Nband = SIZE(labBIN)
-  Nline = SIZE(labLIN)
-
-  CALL READ_MASTER(LABQ=labQ(:), LABBIN=labBIN(:), LABLIN=labLIN(:), WAVEALL=wave(:), &
-                   QABS=Qabs, INDBIN=indBIN, INDLIN=indLIN)
+  CALL READ_MASTER(WAVALL=wave, &
+                   NMCMC=Nmcmc, VERBOSE=verbose, NiniMC=NiniMC, &
+                   CALIB=calib, NEWSEED=newseed, NEWINIT=newinit, &
+                   LABQ=labQ, LABL=labL, LABB=labB, QABS=Qabs, &
+                   NCONT=Ncont, NBAND=Nband, NLINE=Nline, DOSTOP=dostop, &
+                   PARINFO=parinfo, INDPAR=ind, NPAR=Npar, &
+                   SPEC_UNIT=spec_unit)
 
   !! Print outputs
   !!---------------
-  ! PRINT*, 'Qabs1%wave = ', Qabs(1)%wave
-  ! PRINT*, 'Qabs1%rho = ', Qabs(1)%rho
-  ! PRINT*, 'Qabs1%Qova = ', Qabs(1)%Qova
-  ! PRINT*, 'Qabs2%coeffMBB = ', Qabs(2)%coeffMBB
-  PRINT*, 'Band indices: ', indBIN
-  PRINT*, 'Line indices: ', indLIN
+  PRINT*, 'Nmcmc = ', Nmcmc
+  PRINT*, 'verbose = ', verbose
+  ! PRINT*, 'Qabs%wave = ', Qabs(1)%wave
+  ! PRINT*, 'Qabs%rho = ', Qabs(1)%rho
+  ! PRINT*, 'Qabs%kappa = ', Qabs(2)%kappa
+  PRINT*, 'parinfo%name = ', parinfo%name
+  PRINT*, 'parinfo%fixed = ', parinfo%fixed
+  PRINT*, 'parinfo(1)%limited = ', parinfo(1)%limited
 
 END PROGRAM test_read

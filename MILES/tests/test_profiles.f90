@@ -92,7 +92,7 @@ PROGRAM test_profiles
 
   !! GET PARAM
   !!-----------
-  CALL READ_MASTER(labQ, WAVEALL=wave, QABS=Qabs)
+  CALL READ_MASTER(WAVALL=wave, LABQ=labQ, QABS=Qabs)
 
   !! Calculate Fnu
   !!---------------

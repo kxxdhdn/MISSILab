@@ -68,7 +68,7 @@ MODULE datable
   END TYPE line_type
   PUBLIC :: line_type
   
-  TYPE(line_type), DIMENSION(46), SAVE, PUBLIC :: LIN = &
+  TYPE(line_type), DIMENSION(46), SAVE, PUBLIC :: TABLine = &
     (/ line_type(name='Bracket alpha', &
                 label='Bra', wave=4.052_DP), &
        line_type(name='H!E !NI 6-10', &
@@ -171,7 +171,7 @@ MODULE datable
   END TYPE band_type
   PUBLIC :: band_type
   
-  TYPE(band_type), DIMENSION(33), SAVE, PUBLIC :: BIN = &
+  TYPE(band_type), DIMENSION(33), SAVE, PUBLIC :: TABand = &
     (/ band_type(label='Main 3.3', wave=3.3_DP, &
                 sigmaS=0.04_DP, sigmaL=0.04_DP), &
        band_type(label='Main 3.4', wave=3.45_DP, &
