@@ -20,14 +20,17 @@ path_out = mroot+'tests/out/'
 filename = 'test_fitChi2syn'
 
 ## Read h5 file
-wvl, FnuOBS, FnuMOD, FnuCONT, FnuLINE, FnuBAND, FnuSTAR = \
-    read_hdf5(path_out+filename,
-    'Wavelength (microns)', 'FnuOBS (MJyovsr)', 'FnuMOD (MJyovsr)',
-    'FnuCONT (MJyovsr)', 'FnuLINE (MJyovsr)', 'FnuBAND (MJyovsr)', 'FnuSTAR (MJyovsr)')
+wvl = read_hdf5(path_out+filename, 'Wavelength (microns)')
+FnuOBS = read_hdf5(path_out+filename, 'FnuOBS (MKS)')
+FnuMOD = read_hdf5(path_out+filename, 'FnuMOD (MKS)')
+FnuCONT = read_hdf5(path_out+filename, 'FnuCONT (MKS)')
+FnuLINE = read_hdf5(path_out+filename, 'FnuLINE (MKS)')
+FnuBAND = read_hdf5(path_out+filename, 'FnuBAND (MKS)')
+FnuSTAR = read_hdf5(path_out+filename, 'FnuSTAR (MKS)')
 
 p = plot2d_m(wvl, [FnuOBS, FnuMOD, FnuCONT, FnuLINE, FnuBAND, FnuSTAR], 
              xall=wvl, xlog=1, ylog=1, xlim=(2., 40.), #ylim=(0,2.), 
-             xlab=r'$\lambda\,(micron)$', ylab=r'$F_{\nu} \,(MJy/sr)$', 
+             xlab=r'$\lambda\,(microns)$', ylab=r'$B_{\nu} \,(W/m2/Hz/sr)$', 
              lablist=['Obs', 'Total', 'cont', 'lines', 'bands', 'star'], 
              legend='best', cl=['y', 'k', 'pink', 'g', 'b', 'orange'])
 p.save(path_out+filename+'.png')

@@ -1,0 +1,12701 @@
+
+ [specModel] EXECUTED IN 0s.
+
+================================================================================
+ Running LE MIROIR: LEast-squares fitting of Mid-IR emission OptImized Routine
+        from the SwING (SoftWares for Investigating Nebulae & Galaxies)
+                             written by F. Galliano
+================================================================================
+
+                                                   (December 21, 2020, at 11:23)
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ [specModel] EXECUTED IN 0s.
+
+
+ PROGRAM EXECUTED IN 17s.
+

@@ -21,7 +21,7 @@ PROGRAM test_read
 
   wave = RAMP(Ngrid, 1._DP, 40._DP, XLOG=.TRUE.)
 
-  CALL READ_MASTER(WAVALL=wave, &
+  CALL READ_MASTER(WAVALL=wave(:), &
                    NMCMC=Nmcmc, VERBOSE=verbose, NiniMC=NiniMC, &
                    CALIB=calib, NEWSEED=newseed, NEWINIT=newinit, &
                    LABQ=labQ, LABL=labL, LABB=labB, QABS=Qabs, &

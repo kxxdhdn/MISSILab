@@ -24,16 +24,17 @@ filename = 'test_gibbs'
 flogname = 'parlog_gibbs'
 
 ## Read h5 files
-wvl, FnuOBS, FnuMOD = \
-    read_hdf5(path_out+filename, 
-    'Wavelength (microns)', 'FnuOBS (MJyovsr)', 'FnuMOD (MJyovsr)')
-Fnu1par, lnLHobs, testgrid = read_hdf5(path_out+filename, 
-    'var1par', 'lnLHobs', 'testgrid')
-parmu, parsig = read_hdf5(path_out+filename, 
-    'Mean of parameter value', 'Sigma of parameter value')
+wvl = read_hdf5(path_out+filename, 'Wavelength (microns)')
+FnuOBS = read_hdf5(path_out+filename, 'FnuOBS (MKS)')
+FnuMOD = read_hdf5(path_out+filename, 'FnuMOD (MKS)')
+# Fnu1par = read_hdf5(path_out+filename, 'var1par')
+# lnLHobs = read_hdf5(path_out+filename, 'lnLHobs')
+# testgrid = read_hdf5(path_out+filename, 'testgrid')
+parmu = read_hdf5(path_out+filename, 'Mean of parameter value')
+parsig = read_hdf5(path_out+filename, 'Sigma of parameter value')
 
-Nmcmc, pararr = read_hdf5(path_out+flogname, 
-	'Length of MCMC', 'Parameter values')
+Nmcmc = read_hdf5(path_out+flogname, 'Length of MCMC')
+pararr = read_hdf5(path_out+flogname, 'Parameter values')
 
 ## Vary one param
 ##----------------
@@ -48,7 +49,7 @@ Nmcmc, pararr = read_hdf5(path_out+flogname,
 
 ## Plot
 ##======
-ipar = 1
+ipar = 3
 Nbin = int(Nmcmc)
 fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(8,9))
 plt.subplots_adjust(left=.1, bottom=.05, \
@@ -69,14 +70,14 @@ ax1.set_title(fr'$Param\ dist\ \mu={parmu[ipar-1]},\ \sigma={parsig[ipar-1]}$')
 # ax2.set_title('lnLHobs')
 ## Mod vs Obs
 ##------------
-ax2.plot(wvl, FnuOBS, c='y', label='Obs')
-ax2.plot(wvl, FnuMOD, c='k', label='Mod')
+ax2.plot(wvl, FnuOBS, c='k', label='Obs')
+ax2.plot(wvl, FnuMOD, c='g', label='Mod')
 ax2.set_xscale('log')
 ax2.set_yscale('log')
-# ax2.set_xlim((3.,40.))
-ax2.set_ylim((1.E-2,2.))
-ax2.set_xlabel(r'$\lambda\,(micron)$')
-ax2.set_ylabel(r'$F_{\nu} \,(MJy/sr)$')
+ax2.set_xlim((2.,40.))
+# ax2.set_ylim((1.E-2,2.))
+ax2.set_xlabel(r'$\lambda\,(microns)$')
+ax2.set_ylabel(r'$B_{\nu} \,(W/m2/Hz/sr)$')
 ax2.legend()
 ax2.set_title('Spectral fitting')
 

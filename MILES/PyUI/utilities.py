@@ -5,12 +5,22 @@
 
 Available functions as follows:
 
-  DATA: TABLine, TABand
+  DATA: Res, TABLine, TABand
   FUNC: partuning, 
 
 """
 
 import numpy as np
+
+
+Res = [ dict([ ('name','CAM'),('dwovw',0.010373835) ]),
+        dict([ ('name','SL'),('dwovw',0.0055722841) ]),
+        dict([ ('name','SH'),('dwovw',0.00075127093) ]),
+        dict([ ('name','LL'),('dwovw',0.0057517091) ]),
+        dict([ ('name','LH'),('dwovw',0.00070906159) ]),
+        dict([ ('name','SWS'), ('dwovw',0.0011044189) ]),
+        dict([ ('name','SWSfine'),('dwovw',0.00036671469) ]),
+        dict([ ('name','AKARI_Ns'),('dwovw',0.00356688) ]) ]
 
 TABLine = [ dict([ ('name','Bracket alpha'),
                    ('label','Bra'),('wave',4.052) ]),

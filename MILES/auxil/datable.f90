@@ -4,6 +4,9 @@ MODULE datable
   IMPLICIT NONE
   PRIVATE
 
+  INTEGER, PARAMETER, PUBLIC :: Ncont_max = 31, Nline_max = 46, Nband_max = 33
+  INTEGER, PARAMETER, PUBLIC :: Npabs_max = 1,  Nstar_max = 1
+  
   !!-------------------------
   !! Instrumental resolution
   !!-------------------------
@@ -22,9 +25,9 @@ MODULE datable
   
   TYPE(instr_res), SAVE, PUBLIC :: res
 
-  !!-----------
-  !! Continuum
-  !!-----------
+  !!----------
+  !! Continua
+  !!----------
   ! 'a-C_man20nm_big      '
   ! 'a-C_man20nm_J13      '
   ! 'a-C_man20nm_small    '
@@ -68,7 +71,7 @@ MODULE datable
   END TYPE line_type
   PUBLIC :: line_type
   
-  TYPE(line_type), DIMENSION(46), SAVE, PUBLIC :: TABLine = &
+  TYPE(line_type), DIMENSION(Nline_max), SAVE, PUBLIC :: TABLine = &
     (/ line_type(name='Bracket alpha', &
                 label='Bra', wave=4.052_DP), &
        line_type(name='H!E !NI 6-10', &
@@ -171,7 +174,7 @@ MODULE datable
   END TYPE band_type
   PUBLIC :: band_type
   
-  TYPE(band_type), DIMENSION(33), SAVE, PUBLIC :: TABand = &
+  TYPE(band_type), DIMENSION(Nband_max), SAVE, PUBLIC :: TABand = &
     (/ band_type(label='Main 3.3', wave=3.3_DP, &
                 sigmaS=0.04_DP, sigmaL=0.04_DP), &
        band_type(label='Main 3.4', wave=3.45_DP, &
@@ -184,7 +187,7 @@ MODULE datable
                 sigmaS=0.040000000_DP, sigmaL=0.080000000_DP), &
        band_type(label='Small 6.0', wave=6.0106598_DP, &
                 sigmaS=0.040000000_DP, sigmaL=0.066646401_DP), &
-       band_type(label='Main 6.2 (1)', wave=6.2034273_DP, &
+       band_type(label='Main 6.2 (1)', wave=6.2034273_DP, & ! 7
                 sigmaS=0.031300317_DP, sigmaL=0.060000000_DP), &
        band_type(label='Main 6.2 (2)', wave=6.2672596_DP, &
                 sigmaS=0.036922155_DP, sigmaL=0.11633640_DP), &
@@ -196,13 +199,13 @@ MODULE datable
                 sigmaS=0.080000000_DP, sigmaL=0.080000000_DP), & ! SL2 (9)
        band_type(label='Plateau 7.7', wave=7.6000000_DP, &
                 sigmaS=0.48000000_DP, sigmaL=0.50247515_DP), &
-       band_type(label='Main 7.7 (1)', wave=7.6171123_DP, &
+       band_type(label='Main 7.7 (1)', wave=7.6171123_DP, & ! 13
                 sigmaS=0.11856752_DP, sigmaL=0.14531480_DP), &
        band_type(label='Main 7.7 (2)', wave=7.8704769_DP, &
                 sigmaS=0.16998357_DP, sigmaL=0.24523967_DP), &
        band_type(label='Small 8.3', wave=8.3623706_DP, &
                 sigmaS=0.016256724_DP, sigmaL=0.016256724_DP), &
-       band_type(label='Main 8.6', wave=8.6204540_DP, &
+       band_type(label='Main 8.6', wave=8.6204540_DP, & ! 16
                 sigmaS=0.18340577_DP, sigmaL=0.13337054_DP), &
        band_type(label='Small 9.5', wave=9.5244838_DP, &
                 sigmaS=0.10766965_DP, sigmaL=0.60000000_DP), &
@@ -210,7 +213,7 @@ MODULE datable
                 sigmaS=0.10000000_DP, sigmaL=0.10000000_DP), &
        band_type(label='Small 11.0', wave=11.038349_DP, &
                 sigmaS=0.026989462_DP, sigmaL=0.073146141_DP), &
-       band_type(label='Main 11.2', wave=11.237893_DP, &
+       band_type(label='Main 11.2', wave=11.237893_DP, & ! 20
                 sigmaS=0.053507232_DP, sigmaL=0.15254629_DP), &
        band_type(label='Plateau 11.3', wave=11.400432_DP, &
                 sigmaS=0.72000000_DP, sigmaL=0.63657944_DP), &
