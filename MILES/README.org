@@ -4,13 +4,15 @@
 * Notices
 The Python package [[https://github.com/kxxdhdn/astylo][astylo]] is required by the MILES UI. You can install it with a single command: ~pip install astylo~
 * Version log
-** v0.2 (2021????, Chi2 calib)
+** v0.x (2021xxxx, Chi2 calib)
 - iniMC test revisit
 - Input separated spectra (of each module) + calib error
 - Fractional date saving during program running
-- Add simulated galaxy spectral fitting
-** v1.1 (202012??, HB beta)
-** v1 (202012??, Bayes beta)
+** v0.3 (202101xx, HB beta)
+- Update tests/dat/
+- Add simulated galaxy spectral fitting (~galspec~)
+** v0.2 (20210114, Bayes beta)
+- HIBARI: HIerarchical BAyesian fitting Routine of mid-IR emission
 ** v0.1 (20201221, Chi2 release)
 - HDF5 file fractional writing
 - Add generic interface

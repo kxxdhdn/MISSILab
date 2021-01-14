@@ -5,11 +5,14 @@
 #+TODO: REPORT(r!) BUG(b!) KNOWNCAUSE(k!) | FIXED(f!)
 #+STARTUP: logdone
 
-Version: v0.1 (20201221)
-* TODO tests [8/12]
-** TODO galspecsim
+Version: v0.2 (20210114)
+* TODO tests [9/13]
+** TODO galspec
 ** TODO anaHB
-** TODO fitHB
+** DONE fitHB
+CLOSED: [2021-01-13 Wed 18:55]
+** DONE Bayes
+CLOSED: [2021-01-13 Wed 18:55]
 ** DONE gibbs
 CLOSED: [2020-09-28 Mon 15:06]
 - [X] Vary 1 parameter a time to check the function ~specModel_gen~
@@ -17,8 +20,8 @@ CLOSED: [2020-09-28 Mon 15:06]
 - [X] Fix all but one parameter to check 
 - [X] Redo above for the modified function with logarithmic param
 - [X] plot the dist. for each param
-** DONE anaChi2
-CLOSED: [2020-12-21 Mon 11:47]
+** REPORT anaChi2
+- State "REPORT"     from "DONE"       [2020-12-21 Mon 14:50]
 ** KNOWNCAUSE fitChi2
 - Note taken on [2020-06-18 Thu 16:50] \\
   + [X] Very slow (probably due to the very small uncertainties, or largely varied S/N), should set timers;
@@ -68,21 +71,26 @@ CLOSED: [2020-06-10 Wed 12:06]
 - Note taken on [2020-05-11 Mon 14:32] \\
   Test chi2min with observation (M83), 3D FITS data imported via Python UI (fits2h5)
 - State "KNOWNCAUSE" from "DONE"       [2020-05-11 Mon 14:32]
-* TODO MILES [81%]
+* TODO MILES [85%]
 :PROPERTIES:
 :COOKIE_DATA: recursive
 :END:
-** TODO Hierarchical Bayesian [0%]
-*** TODO add hyper param
-*** TODO test HB with synthetic spectrum
-** TODO Bayesian [75%]
+** TODO Hierarchical Bayesian [66%]
+*** DONE add hyper param
+CLOSED: [2021-01-13 Wed 18:55]
+*** DONE test with M83 spectra
+CLOSED: [2021-01-13 Wed 18:55]
+*** TODO test HB with simulated spectra
+** TODO Bayesian [80%]
 *** DONE build structure according to ~fitSED_HB~ code
 CLOSED: [2020-09-03 Thu 17:30]
 *** DONE test homogeneous prior dist. with synthetic spectrum
 CLOSED: [2020-10-02 Fri 10:59]
 *** DONE automatize ~read_master~ and ~initparam~
 CLOSED: [2020-12-10 Thu 12:19]
-*** TODO test with M83 spectra (init param via Chi2 results)
+*** DONE test with M83 spectra (init param via Chi2 results)
+CLOSED: [2021-01-12 Tue 10:47]
+*** TODO test with (more realistic) simulated spectra
 ** TODO Chi2 [80%]
 *** DONE test chi2min with synthetic spectrum
 CLOSED: [2020-06-04 Thu 11:27]
@@ -173,6 +181,10 @@ CLOSED: [2020-05-20 Wed 23:36]
 - State "KNOWNCAUSE" from "TODO"       [2020-05-12 Tue 10:57]
 **** DONE ~specModel~ : Total model function for Chi2/HB calling
 CLOSED: [2020-12-08 Tue 16:05]
+- Note taken on [2021-01-11 Mon 17:40] \\
+  Corrected 2 mistaken writing in ~specModel_gen~:
+  1. some FnuLINE0 as FnuBAND0 by copy-paste;
+  2. some FORALL conditions as (igrid=i,Nband) \rarr random values attributed to undefined grids
 - Note taken on [2020-12-08 Tue 16:03] \\
   Timer added; 2D & 1D version derived from 3D code using interface.
 - Note taken on [2020-10-01 Thu 15:17] \\
@@ -219,7 +231,7 @@ CLOSED: [2020-05-11 Mon 13:57]
 **** DONE ~bands_IN~
 CLOSED: [2020-05-11 Mon 13:57]
 - BIN
-* TODO PyUI [80%]
+* TODO PyUI [87%]
 :PROPERTIES:
 :COOKIE_DATA: recursive
 :END:
@@ -248,8 +260,11 @@ CLOSED: [2020-11-23 Mon 12:11]
 *** FUNC
 **** DONE ~partuning~
 CLOSED: [2020-10-23 Fri 10:09]
-** TODO show results [4/6]
-*** TODO ~test_fitHB~
+** TODO show results [6/7]
+*** DONE ~test_fitHB~
+CLOSED: [2021-01-14 Thu 11:52]
+*** DONE ~test_fitBayes~
+CLOSED: [2021-01-14 Thu 11:52]
 *** DONE ~test_gibbs~
 CLOSED: [2020-12-10 Thu 12:18]
 *** TODO ~extract_test_fit~ (Chi2)

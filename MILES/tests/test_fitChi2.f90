@@ -128,10 +128,10 @@ PROGRAM test_fitChi2
   INTEGER, DIMENSION(:,:), ALLOCATABLE :: Niter
   INTEGER, DIMENSION(2) :: unitlog
   TYPE(time_type) :: timestr
-  ! REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: FnuCONT, &
-  !   FnuBAND, FnuSTAR, Pabs, FnuLINE, FnuMOD
-  ! REAL(DP), DIMENSION(:,:,:,:), ALLOCATABLE :: FnuCONT_tab, &
-  !   FnuBAND_tab, FnuSTAR_tab, Pabs_tab, FnuLINE_tab
+  REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: FnuCONT, &
+    FnuBAND, FnuSTAR, Pabs, FnuLINE, FnuMOD
+  REAL(DP), DIMENSION(:,:,:,:), ALLOCATABLE :: FnuCONT_tab, &
+    FnuBAND_tab, FnuSTAR_tab, Pabs_tab, FnuLINE_tab
 
   ! Output settings
   !----------------
@@ -150,7 +150,7 @@ PROGRAM test_fitChi2
   !!------------------
   CALL READ_HDF5(wOBS, FILE=filOBS, NAME='Wavelength (microns)', N1=NwOBS)
   CALL READ_MASTER(WAVALL=wOBS(:), &
-                   VERBOSE=verbose, NiniMC=NiniMC, &
+                   VERBOSE=verbose, NINIMC=NiniMC, &
                    CALIB=calib, NEWSEED=newseed, NEWINIT=newinit, &
                    LABQ=labQ, LABL=labL, LABB=labB, QABS=Qabs, &
                    NCONT=Ncont, NBAND=Nband, NLINE=Nline, &
@@ -160,7 +160,7 @@ PROGRAM test_fitChi2
   IF (newseed) CALL GENERATE_NEWSEED()
   IF (verbose) PRINT*
   DO i=1,MERGE(2,1,verbose)
-    CALL BANNER_PROGRAM("LE MIROIR (LEast-squares fitting of Mid-IR emission) " &
+    CALL BANNER_PROGRAM("LE MIROIR: LEast-squares fitting of Mid-IR emission " &
                         //"OptImized Routine", UNIT=unitlog(i), SWING=.True.)
   END DO
 
@@ -320,10 +320,8 @@ PROGRAM test_fitChi2
   CALL WRITE_HDF5(INITDBLARR=[Nx,Ny,Npar], NAME='Best fitted parameter value', &
                   FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.FALSE.)
 
-  chi2fitx: DO xOBS=47,47
-    chi2fity: DO yOBS=21,21
-  ! chi2fitx: DO xOBS=1,Nx
-  !   chi2fity: DO yOBS=1,Ny
+  chi2fitx: DO xOBS=1,Nx
+    chi2fity: DO yOBS=1,Ny
       notmasked: IF (ANY( mask(xOBS,yOBS,:) )) THEN
         PRINT*
         PRINT*, 'pos: ('//TRIMLR(PRING(xOBS))//', '//TRIMLR(PRING(yOBS))//'): '
@@ -332,9 +330,7 @@ PROGRAM test_fitChi2
         !!-------------------------------
         pariniMC: IF (NiniMC == 0) THEN
 
-          !! With single init param
-          ! par(xOBS,yOBS,:) = parini(xOBS,yOBS,:,1)
-          CALL CHI2MIN_LM (residuals, NwOBS, PAR=par(xOBS,yOBS,:), VERBOSE=.TRUE., &
+          CALL CHI2MIN_LM (residuals, NwOBS, PAR=par(xOBS,yOBS,:), VERBOSE=debug, &
                            STATUS=status(xOBS,yOBS), PARNAME=parinfo(:)%name, &
                            LIMITED=limited(:,:), LIMITS=limits(:,:), &
                            FIXED=parinfo(:)%fixed, ITIED=itied(:), &
@@ -345,13 +341,19 @@ PROGRAM test_fitChi2
           !! Vary the init param and keep the best fit
           DO j=1,NiniMC
             PRINT*, 'iniMC iteration: '//TRIMLR(PRING(j))//'/'//TRIMLR(PRING(NiniMC))
-            CALL CHI2MIN_LM (residuals, NwOBS, PAR=parini(xOBS,yOBS,:,j), VERBOSE=.FALSE., &
+            CALL CHI2MIN_LM (residuals, NwOBS, PAR=parini(xOBS,yOBS,:,j), VERBOSE=debug, &
                              STATUS=statusMC(j), PARNAME=parinfo(:)%name, &
                              LIMITED=limited(:,:), LIMITS=limits(:,:), &
                              FIXED=parinfo(:)%fixed, ITIED=itied(:), &
                              CHI2RED=chi2redMC(j), NITER=NiterMC(j), &
                              PARERR=parerrMC(:,j), COVAR=covarMC(:,:,j), NITERMAX=40)
-            
+
+            DO i=1,MERGE(2,1,verbose)
+              WRITE(unitlog(i),*)
+              WRITE(unitlog(i),*) "PROGRAM EXECUTED IN "//TRIMLR(TIMINFO(timestr))//"."
+              WRITE(unitlog(i),*)
+            END DO
+          
           END DO
           ibest = MAXVAL(MINLOC(chi2redMC(:)))
           par(xOBS,yOBS,:) = parini(xOBS,yOBS,:,ibest)
@@ -364,9 +366,9 @@ PROGRAM test_fitChi2
             WRITE(unitlog(i),*) "  MC chi2red is between " &
               //TRIMLR(PRING(MINVAL(chi2redMC(:)),NDEC=6))//" and " &
               //TRIMLR(PRING(MAXVAL(chi2redMC(:)),NDEC=6))
-            
+          
           END DO
-        
+
         END IF pariniMC
 
         !! b. Derived quantities
@@ -377,7 +379,7 @@ PROGRAM test_fitChi2
 
         !! d. Summary
         !!------------
-        DO i=1,MERGE(2,1,verbose)
+        IF (verbose) THEN
           PRINT*, '>>>'
           PRINT*, "Checking output ("//TRIMLR(PRING(xOBS))//', '//TRIMLR(PRING(yOBS))//'): '
           PRINT*, "  status = "//TRIMLR(PRING(status(xOBS,yOBS)))
@@ -398,7 +400,7 @@ PROGRAM test_fitChi2
           PRINT*, '<<<'
           PRINT*
 
-        END DO
+        END IF
        
       END IF notmasked
     END DO chi2fity
@@ -418,41 +420,41 @@ PROGRAM test_fitChi2
 
   !! Calculate model
   !!-----------------
-  ! ALLOCATE(FnuMOD(Nx,Ny,NwOBS))
+  ALLOCATE(FnuMOD(Nx,Ny,NwOBS))
 
-  ! FnuMOD(:,:,:) = specModel( wOBS(:), INDPAR=ind, PARVAL=par(:,:,:), QABS=Qabs(:), &
-  !                            FNUCONT=FnuCONT, FNUBAND=FnuBAND, FNUSTAR=FnuSTAR, &
-  !                            PABS=Pabs, FNULINE=FnuLINE, &
-  !                            FNUCONT_TAB=FnuCONT_tab, FNUBAND_TAB=FnuBAND_tab, &
-  !                            FNUSTAR_TAB=FnuSTAR_tab, PABS_TAB=Pabs_tab, &
-  !                            FNULINE_TAB=FnuLINE_tab )
+  FnuMOD(:,:,:) = specModel( wOBS(:), INDPAR=ind, PARVAL=par(:,:,:), QABS=Qabs(:), &
+                             FNUCONT=FnuCONT, FNUBAND=FnuBAND, FNUSTAR=FnuSTAR, &
+                             PABS=Pabs, FNULINE=FnuLINE, &
+                             FNUCONT_TAB=FnuCONT_tab, FNUBAND_TAB=FnuBAND_tab, &
+                             FNUSTAR_TAB=FnuSTAR_tab, PABS_TAB=Pabs_tab, &
+                             FNULINE_TAB=FnuLINE_tab )
 
-  ! DO i=1,Npabs
-  !   FnuCONT_tab(:,:,:,i) = FnuCONT_tab(:,:,:,i) * Pabs(:,:,:)
-  ! END DO
-  ! CALL WRITE_HDF5(DBLARR4D=FnuCONT_tab, NAME='FnuCONT ('//TRIMLR(spec_unit)//')', &
-  !                 FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
-  ! DO i=1,Nline
-  !   FnuLINE_tab(:,:,:,i) = FnuLINE_tab(:,:,:,i) + (FnuCONT(:,:,:)+FnuSTAR(:,:,:))*Pabs(:,:,:)
-  ! END DO
-  ! CALL WRITE_HDF5(DBLARR4D=FnuLINE_tab, NAME='FnuLINE ('//TRIMLR(spec_unit)//')', &
-  !                 FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
-  ! DO i=1,Nband
-  !   FnuBAND_tab(:,:,:,i) = FnuBAND_tab(:,:,:,i) + (FnuCONT(:,:,:)+FnuSTAR(:,:,:))*Pabs(:,:,:)
-  ! END DO
-  ! CALL WRITE_HDF5(DBLARR4D=FnuBAND_tab, NAME='FnuBAND ('//TRIMLR(spec_unit)//')', &
-  !                 FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
-  ! DO i=1,Nstar
-  !   FnuSTAR_tab(:,:,:,i) = FnuSTAR_tab(:,:,:,i) * Pabs(:,:,:)
-  ! END DO
-  ! CALL WRITE_HDF5(DBLARR4D=FnuSTAR_tab, NAME='FnuSTAR ('//TRIMLR(spec_unit)//')', &
-  !                 FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
-  ! CALL WRITE_HDF5(DBLARR3D=FnuMOD, NAME='FnuMOD ('//TRIMLR(spec_unit)//')', &
-  !                 FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
+  DO i=1,Npabs
+    FnuCONT_tab(:,:,:,i) = FnuCONT_tab(:,:,:,i) * Pabs(:,:,:)
+  END DO
+  CALL WRITE_HDF5(DBLARR4D=FnuCONT_tab, NAME='FnuCONT ('//TRIMLR(spec_unit)//')', &
+                  FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
+  DO i=1,Nline
+    FnuLINE_tab(:,:,:,i) = FnuLINE_tab(:,:,:,i) + (FnuCONT(:,:,:)+FnuSTAR(:,:,:))*Pabs(:,:,:)
+  END DO
+  CALL WRITE_HDF5(DBLARR4D=FnuLINE_tab, NAME='FnuLINE ('//TRIMLR(spec_unit)//')', &
+                  FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
+  DO i=1,Nband
+    FnuBAND_tab(:,:,:,i) = FnuBAND_tab(:,:,:,i) + (FnuCONT(:,:,:)+FnuSTAR(:,:,:))*Pabs(:,:,:)
+  END DO
+  CALL WRITE_HDF5(DBLARR4D=FnuBAND_tab, NAME='FnuBAND ('//TRIMLR(spec_unit)//')', &
+                  FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
+  DO i=1,Nstar
+    FnuSTAR_tab(:,:,:,i) = FnuSTAR_tab(:,:,:,i) * Pabs(:,:,:)
+  END DO
+  CALL WRITE_HDF5(DBLARR4D=FnuSTAR_tab, NAME='FnuSTAR ('//TRIMLR(spec_unit)//')', &
+                  FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
+  CALL WRITE_HDF5(DBLARR3D=FnuMOD, NAME='FnuMOD ('//TRIMLR(spec_unit)//')', &
+                  FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
   
-  ! print*, 'fitChi2 analysis [done]'//NEW_LINE('')
+  print*, 'fitChi2 analysis [done]'//NEW_LINE('')
 
-  ! print*, '=================================================='
+  print*, '=================================================='
 
   !! Final
   !!-------

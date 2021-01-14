@@ -175,13 +175,21 @@ PROGRAM test_gibbs
                    ! NCONT=Ncont, NBAND=Nband, NLINE=Nline, DOSTOP=dostop, &
                    ! PARINFO=parinfo, INDPAR=ind, NPAR=Npar)
 
-  labB = (/'Main 3.3     '/)
+  labB = (/'Main 3.3     ', &
+           'Main 6.2 (1) ', &
+           'Main 6.2 (2) ', &
+           'Plateau 7.7  ', &
+           'Main 7.7 (1) ', &
+           'Main 7.7 (2) ', &
+           'Main 8.6     ', &
+           'Small 11.0   ', &
+           'Main 11.2    '/)
   labL = (/'H2S7  '/)
 
   !! No READ_MASTER buffer
   verbose = .TRUE.
   newseed = .TRUE.
-  Nmcmc = 200 ! Length of Markov chain Monte Carlo
+  Nmcmc = 50 ! Length of Markov chain Monte Carlo
 
   IF (newseed) CALL GENERATE_NEWSEED()
 
@@ -195,6 +203,14 @@ PROGRAM test_gibbs
             4._DP, TABLine(3)%wave, degradeRes(TABLine(3)%wave,.01_DP,'SL-LL'), &
   !!        lnIband, Cband, WSband, WLband, &
             3.8_DP, TABand(1)%wave, TABand(1)%sigmaS, TABand(1)%sigmaL, &
+            1.8_DP, TABand(7)%wave, TABand(7)%sigmaS, TABand(7)%sigmaL, &
+            5.8_DP, TABand(8)%wave, TABand(8)%sigmaS, TABand(8)%sigmaL, &
+            2.8_DP, TABand(12)%wave, TABand(12)%sigmaS, TABand(12)%sigmaL, &
+            1.8_DP, TABand(13)%wave, TABand(13)%sigmaS, TABand(13)%sigmaL, &
+            6.8_DP, TABand(14)%wave, TABand(14)%sigmaS, TABand(14)%sigmaL, &
+            3.8_DP, TABand(16)%wave, TABand(16)%sigmaS, TABand(16)%sigmaL, &
+            2.8_DP, TABand(19)%wave, TABand(19)%sigmaS, TABand(19)%sigmaL, &
+            4.8_DP, TABand(20)%wave, TABand(20)%sigmaS, TABand(20)%sigmaL, &
   !!        lnAv LOG[mag], &
             0._DP, &
   !!        lnFstar LOG[Lsun/pc2]]
@@ -267,8 +283,8 @@ PROGRAM test_gibbs
   ALLOCATE(FnuOBS(NwOBS), dFnuOBS(NwOBS))
 
   FnuOBS(:) = specModel(wOBS(:), INDPAR=ind, PARVAL=pargen(:), QABS=Qabs(:), verbose=.TRUE.)
-  dFnuOBS(:) = RAND_NORM(NwOBS) * 0.2_DP*FnuOBS(:)
-  FnuOBS(:) = FnuOBS(:) + dFnuOBS(:)
+  dFnuOBS(:) = 0.2_DP*ABS(FnuOBS(:))
+  FnuOBS(:) = FnuOBS(:) + dFnuOBS(:) * RAND_NORM(NwOBS)
 
   CALL WRITE_HDF5(wOBS, FILE=filOUT, &
                   NAME="Wavelength (microns)", COMPRESS=compress, VERBOSE=debug, &
@@ -323,6 +339,14 @@ PROGRAM test_gibbs
             1._DP, TABLine(3)%wave, degradeRes(TABLine(3)%wave,.01_DP,'SL-LL'), &
   !!        lnIband, Cband, WSband, WLband, &
             .5_DP, TABand(1)%wave, TABand(1)%sigmaS, TABand(1)%sigmaL, &
+            .8_DP, TABand(7)%wave, TABand(7)%sigmaS, TABand(7)%sigmaL, &
+            .8_DP, TABand(8)%wave, TABand(8)%sigmaS, TABand(8)%sigmaL, &
+            .8_DP, TABand(12)%wave, TABand(12)%sigmaS, TABand(12)%sigmaL, &
+            .8_DP, TABand(13)%wave, TABand(13)%sigmaS, TABand(13)%sigmaL, &
+            .8_DP, TABand(14)%wave, TABand(14)%sigmaS, TABand(14)%sigmaL, &
+            .8_DP, TABand(16)%wave, TABand(16)%sigmaS, TABand(16)%sigmaL, &
+            .8_DP, TABand(19)%wave, TABand(19)%sigmaS, TABand(19)%sigmaL, &
+            .8_DP, TABand(20)%wave, TABand(20)%sigmaS, TABand(20)%sigmaL, &
   !!        lnAv LOG[mag], &
             0._DP, &
   !!        lnFstar LOG[Lsun/pc2]]

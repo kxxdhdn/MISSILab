@@ -49,6 +49,10 @@ fits_obs = path_data+'/M83s' # obs
 fits_unc = fits_obs+'_unc' # unc
 wvl_inf = 1. # min wvl
 wvl_sup = 21. # max wvl
+x_inf = 58
+x_sup = 60
+y_inf = 23
+y_sup = 25
 # spec_unit = 'MKS' # W.m-2.Hz-1.sr-1
 spec_unit = 'MJyovsr' # MJy.sr-1
 
@@ -59,10 +63,11 @@ dset = read_fits(fits_obs, fits_unc)
 ind_inf = closest(dset.wave, wvl_inf)
 ind_sup = closest(dset.wave, wvl_sup)
 wave = dset.wave[ind_inf:ind_sup]
+wave = wave / (1+z)
 
+data = dset.data[ind_inf:ind_sup,y_inf:y_sup,x_inf:x_sup]
+unc = dset.unc[ind_inf:ind_sup,y_inf:y_sup,x_inf:x_sup]
 ## convert MJy/sr to W/m2/Hz/sr (MKS)
-data = dset.data[ind_inf:ind_sup,:,:]
-unc = dset.unc[ind_inf:ind_sup,:,:]
 if spec_unit=='MKS':
     data = data * 1.e-20
     unc = unc * 1.e-20
@@ -86,7 +91,7 @@ else:
 ## Write input_fitMIR_master.h5
 ##--------------------------------
 verbose = 'T'
-Nmcmc = 100
+Nmcmc = 10
 NiniMC = 0
 calib = 'F'
 robust_RMS = 'F'
@@ -151,6 +156,17 @@ labB = ['Main 3.3     ', # 1
 ALline = False
 ALband = True
 
+if (ALline):
+    labL = []
+    for tabL in TABLine:
+        if (tabL['wave']>wave[0] and tabL['wave']<wave[-1]):
+            labL.append(tabL['label'])
+if (ALband):
+    labB = []
+    for tabB in TABand:
+        if (tabB['wave']>wave[0] and tabB['wave']<wave[-1]):
+            labB.append(tabB['label'])
+
 ## dictune, as input of the partuning function,
 ## is a list of dict containing param tuning info
 dictune = [ dict([ ('name','default'),
@@ -158,6 +174,7 @@ dictune = [ dict([ ('name','default'),
                    ('fixed','T'),
                    ('limits',(0.,0.)),
                    ('limited',('F','F')),
+                   ('model','T'),
                    ('hyper','F'),
                    ('tied',''),
                    ('value',0.) ]),
@@ -172,24 +189,28 @@ dictune = [ dict([ ('name','default'),
                    ('fixed','F'),
                    # ('limits',(-25.,0.)),
                    # ('limited',('T','F')),
+                   ('hyper','T'),
             ]),
             
             dict([ ('namall','lnIline'),
                    ('fixed','F'),
                    # ('limits',(-25.,10.)),
                    # ('limited',('T','F')),
+                   ('hyper','T'),
             ]),
             
             dict([ ('namall','lnIband'),
                    ('fixed','F'),
                    # ('limits',(-25.,10.)),
                    # ('limited',('T','F')),
+                   ('hyper','T'),
             ]),
             
             dict([ ('name','lnFstar'),
                    ('fixed','F'),
                    # ('limits',(-25.,10.)),
                    # ('limited',('T','F')),
+                   ('hyper','T'),
                    ]),
             
             ## Intensive param:
@@ -199,40 +220,42 @@ dictune = [ dict([ ('name','default'),
             dict([ ('namall','lnT'),
                    ('fixed','F'),
                    ('limited',('T','T')),
-                   ('limits',(np.log(50.),np.log(500.))),
-            ]), # LOG( (50,500) K )
-            
-
-            
-            dict([ ('namall','Cline'),
-                   ('fixed','F'),
-                   # ('limited',('T','T')),
+                   ('limits',(np.log(50.),np.log(500.))), # LOG( (50,500) K )
+                   ('hyper','T'),
             ]),
             
-            # dict([ ('namall','Wline'),
-            #        ('value',),
-            # ]),
-                
-            # dict([ ('namall','Cband'),
+            # dict([ ('namall','Cline'),
             #        ('fixed','F'),
             # ]),
 
             ## Main 6.2 (1)
-            dict([ ('name','Cband7'),('fixed','F') ]),
-            dict([ ('name','WSband7'),('fixed','F') ]),
-            dict([ ('name','WLband7'),('fixed','F') ]),
+            dict([ ('name','Cband'+str(labB.index('Main 6.2 (1)')+1)),
+                   ('fixed','F'), ('hyper','T') ]),
+            dict([ ('name','WSband'+str(labB.index('Main 6.2 (1)')+1)),
+                   ('fixed','F'), ('hyper','T') ]),
+            dict([ ('name','WLband'+str(labB.index('Main 6.2 (1)')+1)),
+                   ('fixed','F'), ('hyper','T') ]),
             ## Main 7.7 (1)
-            dict([ ('name','Cband13'),('fixed','F') ]),
-            dict([ ('name','WSband13'),('fixed','F') ]),
-            dict([ ('name','WLband13'),('fixed','F') ]),
+            dict([ ('name','Cband'+str(labB.index('Main 7.7 (1)')+1)),
+                   ('fixed','F'), ('hyper','T') ]),
+            dict([ ('name','WSband'+str(labB.index('Main 7.7 (1)')+1)),
+                   ('fixed','F'), ('hyper','T') ]),
+            dict([ ('name','WLband'+str(labB.index('Main 7.7 (1)')+1)),
+                   ('fixed','F'), ('hyper','T') ]),
             ## Main 8.6
-            dict([ ('name','Cband1§'),('fixed','F') ]),
-            dict([ ('name','WSband16'),('fixed','F') ]),
-            dict([ ('name','WLband16'),('fixed','F') ]),
+            dict([ ('name','Cband'+str(labB.index('Main 8.6')+1)),
+                   ('fixed','F'), ('hyper','T') ]),
+            dict([ ('name','WSband'+str(labB.index('Main 8.6')+1)),
+                   ('fixed','F'), ('hyper','T') ]),
+            dict([ ('name','WLband'+str(labB.index('Main 8.6')+1)),
+                   ('fixed','F'), ('hyper','T') ]),
             ## Main 11.2
-            dict([ ('name','Cband20'),('fixed','F') ]),
-            dict([ ('name','WSband20'),('fixed','F') ]),
-            dict([ ('name','WLband20'),('fixed','F') ]),
+            dict([ ('name','Cband'+str(labB.index('Main 11.2')+1)),
+                   ('fixed','F'), ('hyper','T') ]),
+            dict([ ('name','WSband'+str(labB.index('Main 11.2')+1)),
+                   ('fixed','F'), ('hyper','T') ]),
+            dict([ ('name','WLband'+str(labB.index('Main 11.2')+1)),
+                   ('fixed','F'), ('hyper','T') ]),
 
             # dict([ ('namall','lnAv'),
             #        ('value',0.),
@@ -240,22 +263,13 @@ dictune = [ dict([ ('name','default'),
             
             dict() ]
 
-
 ## parinfo
 ##---------
 Ncont = len(labQ)
-if (ALline):
-    labL = []
-    for tabL in TABLine:
-        if (tabL['wave']>wave[0] and tabL['wave']<wave[-1]):
-            labL.append(tabL['label'])
 Nline = len(labL)
-if (ALband):
-    labB = []
-    for tabB in TABand:
-        if (tabB['wave']>wave[0] and tabB['wave']<wave[-1]):
-            labB.append(tabB['label'])
 Nband = len(labB)
+Npabs = 1
+Nstar = 1
 Npar = 2*Ncont + 3*Nline + 4*Nband + 2
 
 ## Set indL (index for labL)
@@ -278,6 +292,7 @@ comp = np.empty((Npar,), dtype=('<U30'))
 fixed = np.array(['T' for i in range(Npar)]) # fixed by default
 limited = np.array([('F','F') for i in range(Npar)])
 limits = np.array([(0.,0.) for i in range(Npar)])
+model = np.array(['T' for i in range(Npar)])
 hyper = np.array(['F' for i in range(Npar)])
 tied = np.empty((Npar,), dtype=('<U30'))
 value = np.array([0. for i in range(Npar)])
@@ -332,19 +347,21 @@ for i in range(Nband):
 for i in range(4*Nband):
     comp[i0+i] = 'BAND'
 i0 += 4*Nband
-name[i0] = 'lnAv'
-namall[i0] = 'lnAv'
-value[i0] = 0. # 1 [mag] ?
-comp[i0] = 'PABS'
-i0 += 1
-name[i0] = 'lnFstar'
-namall[i0] = 'lnFstar'
-value[i0] = -7. # 9.12e-4 [Lsun/pc2]
-comp[i0] = 'STAR'
+for i in range(Npabs):
+    name[i0+i] = 'lnAv'+str(i+1)
+    namall[i0+i] = 'lnAv'
+    value[i0+i] = 0. # 1 [mag] ?
+    comp[i0+i] = 'PABS'
+i0 += Npabs
+for i in range(Nstar):
+    name[i0+i] = 'lnFstar'+str(i+1)
+    namall[i0+i] = 'lnFstar'
+    value[i0+i] = -7. # 9.12e-4 [Lsun/pc2]
+    comp[i0+i] = 'STAR'
 
 ## Param tuning
 partuning(dictune, Ncont, Nline, Nband,
-          name, fixed, limited, limits, hyper, tied, value)
+          name, fixed, limited, limits, model, hyper, tied, value)
 
 ## Write HDF5
 ##------------
@@ -356,6 +373,7 @@ write_hdf5(h5_model, 'parinfo comp', comp, append=True, verbose=noisy)
 write_hdf5(h5_model, 'parinfo fixed', fixed, append=True, verbose=noisy)
 write_hdf5(h5_model, 'parinfo limited', limited, append=True, verbose=noisy)
 write_hdf5(h5_model, 'parinfo limits', limits, append=True, verbose=noisy)
+write_hdf5(h5_model, 'parinfo model', model, append=True, verbose=noisy)
 write_hdf5(h5_model, 'parinfo hyper', hyper, append=True, verbose=noisy)
 write_hdf5(h5_model, 'parinfo tied', tied, append=True, verbose=noisy)
 write_hdf5(h5_model, 'parinfo value', value, append=True, verbose=noisy)

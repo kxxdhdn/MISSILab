@@ -183,7 +183,7 @@ TABand = [ dict([ ('label','Main 3.3'),('wave',3.3),
                   ('sigmaS',0.034553879),('sigmaL',0.11570587) ]) ] # LL2 (6)
 
 def partuning(dictune, Ncont, Nline, Nband,
-              name, fixed, limited, limits, hyper, tied, value):
+              name, fixed, limited, limits, model, hyper, tied, value):
     '''
     ------ INPUT ------
     dictune             dict of param tuning info
@@ -202,6 +202,7 @@ def partuning(dictune, Ncont, Nline, Nband,
     fixed               parinfo fixed
     limited             parinfo limited
     limits              parinfo limits
+    model               parinfo model
     hyper               parinfo hyper
     tied                parinfo tied
     value               parinfo value
@@ -258,6 +259,8 @@ def partuning(dictune, Ncont, Nline, Nband,
                 limited[i] = tune['limited']
             if 'limits' in tune:
                 limits[i] = tune['limits']
+            if 'model' in tune:
+                model[i] = tune['model']
             if 'hyper' in tune:
                 hyper[i] = tune['hyper']
             if 'tied' in tune:

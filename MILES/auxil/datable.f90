@@ -6,6 +6,7 @@ MODULE datable
 
   INTEGER, PARAMETER, PUBLIC :: Ncont_max = 31, Nline_max = 46, Nband_max = 33
   INTEGER, PARAMETER, PUBLIC :: Npabs_max = 1,  Nstar_max = 1
+  REAL(DP), PARAMETER, PUBLIC :: Cband_sig = 0.1_DP ! [micron]
   
   !!-------------------------
   !! Instrumental resolution

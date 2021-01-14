@@ -1,4 +1,4 @@
-PROGRAM test_fitChi2
+PROGRAM test_anaChi2
 
   USE auxil, ONLY: parinfo_type, indpar_type, Qabs_type, read_master, specModel
   USE utilities, ONLY: DP, pring, trimLR, trimeq, timinfo, &
@@ -58,14 +58,12 @@ PROGRAM test_fitChi2
 
   !! Calculate model
   !!-----------------
-  ALLOCATE(FnuMOD(Nx,Ny,NwOBS))
-
-  FnuMOD(:,:,:) = specModel( wOBS(:), INDPAR=ind, PARVAL=par(:,:,:), QABS=Qabs(:), &
-                             FNUCONT=FnuCONT, FNUBAND=FnuBAND, FNUSTAR=FnuSTAR, &
-                             PABS=Pabs, FNULINE=FnuLINE, &
-                             FNUCONT_TAB=FnuCONT_tab, FNUBAND_TAB=FnuBAND_tab, &
-                             FNUSTAR_TAB=FnuSTAR_tab, PABS_TAB=Pabs_tab, &
-                             FNULINE_TAB=FnuLINE_tab )
+  FnuMOD = specModel( wOBS(:), INDPAR=ind, PARVAL=par(:,:,:), QABS=Qabs(:), &
+                      FNUCONT=FnuCONT, FNUBAND=FnuBAND, FNUSTAR=FnuSTAR, &
+                      PABS=Pabs, FNULINE=FnuLINE, &
+                      FNUCONT_TAB=FnuCONT_tab, FNUBAND_TAB=FnuBAND_tab, &
+                      FNUSTAR_TAB=FnuSTAR_tab, PABS_TAB=Pabs_tab, &
+                      FNULINE_TAB=FnuLINE_tab )
 
   DO i=1,Npabs
     FnuCONT_tab(:,:,:,i) = FnuCONT_tab(:,:,:,i) * Pabs(:,:,:)
@@ -96,6 +94,8 @@ PROGRAM test_fitChi2
 
 
   !! Free memory space
-  DEALLOCATE(wOBS, FnuOBS, dFnuOBS, FnuMOD)
+  DEALLOCATE(par, wOBS, FnuOBS, dFnuOBS, FnuMOD, &
+             FnuCONT, FnuBAND, FnuSTAR, Pabs, FnuLINE, &
+             FnuCONT_tab, FnuBAND_tab, FnuSTAR_tab, Pabs_tab, FnuLINE_tab)
 
-END PROGRAM test_fitChi2
+END PROGRAM test_anaChi2

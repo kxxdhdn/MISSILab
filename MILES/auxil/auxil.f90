@@ -1,6 +1,6 @@
 MODULE auxil
 
-  USE datable, ONLY: Ncont_max, Nline_max, Nband_max, Npabs_max, Nstar_max
+  USE datable, ONLY: Ncont_max, Nline_max, Nband_max, Npabs_max, Nstar_max, Cband_sig
   USE utilities, ONLY: DP, STRIKE, WARNING
   USE constants, ONLY: 
   USE inout, ONLY: lenpar
@@ -48,13 +48,13 @@ MODULE auxil
   TYPE, PUBLIC :: parinfo_type
     CHARACTER(lenpar) :: name = ''
     CHARACTER(lenpar) :: comp = ''
+    CHARACTER(lenpar) :: tied = ''
+    LOGICAL :: model = .TRUE.
+    LOGICAL :: hyper = .FALSE.
     LOGICAL :: fixed = .TRUE.
     LOGICAL, DIMENSION(2) :: limited = [.FALSE., .FALSE.]
     REAL(DP), DIMENSION(2) :: limits = [0._DP, 0._DP]
-    LOGICAL :: hyper = .FALSE.
-    CHARACTER(lenpar) :: tied = ''
     REAL(DP) :: value = 0._DP
-    LOGICAL :: model = .TRUE.
     REAL(DP) :: mean = 0._DP
     REAL(DP) :: sigma = 0._DP
     INTEGER :: ind = -1
@@ -174,15 +174,16 @@ CONTAINS
                           calib, newseed, newinit, &
                           labQ, labL, labB, Qabs, &
                           Ncont, Nband, Nline, Npabs, Nstar, Nextra, dostop, &
-                          parinfo, parhypinfo, parextinfo, &
-                          indpar, Npar, &!Nparmod, Nparhyp, Ncorrhyp, Ncorr, &
-                          spec_unit)
+                          parinfo, parmodinfo, parhypinfo, parextinfo, &
+                          indpar, Npar, Nparmod, Nparhyp, Ncorrhyp, Ncorr, &
+                          corrhypname, corrname, spec_unit)
 
     USE utilities, ONLY: DP, strike, trimeq, trimlr, pring!, verbatim
     USE inout, ONLY: lenpar, lenline, read_input_line, read_hdf5, h5ext
     USE constants, ONLY: pi, MKS
     USE arrays, ONLY: incrarr, iwhere, reallocate, closest
     USE interpolation, ONLY: interp_lin_sorted
+    USE statistics, ONLY: correl_parlist, N_corr
     USE grain_optics, ONLY: lendustQ, rho_grain, read_optics
     IMPLICIT NONE
 
@@ -198,12 +199,13 @@ CONTAINS
     CHARACTER(lendustQ), DIMENSION(:), ALLOCATABLE :: labQ0, labL0, labB0
     ! INTEGER :: Nmcmc0, NiniMC0
     INTEGER :: Ncont0, Nband0, Nline0, Npabs0, Nstar0, Nextra0, Npar0
-    ! INTEGER :: Nparall, Nparmod0, Nparhyp0,  Ncorrhyp0, Ncorr0
+    INTEGER :: Nparmod0, Nparhyp0, Ncorrhyp0, Ncorr0, Nparall
     ! INTEGER :: i, iostat, ipar
-    TYPE(parinfo_type), DIMENSION(:), ALLOCATABLE :: parinfo0
-    ! TYPE(parinfo_type), DIMENSION(:), ALLOCATABLE :: parinfoextra, parinfall
+    TYPE(parinfo_type), DIMENSION(:), ALLOCATABLE :: parinfall, parinfo0
+    ! TYPE(parinfo_type), DIMENSION(:), ALLOCATABLE :: parinfoextra
     ! LOGICAL :: verbose0!, robust_RMS0, robust_cal0, skew_RMS0
     ! LOGICAL :: calib0, newseed0, newinit0, dostop0
+    LOGICAL, DIMENSION(:), ALLOCATABLE :: boolparmod, boolpar
 
     CHARACTER(lenpar), DIMENSION(:), ALLOCATABLE   :: strarr1d, Tarr1d
     CHARACTER(lenpar), DIMENSION(:,:), ALLOCATABLE :: strarr2d
@@ -218,11 +220,13 @@ CONTAINS
     REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: Qabsall ! (Ncont, Nr, Nw)
     
     CHARACTER(lendustQ), DIMENSION(:), ALLOCATABLE, INTENT(OUT), OPTIONAL ::labQ, labB, labL
+    CHARACTER(lenpar), DIMENSION(:), ALLOCATABLE, INTENT(OUT), OPTIONAL :: &
+      corrhypname, corrname
     INTEGER, INTENT(OUT), OPTIONAL :: Nmcmc, NiniMC, Ncont, Nband, Nline, Npabs, Nstar, Nextra
-    INTEGER, INTENT(OUT), OPTIONAL :: Npar!, Nparmod, Nparhyp, Ncorrhyp, Ncorr
+    INTEGER, INTENT(OUT), OPTIONAL :: Npar, Nparmod, Nparhyp, Ncorrhyp, Ncorr
     TYPE(Qabs_type), DIMENSION(:), ALLOCATABLE, INTENT(OUT), OPTIONAL :: Qabs
     TYPE(parinfo_type), DIMENSION(:), ALLOCATABLE, INTENT(OUT), OPTIONAL :: &
-      parinfo, parhypinfo, parextinfo!, parmodinfo
+      parinfo, parmodinfo, parhypinfo, parextinfo
     TYPE(indpar_type), INTENT(OUT), OPTIONAL :: indpar
     LOGICAL, INTENT(OUT), OPTIONAL :: verbose!, robust_RMS, robust_cal, skew_RMS
     LOGICAL, INTENT(OUT), OPTIONAL :: calib, newseed, newinit, dostop
@@ -354,18 +358,18 @@ CONTAINS
       DEALLOCATE(wave0, radius, Qabsall)
       
     END IF
-    
+
     !! Extra parameters
     !!------------------
     Nextra0 = 0
 
     !! input_fitMIR_extra
-    IF (PRESENT(Nextra)) THEN
-      CALL READ_HDF5(INTARR1D=intarr1d, FILE=filext, NAME='Nextra')
-      Nextra0 = intarr1d(1)
-      Nextra = Nextra0
-    END IF
-    
+    ! IF (PRESENT(Nextra)) THEN
+    !   CALL READ_HDF5(INTARR1D=intarr1d, FILE=filext, NAME='Nextra')
+    !   Nextra0 = intarr1d(1)
+    !   Nextra = Nextra0
+    ! END IF
+
     ! setEXTRA: IF (Nextra0 > 0) THEN
     !   ALLOCATE (parinfoextra(Nextra0))
     !   CALL READ_PARTUNING('extra',parinfoextra)
@@ -380,41 +384,123 @@ CONTAINS
 
     !! Rearrange the data (parinfo)
     !!------------------------------
-    Npar0 = 2*Ncont0 + 4*Nband0 + 3*Nline0 + Npabs0 + Nstar0 + Nextra0
-    IF (PRESENT(Npar)) Npar = Npar0
-    
-    !! General parameter structure
-    ALLOCATE(parinfo0(Npar0), Tarr1d(Npar0))
+    Nparall = 2*Ncont0 + 4*Nband0 + 3*Nline0 + Npabs0 + Nstar0 + Nextra0
+
+    ALLOCATE(parinfall(Nparall), boolpar(Nparall), boolparmod(Nparall))
+
+    ALLOCATE(Tarr1d(Nparall))
     Tarr1d(:) = 'T'
-    parinfo0(:)%ind = [(i,i=1,Npar0)]
-    
+
+    !! Read input model parameters
     CALL READ_HDF5(STRARR1D=strarr1d, FILE=filmod, NAME='parinfo name')
-    parinfo0(:)%name = strarr1d(:)
+    parinfall(1:Nparall-Nextra0)%name = strarr1d(:)
     CALL READ_HDF5(STRARR1D=strarr1d, FILE=filmod, NAME='parinfo comp')
-    parinfo0(:)%comp = strarr1d(:)
+    parinfall(1:Nparall-Nextra0)%comp = strarr1d(:)
     CALL READ_HDF5(STRARR1D=strarr1d, FILE=filmod, NAME='parinfo fixed')
-    parinfo0(:)%fixed = TRIMEQ(strarr1d(:),Tarr1d(:))
+    parinfall(1:Nparall-Nextra0)%fixed = TRIMEQ(strarr1d(:),Tarr1d(:))
     CALL READ_HDF5(STRARR2D=strarr2d, FILE=filmod, NAME='parinfo limited')
     CALL READ_HDF5(DBLARR2D=dblarr2d, FILE=filmod, NAME='parinfo limits')
     DO i=1,2
-      parinfo0(:)%limited(i) = TRIMEQ(strarr2d(i,:),Tarr1d(:))
-      parinfo0(:)%limits(i) = dblarr2d(i,:)
+      parinfall(1:Nparall-Nextra0)%limited(i) = TRIMEQ(strarr2d(i,:),Tarr1d(:))
+      parinfall(1:Nparall-Nextra0)%limits(i) = dblarr2d(i,:)
     END DO
+    CALL READ_HDF5(STRARR1D=strarr1d, FILE=filmod, NAME='parinfo model')
+    parinfall(1:Nparall-Nextra0)%model = TRIMEQ(strarr1d(:),Tarr1d(:))
     CALL READ_HDF5(STRARR1D=strarr1d, FILE=filmod, NAME='parinfo hyper')
-    parinfo0(:)%hyper = TRIMEQ(strarr1d(:),Tarr1d(:))
+    parinfall(1:Nparall-Nextra0)%hyper = TRIMEQ(strarr1d(:),Tarr1d(:))
     CALL READ_HDF5(STRARR1D=strarr1d, FILE=filmod, NAME='parinfo tied')
-    parinfo0(:)%tied = strarr1d(:)
+    parinfall(1:Nparall-Nextra0)%tied = strarr1d(:)
     CALL READ_HDF5(DBLARR1D=dblarr1d, FILE=filmod, NAME='parinfo value')
-    parinfo0(:)%value = dblarr1d(:)
+    parinfall(1:Nparall-Nextra0)%value = dblarr1d(:)
+
+    !! Read input extra parameters
+    ! CALL READ_HDF5(STRARR1D=strarr1d, FILE=filext, NAME='parextinfo name')
+    ! parinfall(Nparall-Nextra0+1:)%name = strarr1d(:)
+
+    boolparmod(:) = .FALSE.
+    boolpar(:) = .TRUE.
+    boolparmod(:) = parinfall(1:Nparall-Nextra0)%model
+    boolpar(:) = parinfall(1:Nparall-Nextra0)%hyper
+
+    !! Number of parameters for the modelling
+    Nparmod0 = COUNT(boolparmod(:))
+    IF (PRESENT(Nparmod)) Nparmod = Nparmod0
     
-    IF (PRESENT(parinfo)) parinfo = parinfo0(:)
+    !! Number of parameters for the modelling,
+    !! including the fixed ones, plus the parameters to be correlated
+    Npar0 = Nparmod0 + Nextra0
+    IF (PRESENT(Npar)) Npar = Npar0
+    !! Nparall is the number of param calculated by the full model
+    !! Technically any certain param can be deactivated by parinfo%model=.FALSE.
+    !! This happens when there are tied param
+    !! Otherwise Npar0=Nparall (thus Nparall-Nextra0=Nparmod0) is valid
+
+    !! General parameter structure
+    ALLOCATE (parinfo0(Npar0))
+    parinfo0(:) = PACK(parinfall(:), boolpar(:) .OR. boolparmod(:))
+    parinfo0(:)%ind = [(i,i=1,Npar0)]
+    IF (PRESENT(parinfo)) THEN
+      ALLOCATE (parinfo(Npar0)) 
+      parinfo(:) = parinfo0(:)
+    END IF
+
+    !! No correlation for tied parameters
+    boolpar(1:Nparmod0) = ( boolpar(1:Nparmod0) &
+                            .AND. TRIMEQ(parinfall(1:Nparmod0)%tied, "") )
+    WHERE (.NOT. TRIMEQ(parinfall(:)%tied, ""))
+      parinfall(:)%hyper = .FALSE.
+    END WHERE
+
+    !! Number of parameters to be correlated (hyperstructure)
+    Nparhyp0 = COUNT(boolpar(:))
+    IF (Nparhyp0 == 0) &
+      Nparhyp0 = COUNT(.NOT. parinfall(:)%fixed .AND. boolparmod(:))
+    IF (PRESENT(Nparhyp)) Nparhyp = Nparhyp0
+
+    !! Number of non-trivial correlations (C(N,2))
+    Ncorrhyp0 = N_CORR(Nparhyp0)
+    IF (PRESENT(Ncorrhyp)) Ncorrhyp = Ncorrhyp0
+    Ncorr0 = N_CORR(Npar0)
+    IF (PRESENT(Ncorr)) Ncorr = Ncorr0
+
+    !! Parameter structures
+    IF (PRESENT(parhypinfo)) THEN
+      ALLOCATE (parhypinfo(Nparhyp0)) 
+      IF (COUNT(boolpar(:)) > 0) THEN
+        parhypinfo(:) = PACK(parinfall(:), boolpar(:))
+      ELSE
+        parhypinfo(:) = PACK(parinfall(:), &
+                             .NOT. parinfall(:)%fixed .AND. boolparmod(:))
+      END IF
+    END IF
+    IF (PRESENT(parmodinfo)) THEN
+      ALLOCATE (parmodinfo(Nparmod0)) 
+      parmodinfo(:) = PACK(parinfall(:), boolparmod(:))
+    END IF
+
+    !! Correlation names
+    ! IF (PRESENT(corrhypname)) THEN
+    !   ALLOCATE (parhypname(Nparhyp0))
+    !   IF (COUNT(boolpar(:)) > 0) THEN
+    !     parhypname(:) = PACK(parinfall(:)%name,boolpar(:))
+    !     CALL CORREL_PARLIST(parhypname(:),corrhypname)
+    !   ELSE
+    !     parhypname(:) = PACK(parinfall(:)%name, &
+    !                          .NOT. parinfall(:)%fixed .AND. boolparmod(:))
+    !     CALL CORREL_PARLIST(parhypname(:),corrhypname)
+    !   END IF
+    !   DEALLOCATE (parhypname)
+    ! END IF
+
+    !! Correlation names for all parameters
+    ! IF (PRESENT(corrname)) CALL CORREL_PARLIST(parinfall(:)%name,corrname)
     
     !! Indices
     IF (PRESENT(indpar)) CALL SET_INDPAR(indpar, parinfo0(:))
-      
+
     !! Free memory space
     !!-------------------
-    DEALLOCATE (labQ0, labL0, labB0)
+    DEALLOCATE (labQ0, labL0, labB0, boolpar, boolparmod, parinfo0, parinfall)
     
   END SUBROUTINE read_master
 
@@ -438,7 +524,7 @@ CONTAINS
     INTEGER, INTENT(IN) :: NiniMC
     TYPE(indpar_type), INTENT(IN) :: ind
     REAL(DP), DIMENSION(:,:,:,:), INTENT(INOUT) :: par ! (Nx,Ny,Npar,NiniMC)
-    TYPE(parinfo_type), DIMENSION(:), INTENT(IN) :: parinfo
+    TYPE(parinfo_type), DIMENSION(:), INTENT(INOUT) :: parinfo
     INTEGER, DIMENSION(:), INTENT(IN) :: itied
     LOGICAL, DIMENSION(:,:,:), INTENT(IN) :: mask
     LOGICAL, INTENT(IN), OPTIONAL :: newinit
@@ -510,6 +596,18 @@ CONTAINS
             par(:,:,ind%Cline(i),:) = parinfo(ind%Cline(i))%value
           ELSE
             par(:,:,ind%Cline(i),:) = TABLine(itab)%wave
+            !! If Cline is not fixed, limits are indispensable
+            !! FWHM = 2*sqrt(2*log(2))*sigma ~ 2.355 (suppose PSF is gaussian)
+            !! R = lambda / FWHM
+            !! => sigma = lambda / R / 2.355
+            val = TABLine(itab)%wave
+            sig = val / degradeRes(val, 0.01_DP, 'SL-LL') / 2.355_DP
+            IF (.NOT. parinfo(ind%Cline(i))%limited(1)) &
+              parinfo(ind%Cline(i))%limits(1) = val-sig
+              parinfo(ind%Cline(i))%limited(1) = .TRUE.
+            IF (.NOT. parinfo(ind%Cline(i))%limited(2)) &
+              parinfo(ind%Cline(i))%limits(2) = val+sig
+              parinfo(ind%Cline(i))%limited(2) = .TRUE.
           END IF
           
           !! Wline
@@ -517,6 +615,13 @@ CONTAINS
             par(:,:,ind%Wline(i),:) = parinfo(ind%Wline(i))%value
           ELSE
             par(:,:,ind%Wline(i),:) = degradeRes(TABLine(itab)%wave, .01_DP, 'SL-LL')
+            val = degradeRes(TABLine(itab)%wave, .01_DP, 'SL-LL')
+            IF (.NOT. parinfo(ind%Wline(i))%limited(1)) &
+              parinfo(ind%Wline(i))%limits(1) = val*0.5_DP
+              parinfo(ind%Wline(i))%limited(1) = .TRUE.
+            IF (.NOT. parinfo(ind%Wline(i))%limited(2)) &
+              parinfo(ind%Wline(i))%limits(2) = val*2._DP
+              parinfo(ind%Wline(i))%limited(2) = .TRUE.
           END IF
           
           !! lnIline
@@ -554,6 +659,15 @@ CONTAINS
             par(:,:,ind%Cband(i),:) = parinfo(ind%Cband(i))%value
           ELSE
             par(:,:,ind%Cband(i),:) = TABand(itab)%wave
+            !! If Cband is not fixed, limits are indispensable
+            val = TABand(itab)%wave
+            sig = Cband_sig
+            IF (.NOT. parinfo(ind%Cband(i))%limited(1)) &
+              parinfo(ind%Cband(i))%limits(1) = val-sig
+              parinfo(ind%Cband(i))%limited(1) = .TRUE.
+            IF (.NOT. parinfo(ind%Cband(i))%limited(2)) &
+              parinfo(ind%Cband(i))%limits(2) = val+sig
+              parinfo(ind%Cband(i))%limited(2) = .TRUE.
           END IF
           
           !! WSband
@@ -561,6 +675,13 @@ CONTAINS
             par(:,:,ind%WSband(i),:) = parinfo(ind%WSband(i))%value
           ELSE
             par(:,:,ind%WSband(i),:) = TABand(itab)%sigmaS
+            val = TABand(itab)%sigmaS
+            IF (.NOT. parinfo(ind%WSband(i))%limited(1)) &
+              parinfo(ind%WSband(i))%limits(1) = val*0.5_DP
+              parinfo(ind%WSband(i))%limited(1) = .TRUE.
+            IF (.NOT. parinfo(ind%WSband(i))%limited(2)) &
+              parinfo(ind%WSband(i))%limits(2) = val*2._DP
+              parinfo(ind%WSband(i))%limited(2) = .TRUE.
           END IF
    
           !! WLband
@@ -568,6 +689,13 @@ CONTAINS
             par(:,:,ind%WLband(i),:) = parinfo(ind%WLband(i))%value
           ELSE
             par(:,:,ind%WLband(i),:) = TABand(itab)%sigmaL
+            val = TABand(itab)%sigmaL
+            IF (.NOT. parinfo(ind%WLband(i))%limited(1)) &
+              parinfo(ind%WLband(i))%limits(1) = val*0.5_DP
+              parinfo(ind%WLband(i))%limited(1) = .TRUE.
+            IF (.NOT. parinfo(ind%WLband(i))%limited(2)) &
+              parinfo(ind%WLband(i))%limits(2) = val*2._DP
+              parinfo(ind%WLband(i))%limited(2) = .TRUE.
           END IF
           
           !! lnIband
@@ -666,8 +794,8 @@ CONTAINS
         
       ELSE
 
-        !! b. MC initilization
-        !!---------------------
+        !! b. MC initialization
+        !!----------------------
 
         DO i=1,Nline
           CALL IWHERE( TRIMEQ(TABLine(:)%label, labL(i)), itab ) ! itab = ind of TABLine
@@ -676,7 +804,7 @@ CONTAINS
           IF (parinfo(ind%Cline(i))%fixed) THEN
             par(:,:,ind%Cline(i),:) = parinfo(ind%Cline(i))%value
           ELSE
-            !! FWHM = 2*sqrt(2*log(2))*sigma ~ 2.355 (suppose PSF is gaussian, idem. for band)
+            !! FWHM = 2*sqrt(2*log(2))*sigma ~ 2.355 (suppose PSF is gaussian)
             !! R = lambda / FWHM
             !! => sigma = lambda / R / 2.355
             val = TABLine(itab)%wave
@@ -698,10 +826,10 @@ CONTAINS
           ELSE
             val = degradeRes(TABLine(itab)%wave, .01_DP, 'SL-LL')
             limi = MERGE( parinfo(ind%Wline(i))%limits(1), &
-                          val*0.9_DP, &
+                          val*0.5_DP, &
                           parinfo(ind%Wline(i))%limited(1)) ! lim inf
             lims = MERGE( parinfo(ind%Wline(i))%limits(2), &
-                          val*1.1_DP, &
+                          val*2._DP, &
                           parinfo(ind%Wline(i))%limited(2)) ! lim sup
             CALL RANDOM_NUMBER(theta3(:,:,:))
             !! Uniform distribution
@@ -719,7 +847,7 @@ CONTAINS
                 !! Estimated via feature peak
                 val2(x,y) = LOG( ABS(FnuOBS(x,y,iw2(x,y))) )
                 limi2(x,y) = MERGE( parinfo(ind%lnIline(i))%limits(1), &
-                                    0._DP, &
+                                    val2(x,y)-10._DP, & !! EXP(factor - 10)
                                     parinfo(ind%lnIline(i))%limited(1)) ! lim inf
                 lims2(x,y) = MERGE( parinfo(ind%lnIline(i))%limits(2), &
                                     val2(x,y), &
@@ -750,7 +878,8 @@ CONTAINS
             par(:,:,ind%Cband(i),:) = parinfo(ind%Cband(i))%value
           ELSE
             val = TABand(itab)%wave
-            sig = val / degradeRes(val, 0.01_DP, 'SL-LL') / 2.355_DP
+            ! sig = val / degradeRes(val, 0.01_DP, 'SL-LL') / 2.355_DP
+            sig = Cband_sig
             limi = MERGE( parinfo(ind%Cband(i))%limits(1), &
                           val-sig, &
                           parinfo(ind%Cband(i))%limited(1) ) ! lim inf
@@ -768,10 +897,10 @@ CONTAINS
           ELSE
             val = TABand(itab)%sigmaS
             limi = MERGE( parinfo(ind%WSband(i))%limits(1), &
-                          val*0.9_DP, &
+                          val*0.5_DP, &
                           parinfo(ind%WSband(i))%limited(1) ) ! lim inf
             lims = MERGE( parinfo(ind%WSband(i))%limits(2), &
-                          val*1.1_DP, &
+                          val*2._DP, &
                           parinfo(ind%WSband(i))%limited(2) ) ! lim sup
             CALL RANDOM_NUMBER(theta3(:,:,:))
             !! Uniform distribution
@@ -784,10 +913,10 @@ CONTAINS
           ELSE
             val = TABand(itab)%sigmaL
             limi = MERGE( parinfo(ind%WLband(i))%limits(1), &
-                          val*0.9_DP, &
+                          val*0.5_DP, &
                           parinfo(ind%WLband(i))%limited(1) ) ! lim inf
             lims = MERGE( parinfo(ind%WLband(i))%limits(2), &
-                          val*1.1_DP, &
+                          val*2._DP, &
                           parinfo(ind%WLband(i))%limited(2) ) ! lim sup
             CALL RANDOM_NUMBER(theta3(:,:,:))
             !! Uniform distribution
@@ -805,7 +934,7 @@ CONTAINS
                 !! Estimated via feature peak
                 val2(x,y) = LOG( ABS(FnuOBS(x,y,iw2(x,y))) )
                 limi2(x,y) = MERGE( parinfo(ind%lnIband(i))%limits(1), &
-                                    0._DP, &
+                                    val2(x,y)-10._DP, & !! EXP(factor - 10)
                                     parinfo(ind%lnIband(i))%limited(1) ) ! lim inf
                 lims2(x,y) = MERGE( parinfo(ind%lnIband(i))%limits(2), &
                                     val2(x,y), &
@@ -894,7 +1023,6 @@ CONTAINS
         END DO
         
         DO i=1,Npabs
-          print*, "coucou1", ind%lnAv(1)
           !! lnAv LOG[mag]
           IF (parinfo(ind%lnAv(i))%fixed) THEN
             par(:,:,ind%lnAv(i),:) = parinfo(ind%lnAv(i))%value
@@ -1801,7 +1929,8 @@ CONTAINS
   
   !! Generic intertface
   !!====================
-  FUNCTION specModel_gen( wvl, parvec, parname, parinfo, indpar, parval, Qabs, verbose )
+  FUNCTION specModel_gen( wvl, parvec, parname, parinfo, indpar, parval, Qabs, &
+                          verbose, debug )
 
     USE utilities, ONLY: DP, trimeq, trimlr, pring, &!verbatim, &
                          initiate_clock, time_type, timinfo, ustd
@@ -1817,7 +1946,7 @@ CONTAINS
     TYPE(indpar_type), INTENT(IN)                :: indpar
     REAL(DP), DIMENSION(:), INTENT(IN)           :: parval ! 1D
     TYPE(Qabs_type), DIMENSION(:), INTENT(IN)    :: Qabs
-    LOGICAL, INTENT(IN), OPTIONAL                :: verbose
+    LOGICAL, INTENT(IN), OPTIONAL                :: verbose, debug
     
     INTEGER :: Nw, Ngrid, Ncont, Nline, Nband, Npabs, Nstar
     INTEGER :: i, igrid, iw, j!, itied
@@ -1829,15 +1958,9 @@ CONTAINS
     REAL(DP), DIMENSION(SIZE(parvec),SIZE(wvl)) :: Pabs0, FnuLINE0
     REAL(DP) :: Const
     REAL(DP), DIMENSION(SIZE(wvl)) :: Const1D
-    ! REAL(DP), DIMENSION(SIZE(parvec),SIZE(wvl)) :: Const2D
-    ! REAL(DP), DIMENSION(:), ALLOCATABLE, INTENT(OUT), OPTIONAL   :: Pabs
-    ! REAL(DP), DIMENSION(:,:), ALLOCATABLE, INTENT(OUT), OPTIONAL :: FnuCONT
-    ! REAL(DP), DIMENSION(:,:), ALLOCATABLE, INTENT(OUT), OPTIONAL :: FnuBAND
-    ! REAL(DP), DIMENSION(:), ALLOCATABLE, INTENT(OUT), OPTIONAL   :: FnuSTAR
-    ! REAL(DP), DIMENSION(:,:), ALLOCATABLE, INTENT(OUT), OPTIONAL :: FnuLINE
     REAL(DP), DIMENSION(SIZE(parvec),SIZE(wvl)) :: specModel_gen
     
-    LOGICAL :: printimer
+    LOGICAL :: printimer, bls
     INTEGER, PARAMETER :: ulog = 2
     INTEGER, DIMENSION(2) :: unitlog
     TYPE(time_type) :: timestr
@@ -1859,9 +1982,13 @@ CONTAINS
     nu(:) = MKS%clight / wvl(:) /MKS%micron
     extinction(:) = extCurve(wvl(:))
     
-    !! Print timer
-    printimer = .FALSE.
+    !! Verbose
+    printimer = .FALSE. ! Print timer
     IF (PRESENT(verbose)) printimer = verbose
+
+    !! Debug
+    bls = .FALSE.
+    IF (PRESENT(debug)) bls = debug
     
     !! Is the parameter tied to another one?
     ! tied = ANY(TRIMEQ(parinfo(:)%tied, parname))
@@ -1979,6 +2106,35 @@ CONTAINS
                              Pabs0(:,:) + FnuLINE0(:,:)
 
       END IF
+
+      !! BLS (Bug Localization System)
+      IF (bls) THEN
+        IF (ANY(isNaN(specModel_gen))) THEN
+          IF (gridlnMovd2) THEN
+            PRINT*, "lnMovd2"//TRIMLR(PRING(i))
+          ELSE IF (gridlnT) THEN
+            PRINT*, "lnT"//TRIMLR(PRING(i))
+          END IF
+          
+          IF (ANY(isNaN(FnuCONT0))) THEN
+            PRINT*, 'FnuCONT0'
+          END IF
+          IF (ANY(isNaN(FnuBAND0))) THEN
+            PRINT*, 'FnuBAND0'
+          END IF
+          IF (ANY(isNaN(FnuSTAR0))) THEN
+            PRINT*, 'FnuSTAR0'
+          END IF
+          IF (ANY(isNaN(PABS0))) THEN
+            PRINT*, 'PABS0'
+          END IF
+          IF (ANY(isNaN(FnuLINE0))) THEN
+            PRINT*, 'FnuLINE0'
+          END IF
+          STOP
+        END IF
+      END IF
+      
     END DO loopCONT
 
     DO i=1,MERGE(2,1,printimer)
@@ -2008,6 +2164,9 @@ CONTAINS
                        parval(indpar%WSband(i)), parval(indpar%WLband(i)))
         FORALL (igrid=1:Ngrid) &
           FnuBAND0(igrid,:) = EXP(parvec(igrid)) * Const1D(:)
+! if (any(isnan(Const1D))) print*, "*lnIband", &
+  ! new_line('a'), parval(indpar%cband(i)), parval(indpar%wsband(i)), parval(indpar%wlband(i))
+
         !! BAND
         Const1D(:) = 0._DP
         DO j=1,Nband
@@ -2015,7 +2174,11 @@ CONTAINS
             Const1D(:) = Const1D(:) + EXP(parval(indpar%lnIband(j))) * &
                          lorentzBand(wvl(:), parval(indpar%Cband(j)), &
                            parval(indpar%WSband(j)), parval(indpar%WLband(j)))
-        
+! if (j.NE.i .AND. any(isnan(lorentzBand(wvl(:), parval(indpar%Cband(j)), &
+!   parval(indpar%WSband(j)), parval(indpar%WLband(j)))))) &
+!   print*, "lnIband", j, new_line('a'), &
+!   new_line('a'), parval(indpar%cband(j)), parval(indpar%wsband(j)), parval(indpar%wlband(j))
+
         END DO
         FORALL (iw=1:Nw) FnuBAND0(:,iw) = FnuBAND0(:,iw) + Const1D(iw)
         !! STAR
@@ -2057,9 +2220,12 @@ CONTAINS
         FORALL (iw=1:Nw) FnuCONT0(:,iw) = Const1D(iw)
         !! BAND *Cband
         Const = EXP(parval(indpar%lnIband(i)))
-        FORALL (igrid=i:Ngrid) &
+        FORALL (igrid=1:Ngrid) &
           FnuBAND0(igrid,:) = Const * lorentzBand(wvl(:), parvec(igrid), &
                                         parval(indpar%WSband(i)), parval(indpar%WLband(i)))
+! if (any(isnan(fnuband0))) print*, "*Cband"//trimlr(pring(i)), &
+  ! new_line('a'), parval(indpar%cband(i)), parval(indpar%wsband(i)), parval(indpar%wlband(i))
+
         !! BAND
         Const1D(:) = 0._DP
         DO j=1,Nband
@@ -2067,7 +2233,11 @@ CONTAINS
             Const1D(:) = Const1D(:) + EXP(parval(indpar%lnIband(j))) * &
                          lorentzBand(wvl(:), parval(indpar%Cband(j)), &
                            parval(indpar%WSband(j)), parval(indpar%WLband(j)))
-        
+! if (j.NE.i .AND. any(isnan(lorentzBand(wvl(:), parval(indpar%Cband(j)), &
+!   parval(indpar%WSband(j)), parval(indpar%WLband(j)))))) &
+!   print*, "Cband", j, new_line('a'), &
+!   new_line('a'), parval(indpar%cband(j)), parval(indpar%wsband(j)), parval(indpar%wlband(j))
+
         END DO
         FORALL (iw=1:Nw) FnuBAND0(:,iw) = FnuBAND0(:,iw) + Const1D(iw)
         !! STAR
@@ -2109,9 +2279,12 @@ CONTAINS
         FORALL (iw=1:Nw) FnuCONT0(:,iw) = Const1D(iw)
         !! BAND *WSband
         Const = EXP(parval(indpar%lnIband(i)))
-        FORALL (igrid=i:Ngrid) &
+        FORALL (igrid=1:Ngrid) &
           FnuBAND0(igrid,:) = Const * lorentzBand(wvl(:), parval(indpar%Cband(i)), &
                                         parvec(igrid), parval(indpar%WLband(i)))
+! if (any(isnan(fnuband0))) print*, "*WSband", &
+!   new_line('a'), parval(indpar%cband(i)), parval(indpar%wsband(i)), parval(indpar%wlband(i))
+
         !! BAND
         Const1D(:) = 0._DP
         DO j=1,Nband
@@ -2119,7 +2292,11 @@ CONTAINS
             Const1D(:) = Const1D(:) + EXP(parval(indpar%lnIband(j))) * &
                          lorentzBand(wvl(:), parval(indpar%Cband(j)), &
                            parval(indpar%WSband(j)), parval(indpar%WLband(j)))
-        
+! if (j.NE.i .AND. any(isnan(lorentzBand(wvl(:), parval(indpar%Cband(j)), &
+!   parval(indpar%WSband(j)), parval(indpar%WLband(j)))))) &
+!   print*, "WSband", j, new_line('a'), &
+!   new_line('a'), parval(indpar%cband(j)), parval(indpar%wsband(j)), parval(indpar%wlband(j))
+          
         END DO
         FORALL (iw=1:Nw) FnuBAND0(:,iw) = FnuBAND0(:,iw) + Const1D(iw)
         !! STAR
@@ -2161,9 +2338,12 @@ CONTAINS
         FORALL (iw=1:Nw) FnuCONT0(:,iw) = Const1D(iw)
         !! BAND *WLband
         Const = EXP(parval(indpar%lnIband(i)))
-        FORALL (igrid=i:Ngrid) &
+        FORALL (igrid=1:Ngrid) &
           FnuBAND0(igrid,:) = Const * lorentzBand(wvl(:), parval(indpar%Cband(i)), &
-                                       parval(indpar%WSband(i)), parvec(igrid))
+                                        parval(indpar%WSband(i)), parvec(igrid))
+! if (any(isnan(fnuband0))) print*, "*WLband", &
+!   new_line('a'), parval(indpar%cband(i)), parval(indpar%wsband(i)), parval(indpar%wlband(i))
+
         !! BAND
         Const1D(:) = 0._DP
         DO j=1,Nband
@@ -2171,7 +2351,11 @@ CONTAINS
             Const1D(:) = Const1D(:) + EXP(parval(indpar%lnIband(j))) * &
                          lorentzBand(wvl(:), parval(indpar%Cband(j)), &
                            parval(indpar%WSband(j)), parval(indpar%WLband(j)))
-        
+! if (j.NE.i .AND. any(isnan(lorentzBand(wvl(:), parval(indpar%Cband(j)), &
+!   parval(indpar%WSband(j)), parval(indpar%WLband(j)))))) &
+!   print*, "WLband", j, new_line('a'), &
+!   new_line('a'), parval(indpar%cband(j)), parval(indpar%wsband(j)), parval(indpar%wlband(j))
+
         END DO
         FORALL (iw=1:Nw) FnuBAND0(:,iw) = FnuBAND0(:,iw) + Const1D(iw)
         !! STAR
@@ -2203,6 +2387,39 @@ CONTAINS
                              Pabs0(:,:) + FnuLINE0(:,:)
 
       END IF
+
+      !! BLS (Bug Localization System)
+      IF (bls) THEN
+        IF (ANY(isNaN(specModel_gen))) THEN
+          IF (gridlnIband) THEN
+            PRINT*, "lnIband"//TRIMLR(PRING(i))
+          ELSE IF (gridCband) THEN
+            PRINT*, "Cband"//TRIMLR(PRING(i))
+          ELSE IF (gridWSband) THEN
+            PRINT*, "WSband"//TRIMLR(PRING(i))
+          ELSE IF (gridWLband) THEN
+            PRINT*, "WLband"//TRIMLR(PRING(i))
+          END IF
+          
+          IF (ANY(isNaN(FnuCONT0))) THEN
+            PRINT*, 'FnuCONT0'
+          END IF
+          IF (ANY(isNaN(FnuBAND0))) THEN
+            PRINT*, 'FnuBAND0'
+          END IF
+          IF (ANY(isNaN(FnuSTAR0))) THEN
+            PRINT*, 'FnuSTAR0'
+          END IF
+          IF (ANY(isNaN(PABS0))) THEN
+            PRINT*, 'PABS0'
+          END IF
+          IF (ANY(isNaN(FnuLINE0))) THEN
+            PRINT*, 'FnuLINE0'
+          END IF
+          STOP
+        END IF
+      END IF
+      
     END DO loopBAND
 
     DO i=1,MERGE(2,1,printimer)
@@ -2265,8 +2482,33 @@ CONTAINS
         !! Total model
         specModel_gen(:,:) = (FnuCONT0(:,:) + FnuBAND0(:,:) + FnuSTAR0(:,:)) * &
                              Pabs0(:,:) + FnuLINE0(:,:)
-  
+
       END IF
+
+      !! BLS (Bug Localization System)
+      IF (bls) THEN
+        IF (ANY(isNaN(specModel_gen))) THEN
+          IF (gridlnFstar) PRINT*, "lnFstar"//TRIMLR(PRING(j))
+
+          IF (ANY(isNaN(FnuCONT0))) THEN
+            PRINT*, 'FnuCONT0'
+          END IF
+          IF (ANY(isNaN(FnuBAND0))) THEN
+            PRINT*, 'FnuBAND0'
+          END IF
+          IF (ANY(isNaN(FnuSTAR0))) THEN
+            PRINT*, 'FnuSTAR0'
+          END IF
+          IF (ANY(isNaN(PABS0))) THEN
+            PRINT*, 'PABS0'
+          END IF
+          IF (ANY(isNaN(FnuLINE0))) THEN
+            PRINT*, 'FnuLINE0'
+          END IF
+          STOP
+        END IF
+      END IF
+      
     END DO loopSTAR
     
     DO i=1,MERGE(2,1,printimer)
@@ -2327,8 +2569,33 @@ CONTAINS
         !! Total model
         specModel_gen(:,:) = (FnuCONT0(:,:) + FnuBAND0(:,:) + FnuSTAR0(:,:)) * &
                              Pabs0(:,:) + FnuLINE0(:,:)
-      
+
       END IF
+
+      !! BLS (Bug Localization System)
+      IF (bls) THEN
+        IF (ANY(isNaN(specModel_gen))) THEN
+          IF (gridlnAv) PRINT*, "lnAv"//TRIMLR(PRING(i))
+          
+          IF (ANY(isNaN(FnuCONT0))) THEN
+            PRINT*, 'FnuCONT0'
+          END IF
+          IF (ANY(isNaN(FnuBAND0))) THEN
+            PRINT*, 'FnuBAND0'
+          END IF
+          IF (ANY(isNaN(FnuSTAR0))) THEN
+            PRINT*, 'FnuSTAR0'
+          END IF
+          IF (ANY(isNaN(PABS0))) THEN
+            PRINT*, 'PABS0'
+          END IF
+          IF (ANY(isNaN(FnuLINE0))) THEN
+            PRINT*, 'FnuLINE0'
+          END IF
+          STOP
+        END IF
+      END IF
+      
     END DO loopPABS
 
     DO i=1,MERGE(2,1,printimer)
@@ -2372,6 +2639,8 @@ CONTAINS
         !! LINE *lnIline
         Const1D(:) =  gaussLine(wvl(:), parval(indpar%Cline(i)), &
                         parval(indpar%Wline(i)))
+! if (isnan(EXP(parval(indpar%lnIline(j))))) print*, "exp*"
+! if (any(isnan(gaussLine(wvl(:), parval(indpar%Cline(j)), parval(indpar%Wline(j)))))) print*, "gauss*"
         FORALL (igrid=1:Ngrid) &
           FnuLINE0(igrid,:) = EXP(parvec(igrid)) * Const1D(:)
         !! LINE
@@ -2381,7 +2650,8 @@ CONTAINS
           Const1D(:) = Const1D(:) + EXP(parval(indpar%lnIline(j))) * &
                        gaussLine(wvl(:), parval(indpar%Cline(j)), &
                          parval(indpar%Wline(j)))
-        
+! if (isnan(EXP(parval(indpar%lnIline(j))))) print*, "exp"
+! if (any(isnan(gaussLine(wvl(:), parval(indpar%Cline(j)), parval(indpar%Wline(j)))))) print*, "gauss"        
         END DO
         FORALL (iw=1:Nw) FnuLINE0(:,iw) = FnuLINE0(:,iw) + Const1D(iw)
         !! PABS
@@ -2424,7 +2694,7 @@ CONTAINS
         !! LINE *Cline
         Const = EXP(parval(indpar%lnIline(i)))
         FORALL (igrid=1:Ngrid) &
-          FnuBAND0(igrid,:) = Const * gaussLine(wvl(:), parvec(igrid), &
+          FnuLINE0(igrid,:) = Const * gaussLine(wvl(:), parvec(igrid), &
                                        parval(indpar%Wline(i)))
         !! LINE
         Const1D(:) = 0._DP
@@ -2433,7 +2703,8 @@ CONTAINS
           Const1D(:) = Const1D(:) + EXP(parval(indpar%lnIline(j))) * &
                        gaussLine(wvl(:), parval(indpar%Cline(j)), &
                          parval(indpar%Wline(j)))
-        
+! if (isnan(EXP(parval(indpar%lnIline(j))))) print*, "exp"
+! if (any(isnan(gaussLine(wvl(:), parval(indpar%Cline(j)), parval(indpar%Wline(j)))))) print*, "gauss"
         END DO
         FORALL (iw=1:Nw) FnuLINE0(:,iw) = FnuLINE0(:,iw) + Const1D(iw)
         !! PABS
@@ -2476,7 +2747,7 @@ CONTAINS
         !! LINE *Wline
         Const = EXP(parval(indpar%lnIline(i)))
         FORALL (igrid=1:Ngrid) &
-          FnuBAND0(igrid,:) = Const * gaussLine(wvl(:), parvec(igrid), &
+          FnuLINE0(igrid,:) = Const * gaussLine(wvl(:), parvec(igrid), &
                                        parval(indpar%Wline(i)))
         !! LINE
         Const1D(:) = 0._DP
@@ -2500,6 +2771,37 @@ CONTAINS
                              Pabs0(:,:) + FnuLINE0(:,:)
 
       END IF
+
+      !! BLS (Bug Localization System)
+      IF (bls) THEN
+        IF (ANY(isNaN(specModel_gen))) THEN
+          IF (gridlnIline) THEN
+            PRINT*, "lnIline"//TRIMLR(PRING(i))
+          ELSE IF (gridCline) THEN
+            PRINT*, "Cline"//TRIMLR(PRING(i))
+          ELSE IF (gridWline) THEN
+            PRINT*, "Wline"//TRIMLR(PRING(i))
+          END IF
+          
+          IF (ANY(isNaN(FnuCONT0))) THEN
+            PRINT*, 'FnuCONT0'
+          END IF
+          IF (ANY(isNaN(FnuBAND0))) THEN
+            PRINT*, 'FnuBAND0'
+          END IF
+          IF (ANY(isNaN(FnuSTAR0))) THEN
+            PRINT*, 'FnuSTAR0'
+          END IF
+          IF (ANY(isNaN(PABS0))) THEN
+            PRINT*, 'PABS0'
+          END IF
+          IF (ANY(isNaN(FnuLINE0))) THEN
+            PRINT*, 'FnuLINE0'
+          END IF
+          STOP
+        END IF
+      END IF
+      
     END DO loopLINE
 
     DO i=1,MERGE(2,1,printimer)
@@ -2509,7 +2811,7 @@ CONTAINS
     
   END FUNCTION specModel_gen
 
-  FUNCTION specModel_scl( wvl, parinfo, indpar, parval, Qabs, verbose )
+  FUNCTION specModel_scl( wvl, parinfo, indpar, parval, Qabs, verbose, debug )
     USE utilities, ONLY: DP
     IMPLICIT NONE
     REAL(DP), DIMENSION(:), INTENT(IN)           :: wvl
@@ -2517,11 +2819,11 @@ CONTAINS
     TYPE(indpar_type), INTENT(IN)                :: indpar
     REAL(DP), DIMENSION(:), INTENT(IN)           :: parval ! 1D
     TYPE(Qabs_type), DIMENSION(:), INTENT(IN)    :: Qabs
-    LOGICAL, INTENT(IN), OPTIONAL                :: verbose
+    LOGICAL, INTENT(IN), OPTIONAL                :: verbose, debug
     REAL(DP), DIMENSION(SIZE(wvl))               :: specModel_scl
     specModel_scl(:) = RESHAPE( specModel_gen(wvl(:), PARVEC=[0._DP],PARNAME='', &
                                   PARINFO=parinfo, INDPAR=indpar, PARVAL=parval(:), &
-                                  QABS=Qabs(:), VERBOSE=verbose), &
+                                  QABS=Qabs(:), VERBOSE=verbose, DEBUG=debug), &
                                 [SIZE(wvl(:))] )
   END FUNCTION specModel_scl
   
