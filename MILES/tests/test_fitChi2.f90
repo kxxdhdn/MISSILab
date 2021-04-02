@@ -8,6 +8,7 @@ MODULE fitChi2_external
   INTEGER, SAVE, PUBLIC :: Nx, Ny, NwOBS, xOBS, yOBS, jw
   INTEGER, DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC        :: iwfree
   REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC       :: wOBS, nuOBS
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE, SAVE, PUBLIC :: extinct
   REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC       :: Fnu_mod, resid
   REAL(DP), DIMENSION(:,:,:), ALLOCATABLE, SAVE, PUBLIC   :: FnuOBS, dFnuOBS
   REAL(DP), DIMENSION(:,:,:,:), ALLOCATABLE, SAVE, PUBLIC :: invLcovarOBS
@@ -38,7 +39,8 @@ CONTAINS
     
     REAL(DP), DIMENSION(NwOBS0)              :: residuals
 
-    Fnu_mod(:) = specModel(wOBS(:), INDPAR=ind, PARVAL=par(:), QABS=Qabs(:))
+    Fnu_mod(:) = specModel(wOBS(:), INDPAR=ind, PARVAL=par(:), &
+                           QABS=Qabs(:), EXTINCT=extinct(:,:))
 
     !! Unweighted residuals    
     WHERE (mask(xOBS,yOBS,:))
@@ -83,7 +85,7 @@ PROGRAM test_fitChi2
   USE random, ONLY: generate_newseed
   USE chi2_minimization, ONLY: chi2min_LM
   USE fitChi2_external, ONLY: Nx, Ny, NwOBS, wOBS, nuOBS, FnuOBS, dFnuOBS, &
-                              residuals, Fnu_mod, resid, invLcovarOBS, &
+                              residuals, Fnu_mod, resid, invLcovarOBS, extinct, &
                               ind, parinfo, Qabs, xOBS, yOBS, mask, iwfree, iid
   IMPLICIT NONE
 
@@ -99,7 +101,7 @@ PROGRAM test_fitChi2
   
   !! Input variables
   INTEGER :: i, j, x, y, Npar, Nparfree, Nwfree, NiniMC
-  INTEGER :: Ncont, Nband, Nline, Npabs, Nstar, Nextra
+  INTEGER :: Ncont, Nband, Nline, Nextc, Nstar, Nextra
   CHARACTER(lenpar) :: spec_unit
   CHARACTER(lendustQ), DIMENSION(:), ALLOCATABLE :: labQ
   CHARACTER(lenpar), DIMENSION(:), ALLOCATABLE :: labB, labL
@@ -152,9 +154,9 @@ PROGRAM test_fitChi2
   CALL READ_MASTER(WAVALL=wOBS(:), &
                    VERBOSE=verbose, NINIMC=NiniMC, &
                    CALIB=calib, NEWSEED=newseed, NEWINIT=newinit, &
-                   LABQ=labQ, LABL=labL, LABB=labB, QABS=Qabs, &
+                   LABQ=labQ, LABL=labL, LABB=labB, QABS=Qabs, EXTINCT=extinct, &
                    NCONT=Ncont, NBAND=Nband, NLINE=Nline, &
-                   NPABS=Npabs, NSTAR=Nstar, NEXTRA=Nextra, DOSTOP=dostop, &
+                   NEXTC=Nextc, NSTAR=Nstar, NEXTRA=Nextra, DOSTOP=dostop, &
                    PARINFO=parinfo, INDPAR=ind, NPAR=Npar, SPEC_UNIT=spec_unit)
 
   IF (newseed) CALL GENERATE_NEWSEED()
@@ -384,15 +386,7 @@ PROGRAM test_fitChi2
           PRINT*, "Checking output ("//TRIMLR(PRING(xOBS))//', '//TRIMLR(PRING(yOBS))//'): '
           PRINT*, "  status = "//TRIMLR(PRING(status(xOBS,yOBS)))
           PRINT*, "  chi2red = "//TRIMLR(PRING(chi2red(xOBS,yOBS),NDEC=10))
-          PRINT*, "  Niter = "//TRIMLR(PRING(Niter(xOBS,yOBS)))
-          ! CALL WRITE_ASCII(VEC1=par(xOBS,yOBS,:), VEC2=parerr(xOBS,yOBS,:), &
-          !                  FILE="out/chi2min_fitChi2.txt")
-
-          CALL WRITE_HDF5(DBLARR3D=par(:,:,:), NAME='Best fitted parameter value', &
-                          FILE=filOUT, COMPRESS=compress, VERBOSE=debug, &
-                          IND1=[xOBS,xOBS], IND2=[yOBS,yOBS])
-
-          PRINT*
+          PRINT*, "  Niter = "//TRIMLR(PRING(Niter(xOBS,yOBS))) 
           PRINT*, "Covariance matrix:"
           ! DO i=1,Npar
           !   PRINT*, REAL(covpar(xOBS,yOBS,:,i), KIND(0.))
@@ -401,7 +395,12 @@ PROGRAM test_fitChi2
           PRINT*
 
         END IF
-       
+
+        CALL WRITE_HDF5(DBLARR3D=par(xOBS:xOBS,yOBS:yOBS,:), &
+                        NAME='Best fitted parameter value', &
+                        FILE=filOUT, COMPRESS=compress, VERBOSE=debug, &
+                        IND1=[xOBS,xOBS], IND2=[yOBS,yOBS])
+
       END IF notmasked
     END DO chi2fity
   END DO chi2fitx
@@ -422,14 +421,15 @@ PROGRAM test_fitChi2
   !!-----------------
   ALLOCATE(FnuMOD(Nx,Ny,NwOBS))
 
-  FnuMOD(:,:,:) = specModel( wOBS(:), INDPAR=ind, PARVAL=par(:,:,:), QABS=Qabs(:), &
+  FnuMOD(:,:,:) = specModel( wOBS(:), INDPAR=ind, PARVAL=par(:,:,:), &
+                             QABS=Qabs(:), EXTINCT=extinct(:,:), &
                              FNUCONT=FnuCONT, FNUBAND=FnuBAND, FNUSTAR=FnuSTAR, &
                              PABS=Pabs, FNULINE=FnuLINE, &
                              FNUCONT_TAB=FnuCONT_tab, FNUBAND_TAB=FnuBAND_tab, &
                              FNUSTAR_TAB=FnuSTAR_tab, PABS_TAB=Pabs_tab, &
                              FNULINE_TAB=FnuLINE_tab )
 
-  DO i=1,Npabs
+  DO i=1,Nextc
     FnuCONT_tab(:,:,:,i) = FnuCONT_tab(:,:,:,i) * Pabs(:,:,:)
   END DO
   CALL WRITE_HDF5(DBLARR4D=FnuCONT_tab, NAME='FnuCONT ('//TRIMLR(spec_unit)//')', &

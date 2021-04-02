@@ -17,11 +17,12 @@ PROGRAM test_anaHB
   
   !! Input variables
   INTEGER :: i, Nx, Ny, NwOBS
-  INTEGER :: Ncont, Nband, Nline, Npabs, Nstar
+  INTEGER :: Ncont, Nband, Nline, Nextc, Nstar
   CHARACTER(lenpar) :: spec_unit
   LOGICAL :: verbose
   ! LOGICAL, DIMENSION(:,:,:), ALLOCATABLE :: mask
   REAL(DP), DIMENSION(:), ALLOCATABLE :: wOBS
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: extinct
   REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: FnuOBS, dFnuOBS
   REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: par
   REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: FnuCONT, &
@@ -35,8 +36,8 @@ PROGRAM test_anaHB
   !!                            I. Read the inputs
   !!------------------------------------------------------------------------
   CALL READ_HDF5(wOBS, FILE=filOBS, NAME='Wavelength (microns)', N1=NwOBS)
-  CALL READ_MASTER(WAVALL=wOBS(:), VERBOSE=verbose, QABS=Qabs, &
-                   NCONT=Ncont, NBAND=Nband, NLINE=Nline, NPABS=Npabs, NSTAR=Nstar, &
+  CALL READ_MASTER(WAVALL=wOBS(:), VERBOSE=verbose, QABS=Qabs, EXTINCT=extinct, &
+                   NCONT=Ncont, NBAND=Nband, NLINE=Nline, NEXTC=Nextc, NSTAR=Nstar, &
                    INDPAR=ind, SPEC_UNIT=spec_unit)
   CALL READ_HDF5(DBLARR3D=FnuOBS, FILE=filOBS, &
                  NAME='FnuOBS ('//TRIMLR(spec_unit)//')', N1=Nx, N2=Ny)
@@ -58,14 +59,15 @@ PROGRAM test_anaHB
 
   !! Calculate model
   !!-----------------
-  FnuMOD = specModel( wOBS(:), INDPAR=ind, PARVAL=par(:,:,:), QABS=Qabs(:), &
+  FnuMOD = specModel( wOBS(:), INDPAR=ind, PARVAL=par(:,:,:), &
+                      QABS=Qabs(:), EXTINCT=extinct(:,:), &
                       FNUCONT=FnuCONT, FNUBAND=FnuBAND, FNUSTAR=FnuSTAR, &
                       PABS=Pabs, FNULINE=FnuLINE, &
                       FNUCONT_TAB=FnuCONT_tab, FNUBAND_TAB=FnuBAND_tab, &
                       FNUSTAR_TAB=FnuSTAR_tab, PABS_TAB=Pabs_tab, &
                       FNULINE_TAB=FnuLINE_tab )
 
-  DO i=1,Npabs
+  DO i=1,Nextc
     FnuCONT_tab(:,:,:,i) = FnuCONT_tab(:,:,:,i) * Pabs(:,:,:)
   END DO 
   CALL WRITE_HDF5(DBLARR4D=FnuCONT_tab, NAME='FnuCONT ('//TRIMLR(spec_unit)//')', &

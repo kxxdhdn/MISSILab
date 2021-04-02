@@ -1,0 +1,70 @@
+================================================================================
+ Running LE MIROIR: LEast-squares fitting of Mid-IR emission OptImized Routine
+        from the SwING (SoftWares for Investigating Nebulae & Galaxies)
+                             written by F. Galliano
+================================================================================
+
+                                                      (March 29, 2021, at 23:35)
+
+
+ Read the inputs [done]
+ ============================================================
+
+ ESTIMATING THE INITIAL VALUES OF THE PARAMETERS (0s)
+
+ Number of free param: 65
+
+ Initial parameters [done]
+ ============================================================
+
+ pos: (1, 1): 
+
+ iniMC iteration: 1/10
+ PROGRAM EXECUTED IN 16s.
+
+ iniMC iteration: 2/10
+ PROGRAM EXECUTED IN 18s.
+
+ iniMC iteration: 3/10
+ PROGRAM EXECUTED IN 20s.
+
+ iniMC iteration: 4/10
+ PROGRAM EXECUTED IN 23s.
+
+ iniMC iteration: 5/10
+ PROGRAM EXECUTED IN 25s.
+
+ iniMC iteration: 6/10
+ PROGRAM EXECUTED IN 34s.
+
+ iniMC iteration: 7/10
+ PROGRAM EXECUTED IN 36s.
+
+ iniMC iteration: 8/10
+ PROGRAM EXECUTED IN 39s.
+
+ iniMC iteration: 9/10
+ PROGRAM EXECUTED IN 54s.
+
+ iniMC iteration: 10/10
+ PROGRAM EXECUTED IN 1m 10s.
+
+   MC chi2red is between 63.969773 and 1.155144E+04
+
+ >>>
+ Checking output (1, 1): 
+   status = 5
+   chi2red = 63.9697729679
+   Niter = 518
+ <<<
+
+ Chi2 fit galgen (M83 via IRS) [done]
+ ============================================================
+
+
+ Show fit galgen [done]
+ ============================================================
+
+
+ PROGRAM EXECUTED IN 1m 10s.
+

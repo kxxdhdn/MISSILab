@@ -1,6 +1,6 @@
 PROGRAM test_profiles
 
-  USE auxil, ONLY: Qabs_type, read_master, modifBB, gaussLine, lorentzBand, extCurve
+  USE auxil, ONLY: Qabs_type, make_Qabs, modifBB, gaussLine, lorentzBand, extCurve
   USE arrays, ONLY: ramp, reverse
   USE utilities, ONLY: DP, TRIMLR
   USE constants, ONLY: MKS
@@ -61,8 +61,8 @@ PROGRAM test_profiles
   !!---------
   wTEST(:) = ramp(NwTEST, 1._DP, 40._DP)
   ! wTEST(:) = ramp(NwTEST, 1.E-2_DP, 3.E4_DP, .true.) ! try larger NwTEST
-  nuTEST = MKS%clight/MKS%micron / wTEST ! as reciprocal of wTEST, nuTEST is not in log
-  FnuTEST = gaussLine(wTEST, 15.555_DP, 15.555_DP*0.0055722841_DP, .TRUE.) ! /Hz
+  nuTEST = MKS%clight/MKS%micron / wTEST(:) ! as reciprocal of wTEST, nuTEST is not in log
+  FnuTEST = gaussLine(wTEST, 15.555_DP, 15.555_DP*0.055722841_DP, .TRUE.) ! /Hz
   ! FnuTEST = lorentzBand(wTEST, 6.2_DP, 0.060000000_DP, 0.031300317_DP, .TRUE.) ! /Hz
   PRINT*, 'I(test no reverse) = ', integ_tabulated(nuTEST, FnuTEST)!, xlog=.true.)
   PRINT*, 'I(test) = ', integ_tabulated(reverse(nuTEST), reverse(FnuTEST))!, xlog=.true.)
@@ -78,10 +78,10 @@ PROGRAM test_profiles
   ALLOCATE(labQ(Nbb), Qabs(Nbb), massBB(Nbb), tempBB(Nbb))
   
   wave = ramp(Nw, 1._DP, 40._DP)
-  nu = MKS%clight/MKS%micron / wave
+  nu = MKS%clight/MKS%micron / wave(:)
   labQ = (/'Sil_D03 ', 'ACAR_Z96'/)
-  massBB = 3.E-2_DP ! Msun/pc2
-  tempBB = 200._DP
+  massBB = EXP(45._DP) ! Msun/pc2
+  tempBB = EXP(4.5_DP)
   Iline = 1.E-7 ! W/m2
   ref1 = 15.555_DP ! [NeIII] 1 line
   sigma = 0.0055722841_DP * ref1
@@ -92,16 +92,16 @@ PROGRAM test_profiles
 
   !! GET PARAM
   !!-----------
-  CALL READ_MASTER(WAVALL=wave, LABQ=labQ, QABS=Qabs)
+  CALL MAKE_QABS(LABEL=labQ(:), QABS=Qabs(:), WAVALL=wave(:))
 
   !! Calculate Fnu
   !!---------------
   !! extinction
-  Pabs = EXP(-.1_DP/1.086_DP * extCurve(wave))
+  Pabs = EXP(-.1_DP/1.086_DP * extCurve('D03',wave,.TRUE.))
   !! mbb
-  FnuBB = interp_lin_sorted(modifBB(wave, tempBB(1), Qabs(1)), &
+  FnuBB = interp_lin_sorted(modifBB(wave, tempBB(1), Qabs(1), .TRUE.), &
           Qabs(1)%nu, nu, xlog=.True., ylog=.True.) * massBB(1) * MKS%Msun/MKS%pc**2
-  FnuBB = FnuBB + interp_lin_sorted(modifBB(wave, tempBB(2), Qabs(2)), &
+  FnuBB = FnuBB + interp_lin_sorted(modifBB(wave, tempBB(2), Qabs(2), .TRUE.), &
           Qabs(2)%nu, nu, xlog=.True., ylog=.True.) * massBB(2) * MKS%Msun/MKS%pc**2
   !! gauss line
   FnuLINE = gaussLine(wave, ref1, sigma, .TRUE.)
@@ -112,7 +112,7 @@ PROGRAM test_profiles
   PRINT*, 'I(lorentz) = ', integ_tabulated(reverse(nu), reverse(FnuBAND))
   FnuBAND = FnuBAND * Iband /MKS%Jy/1.E6
   !! total
-  Fnu = (FnuBB + FnuBAND) * Pabs + FnuLINE
+  Fnu = (FnuBB + FnuBAND + FnuLINE) * Pabs
   PRINT*, 'MAX(BB) = ', MAXVAL(FnuBB)
   PRINT*, 'MAX(gauss) = ', MAXVAL(FnuLINE)
   PRINT*, 'MAX(lorentz) = ', MAXVAL(FnuBAND)

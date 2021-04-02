@@ -1,0 +1,300 @@
+================================================================================
+ Running LE MIROIR: LEast-squares fitting of Mid-IR emission OptImized Routine
+        from the SwING (SoftWares for Investigating Nebulae & Galaxies)
+                             written by F. Galliano
+================================================================================
+
+                                                      (March 31, 2021, at 14:35)
+
+
+ Read the inputs [done]
+ ============================================================
+
+ ESTIMATING THE INITIAL VALUES OF THE PARAMETERS (0s)
+
+ Number of free param: 64
+
+ Initial parameters [done]
+ ============================================================
+
+ pos: (1, 1): 
+
+ PROGRAM EXECUTED IN 19s.
+
+ >>>
+ Checking output (1, 1): 
+   status = 5
+   chi2red = 0.8978023169
+   Niter = 527
+ <<<
+ pos: (1, 2): 
+
+ PROGRAM EXECUTED IN 52s.
+
+ >>>
+ Checking output (1, 2): 
+   status = 5
+   chi2red = 0.9587491490
+   Niter = 527
+ <<<
+ pos: (1, 3): 
+
+ PROGRAM EXECUTED IN 1m 9s.
+
+ >>>
+ Checking output (1, 3): 
+   status = 5
+   chi2red = 1.1531651282
+   Niter = 527
+ <<<
+ pos: (1, 4): 
+
+ PROGRAM EXECUTED IN 1m 35s.
+
+ >>>
+ Checking output (1, 4): 
+   status = 5
+   chi2red = 1.4555896298
+   Niter = 527
+ <<<
+ pos: (1, 5): 
+
+ PROGRAM EXECUTED IN 1m 50s.
+
+ >>>
+ Checking output (1, 5): 
+   status = 1
+   chi2red = 1.1678778889
+   Niter = 378
+ <<<
+ pos: (1, 6): 
+
+ PROGRAM EXECUTED IN 2m 21s.
+
+ >>>
+ Checking output (1, 6): 
+   status = 5
+   chi2red = 1.3130675992
+   Niter = 527
+ <<<
+ pos: (1, 7): 
+
+ PROGRAM EXECUTED IN 2m 53s.
+
+ >>>
+ Checking output (1, 7): 
+   status = 5
+   chi2red = 9.6202705132
+   Niter = 526
+ <<<
+ pos: (1, 8): 
+
+ PROGRAM EXECUTED IN 3m 12s.
+
+ >>>
+ Checking output (1, 8): 
+   status = 5
+   chi2red = 2.3183766894
+   Niter = 527
+ <<<
+ pos: (1, 9): 
+
+ PROGRAM EXECUTED IN 3m 17s.
+
+ >>>
+ Checking output (1, 9): 
+   status = 1
+   chi2red = 1.6954919208
+   Niter = 168
+ <<<
+ pos: (2, 1): 
+
+ PROGRAM EXECUTED IN 3m 37s.
+
+ >>>
+ Checking output (2, 1): 
+   status = 5
+   chi2red = 0.9606441389
+   Niter = 527
+ <<<
+ pos: (2, 2): 
+
+ PROGRAM EXECUTED IN 4m 7s.
+
+ >>>
+ Checking output (2, 2): 
+   status = 5
+   chi2red = 0.9745822908
+   Niter = 527
+ <<<
+ pos: (2, 3): 
+
+ PROGRAM EXECUTED IN 4m 11s.
+
+ >>>
+ Checking output (2, 3): 
+   status = 1
+   chi2red = 1.2233628223
+   Niter = 88
+ <<<
+ pos: (2, 4): 
+
+ PROGRAM EXECUTED IN 4m 41s.
+
+ >>>
+ Checking output (2, 4): 
+   status = 5
+   chi2red = 1.4028897076
+   Niter = 527
+ <<<
+ pos: (2, 5): 
+
+ PROGRAM EXECUTED IN 5m 1s.
+
+ >>>
+ Checking output (2, 5): 
+   status = 5
+   chi2red = 1.2139744198
+   Niter = 527
+ <<<
+ pos: (2, 6): 
+
+ PROGRAM EXECUTED IN 5m 32s.
+
+ >>>
+ Checking output (2, 6): 
+   status = 5
+   chi2red = 1.1047258320
+   Niter = 527
+ <<<
+ pos: (2, 7): 
+
+ PROGRAM EXECUTED IN 5m 51s.
+
+ >>>
+ Checking output (2, 7): 
+   status = 5
+   chi2red = 11.2698984588
+   Niter = 527
+ <<<
+ pos: (2, 8): 
+
+ PROGRAM EXECUTED IN 6m 22s.
+
+ >>>
+ Checking output (2, 8): 
+   status = 5
+   chi2red = 2.0902450365
+   Niter = 527
+ <<<
+ pos: (2, 9): 
+
+ PROGRAM EXECUTED IN 6m 26s.
+
+ >>>
+ Checking output (2, 9): 
+   status = 1
+   chi2red = 1.5616908834
+   Niter = 127
+ <<<
+ pos: (3, 1): 
+
+ PROGRAM EXECUTED IN 6m 37s.
+
+ >>>
+ Checking output (3, 1): 
+   status = 1
+   chi2red = 1.2630145777
+   Niter = 180
+ <<<
+ pos: (3, 2): 
+
+ PROGRAM EXECUTED IN 7m 8s.
+
+ >>>
+ Checking output (3, 2): 
+   status = 5
+   chi2red = 1.0530662415
+   Niter = 527
+ <<<
+ pos: (3, 3): 
+
+ PROGRAM EXECUTED IN 7m 41s.
+
+ >>>
+ Checking output (3, 3): 
+   status = 5
+   chi2red = 1.1999357577
+   Niter = 527
+ <<<
+ pos: (3, 4): 
+
+ PROGRAM EXECUTED IN 8m 12s.
+
+ >>>
+ Checking output (3, 4): 
+   status = 5
+   chi2red = 1.4016191442
+   Niter = 527
+ <<<
+ pos: (3, 5): 
+
+ PROGRAM EXECUTED IN 8m 37s.
+
+ >>>
+ Checking output (3, 5): 
+   status = 1
+   chi2red = 1.0743355155
+   Niter = 417
+ <<<
+ pos: (3, 6): 
+
+ PROGRAM EXECUTED IN 8m 54s.
+
+ >>>
+ Checking output (3, 6): 
+   status = 1
+   chi2red = 1.2196617163
+   Niter = 361
+ <<<
+ pos: (3, 7): 
+
+ PROGRAM EXECUTED IN 8m 58s.
+
+ >>>
+ Checking output (3, 7): 
+   status = 1
+   chi2red = 10.6319349346
+   Niter = 119
+ <<<
+ pos: (3, 8): 
+
+ PROGRAM EXECUTED IN 9m 28s.
+
+ >>>
+ Checking output (3, 8): 
+   status = 5
+   chi2red = 1.9282102921
+   Niter = 527
+ <<<
+ pos: (3, 9): 
+
+ PROGRAM EXECUTED IN 9m 58s.
+
+ >>>
+ Checking output (3, 9): 
+   status = 5
+   chi2red = 1.5912326323
+   Niter = 524
+ <<<
+
+ Chi2 fit galspec (simulated spectra) [done]
+ ============================================================
+
+
+ fitpar_chi2 analysis [done]
+ ============================================================
+
+
+ PROGRAM EXECUTED IN 9m 58s.
+

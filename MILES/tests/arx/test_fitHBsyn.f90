@@ -1,3 +1,20 @@
+!******************************************************************************
+!*
+!*                          Test fitMIR_HB
+!*
+!******************************************************************************
+
+
+  !==========================================================================
+  ! 1) AUTHOR: D. HU
+  ! 
+  ! 2) DESCRIPTION: NONE
+  !
+  ! 3) HISTORY: 
+  !    - 20210114: Archived. More realistic simulated spectra are created by 
+  !      programs/galspec
+  !==========================================================================
+
 MODULE fitHBsyn_external
 
   USE auxil, ONLY: parinfo_type, indpar_type, Qabs_type

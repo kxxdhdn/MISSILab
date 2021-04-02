@@ -5,12 +5,34 @@
 The Python package [[https://github.com/kxxdhdn/astylo][astylo]] is required by the MILES UI. You can install it with a single command: ~pip install astylo~
 * Version log
 ** v0.x (2021xxxx, Chi2 calib)
-- iniMC test revisit
 - Input separated spectra (of each module) + calib error
 - Fractional date saving during program running
-** v0.3 (202101xx, HB beta)
+** v1 (202104xx, HB release)
+- Update tests/
+** v0.3.2 (202104xx, SMinverse)
+- Adopte Sherman-Morrison formula for (covariance) matrix inversion
+** v0.3.1 (202104xx, reparam)
+- Reparametrise ~specModel~ with band ratios instead of band intensities
+** v0.3 (20210331, HB beta)
+- Add simulated galaxy spectral fitting
+- Add uncertainty propagation for band ratios
+  + Use covar mat and param gradient for chi2
+  + Non-correlated analytic calculation for chi2 (alternative post-analysis, see ~pynout/corr_fitpar~)
+  + Calculate ratios in MCMC for HB
+- INOUT file organization
+  + Create out1/ and programs/ repertories
+  + PyUI/ \rarr pynout/ (move all test interface scripts into tests/)
+- ~initparam~/iniMC test revisit
+  + modify parameter ranges
+  + involve profile functions (~modifBB~, ~gaussLine~ & ~lorentzBand~) into the auto limits
+  + force limited=.TRUE. for intensive param
+- Add ~auxil/chi2_kit.f90~ and ~auxil/HB_kit.f90~
+- Modify ~SpecModel~ inputs by adding extinct(:,:) and moving extCurve to ~read_master~ <speed problem solved>
+- Add resume option in ~read_master~ (used by HB only)
+- Update Python interface pynout/
+  + chi2, BB (Belgium/non-hierarchical Bayesian) and HB (hierarchical Bayesian)
+  + Add ~partrack~ to visualise MCMC sampling
 - Update tests/dat/
-- Add simulated galaxy spectral fitting (~galspec~)
 ** v0.2 (20210114, Bayes beta)
 - HIBARI: HIerarchical BAyesian fitting Routine of mid-IR emission
 ** v0.1 (20201221, Chi2 release)
@@ -21,7 +43,7 @@ The Python package [[https://github.com/kxxdhdn/astylo][astylo]] is required by 
   + add indpar
 - ~par_type~ \rarr ~set_indpar~
 - ~make_par~ \rarr ~read_master~ (update inspired by HerBIE)
-- Add initparam
+- Add ~initparam~
 - INOUT file organization
 - parname changes
   + massBB \rarr lnMovd2

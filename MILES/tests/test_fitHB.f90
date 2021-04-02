@@ -15,6 +15,7 @@ MODULE fitHB_external
   INTEGER, DIMENSION(:,:), ALLOCATABLE, SAVE, PUBLIC :: icorr2ij
   REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: cenlnS0
   REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: wOBS, nuOBS
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE, SAVE, PUBLIC :: extinct
   REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: parcurr, parhypcurr
   REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: mucurr, corrcurr, sigcurr
   REAL(DP), DIMENSION(:,:), ALLOCATABLE, SAVE, PUBLIC :: cov_prev, invcov_prev
@@ -91,7 +92,7 @@ CONTAINS
     !! Model
     Fnu_mod(:,:) = specModel(wOBS(:), PARVEC=pargrid(:), PARNAME=parinfo(ipar)%name, &
                              PARINFO=parinfo(:), INDPAR=ind, PARVAL=parcurr(:), &
-                             QABS=Qabs(:))
+                             QABS=Qabs(:), EXTINCT=extinct(:,:))
 
     !! Likelihoods
     varred(:,:) = 0._DP
@@ -457,7 +458,7 @@ PROGRAM test_fitHB
                             lnpost_par, lnlhobs_par, &
                             lnpost_mu, lnpost_sig, lnpost_corr, covariance, &
                             mask, maskpar, maskhyp, maskhypcurr, maskS, &!maskextra, &
-                            ind, parinfo, Qabs
+                            ind, parinfo, Qabs, extinct
   IMPLICIT NONE
 
   !! Parameters
@@ -479,7 +480,7 @@ PROGRAM test_fitHB
   !! Input variables
   INTEGER :: x, y, i, iw, ih, indhyp, j
   INTEGER :: Npar, Nmcmc, NiniMC, Nsou, Nparfree!, Nwfree
-  INTEGER :: Ncont, Nband, Nline, Npabs, Nstar, Nextra
+  INTEGER :: Ncont, Nband, Nline, Nextc, Nstar, Nextra
   INTEGER, DIMENSION(:), ALLOCATABLE :: itied
   INTEGER, DIMENSION(:,:,:), ALLOCATABLE :: maskint ! convert mask=0 to mask=T
   LOGICAL :: verbose, calib, newseed, newinit, dostop
@@ -524,9 +525,9 @@ PROGRAM test_fitHB
   CALL READ_MASTER(WAVALL=wOBS(:), &
                    VERBOSE=verbose, NMCMC=Nmcmc, NINIMC=NiniMC, &
                    CALIB=calib, NEWSEED=newseed, NEWINIT=newinit, &
-                   LABQ=labQ, LABL=labL, LABB=labB, QABS=Qabs, &
+                   LABQ=labQ, LABL=labL, LABB=labB, QABS=Qabs, EXTINCT=extinct, &
                    NCONT=Ncont, NBAND=Nband, NLINE=Nline, &
-                   NPABS=Npabs, NSTAR=Nstar, NEXTRA=Nextra, DOSTOP=dostop, &
+                   NEXTC=Nextc, NSTAR=Nstar, NEXTRA=Nextra, DOSTOP=dostop, &
                    PARINFO=parinfo, INDPAR=ind, NPAR=Npar, SPEC_UNIT=spec_unit, &
                    PARHYPINFO=parhypinfo, NPARHYP=Nparhyp, NCORRHYP=Ncorrhyp)
 
@@ -963,14 +964,15 @@ PROGRAM test_fitHB
   !!-----------------
   ALLOCATE(FnuMOD(Nx,Ny,NwOBS))
 
-  FnuMOD(:,:,:) = specModel( wOBS(:), INDPAR=ind, PARVAL=meanpar(:,:,:), QABS=Qabs(:), &
+  FnuMOD(:,:,:) = specModel( wOBS(:), INDPAR=ind, PARVAL=meanpar(:,:,:), &
+                             QABS=Qabs(:), EXTINCT=extinct(:,:), &
                              FNUCONT=FnuCONT, FNUBAND=FnuBAND, FNUSTAR=FnuSTAR, &
                              PABS=Pabs, FNULINE=FnuLINE, &
                              FNUCONT_TAB=FnuCONT_tab, FNUBAND_TAB=FnuBAND_tab, &
                              FNUSTAR_TAB=FnuSTAR_tab, PABS_TAB=Pabs_tab, &
                              FNULINE_TAB=FnuLINE_tab )
 
-  DO i=1,Npabs
+  DO i=1,Nextc
     FnuCONT_tab(:,:,:,i) = FnuCONT_tab(:,:,:,i) * Pabs(:,:,:)
   END DO 
   CALL WRITE_HDF5(DBLARR4D=FnuCONT_tab, NAME='FnuCONT ('//TRIMLR(spec_unit)//')', &

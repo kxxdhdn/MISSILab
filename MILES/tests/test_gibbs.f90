@@ -9,6 +9,7 @@ MODULE gibbs_external
 
   INTEGER, SAVE, PUBLIC :: NwOBS, ipar
   REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: wOBS, nuOBS
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE, SAVE, PUBLIC :: extinct
   REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: parcurr
   REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: FnuOBS, dFnuOBS
 
@@ -45,7 +46,7 @@ CONTAINS
     !! Model
     Fnu_mod(:,:) = specModel(wOBS(:), PARVEC=pargrid(:), PARNAME=parinfo(ipar)%name, &
                              PARINFO=parinfo(:), INDPAR=ind, PARVAL=parcurr(:), &
-                             QABS=Qabs)
+                             QABS=Qabs, EXTINCT=extinct)
 
     !! Likelihoods
     varred(:,:) = 0._DP
@@ -106,7 +107,8 @@ PROGRAM test_gibbs
   USE random, ONLY: generate_newseed, rand_general, rand_norm
   USE statistics, ONLY: mean, sigma
   USE gibbs_external, ONLY: NwOBS, wOBS, nuOBS, FnuOBS, dFnuOBS, ind, &
-                            ipar, parcurr, lnpost_par, lnlhobs_par, parinfo, Qabs
+                            ipar, parcurr, lnpost_par, lnlhobs_par, parinfo, &
+                            Qabs, extinct
   IMPLICIT NONE
 
 
@@ -171,7 +173,7 @@ PROGRAM test_gibbs
   CALL READ_MASTER(WAVALL=wOBS(:), &
                    ! VERBOSE=verbose, NiniMC=NiniMC, &
                    ! CALIB=calib, NEWSEED=newseed, NEWINIT=newinit, &
-                   QABS=Qabs, LABQ=labQ)!, LABL=labL, LABB=labB, &
+                   QABS=Qabs, EXTINCT=extinct, LABQ=labQ)!, LABL=labL, LABB=labB, &
                    ! NCONT=Ncont, NBAND=Nband, NLINE=Nline, DOSTOP=dostop, &
                    ! PARINFO=parinfo, INDPAR=ind, NPAR=Npar)
 
@@ -282,7 +284,8 @@ PROGRAM test_gibbs
   !!--------------------------
   ALLOCATE(FnuOBS(NwOBS), dFnuOBS(NwOBS))
 
-  FnuOBS(:) = specModel(wOBS(:), INDPAR=ind, PARVAL=pargen(:), QABS=Qabs(:), verbose=.TRUE.)
+  FnuOBS(:) = specModel(wOBS(:), INDPAR=ind, PARVAL=pargen(:), &
+                        QABS=Qabs(:), EXTINCT=extinct(:,:), verbose=.TRUE.)
   dFnuOBS(:) = 0.2_DP*ABS(FnuOBS(:))
   FnuOBS(:) = FnuOBS(:) + dFnuOBS(:) * RAND_NORM(NwOBS)
 
@@ -311,7 +314,8 @@ PROGRAM test_gibbs
   ! DO i=1,5
   !   ! pargen(itest) = pargen0 * i!**.25_DP
   !   pargen(itest) = pargen0 + LOG(i**1._DP) ! LOG cases
-  !   Fnu1par(:,i) = specModel(wOBS(:), INDPAR=ind, PARVAL=pargen(:), QABS=Qabs(:))
+  !   Fnu1par(:,i) = specModel(wOBS(:), INDPAR=ind, PARVAL=pargen(:), &
+                     ! QABS=Qabs(:), EXTINCT=extinct(:,:))
   !   CALL WRITE_HDF5(DBLARR2D=Fnu1par(:,i:i), FILE=filOUT, &
   !                   NAME="var1par", COMPRESS=compress, verbose=debug, &
   !                   IND2=[i,i])
@@ -511,7 +515,8 @@ PROGRAM test_gibbs
   !!-----------------
   ALLOCATE(FnuMOD(NwOBS))
   
-  FnuMOD(:) = specModel(wOBS(:), INDPAR=ind, PARVAL=meanpar(:), QABS=Qabs(:), verbose=.TRUE.)
+  FnuMOD(:) = specModel(wOBS(:), INDPAR=ind, PARVAL=meanpar(:), &
+                        QABS=Qabs(:), EXTINCT=extinct(:,:), verbose=.TRUE.)
   
   CALL WRITE_HDF5(DBLARR1D=FnuMOD, FILE=filOUT, &
                   NAME="FnuMOD (MKS)", COMPRESS=compress, verbose=debug, &
