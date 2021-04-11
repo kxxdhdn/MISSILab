@@ -135,7 +135,7 @@ for m in mode:
                 axes[px,py].set_title(
                     fr'$Spectra ({x+1},{y+1})$')
         
-            plt.savefig(filename)
+            # plt.savefig(filename)
     
 # plt.show()
 

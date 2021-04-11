@@ -40,7 +40,7 @@ PROGRAM simulate_MIR
   INTEGER :: Np, Nq, Nw, NwOBS, Npar, Ncorr, Nrat, Nbandr, Ncont
   INTEGER :: counter
   INTEGER, DIMENSION(:), ALLOCATABLE :: indB ! 1D (Nbandr)
-  REAL(DP) :: wvl0, lnIband0!, rescaling
+  REAL(DP) :: wvl0!, lnIref, rescaling
   REAL(DP), DIMENSION(:), ALLOCATABLE :: dblarr1d
   REAL(DP), DIMENSION(:), ALLOCATABLE :: mulnR, siglnR ! 1D (Nrat)
   REAL(DP), DIMENSION(:), ALLOCATABLE :: corr ! 1D (Ncorr)
@@ -53,13 +53,12 @@ PROGRAM simulate_MIR
   REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: lnR ! 3D (Nrat,Np,Nq)
   REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: pargen ! 3D (1,1,Npar)
   REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: par ! 3D (Np,Nq,Npar)
-  REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: Iband ! 3D (Np,Nq,Nbandr) [(U_in * Hz)]
+  ! REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: Rband ! 3D (Np,Nq,Nbandr)
   REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: FnuSIM, dFnuSIM ! 3D (Np,Nq,Nw) [U_in]
   REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: FnuOBS, dFnuOBS ! 3D (1,1,NwOBS) [U_in]
   REAL(DP), DIMENSION(:,:,:,:), ALLOCATABLE :: fnuband_tab
   CHARACTER(lenpar) :: spec_unit
-  CHARACTER(lenpar), DIMENSION(:), ALLOCATABLE :: ALLabB
-  CHARACTER(lenpar), DIMENSION(:), ALLOCATABLE :: labB ! 1D (Nbandr)
+  CHARACTER(lenpar), DIMENSION(:), ALLOCATABLE :: labB
   CHARACTER(lenpar), DIMENSION(:), ALLOCATABLE :: ratname ! 1D (Nrat)
   CHARACTER(lenpar), DIMENSION(:), ALLOCATABLE :: corrname ! 1D (Ncorr)
   LOGICAL :: varCONT, varSovN, flatSovN, flatUNC
@@ -78,7 +77,7 @@ PROGRAM simulate_MIR
   PRINT*
 
   !! Sample size
-  Np = 3 ! sampling along correlation axis
+  Np = 6 ! sampling along correlation axis
   Nq = 9 ! sampling along option (FnuCONT or SovN) axis
 
   !! Options
@@ -120,7 +119,7 @@ PROGRAM simulate_MIR
   Nw = SIZE(wvl)
 
   CALL READ_MASTER(WAVALL=wvl(:), DIRIN=dirIN, &
-                   LABB=ALLabB, &
+                   LABB=labB, &
                    NCONT=Ncont, &
                    QABS=Qabs, EXTINCT=extinct, &
                    PARINFO=parinfo, INDPAR=ind, NPAR=Npar, SPEC_UNIT=spec_unit)
@@ -151,48 +150,48 @@ PROGRAM simulate_MIR
 
   !! Find band index
   !!-----------------
-  CALL IWHERE( TRIMEQ(ALLabB(:),'Main 6.2 (1)'), indB(1) )
-  CALL IWHERE( TRIMEQ(ALLabB(:),'Main 7.7 (1)'), indB(2) )
-  CALL IWHERE( TRIMEQ(ALLabB(:),'Main 8.6'), indB(3) )
-  CALL IWHERE( TRIMEQ(ALLabB(:),'Main 11.2'), indB(4) )
-  CALL IWHERE( TRIMEQ(ALLabB(:),'Main 12.7 (1)'), indB(5) )
+  CALL IWHERE( TRIMEQ(labB(:),'Main 6.2 (1)'), indB(1) )
+  CALL IWHERE( TRIMEQ(labB(:),'Main 7.7 (1)'), indB(2) )
+  CALL IWHERE( TRIMEQ(labB(:),'Main 8.6'), indB(3) )
+  CALL IWHERE( TRIMEQ(labB(:),'Main 11.2'), indB(4) )
+  CALL IWHERE( TRIMEQ(labB(:),'Main 12.7 (1)'), indB(5) )
   
   !! Number of indpdt intensity ratios should be no larger
-  Nrat = Nbandr - 1 ! fix I11.3
+  Nrat = Nbandr - 1 ! fix I11.2
 
   ALLOCATE(ratname(Nrat), mulnR(Nrat), siglnR(Nrat))
   
   !! Denote ratio name
   !!-------------------
-  ratname(1) = 'I6.2/I11.3'
-  ratname(2) = 'I7.7/I11.3'
-  ratname(3) = 'I8.6/I11.3'
-  ratname(4) = 'I12.7/I11.3'
+  ratname(1) = 'I6.2/I11.2'
+  ratname(2) = 'I7.7/I11.2'
+  ratname(3) = 'I8.6/I11.2'
+  ratname(4) = 'I12.7/I11.2'
 
   mulnR(1) = LOG(.9_DP)
-  mulnR(2) = LOG(1.5_DP)
-  mulnR(3) = LOG(1.1_DP)
+  mulnR(2) = LOG(1.8_DP)
+  mulnR(3) = LOG(1.4_DP)
   mulnR(4) = LOG(.8_DP)
 
   siglnR(1) = LOG(1.2_DP) - mulnR(1)
-  siglnR(2) = LOG(2._DP) - mulnR(2)
-  siglnR(3) = LOG(1.2_DP) - mulnR(3)
+  siglnR(2) = LOG(2.1_DP) - mulnR(2)
+  siglnR(3) = LOG(1.5_DP) - mulnR(3)
   siglnR(4) = LOG(1._DP) - mulnR(4)
 
   !! Number of correlations (incl. non-correlated ones)
   Ncorr = N_CORR(Nrat)
 
-  ALLOCATE(corrname(Ncorr), corr(Ncorr), &
-           lnR(Nrat,Np,Nq), covar(Nrat,Nrat), Smat(Nrat,Nrat), Rmat(Nrat,Nrat))
+  ALLOCATE(corrname(Ncorr), corr(Ncorr), lnR(Nrat,Np,Nq), &
+           covar(Nrat,Nrat), Smat(Nrat,Nrat), Rmat(Nrat,Nrat))
 
   !! Denote correlation name (X - Y)
   !!---------------------------------
-  corrname(1) = 'I6.2/I11.3 - I7.7/I11.3' ! r12
-  corrname(2) = 'I6.2/I11.3 - I8.6/I11.3' ! r13
-  corrname(3) = 'I6.2/I11.3 - I12.7/I11.3' ! r14
-  corrname(4) = 'I7.7/I11.3 - I8.6/I11.3' ! r23
-  corrname(5) = 'I7.7/I11.3 - I12.7/I11.3' ! r24
-  corrname(6) = 'I8.6/I11.3 - I12.7/I11.3' ! r34
+  corrname(1) = 'I6.2/I11.2 - I7.7/I11.2' ! r12
+  corrname(2) = 'I6.2/I11.2 - I8.6/I11.2' ! r13
+  corrname(3) = 'I6.2/I11.2 - I12.7/I11.2' ! r14
+  corrname(4) = 'I7.7/I11.2 - I8.6/I11.2' ! r23
+  corrname(5) = 'I7.7/I11.2 - I12.7/I11.2' ! r24
+  corrname(6) = 'I8.6/I11.2 - I12.7/I11.2' ! r34
 
   !! Define correlation coefficients
   !!---------------------------------
@@ -211,49 +210,30 @@ PROGRAM simulate_MIR
   covar(:,:) = MATMUL( Smat(:,:),MATMUL(Rmat(:,:),Smat(:,:)) )
 
   !! Generate lnR(Nrat,Np,Nq)
-  lnR(:,:,1) = RAND_MULTINORM(Np,COVAR=covar(:,:),MU=mulnR(:))
+  ! lnR(:,:,1) = RAND_MULTINORM(Np,COVAR=covar(:,:),MU=mulnR(:))
   DO q=1,Nq
-    lnR(:,:,q) = lnR(:,:,1)
-    ! lnR(:,:,q) = RAND_MULTINORM(Np,COVAR=covar(:,:),MU=mulnR(:))
+    ! lnR(:,:,q) = lnR(:,:,1)
+    lnR(:,:,q) = RAND_MULTINORM(Np,COVAR=covar(:,:),MU=mulnR(:))
 
   END DO
 
-  !! Get band intensities (lnIband in par)
+  !! Get band intensity ratios (lnRband in par)
   !!---------------------------------------
   
-  !! Set Iband benchmark (see also cont level)
-  lnIband0 = pargen(1,1,ind%lnIband(indB(4))) ! lnI11.3
+  !! Set ref band intensity (see also cont level)
+  ! lnIref = pargen(1,1,ind%lnRband(ind%refB)) ! lnI11.2
 
-  !! Modify and extract Iband
-  par(:,:,ind%lnIband(indB(1))) = lnR(1,:,:) + lnIband0 ! lnI6.2 (1)
-  par(:,:,ind%lnIband(indB(1)+1)) = LOG(.2_DP) + lnIband0 ! lnI6.2 (2)
-  par(:,:,ind%lnIband(indB(2))) = lnR(2,:,:) + lnIband0 ! lnI7.7
-  par(:,:,ind%lnIband(indB(3))) = lnR(3,:,:) + lnIband0 ! lnI8.6
-  par(:,:,ind%lnIband(indB(5))) = lnR(4,:,:) + lnIband0 ! lnI12.7
-
-  ALLOCATE(labB(Nbandr), Iband(Np,Nq,Nbandr))
+  par(:,:,ind%lnRband(indB(1))) = lnR(1,:,:) ! lnI6.2 (1)
+  ! par(:,:,ind%lnRband(indB(1)+1)) = LOG(.2_DP) ! lnI6.2 (2)
+  par(:,:,ind%lnRband(indB(2))) = lnR(2,:,:) ! lnI7.7
+  par(:,:,ind%lnRband(indB(3))) = lnR(3,:,:) ! lnI8.6
+  par(:,:,ind%lnRband(indB(5))) = lnR(4,:,:) ! lnI12.7
   
-  DO i=1,Nbandr
-    labB(i) = ALLabB(indB(i))
-    !! Intensity unit in W/m2/sr
-    SELECT CASE(spec_unit)
-      CASE ('MKS')
-        Iband(:,:,i) = EXP(par(:,:,ind%lnIband(indB(i))))
-      CASE ('MJyovsr')
-        Iband(:,:,i) = EXP(par(:,:,ind%lnIband(indB(i)))) * 1.E-20_DP
-      CASE DEFAULT
-        Iband(:,:,i) = EXP(par(:,:,ind%lnIband(indB(i))))
-
-    END SELECT
-  END DO
-
   CALL WRITE_HDF5(STRARR1D=[spec_unit], NAME='Spectral unit', &
                   FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.FALSE.)
-  CALL WRITE_HDF5(STRARR1D=labB(:), NAME='Correlated band name', &
+  CALL WRITE_HDF5(STRARR1D=labB(indB(:)), NAME='Correlated band name', &
                   FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
-  CALL WRITE_HDF5(INTARR1D=ind%lnIband(indB(:)), NAME='Correlated band indpar', &
-                  FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
-  CALL WRITE_HDF5(DBLARR3D=Iband(:,:,:), NAME='Correlated band intensity (Wovm2ovsr)', &
+  CALL WRITE_HDF5(INTARR1D=ind%lnRband(indB(:)), NAME='Correlated band indpar', &
                   FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
   CALL WRITE_HDF5(STRARR1D=ratname(:), NAME='Band ratio name', &
                   FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
@@ -266,6 +246,8 @@ PROGRAM simulate_MIR
   FORALL (p=1:Np,q=1:Nq) &
     par(p,q,ind%lnMovd2(:Ncont)) = par(p,q,ind%lnMovd2(:Ncont)) + LOG(multiCONT(q))
 
+  par(:,:,ind%lnAv(:)) = 0.5_DP
+  
   ALLOCATE(FnuSIM(Np,Nq,Nw), dFnuSIM(Np,Nq,Nw))
 
   FnuSIM(:,:,:) = specModel(wvl(:), INDPAR=ind, PARVAL=par(:,:,:), &
@@ -341,6 +323,8 @@ PROGRAM simulate_MIR
   CALL WRITE_HDF5(DBLARR3D=dFnuSIM(:,:,:), NAME='dFnuOBS ('//TRIMLR(spec_unit)//')', &
                   FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
   CALL WRITE_HDF5(DBLARR4D=fnuband_tab(:,:,:,:), NAME='FnuBAND ('//TRIMLR(spec_unit)//')', &
+                  FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
+  CALL WRITE_HDF5(DBLARR3D=par(:,:,:), NAME='Simulated parameter value', &
                   FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
 
   PRINT*, 'Simulate spectra [done]'//NEW_LINE('')

@@ -63,7 +63,7 @@ else:
 ##--------------------------------
 dirout = mroot
 verbose = 'T'
-Nmcmc = 10
+Nmcmc = 500
 NiniMC = 0 # no need for BB
 calib = 'F'
 robust_RMS = 'F'
@@ -134,6 +134,8 @@ labB = ['Main 3.3     ', # 1
         'Plateau 17.0 '] # 30
 labE = ['D03']
 
+refB = ['Main 11.2    ']
+
 ALline = False
 ALband = True
 
@@ -164,13 +166,13 @@ dictune = [ dict([ ('name','default'),
             ##=======================
 
             ## Extensive param:
-            ## lnMovd2, lnIline, lnIband, lnFstar,
+            ## lnMovd2, lnRline, lnRband, lnFstar,
             ##-------------------------------------
             dict([ ('namall','lnMovd2'),('fixed','F'),('hyper','T'),]),
             
-            dict([ ('namall','lnIline'),('fixed','F'),('hyper','T'),]),
+            dict([ ('namall','lnRline'),('fixed','F'),('hyper','T'),]),
             
-            dict([ ('namall','lnIband'),('fixed','F'),('hyper','T'),]),
+            dict([ ('namall','lnRband'),('fixed','F'),('hyper','T'),]),
             
             dict([ ('namall','lnFstar'),('fixed','F'),('hyper','T'),]),
             
@@ -216,7 +218,7 @@ dictune = [ dict([ ('name','default'),
             dict([ ('name','WLband'+str(labB.index('Main 11.2')+1)),
                    ('fixed','F'),('hyper','T') ]),
             
-            # dict([ ('namall','lnAv'),('fixed','F'),('hyper','T'), ]), # LOG( 1 mag )
+            dict([ ('namall','lnAv'),('fixed','F'),('hyper','T'), ]), # LOG( 1 mag )
             
             dict() ]
 
@@ -267,8 +269,8 @@ for i in range(2*Ncont):
     comp[i0+i] = 'CONT'
 i0 += 2*Ncont
 for i in range(Nline):
-    name[i0+3*i] = 'lnIline'+str(i+1)
-    namall[i0+3*i] = 'lnIline'
+    name[i0+3*i] = 'lnRline'+str(i+1)
+    namall[i0+3*i] = 'lnRline'
     value[i0+3*i] = -20. # 2.06e-9 [MJyovsr]
     name[i0+3*i+1] = 'Cline'+str(i+1)
     namall[i0+3*i+1] = 'Cline'
@@ -289,8 +291,8 @@ for i in range(3*Nline):
     comp[i0+i] = 'LINE'
 i0 += 3*Nline
 for i in range(Nband):
-    name[i0+4*i] = 'lnIband'+str(i+1)
-    namall[i0+4*i] = 'lnIband'
+    name[i0+4*i] = 'lnRband'+str(i+1)
+    namall[i0+4*i] = 'lnRband'
     value[i0+4*i] = -20. # 2.06e-9 [MJyovsr]
     name[i0+4*i+1] = 'Cband'+str(i+1)
     namall[i0+4*i+1] = 'Cband'
@@ -327,6 +329,7 @@ write_hdf5(h5_model, 'label cont', labQ, append=True, verbose=noisy)
 write_hdf5(h5_model, 'label band', labB, append=True, verbose=noisy)
 write_hdf5(h5_model, 'label line', labL, append=True, verbose=noisy)
 write_hdf5(h5_model, 'label extc', labE, append=True, verbose=noisy)
+write_hdf5(h5_model, 'ref band', refB, append=True, verbose=noisy)
 write_hdf5(h5_model, 'parinfo name', name, append=True, verbose=noisy)
 write_hdf5(h5_model, 'parinfo comp', comp, append=True, verbose=noisy)
 write_hdf5(h5_model, 'parinfo fixed', fixed, append=True, verbose=noisy)

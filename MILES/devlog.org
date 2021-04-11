@@ -5,7 +5,7 @@
 #+TODO: REPORT(r!) BUG(b!) KNOWNCAUSE(k!) | FIXED(f!)
 #+STARTUP: logdone
 
-Version: v0.3 (20210331)
+Version: v0.3.1 (20210407)
 * TODO tests [9/12]
 ** DONE fitHB
 CLOSED: [2021-01-13 Wed 18:55]
@@ -72,7 +72,7 @@ CLOSED: [2020-06-10 Wed 12:06]
 - Note taken on [2020-05-11 Mon 14:32] \\
   Test chi2min with observation (M83), 3D FITS data imported via Python UI (fits2h5)
 - State "KNOWNCAUSE" from "DONE"       [2020-05-11 Mon 14:32]
-* TODO programs [90%]
+* TODO programs [84%]
 :PROPERTIES:
 :COOKIE_DATA: recursive
 :END:
@@ -93,10 +93,12 @@ CLOSED: [2020-06-10 Wed 12:06]
 CLOSED: [2021-02-10 Wed 00:45]
 *** DONE ~genpar.f90~
 CLOSED: [2021-02-10 Wed 00:45]
-*** DONE ~.pynout/show_genpar.py~
+*** DONE ~pynout/show_genpar.py~
 CLOSED: [2021-02-10 Wed 00:45]
 *** DONE ~simulate_MIR.f90~ 
 CLOSED: [2021-03-12 Fri 14:56]
+- Note taken on [2021-04-07 Wed 14:06] \\
+  Reparameterization
 *** DONE ~pynout/show_galspec.py~
 CLOSED: [2021-02-10 Wed 00:45]
 *** DONE ~pynout/input_fitpar_chi2.py~
@@ -109,7 +111,11 @@ CLOSED: [2021-02-10 Wed 00:45]
 CLOSED: [2021-02-10 Wed 00:45]
 *** DONE ~pynout/corr_fitpar.py~
 CLOSED: [2021-02-10 Wed 00:45]
-** TODO Analysis: ~anapar.f90~
+- Note taken on [2021-04-07 Wed 14:07] \\
+  Seperated figures
+** TODO Analysis [0%]
+*** TODO ~anapar.f90~
+*** TODO ~anaMIR.f90~
 ** DONE Hierarchical Bayesian (HIBARI): ~fitMIR_HB.f90~ [100%]
 *** DONE add hyper param
 CLOSED: [2021-01-13 Wed 18:55]
@@ -167,6 +173,8 @@ CLOSED: [2020-05-11 Mon 11:47]
 *** SUBROUTINE
 **** DONE ~initparam~ : Automatic initialization of model parameters
 CLOSED: [2020-12-10 Thu 11:43]
+- Note taken on [2021-04-07 Wed 14:05] \\
+  Reparameterization
 - Note taken on [2021-03-31 Wed 15:36] \\
   Involved ~modiffBB~, ~~ and ~lorentzband~ in the auto limits to avoid PDF normalization difference due to the variable change (between \lambda and \nu);
   Force limited=.TRUE. for intensive parameters
@@ -174,14 +182,21 @@ CLOSED: [2020-12-10 Thu 11:43]
   Modified iniMC limits to more narrow ranges
 **** DONE ~read_master~ : Read the input master file for the Chi2/HB run
 CLOSED: [2020-10-23 Fri 10:13]
+- Note taken on [2021-04-07 Wed 13:57] \\
+  Reparameterization added refB
 - Note taken on [2021-03-31 Wed 15:40] \\
   Added resume option
 - Note taken on [2021-02-10 Wed 00:33] \\
   Added extinction curve.
-**** DONE ~set_indpar~ : Fill the INDPAR_TYPE structure, from a ~PARINFO_TYPE~ structure
+**** DONE ~set_indpar~ : Fill the ~INDPAR_TYPE~ structure, from a ~PARINFO_TYPE~ structure
 CLOSED: [2020-09-23 Wed 10:58]
-**** CNCL ~make_Qabs~ : Read optical properties
+- Note taken on [2021-04-07 Wed 13:56] \\
+  Reparameterization added a variable ~refB~
+**** DONE ~set_indref~ : see also ~set_indref~
+CLOSED: [2021-04-07 Wed 13:55]
+**** DONE ~make_Qabs~ : Read optical properties
 CLOSED: [2020-05-11 Mon 11:47]
+- State "DONE"       from "CNCL"       [2021-04-07 Wed 13:54]
 - State "CNCL"       from "DONE"       [2020-09-23 Wed 10:57] \\
   Merged to ~read_master~
 **** CNCL ~make_par~ : Create the parameter structure (obsolete)
@@ -232,6 +247,8 @@ CLOSED: [2020-05-20 Wed 23:36]
 CLOSED: [2020-05-11 Mon 13:40]
 **** DONE ~specModel~ : Total model function for Chi2/HB calling
 CLOSED: [2020-12-08 Tue 16:05]
+- Note taken on [2021-04-07 Wed 13:52] \\
+  Reparameterization
 - Note taken on [2021-03-05 Fri 22:41] \\
   Simplification of ~specModel_gen~ (by Fred): run time 4 times faster
 - Note taken on [2021-02-10 Wed 00:31] \\
@@ -322,6 +339,8 @@ CLOSED: [2020-11-23 Mon 12:11]
 *** FUNC
 **** ~partuning~
 CLOSED: [2020-10-23 Fri 10:09]
+- Note taken on [2021-04-07 Wed 14:12] \\
+  Reparameterization
 ** DONE ~asc2h5.py~
 CLOSED: [2020-04-27 Mon 23:35]
 ** CNCL ~fits2h5.py~

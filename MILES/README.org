@@ -4,14 +4,15 @@
 * Notices
 The Python package [[https://github.com/kxxdhdn/astylo][astylo]] is required by the MILES UI. You can install it with a single command: ~pip install astylo~
 * Version log
-** v0.x (2021xxxx, Chi2 calib)
-- Input separated spectra (of each module) + calib error
-- Fractional date saving during program running
 ** v1 (202104xx, HB release)
 - Update tests/
+** v0.3.3 (2021xxxx, Chi2 enhanced)
+- Input separated spectra (of each module) + calib error
+- Calculate derived parameter errors with gradient function
+- Fractional date saving during program running
 ** v0.3.2 (202104xx, SMinverse)
 - Adopte Sherman-Morrison formula for (covariance) matrix inversion
-** v0.3.1 (202104xx, reparam)
+** v0.3.1 (20210407, reparam)
 - Reparametrise ~specModel~ with band ratios instead of band intensities
 ** v0.3 (20210331, HB beta)
 - Add simulated galaxy spectral fitting

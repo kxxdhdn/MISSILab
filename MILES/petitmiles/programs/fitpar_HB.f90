@@ -49,7 +49,6 @@ PROGRAM fitpar_HB
   CHARACTER(*), PARAMETER :: nammu = "Mean of hyperdistribution"
   CHARACTER(*), PARAMETER :: namsig = "Sigma of hyperdistribution"
   CHARACTER(*), PARAMETER :: namcorr = "Correlation of hyperdistribution"
-  CHARACTER(*), PARAMETER :: namrat = "Band ratio values"
   CHARACTER(*), PARAMETER :: dirIN = '../out1/'
   CHARACTER(*), PARAMETER :: filOBS = dirIN//'galspec'//h5ext
   LOGICAL, PARAMETER :: compress = .FALSE.
@@ -57,14 +56,14 @@ PROGRAM fitpar_HB
   
   !! Input variables
   INTEGER :: x, y, i, ih, indhyp, indres0!, iw, j
-  INTEGER :: Npar, Nmcmc, NiniMC, Nsou, Nrat, Nparfree!, Nwfree
+  INTEGER :: Npar, Nmcmc, NiniMC, Nsou, Nparfree!, Nwfree
   INTEGER :: Ncont, Nband, Nline, Nextc, Nstar, Nextra
-  INTEGER, DIMENSION(:), ALLOCATABLE :: indresume, itied, indBcorr
+  INTEGER, DIMENSION(:), ALLOCATABLE :: indresume, itied
   INTEGER, DIMENSION(:,:,:), ALLOCATABLE :: maskint ! convert mask=0 to mask=T
   LOGICAL :: verbose, calib, newseed, newinit, dostop, resume, nohi
   CHARACTER(lenpath) :: dirOUT, filOUT, filMCMC, fiLOG
   CHARACTER(lenpar) :: spec_unit
-  CHARACTER(lenpar), DIMENSION(:), ALLOCATABLE :: labB, labL, ratname, namBcorr
+  CHARACTER(lenpar), DIMENSION(:), ALLOCATABLE :: labB, labL
 
   !! MCMC parameters
   INTEGER :: icurr, iprev, counter
@@ -74,7 +73,7 @@ PROGRAM fitpar_HB
   REAL(DP), DIMENSION(:), ALLOCATABLE :: meancorr, stdevcorr
   REAL(DP), DIMENSION(:,:), ALLOCATABLE :: dblarr2d
   REAL(DP), DIMENSION(:,:), ALLOCATABLE :: mumcmc, sigmcmc, corrmcmc
-  REAL(DP), DIMENSION(:,:,:,:), ALLOCATABLE :: parini, parmcmc, ratmcmc
+  REAL(DP), DIMENSION(:,:,:,:), ALLOCATABLE :: parini, parmcmc
   LOGICAL :: fileOK
 
   !! Output variables
@@ -85,12 +84,11 @@ PROGRAM fitpar_HB
   !! Analysis variables
   INTEGER :: t_burnin, t_end, Nmcmc_eff
   REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: meanpar, stdevpar
-  REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: meanrat, stdevrat
   REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: FnuCONT, &
     FnuBAND, FnuSTAR, Pabs, FnuLINE, FnuMOD
   REAL(DP), DIMENSION(:,:,:,:), ALLOCATABLE :: FnuCONT_tab, &
     FnuBAND_tab, FnuSTAR_tab, Pabs_tab, FnuLINE_tab
-  REAL(DP), DIMENSION(:,:,:,:), ALLOCATABLE :: parpix, par4D, ratpix
+  REAL(DP), DIMENSION(:,:,:,:), ALLOCATABLE :: parpix, par4D
 
   
   !!------------------------------------------------------------------------
@@ -127,11 +125,6 @@ PROGRAM fitpar_HB
         ACTION="WRITE",POSITION=MERGE("APPEND","REWIND",resume))
   unitlog(:) = [ ulog, ustd ]
   
-  !! Band ratio correlations
-  CALL READ_HDF5(STRARR1D=ratname, FILE=filOBS, NAME='Band ratio name', N1=Nrat)
-  CALL READ_HDF5(STRARR1D=namBcorr, FILE=filOBS, NAME='Correlated band name')
-  CALL READ_HDF5(INTARR1D=indBcorr, FILE=filOBS, NAME='Correlated band indpar')
-
   IF (newseed) CALL GENERATE_NEWSEED()
   IF (verbose) PRINT*
   DO i=1,MERGE(2,1,verbose)
@@ -331,11 +324,10 @@ PROGRAM fitpar_HB
   END DO
   
   !! Initialize the parameters of the chain
-  ALLOCATE (parmcmc(Nx,Ny,Npar,2), ratmcmc(Nx,Ny,Nrat,2))!,ln1pdmcmc(Ncalib,2))
+  ALLOCATE (parmcmc(Nx,Ny,Npar,2))!,ln1pdmcmc(Ncalib,2))
   DO i=1,2 
     FORALL (x=1:Nx,y=1:Ny,ANY(maskpar(x,y,:))) parmcmc(x,y,:,i) = parini(x,y,:,1)
     ! ln1pdmcmc(:,i) = ln1pd0(:)
-    ratmcmc(:,:,:,i) = 0._DP
   END DO
 
   !! Initialize the hyperparameters. If the run is non hierarchical, we
@@ -399,15 +391,9 @@ PROGRAM fitpar_HB
                     FILE=filMCMC, COMPRESS=compress, VERBOSE=debug, APPEND=.FALSE.)
     CALL WRITE_HDF5(STRARR1D=parhypinfo(:)%name,NAME="Hyper parameter label",&
                     FILE=filMCMC, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
-    CALL WRITE_HDF5(STRARR1D=ratname(:), NAME="Band ratio label", &
-                    FILE=filMCMC, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
-    CALL WRITE_HDF5(STRARR1D=namBcorr(:), NAME="Correlated band label", &
-                    FILE=filMCMC, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
     CALL WRITE_HDF5(INTARR1D=[Nmcmc], NAME="Length of MCMC", &
                     FILE=filMCMC, COMPRESS=compress, verbose=debug, APPEND=.TRUE.)
     CALL WRITE_HDF5(INITDBLARR=[Nx,Ny,Npar,Nmcmc], NAME=nampar, &
-                    FILE=filMCMC, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
-    CALL WRITE_HDF5(INITDBLARR=[Nx,Ny,Nrat,Nmcmc], NAME=namrat, &
                     FILE=filMCMC, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
     CALL WRITE_HDF5(INITDBLARR=[Nparhyp,Nmcmc], NAME=nammu, &
                     FILE=filMCMC, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
@@ -533,11 +519,6 @@ PROGRAM fitpar_HB
       END IF
     END DO param
 
-    ratmcmc(:,:,1,icurr) = EXP(parmcmc(:,:,indBcorr(1),icurr)) / EXP(parmcmc(:,:,indBcorr(4),icurr))
-    ratmcmc(:,:,2,icurr) = EXP(parmcmc(:,:,indBcorr(2),icurr)) / EXP(parmcmc(:,:,indBcorr(4),icurr))
-    ratmcmc(:,:,3,icurr) = EXP(parmcmc(:,:,indBcorr(3),icurr)) / EXP(parmcmc(:,:,indBcorr(4),icurr))
-    ratmcmc(:,:,4,icurr) = EXP(parmcmc(:,:,indBcorr(5),icurr)) / EXP(parmcmc(:,:,indBcorr(4),icurr))
-
     !! 3) Hyperparameters
     !!--------------------
     hierarchy: IF (ANY(parinfo(:)%hyper)) THEN
@@ -628,9 +609,6 @@ END DO
     CALL WRITE_HDF5(DBLARR4D=parmcmc(:,:,:,icurr:icurr), FILE=filMCMC, &
                     NAME=nampar, COMPRESS=compress, VERBOSE=debug, &
                     IND4=[counter,counter])
-    CALL WRITE_HDF5(DBLARR4D=ratmcmc(:,:,:,icurr:icurr), FILE=filMCMC, &
-                    NAME=namrat, COMPRESS=compress, VERBOSE=debug, &
-                    IND4=[counter,counter])
     CALL WRITE_HDF5(DBLARR2D=mumcmc(:,icurr:icurr), FILE=filMCMC, &
                     NAME=nammu, COMPRESS=compress, VERBOSE=debug, &
                     IND2=[counter,counter])
@@ -688,7 +666,6 @@ END DO
   Nmcmc_eff = t_end - t_burnin + 1
 
   ALLOCATE(parpix(Nx,Ny,Npar,t_end), meanpar(Nx,Ny,Npar), stdevpar(Nx,Ny,Npar))
-  ALLOCATE(ratpix(Nx,Ny,Nrat,t_end), meanrat(Nx,Ny,Nrat), stdevrat(Nx,Ny,Nrat))
 
   CALL READ_HDF5(DBLARR4D=par4D, FILE=filMCMC, &
                  NAME=nampar, IND4=[1,t_end])
@@ -696,25 +673,11 @@ END DO
   meanpar(:,:,:) = MEAN(parpix(:,:,:,t_burnin:t_end), DIM=4)
   stdevpar(:,:,:) = SIGMA(parpix(:,:,:,t_burnin:t_end), DIM=4)
 
-  CALL READ_HDF5(DBLARR4D=par4D, FILE=filMCMC, &
-                 NAME=namrat, IND4=[1,t_end])
-  ratpix(:,:,:,:) = par4D(:,:,:,:)
-  meanrat(:,:,:) = MEAN(ratpix(:,:,:,t_burnin:t_end), DIM=4)
-  stdevrat(:,:,:) = SIGMA(ratpix(:,:,:,t_burnin:t_end), DIM=4)
-  
   CALL WRITE_HDF5(STRARR1D=parinfo(:)%name, NAME="Parameter label", &
                   FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.FALSE.)
   CALL WRITE_HDF5(DBLARR3D=meanpar(:,:,:), NAME="Mean of parameter value", &
                   FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
   CALL WRITE_HDF5(DBLARR3D=stdevpar(:,:,:), NAME="Sigma of parameter value", &
-                  FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
-  CALL WRITE_HDF5(STRARR1D=namBcorr(:), NAME="Correlated band label", &
-                  FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
-  CALL WRITE_HDF5(STRARR1D=ratname(:), NAME="Band ratio label", &
-                  FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
-  CALL WRITE_HDF5(DBLARR3D=meanrat(:,:,:), NAME="Mean of band ratio value", &
-                  FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
-  CALL WRITE_HDF5(DBLARR3D=stdevrat(:,:,:), NAME="Sigma of band ratio value", &
                   FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
 
   !! Compute the average, standard deviations and correlations of each quantity

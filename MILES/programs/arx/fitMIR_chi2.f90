@@ -41,14 +41,14 @@ PROGRAM fitMIR_chi2
   
   !! Input variables
   INTEGER :: i, j, x, y, Npar, Nparfree, Nwfree, NiniMC
-  INTEGER :: Ncont, Nband, Nline, Npabs, Nstar, Nextra
+  INTEGER :: Ncont, Nband, Nline, Nextc, Nstar, Nextra
   CHARACTER(lenpath) :: dirIN, dirOUT, filOBS, filOUT, fiLOG
   CHARACTER(lenpar) :: spec_unit
   CHARACTER(lenpath), DIMENSION(:), ALLOCATABLE :: Parr1d
   CHARACTER(lendustQ), DIMENSION(:), ALLOCATABLE :: labQ
   CHARACTER(lenpar), DIMENSION(:), ALLOCATABLE :: labB, labL
   LOGICAL :: verbose, calib, newseed, newinit, dostop
-  INTEGER, DIMENSION(:,:,:), ALLOCATABLE    :: maskint ! convert mask=0 to mask=T
+  INTEGER, DIMENSION(:,:,:), ALLOCATABLE :: maskint ! convert mask=0 to mask=T
 
   !! Monte-Carlo parameters
   INTEGER :: ibest
@@ -59,13 +59,13 @@ PROGRAM fitMIR_chi2
   REAL(DP), DIMENSION(:,:,:,:), ALLOCATABLE :: parini
   
   !! chi2min_LM parameters
-  INTEGER, DIMENSION(:,:), ALLOCATABLE      :: status
-  INTEGER, DIMENSION(:), ALLOCATABLE        :: itied
-  REAL(DP), DIMENSION(:,:), ALLOCATABLE     :: limits!, medSovN
-  REAL(DP), DIMENSION(:,:), ALLOCATABLE     :: chi2red
-  REAL(DP), DIMENSION(:,:,:), ALLOCATABLE   :: parerr, par
+  INTEGER, DIMENSION(:,:), ALLOCATABLE :: status
+  INTEGER, DIMENSION(:), ALLOCATABLE :: itied
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: limits!, medSovN
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: chi2red
+  REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: parerr, par
   REAL(DP), DIMENSION(:,:,:,:), ALLOCATABLE :: covarOBS, covpar
-  LOGICAL, DIMENSION(:,:), ALLOCATABLE      :: limited, maskS
+  LOGICAL, DIMENSION(:,:), ALLOCATABLE :: limited, maskS
   
   !! Output variables
   INTEGER, DIMENSION(:,:), ALLOCATABLE :: Niter
@@ -82,7 +82,7 @@ PROGRAM fitMIR_chi2
   !!                            I. Read the inputs
   !!------------------------------------------------------------------------
 
-  CALL READ_HDF5(STRARR1D=Parr1d, FILE='../out2/input_path'//h5ext, NAME='input path')
+  CALL READ_HDF5(STRARR1D=Parr1d, FILE='../out1/input_path'//h5ext, NAME='Input path')
   dirIN = Parr1d(1)
   filOBS = TRIMLR(dirIN)//'observation_MIR'//h5ext
   
@@ -94,7 +94,7 @@ PROGRAM fitMIR_chi2
                    CALIB=calib, NEWSEED=newseed, NEWINIT=newinit, &
                    LABQ=labQ, LABL=labL, LABB=labB, QABS=Qabs, EXTINCT=extinct, &
                    NCONT=Ncont, NBAND=Nband, NLINE=Nline, &
-                   NPABS=Npabs, NSTAR=Nstar, NEXTRA=Nextra, DOSTOP=dostop, &
+                   NEXTC=Nextc, NSTAR=Nstar, NEXTRA=Nextra, DOSTOP=dostop, &
                    PARINFO=parinfo, INDPAR=ind, NPAR=Npar, SPEC_UNIT=spec_unit)
 
   !! Output settings
@@ -394,14 +394,14 @@ PROGRAM fitMIR_chi2
   ALLOCATE(FnuMOD(Nx,Ny,NwOBS))
 
   FnuMOD(:,:,:) = specModel( wOBS(:), INDPAR=ind, PARVAL=par(:,:,:), &
-                             QABS=Qabs(:), EXTINCT=extinct(:), &
+                             QABS=Qabs(:), EXTINCT=extinct(:,:), &
                              FNUCONT=FnuCONT, FNUBAND=FnuBAND, FNUSTAR=FnuSTAR, &
                              PABS=Pabs, FNULINE=FnuLINE, &
                              FNUCONT_TAB=FnuCONT_tab, FNUBAND_TAB=FnuBAND_tab, &
                              FNUSTAR_TAB=FnuSTAR_tab, PABS_TAB=Pabs_tab, &
                              FNULINE_TAB=FnuLINE_tab )
 
-  DO i=1,Npabs
+  DO i=1,Nextc
     FnuCONT_tab(:,:,:,i) = FnuCONT_tab(:,:,:,i) * Pabs(:,:,:)
   END DO
   CALL WRITE_HDF5(DBLARR4D=FnuCONT_tab, NAME='FnuCONT ('//TRIMLR(spec_unit)//')', &

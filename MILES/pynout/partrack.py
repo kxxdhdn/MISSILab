@@ -25,17 +25,30 @@ filobs = mroot+'galspec'
 filfit = mroot+'fitpar_HB'
 filog = mroot+'parlog_fitpar_HB'
 
-Nmcmc = read_hdf5(filog, 'Length of MCMC')
+Nmcmc = read_hdf5(filog, 'Length of MCMC')[0]
+t_end = Nmcmc
+t_burnin = int(t_end/10) - 1
 parname = read_hdf5(filog, 'Parameter label')
 parmcmc = read_hdf5(filog, 'Parameter values')
 Npar, Ny, Nx = parmcmc.shape[1:4]
 parmu = read_hdf5(filfit, 'Mean of parameter value')
+# mu = np.mean(parmcmc[t_burnin:t_end,:,:,:], axis=0)
+# print(mu-parmu)
 parsig = read_hdf5(filfit, 'Sigma of parameter value')
+# sig = np.std(parmcmc[t_burnin:t_end,:,:,:], axis=0)
+# print(sig-parsig)
+# exit()
 
 filmod = mroot+'input_fitMIR_model'
 fixed = read_hdf5(filmod, 'parinfo fixed')
 parini = read_hdf5(filmod, 'parinfo value')
 labB = read_hdf5(filmod, 'label band')
+parsim = read_hdf5(filobs, 'Simulated parameter value') # True par
+chi2ini = read_hdf5(filobs, 'Chi2 fitted parameter value') # Chi2 result
+
+            
+## Parameter track (pix)
+##-----------------------
 
 ## Find band param
 bname = 'Main 6.2 (1)'
@@ -47,12 +60,9 @@ for i, name in enumerate(parname):
         if labB[indB-1]==bname:
             ipar = i + bex
             
-## Parameter track (pix)
-##-----------------------
 counter = np.arange(Nmcmc)
 for x in range(Nx):
-    # filename = path_fig+'partrack_x='+str(x+1)+'.png'
-    filename = path_fig+'x='+str(x+1)+'_partrack'+'.png'
+    filename = path_fig+'partrack_x='+str(x+1)+'.png'
     
     fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(9,9))
     plt.subplots_adjust(left=.1, bottom=.05, \
@@ -79,8 +89,7 @@ for x in range(Nx):
 ##------------------------------
 # Nbin = int(Nmcmc/10)
 # for x in range(Nx):
-#     # filename = path_fig+'pardist_x='+str(x+1)+'.png'
-#     filename = path_fig+'x='+str(x+1)+'_pardist'+'.png'
+#     filename = path_fig+'pardist_x='+str(x+1)+'.png'
 
 #     fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(9,9))
 #     plt.subplots_adjust(left=.1, bottom=.05, \
@@ -105,9 +114,9 @@ for x in range(Nx):
 
 ## Parameter track (par)
 ##-----------------------
-# x,y = 0,0
+x,y = 0,2
 for j in range(int(Npar/9)+1):
-    filename = path_fig+'ipar='+str(j*9+1)+'-'+str(j*9+9)+'_partrack'+'.png'
+    filename = path_fig+'partrack_ipar='+str(j*9+1)+'-'+str(j*9+9)+'.png'
     
     fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(9,9))
     plt.subplots_adjust(left=.1, bottom=.05, \
@@ -126,7 +135,9 @@ for j in range(int(Npar/9)+1):
 
             ## Initial param in red
             if fixed[jpar]=='F':
-                axes[px,py].vlines(parini[jpar],0,Nmcmc,colors='r')
+                # axes[px,py].vlines(parini[jpar],0,Nmcmc,colors='r')
+                axes[px,py].vlines(chi2ini[jpar,y,x],0,Nmcmc,colors='r')
+                axes[px,py].vlines(parsim[jpar,y,x],0,Nmcmc,colors='g')
             
             axes[px,py].set_xlabel('Parameter value')
             axes[px,py].set_ylabel('MCMC counter')

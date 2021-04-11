@@ -49,7 +49,7 @@ PROGRAM fitpar_chi2
   CHARACTER(lendustQ), DIMENSION(:), ALLOCATABLE :: labQ
   CHARACTER(lenpar), DIMENSION(:), ALLOCATABLE :: labB, labL
   LOGICAL :: verbose, calib, newseed, newinit, dostop
-  INTEGER, DIMENSION(:,:,:), ALLOCATABLE    :: maskint ! convert mask=0 to mask=T
+  INTEGER, DIMENSION(:,:,:), ALLOCATABLE :: maskint ! convert mask=0 to mask=T
 
   !! Monte-Carlo parameters
   INTEGER :: ibest
@@ -95,7 +95,6 @@ PROGRAM fitpar_chi2
                    PARINFO=parinfo, INDPAR=ind, NPAR=Npar, SPEC_UNIT=spec_unit)
 
   !! Output settings
-  !!-----------------
   filOUT = TRIMLR(dirOUT)//'fitpar_chi2'//h5ext
   
   fiLOG = TRIMLR(dirOUT)//'log_fitpar_chi2'//ascext

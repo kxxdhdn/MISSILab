@@ -217,7 +217,7 @@ def partuning(dictune, Ncont, Nline, Nband,
             elif tune['namall']=='lnT':
                 i0 = 0
                 ind = [i0+2*i+1 for i in range(Ncont)]
-            elif tune['namall']=='lnIline':
+            elif tune['namall']=='lnRline':
                 i0 = 2*Ncont
                 ind = [i0+3*i for i in range(Nline)]
             elif tune['namall']=='Cline':
@@ -226,7 +226,7 @@ def partuning(dictune, Ncont, Nline, Nband,
             elif tune['namall']=='Wline':
                 i0 = 2*Ncont
                 ind = [i0+3*i+2 for i in range(Nline)]
-            elif tune['namall']=='lnIband':
+            elif tune['namall']=='lnRband':
                 i0 = 2*Ncont + 3*Nline
                 ind = [i0+4*i for i in range(Nband)]
             elif tune['namall']=='Cband':
