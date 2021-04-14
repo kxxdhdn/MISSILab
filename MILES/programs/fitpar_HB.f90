@@ -16,10 +16,10 @@
 
 PROGRAM fitpar_HB
 
-  USE utilities, ONLY: DP, pring, trimLR, trimeq, swap, timinfo, tinyDP, &
+  USE utilities, ONLY: DP, pring, trimLR, trimEQ, swap, tinyDP, &
                        banner_program, ustd, isNaN, strike, warning, &
-                       initiate_clock, time_type, today
-  USE arrays, ONLY: iwhere, closest, reallocate, ramp
+                       timinfo, initiate_clock, time_type, today
+  USE arrays, ONLY: iwhere, closest, reallocate
   USE constants, ONLY: MKS
   USE matrices, ONLY: invert_cholesky
   USE statistics, ONLY: mean, sigma, correlate, correl_index, corr2Rmat
@@ -45,7 +45,7 @@ PROGRAM fitpar_HB
   INTEGER, PARAMETER :: Ngibbsmax = 3000 ! determines Ngrid
   REAL(DP), PARAMETER :: accrand = 1.E-3_DP
   CHARACTER(*), PARAMETER :: nampar = "Parameter values"
-  CHARACTER(*), PARAMETER :: namln1pd = "ln(1+delta)"
+  ! CHARACTER(*), PARAMETER :: namln1pd = "ln(1+delta)"
   CHARACTER(*), PARAMETER :: nammu = "Mean of hyperdistribution"
   CHARACTER(*), PARAMETER :: namsig = "Sigma of hyperdistribution"
   CHARACTER(*), PARAMETER :: namcorr = "Correlation of hyperdistribution"
@@ -109,7 +109,7 @@ PROGRAM fitpar_HB
                    PARHYPINFO=parhypinfo, NPARHYP=Nparhyp, NCORRHYP=Ncorrhyp)
 
   !! Output settings
-  !!----------------
+  !!-----------------
   IF (nohi) THEN
     filOUT = TRIMLR(dirOUT)//'fitpar_BB'//h5ext
     filMCMC = TRIMLR(dirOUT)//'parlog_fitpar_BB'//h5ext
@@ -518,6 +518,10 @@ PROGRAM fitpar_HB
         END DO xsource
       END IF
     END DO param
+! DO i=1,MERGE(2,1,verbose)
+!   WRITE(unitlog(i),*) 'Parameter sampling [done] - '// &
+!                         TRIMLR(TIMINFO(timestr))
+! END DO
 
     !! 3) Hyperparameters
     !!--------------------
@@ -534,9 +538,10 @@ PROGRAM fitpar_HB
                                            ACCURACY=accrand,NMAX=Ngibbsmax)
       END DO average
 DO i=1,MERGE(2,1,verbose)
-  WRITE(unitlog(i),*) 'Average sampling - '// &
+  WRITE(unitlog(i),*) 'Average sampling [done] - '// &
                         TRIMLR(TIMINFO(timestr))
 END DO
+
       !! b. Variance
       mucurr(:) = mumcmc(:,icurr)
       sigmcmc(:,icurr) = sigmcmc(:,iprev)
@@ -550,9 +555,10 @@ END DO
                                                 ACCURACY=accrand,NMAX=Ngibbsmax))
       END DO variance
 DO i=1,MERGE(2,1,verbose)
-  WRITE(unitlog(i),*) 'Variance sampling - '// &
+  WRITE(unitlog(i),*) 'Variance sampling [done] - '// &
                         TRIMLR(TIMINFO(timestr))
 END DO
+
       !! c. Correlation
       !! Correlation coefficients are the tricky part. Indeed, the covariance
       !! matrix has to be positive definite. The Wishart prior is here to ensure
@@ -570,7 +576,8 @@ END DO
         corrcurr(:) = corrmcmc(:,icurr)
         corrmcmc(icorr,icurr) = RAND_GENERAL(lnpost_corr,limR(:),YLOG=.True., &
                                              VERBOSE=debug,LNFUNC=.True.,  &
-                                             ACCURACY=accrand,NMAX=1000)!Ngibbsmax)
+                                             ! ACCURACY=accrand,NMAX=Ngibbsmax)
+                                             ACCURACY=1.E-2_DP,NMAX=Ngibbsmax)
         IF (isNaN(corrmcmc(icorr,icurr))) THEN
           IF (icorr > 1) THEN
             corrmcmc(icorr-1:icorr,icurr) = corrmcmc(icorr-1:icorr,iprev)
@@ -582,9 +589,10 @@ END DO
         END IF
       END DO correlation
 DO i=1,MERGE(2,1,verbose)
-  WRITE(unitlog(i),*) 'Correlation sampling - '// &
+  WRITE(unitlog(i),*) 'Correlation sampling [done] - '// &
                         TRIMLR(TIMINFO(timestr))
-END DO      
+END DO
+
     ELSE
       PRINT*, "  HIBARI: Non-hierarchical run."
       !! If the run is non hierarchical, we save in place of the hyperparameters

@@ -3,16 +3,18 @@
 
 """
 
+SOURCE: M82 (NGC 3034)
+
 This is the interface of MILES generating following input files:
 
-  /out1/galspec.h5   -- data + new initial parameters
-  /out1/input_fitMIR_master.h5   -- general param
-  /out1/input_fitMIR_model.h5    -- model param
-  /out1/input_fitMIR_extra.h5    -- extra param
+  mroot/out1/set_input.h5     -- input path
+  dirin/observation_MIR.h5     -- observations
+  dirin/input_fitMIR_master.h5 -- general param
+  dirin/input_fitMIR_model.h5  -- model param
+  dirin/input_fitMIR_extra.h5  -- extra param
 
 """
 
-import os
 import math
 import numpy as np
 
@@ -21,42 +23,73 @@ from astylo.arrlib import closest
 from astylo.iolib import read_fits, write_hdf5, read_hdf5
 
 ## local
-from utilities import res, TABLine, TABand, partuning
-         
+from utilities import (croot, mroot,
+                       res, TABLine, TABand, partuning)
+
 ## Path
 ##------
-mroot = os.path.dirname(os.path.abspath(__file__))+'/../out1/'
-h5_obs = mroot+'galspec' # simulated spectra
-h5_master = mroot+'input_fitMIR_master'
-h5_model = mroot+'input_fitMIR_model'
-h5_extra = mroot+'input_fitMIR_extra'
+h5_path = mroot+'out1/set_input'
+dirin = croot # define input dir
+
+h5_obs = dirin+'observation_MIR'
+h5_master = dirin+'input_fitMIR_master'
+h5_model = dirin+'input_fitMIR_model'
+h5_extra = dirin+'input_fitMIR_extra'
 
 ##-----------------------------
 ## Set parameters
 ##-----------------------------
-program = 'fitpar_chi2'
+program = 'fit_chi2_M82'
 noisy = False # verbose/debug for this routine
 
+write_hdf5(h5_path, 'input dir', [dirin], verbose=noisy)
+
 ##-----------------------------
-## Append galspec.h5
+## Write observation_MIR.h5
 ##-----------------------------
+z = 0.00068
+fits_obs = mroot+'data/M82_irs' # obs
+fits_unc = fits_obs+'_unc' # unc
+wvl_inf = 5. # min wvl
+wvl_sup = 21. # max wvl
+x_inf = 0 # 6*4 pix: (1,1) - (9,10)
+y_inf = 0
+x_sup = 9
+y_sup = 10
 # spec_unit = 'MKS' # W.m-2.Hz-1.sr-1
 spec_unit = 'MJyovsr' # MJy.sr-1
 
-wave = read_hdf5(h5_obs, 'Wavelength (microns)')
+## Read FITS
+dset = read_fits(fits_obs, fits_unc)
 
-## Create mask
-data = read_hdf5(h5_obs, 'FnuOBS ('+spec_unit+')')
+## Truncate wavelength range
+ind_inf = closest(dset.wave, wvl_inf)
+ind_sup = closest(dset.wave, wvl_sup)
+wave = dset.wave[ind_inf:ind_sup]
+wave = wave / (1+z)
+
+data = dset.data[ind_inf:ind_sup,y_inf:y_sup,x_inf:x_sup]
+unc = dset.unc[ind_inf:ind_sup,y_inf:y_sup,x_inf:x_sup]
+## convert MJy/sr to W/m2/Hz/sr (MKS)
+if spec_unit=='MKS':
+    data = data * 1.e-20
+    unc = unc * 1.e-20
+
+## Mask NaNs
 mask = np.isnan(data) * 1
 
 ## Write HDF5
 ##------------
+write_hdf5(h5_obs, 'Spectral unit', [spec_unit], verbose=noisy)
+write_hdf5(h5_obs, 'Wavelength (microns)', wave, append=True, verbose=noisy)
+write_hdf5(h5_obs, 'FnuOBS ('+spec_unit+')', data, append=True, verbose=noisy)
+write_hdf5(h5_obs, 'dFnuOBS ('+spec_unit+')', unc, append=True, verbose=noisy)
 write_hdf5(h5_obs, 'NaN mask', mask, append=True, verbose=noisy)
 
 ##--------------------------------
 ## Write input_fitMIR_master.h5
 ##--------------------------------
-dirout = mroot
+dirout = croot # define output dir
 verbose = 'T'
 Nmcmc = 1000 # no need for chi2
 NiniMC = 0
@@ -71,7 +104,7 @@ newinit = 'F'
 ## Write HDF5
 ##------------
 write_hdf5(h5_master, 'program', [program], verbose=noisy)
-write_hdf5(h5_master, 'output dir', [dirout], append=True, verbose=noisy)
+write_hdf5(h5_master, 'output dir', [dirout], verbose=noisy)
 write_hdf5(h5_master, 'Spectral unit', [spec_unit], append=True, verbose=noisy)
 write_hdf5(h5_master, 'verbose', [verbose], append=True, verbose=noisy)
 write_hdf5(h5_master, 'Nmcmc', [Nmcmc], append=True, verbose=noisy)
@@ -151,13 +184,13 @@ dictune = [ dict([ ('name','default'),
             ##=======================
 
             ## Extensive param:
-            ## lnMovd2, lnRline, lnRband, lnFstar,
+            ## lnMovd2, lnIline, lnIband, lnFstar,
             ##-------------------------------------
             dict([ ('namall','lnMovd2'),('fixed','F'),]),
             
-            dict([ ('namall','lnRline'),('fixed','F'),]),
+            dict([ ('namall','lnIline'),('fixed','F'),]),
             
-            dict([ ('namall','lnRband'),('fixed','F'),]),
+            dict([ ('namall','lnIband'),('fixed','F'),]),
             
             dict([ ('namall','lnFstar'),('fixed','F'),]),
             
@@ -241,8 +274,8 @@ for i in range(2*Ncont):
     comp[i0+i] = 'CONT'
 i0 += 2*Ncont
 for i in range(Nline):
-    name[i0+3*i] = 'lnRline'+str(i+1)
-    namall[i0+3*i] = 'lnRline'
+    name[i0+3*i] = 'lnIline'+str(i+1)
+    namall[i0+3*i] = 'lnIline'
     value[i0+3*i] = 0.
     name[i0+3*i+1] = 'Cline'+str(i+1)
     namall[i0+3*i+1] = 'Cline'
@@ -263,8 +296,8 @@ for i in range(3*Nline):
     comp[i0+i] = 'LINE'
 i0 += 3*Nline
 for i in range(Nband):
-    name[i0+4*i] = 'lnRband'+str(i+1)
-    namall[i0+4*i] = 'lnRband'
+    name[i0+4*i] = 'lnIband'+str(i+1)
+    namall[i0+4*i] = 'lnIband'
     value[i0+4*i] = 0.
     name[i0+4*i+1] = 'Cband'+str(i+1)
     namall[i0+4*i+1] = 'Cband'
@@ -325,3 +358,10 @@ Nextra = 0
 write_hdf5(h5_extra, 'program', [program], verbose=noisy)
 write_hdf5(h5_extra, 'Nextra', [Nextra], append=True, verbose=noisy)
 
+
+##-----------------------------
+## Write observations_fitMIR.h5 (part 2)
+##-----------------------------
+
+## Write HDF5
+##------------

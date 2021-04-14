@@ -6,11 +6,13 @@ The Python package [[https://github.com/kxxdhdn/astylo][astylo]] is required by 
 * Version log
 ** v1 (202104xx, HB release)
 - Update tests/
-** v0.3.3 (2021xxxx, Chi2 enhanced)
+** v0.3.4 (2021xxxx, Chi2 enhanced)
 - Input separated spectra (of each module) + calib error
 - Calculate derived parameter errors with gradient function
 - Fractional date saving during program running
-** v0.3.2 (202104xx, SMinverse)
+** v0.3.3 (202104xx, reparam2)
+- Reparametrise ~specModel~ with contimuum param (Movd2 & T)
+** v0.3.2 (20210412, SMinverse)
 - Adopte Sherman-Morrison formula for (covariance) matrix inversion
 ** v0.3.1 (20210407, reparam)
 - Reparametrise ~specModel~ with band ratios instead of band intensities

@@ -307,9 +307,9 @@ PROGRAM fitpar_chi2
     END DO chi2fity
   END DO chi2fitx
 
-  !! Extending init param for HB inputs
-  CALL WRITE_HDF5(DBLARR3D=par(:,:,:), NAME='Chi2 fitted parameter value', &
-                  FILE=filOBS, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
+  !! Extending init param for HB inputs (alternatively by Python)
+  ! CALL WRITE_HDF5(DBLARR3D=par(:,:,:), NAME='Chi2 fitted parameter value', &
+  !                 FILE=filOBS, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
 
   DO i=1,MERGE(2,1,verbose)
     WRITE(unitlog(i),*)

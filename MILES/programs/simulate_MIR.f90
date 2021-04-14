@@ -92,9 +92,9 @@ PROGRAM simulate_MIR
   ALLOCATE(multiCONT(Nq))
   
   IF (varCONT) THEN
-    multiCONT(:) = [ .1_DP, 1._DP, 10._DP, &
-                     .1_DP, 1._DP, 10._DP, &
-                     .1_DP, 1._DP, 10._DP ]
+    multiCONT(:) = [ 1._DP, 3._DP, 10._DP, &
+                     1._DP, 3._DP, 10._DP, &
+                     1._DP, 3._DP, 10._DP ]
   ELSE
     multiCONT(:) = 1._DP
   END IF
@@ -105,10 +105,10 @@ PROGRAM simulate_MIR
 
   IF (varSovN) THEN
     SovN(:) = [ 5._DP, 5._DP, 5._DP, &
-                25._DP, 25._DP, 25._DP, &
-                125._DP, 125._DP, 125._DP ]
+                20._DP, 20._DP, 20._DP, &
+                80._DP, 80._DP, 80._DP ]
   ELSE
-    SovN(:) = 10._DP
+    SovN(:) = 20._DP
   END IF
 
   !! Read the inputs
@@ -170,13 +170,13 @@ PROGRAM simulate_MIR
 
   mulnR(1) = LOG(.9_DP)
   mulnR(2) = LOG(1.8_DP)
-  mulnR(3) = LOG(1.4_DP)
+  mulnR(3) = LOG(1.2_DP)
   mulnR(4) = LOG(.8_DP)
 
-  siglnR(1) = LOG(1.2_DP) - mulnR(1)
-  siglnR(2) = LOG(2.1_DP) - mulnR(2)
-  siglnR(3) = LOG(1.5_DP) - mulnR(3)
-  siglnR(4) = LOG(1._DP) - mulnR(4)
+  siglnR(1) = LOG(1.8_DP) - mulnR(1)
+  siglnR(2) = LOG(2.6_DP) - mulnR(2)
+  siglnR(3) = LOG(2.5_DP) - mulnR(3)
+  siglnR(4) = LOG(1.6_DP) - mulnR(4)
 
   !! Number of correlations (incl. non-correlated ones)
   Ncorr = N_CORR(Nrat)

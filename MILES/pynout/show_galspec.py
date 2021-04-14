@@ -106,7 +106,7 @@ for x in range(Nx):
         axes[px,py].set_title(
             fr'$Spectra ({x+1},{y+1})$')
 
-    plt.savefig(filename)
+    # plt.savefig(filename)
     
 # plt.show()
 

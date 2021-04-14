@@ -245,7 +245,7 @@ CONTAINS
   FUNCTION lnhyper_sig (lnSgrid)
 
     USE utilities, ONLY: DP, hugeDP
-    USE matrices, ONLY: invert_cholesky
+    ! USE matrices, ONLY: invert_cholesky
     IMPLICIT NONE
 
     REAL(DP), DIMENSION(:), INTENT(IN) :: lnSgrid
@@ -260,7 +260,7 @@ CONTAINS
     REAL(DP), DIMENSION(Nparhyp,Nparhyp,SIZE(lnSgrid)) :: invcov, allinvSmat
     REAL(DP), DIMENSION(SIZE(lnSgrid)) :: detcov
     ! LOGICAL, DIMENSION(SIZE(lnSgrid)) :: noposdef
-
+    
     ! Covariance matrices and inverses for the grid
     Ngrid = SIZE(lnSgrid(:))
 
@@ -288,7 +288,7 @@ CONTAINS
                               allinvSmat(:,:,i) )
       detcov(i) = detcorr * 1._DP/PRODUCT( allinvSgrid(:,i) )**2
     END FORALL
-      
+    
     ! Individual distributions
     allpar0(:,:,:) = 0._DP 
     FORALL (ix=1:Nx,iy=1:Ny,ip=1:Nparhyp,maskhyp(ix,iy,ip)) &
@@ -312,20 +312,28 @@ CONTAINS
   !!------------------------------
   FUNCTION lnhyper_corr (corrgrid)
 
-    USE utilities, ONLY: DP, hugeDP
-    USE matrices, ONLY: invert_cholesky 
+    USE utilities, ONLY: DP, hugeDP!, &
+                         ! pring, trimLR, timinfo, initiate_clock, time_type
+    ! USE linear_system, ONLY: cholesky_decomp
+    USE matrices, ONLY: invert_cholesky!, determinant_cholesky
+    ! USE auxil, ONLY: invert_mSM
     IMPLICIT NONE
 
     REAL(DP), DIMENSION(:), INTENT(IN) :: corrgrid
     REAL(DP), DIMENSION(SIZE(corrgrid)) :: lnhyper_corr
 
     INTEGER :: ic, ix, iy, i, Ngrid
+    ! REAL(DP) :: delta
+    ! REAL(DP), DIMENSION(Nparhyp,Nparhyp) :: Chdcp
     REAL(DP), DIMENSION(Ncorrhyp,SIZE(corrgrid)) :: allcorrgrid
     REAL(DP), DIMENSION(Nx,Ny,SIZE(corrgrid)) :: lnpind
     REAL(DP), DIMENSION(Nx,Ny,Nparhyp) :: allpar0
     REAL(DP), DIMENSION(Nparhyp,Nparhyp,SIZE(corrgrid)) :: covar, invcov
     REAL(DP), DIMENSION(SIZE(corrgrid)) :: detcov
     LOGICAL, DIMENSION(SIZE(corrgrid)) :: noposdef
+
+    ! TYPE(time_type) :: timestr
+    ! CALL INITIATE_CLOCK(timestr)
 
     ! Covariance matrices and inverses for the grid
     Ngrid = SIZE(corrgrid(:))
@@ -341,7 +349,25 @@ CONTAINS
                                        NOPOSDEF=noposdef(i) )
     END DO
 
-    !! Calculate invcov and detcov (opt.2: Sherman-Morrison)
+    !! Calculate invcov and detcov (opt.2: modified Sherman-Morrison)
+! PRINT*, 'icorr='//TRIMLR(pring(icorr))//' begin: '//TRIMLR(TIMINFO(timestr))
+    ! DO i=1,Ngrid
+    !   IF (i==1) THEN
+    !     invcov(:,:,i) = INVERT_CHOLESKY( covar(:,:,i), DETERMINANT=detcov(i), &
+    !                                      NOPOSDEF=noposdef(i) )
+    !   ELSE
+    !     Chdcp = CHOLESKY_DECOMP(covar(:,:,i), noposdef(i))
+    !     IF (noposdef(i)) RETURN
+
+    !     delta = covar(icorr2ij(icorr,1),icorr2ij(icorr,2),i) &
+    !             - covar(icorr2ij(icorr,1),icorr2ij(icorr,2),i-1)
+    !     invcov(:,:,i) = INVERT_MSM(covar(:,:,i), invcov(:,:,i-1), &
+    !                                icorr2ij(icorr,:), delta, Nparhyp)
+        
+    !     detcov(i) = DETERMINANT_CHOLESKY(covar(:,:,i), NODECOMPOSITION=.TRUE.)
+    !   END IF
+    ! END DO
+! PRINT*, 'icorr='//TRIMLR(pring(icorr))//' end: '//TRIMLR(TIMINFO(timestr))
 
     ! Individual distributions
     allpar0(:,:,:) = 0._DP

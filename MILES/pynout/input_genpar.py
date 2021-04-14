@@ -317,7 +317,7 @@ for i in range(Nstar):
     comp[i0+i] = 'STAR'
 
 ## Param tuning
-partuning(dictune, Ncont, Nline, Nband,
+partuning(dictune, Ncont, Nline, Nband, Nextc,
           name, fixed, limited, limits, model, hyper, tied, value)
 
 ## Write HDF5

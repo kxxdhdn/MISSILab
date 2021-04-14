@@ -5,8 +5,10 @@
 #+TODO: REPORT(r!) BUG(b!) KNOWNCAUSE(k!) | FIXED(f!)
 #+STARTUP: logdone
 
-Version: v0.3.1 (20210407)
-* TODO tests [9/12]
+Version: v0.3.2 (20210412)
+* TODO tests [11/12]
+** DONE invert
+CLOSED: [2021-04-14 Wed 10:42]
 ** DONE fitHB
 CLOSED: [2021-01-13 Wed 18:55]
 ** DONE Bayes
@@ -18,8 +20,6 @@ CLOSED: [2020-09-28 Mon 15:06]
 - [X] Fix all but one parameter to check 
 - [X] Redo above for the modified function with logarithmic param
 - [X] plot the dist. for each param
-** REPORT anaChi2
-- State "REPORT"     from "DONE"       [2020-12-21 Mon 14:50]
 ** KNOWNCAUSE fitChi2
 - Note taken on [2020-06-18 Thu 16:50] \\
   + [X] Very slow (probably due to the very small uncertainties, or largely varied S/N), should set timers;
@@ -45,6 +45,10 @@ CLOSED: [2020-04-25 Sat 19:27]
 - State "FIXED"      from "DONE"       [2020-05-20 Wed 23:39]
 ** DONE compile
 CLOSED: [2020-04-24 Fri 15:00]
+** CNCL anaChi2
+CLOSED: [2021-04-14 Wed 10:41]
+- State "CNCL"       from "REPORT"     [2021-04-14 Wed 10:41]
+- State "REPORT"     from "DONE"       [2020-12-21 Mon 14:50]
 ** CNCL fitHBsyn
 CLOSED: [2020-10-02 Fri 10:20]
 - State "CNCL"       from "FIXED"      [2021-01-14 Thu 15:35] \\
@@ -72,7 +76,7 @@ CLOSED: [2020-06-10 Wed 12:06]
 - Note taken on [2020-05-11 Mon 14:32] \\
   Test chi2min with observation (M83), 3D FITS data imported via Python UI (fits2h5)
 - State "KNOWNCAUSE" from "DONE"       [2020-05-11 Mon 14:32]
-* TODO programs [84%]
+* TODO programs [87%]
 :PROPERTIES:
 :COOKIE_DATA: recursive
 :END:
@@ -113,8 +117,9 @@ CLOSED: [2021-02-10 Wed 00:45]
 CLOSED: [2021-02-10 Wed 00:45]
 - Note taken on [2021-04-07 Wed 14:07] \\
   Seperated figures
-** TODO Analysis [0%]
-*** TODO ~anapar.f90~
+** TODO Analysis [50%]
+*** DONE ~anapar.f90~
+CLOSED: [2021-04-14 Wed 10:42]
 *** TODO ~anaMIR.f90~
 ** DONE Hierarchical Bayesian (HIBARI): ~fitMIR_HB.f90~ [100%]
 *** DONE add hyper param
@@ -199,6 +204,8 @@ CLOSED: [2020-05-11 Mon 11:47]
 - State "DONE"       from "CNCL"       [2021-04-07 Wed 13:54]
 - State "CNCL"       from "DONE"       [2020-09-23 Wed 10:57] \\
   Merged to ~read_master~
+**** DONE ~check_SM~ : Prepare Sherman-Morrison approach
+CLOSED: [2021-04-14 Wed 10:39]
 **** CNCL ~make_par~ : Create the parameter structure (obsolete)
 CLOSED: [2020-06-09 Tue 09:53]
 - State "CNCL"       from "FIXED"      [2020-09-04 Fri 10:26] \\
@@ -213,6 +220,10 @@ CLOSED: [2020-05-25 Mon 18:11]
   Removed. Parameters stored in a separate module/file
 *** FUNCTION
 **** Analytical functions of the individual features
+***** DONE ~invert_SM~ : Sherman-Morrison approach to invert matrices
+CLOSED: [2021-04-14 Wed 10:40]
+***** DONE ~invert_mSM~ : Modified Sherman-Morrison approach to invert matrices
+CLOSED: [2021-04-14 Wed 10:40]
 ***** FIXED ~modifBB~ : Dust contimuum (N BB)
 CLOSED: [2020-12-10 Thu 11:55]
 - State "FIXED"      from "KNOWNCAUSE" [2020-12-10 Thu 11:55]
@@ -307,7 +318,7 @@ Former ~fitMIR_chi2_external~ module
 ** DONE ~HB_kit.f90~
 CLOSED: [2021-02-10 Wed 01:17]
 Former ~fitMIR_HB_external~ module
-* TODO pynout [42%]
+* DONE pynout [100%]
 :PROPERTIES:
 :COOKIE_DATA: recursive
 :END:
@@ -320,14 +331,15 @@ Former ~fitMIR_HB_external~ module
 *** ~out1/parlog_fitMIR_HB.h5~
 *** ~out1/fitMIR_chi2.h5~
 *** ~out1/fitMIR_HB.h5~
-** TODO plots [0/0]
-** TODO inputs [0/2]
+** DONE inputs [2/2]
 - Note taken on [2020-12-14 Mon 20:00] \\
   Added redshift
 - Note taken on [2020-11-23 Mon 13:41] \\
   Added wvl auto detecting process to constrain band and line selection
-*** TODO ~input_fitMIR_HB.py~
-*** TODO ~input_fitMIR_chi2.py~
+*** DONE ~input_fitMIR_HB.py~
+CLOSED: [2021-04-14 Wed 10:43]
+*** DONE ~input_fitMIR_chi2.py~
+CLOSED: [2021-04-14 Wed 10:43]
 ** DONE ~utilities.py~
 *** DATA
 **** ~res~

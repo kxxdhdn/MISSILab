@@ -27,6 +27,7 @@ from utilities import res, TABLine, TABand, partuning
 ##------
 mroot = os.path.dirname(os.path.abspath(__file__))+'/../out1/'
 h5_obs = mroot+'galspec' # simulated spectra
+h5_chi2 = mroot+'fitpar_chi2'
 h5_master = mroot+'input_fitMIR_master'
 h5_model = mroot+'input_fitMIR_model'
 h5_extra = mroot+'input_fitMIR_extra'
@@ -57,13 +58,16 @@ if (not chi2init):
     write_hdf5(h5_obs, 'Chi2init', ['F'], append=True, verbose=noisy)
 else:
     write_hdf5(h5_obs, 'Chi2init', ['T'], append=True, verbose=noisy)
-
+    parini = read_hdf5(h5_chi2, 'Best fitted parameter value')
+    write_hdf5(h5_obs, 'Chi2 fitted parameter value', parini,
+               append=True, verbose=noisy)
+    
 ##--------------------------------
 ## Write input_fitMIR_master.h5
 ##--------------------------------
 dirout = mroot
 verbose = 'T'
-Nmcmc = 500
+Nmcmc = 100
 NiniMC = 0 # no need for HB
 calib = 'F'
 robust_RMS = 'F'
@@ -320,7 +324,7 @@ for i in range(Nstar):
     comp[i0+i] = 'STAR'
 
 ## Param tuning
-partuning(dictune, Ncont, Nline, Nband,
+partuning(dictune, Ncont, Nline, Nband, Nextc,
           name, fixed, limited, limits, model, hyper, tied, value)
 
 ## Write HDF5

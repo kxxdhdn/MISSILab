@@ -22,8 +22,8 @@ path_fig = mroot+'Figures/'
 if not os.path.exists(path_fig):
     os.makedirs(path_fig)
 filobs = mroot+'galspec'
-filfit = mroot+'fitpar_HB'
-filog = mroot+'parlog_fitpar_HB'
+filfit = mroot+'fitpar_BB'
+filog = mroot+'parlog_fitpar_BB'
 
 Nmcmc = read_hdf5(filog, 'Length of MCMC')[0]
 t_end = Nmcmc
@@ -114,7 +114,7 @@ for x in range(Nx):
 
 ## Parameter track (par)
 ##-----------------------
-x,y = 0,2
+x,y = 2,5
 for j in range(int(Npar/9)+1):
     filename = path_fig+'partrack_ipar='+str(j*9+1)+'-'+str(j*9+9)+'.png'
     

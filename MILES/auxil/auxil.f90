@@ -29,6 +29,7 @@ MODULE auxil
   INTEGER, PARAMETER, PUBLIC :: NparCONT=2, NparLINE=3, NparBAND=4, NparEXTC=1, NparSTAR=1
   
   PUBLIC :: set_indpar, set_indref, make_Qabs, read_master, initparam
+  PUBLIC :: check_SM, invert_SM, invert_mSM
   PUBLIC :: degradeRes, modifBB, gaussLine, lorentzBand, extCurve, specModel
 
   INTERFACE modifBB
@@ -67,6 +68,7 @@ MODULE auxil
     !! The actual unit depends on the input spectrum.
     !! Here as an example, suppose the input is in MKS.
     INTEGER, DIMENSION(Ncont_max) :: lnMovd2 = -1 ! dust MBB coeff LOG[Msun/pc2]
+    !! If there are identical cont composants, the second lnT becomes delta lnT, etc.
     INTEGER, DIMENSION(Ncont_max) :: lnT = -1 ! dust temperature (MBB) LOG[K]
     INTEGER, DIMENSION(Nline_max) :: lnRline = -1 ! line intensity over ref band Ratio LOG[-]
     INTEGER, DIMENSION(Nline_max) :: Cline = -1 ! Center [um]
@@ -758,10 +760,9 @@ CONTAINS
             sig = Cband_sig
             IF (.NOT. parinfo(ind%Cband(i))%limited(1)) &
               parinfo(ind%Cband(i))%limits(1) = val-sig
-            parinfo(ind%Cband(i))%limited(1) = .TRUE.
             IF (.NOT. parinfo(ind%Cband(i))%limited(2)) &
               parinfo(ind%Cband(i))%limits(2) = val+sig
-            parinfo(ind%Cband(i))%limited(2) = .TRUE.
+            parinfo(ind%Cband(i))%limited = .TRUE.
           END IF
           
           !! WSband
@@ -772,10 +773,9 @@ CONTAINS
             par(:,:,ind%WSband(i),:) = val
             IF (.NOT. parinfo(ind%WSband(i))%limited(1)) &
               parinfo(ind%WSband(i))%limits(1) = val*0.5_DP
-            parinfo(ind%WSband(i))%limited(1) = .TRUE.
             IF (.NOT. parinfo(ind%WSband(i))%limited(2)) &
               parinfo(ind%WSband(i))%limits(2) = val*2._DP
-            parinfo(ind%WSband(i))%limited(2) = .TRUE.
+            parinfo(ind%WSband(i))%limited = .TRUE.
           END IF
      
           !! WLband
@@ -786,10 +786,9 @@ CONTAINS
             par(:,:,ind%WLband(i),:) = val
             IF (.NOT. parinfo(ind%WLband(i))%limited(1)) &
               parinfo(ind%WLband(i))%limits(1) = val*0.5_DP
-            parinfo(ind%WLband(i))%limited(1) = .TRUE.
             IF (.NOT. parinfo(ind%WLband(i))%limited(2)) &
               parinfo(ind%WLband(i))%limits(2) = val*2._DP
-            parinfo(ind%WLband(i))%limited(2) = .TRUE.
+            parinfo(ind%WLband(i))%limited = .TRUE.
           END IF
           
           !! lnRband
@@ -842,10 +841,9 @@ CONTAINS
             sig = degradeRes(val, 0.01_DP, 'SL-LL') / 2.355_DP
             IF (.NOT. parinfo(ind%Cline(i))%limited(1)) &
               parinfo(ind%Cline(i))%limits(1) = val-sig
-            parinfo(ind%Cline(i))%limited(1) = .TRUE.
             IF (.NOT. parinfo(ind%Cline(i))%limited(2)) &
               parinfo(ind%Cline(i))%limits(2) = val+sig
-            parinfo(ind%Cline(i))%limited(2) = .TRUE.
+            parinfo(ind%Cline(i))%limited = .TRUE.
           END IF
           
           !! Wline
@@ -856,10 +854,9 @@ CONTAINS
             par(:,:,ind%Wline(i),:) = val
             IF (.NOT. parinfo(ind%Wline(i))%limited(1)) &
               parinfo(ind%Wline(i))%limits(1) = val*0.5_DP
-            parinfo(ind%Wline(i))%limited(1) = .TRUE.
             IF (.NOT. parinfo(ind%Wline(i))%limited(2)) &
               parinfo(ind%Wline(i))%limits(2) = val*2._DP
-            parinfo(ind%Wline(i))%limited(2) = .TRUE.
+            parinfo(ind%Wline(i))%limited = .TRUE.
           END IF
           
           !! lnRline
@@ -949,10 +946,9 @@ CONTAINS
             par(:,:,ind%lnAv(i),:) = 0._DP ! 1 [mag] = no extinction
             IF (.NOT. parinfo(ind%lnAv(i))%limited(1)) &
               parinfo(ind%lnAv(i))%limits(1) = 0._DP
-            parinfo(ind%lnAv(i))%limited(1) = .TRUE.
             IF (.NOT. parinfo(ind%lnAv(i))%limited(2)) &
               parinfo(ind%lnAv(i))%limits(2) = 1._DP
-            parinfo(ind%lnAv(i))%limited(2) = .TRUE.
+            parinfo(ind%lnAv(i))%limited = .TRUE.
           END IF
 
         END DO
@@ -1422,19 +1418,17 @@ CONTAINS
           par(:,:,ind%Cline(i),:) = wcen
           IF (.NOT. parinfo(ind%Cline(i))%limited(1)) &
             parinfo(ind%Cline(i))%limits(1) = wcen-sig
-          parinfo(ind%Cline(i))%limited(1) = .TRUE.
           IF (.NOT. parinfo(ind%Cline(i))%limited(2)) &
             parinfo(ind%Cline(i))%limits(2) = wcen+sig
-          parinfo(ind%Cline(i))%limited(2) = .TRUE.
+          parinfo(ind%Cline(i))%limited = .TRUE.
           
           !! Wline
           par(:,:,ind%Wline(i),:) = dw
           IF (.NOT. parinfo(ind%Wline(i))%limited(1)) &
             parinfo(ind%Wline(i))%limits(1) = dw*0.5_DP
-          parinfo(ind%Wline(i))%limited(1) = .TRUE.
           IF (.NOT. parinfo(ind%Wline(i))%limited(2)) &
             parinfo(ind%Wline(i))%limits(2) = dw*2._DP
-          parinfo(ind%Wline(i))%limited(2) = .TRUE.
+          parinfo(ind%Wline(i))%limited = .TRUE.
           
         END DO
 
@@ -1447,30 +1441,27 @@ CONTAINS
           par(:,:,ind%Cband(i),:) = wcen
           IF (.NOT. parinfo(ind%Cband(i))%limited(1)) &
             parinfo(ind%Cband(i))%limits(1) = wcen-sig
-          parinfo(ind%Cband(i))%limited(1) = .TRUE.
           IF (.NOT. parinfo(ind%Cband(i))%limited(2)) &
             parinfo(ind%Cband(i))%limits(2) = wcen+sig
-          parinfo(ind%Cband(i))%limited(2) = .TRUE.
+          parinfo(ind%Cband(i))%limited = .TRUE.
           
           !! WSband
           val = TABand(itab)%sigmaS
           par(:,:,ind%WSband(i),:) = val
           IF (.NOT. parinfo(ind%WSband(i))%limited(1)) &
             parinfo(ind%WSband(i))%limits(1) = val*0.5_DP
-          parinfo(ind%WSband(i))%limited(1) = .TRUE.
           IF (.NOT. parinfo(ind%WSband(i))%limited(2)) &
             parinfo(ind%WSband(i))%limits(2) = val*2._DP
-          parinfo(ind%WSband(i))%limited(2) = .TRUE.
+          parinfo(ind%WSband(i))%limited = .TRUE.
    
           !! WLband
           val = TABand(itab)%sigmaL
           par(:,:,ind%WLband(i),:) = val
           IF (.NOT. parinfo(ind%WLband(i))%limited(1)) &
             parinfo(ind%WLband(i))%limits(1) = val*0.5_DP
-          parinfo(ind%WLband(i))%limited(1) = .TRUE.
           IF (.NOT. parinfo(ind%WLband(i))%limited(2)) &
             parinfo(ind%WLband(i))%limits(2) = val*2._DP
-          parinfo(ind%WLband(i))%limited(2) = .TRUE.
+          parinfo(ind%WLband(i))%limited = .TRUE.
 
         END DO
         
@@ -1487,7 +1478,7 @@ CONTAINS
           
         END IF
       END DO
-      
+
       !! Free memory space
       DEALLOCATE (iniparname,iniparval)
     
@@ -1522,6 +1513,121 @@ CONTAINS
     FORALL (i=1:Npar,itied(i) > 0) par(:,:,itied(i),:) = par(:,:,i,:)
     
   END SUBROUTINE initparam
+  
+  !!-------------------------------------------------------
+  !!
+  !!     Sherman-Morrison approach to invert matrices
+  !!
+  !!-------------------------------------------------------
+  SUBROUTINE check_SM( A, A_prev, pos, delta )
+    
+    USE utilities, ONLY: DP, strike
+    IMPLICIT NONE
+
+    REAL(DP), DIMENSION(:,:), INTENT(IN) :: A, A_prev
+    INTEGER :: x, y, Nx, Ny
+    LOGICAL :: flag
+    REAL(DP), INTENT(OUT), OPTIONAL :: delta
+    INTEGER, DIMENSION(2), INTENT(OUT), OPTIONAL :: pos
+    
+    Nx = SIZE(A,1)
+    Ny = SIZE(A,2)
+    flag = .FALSE.
+    
+    !! Find the mole
+    DO x=1,Nx
+      DO y=1,Ny
+        IF (A(x,y)/=A_prev(x,y)) THEN
+          IF (.NOT. flag) THEN
+            flag = .TRUE.
+            IF (PRESENT(pos)) pos(:) = [x,y]
+            IF (PRESENT(delta)) delta = A(x,y) - A_prev(x,y)
+          ELSE
+            CALL STRIKE('invert_SM','Cannot use Sherman-Morrison approach.')
+          END IF
+        END IF
+      END DO
+    END DO
+    
+  END SUBROUTINE check_SM
+  
+  FUNCTION invert_SM( A, B_prev, pos, delta, Ndim, determinant )
+
+    USE utilities, ONLY: DP
+    IMPLICIT NONE
+
+    INTEGER, DIMENSION(2), INTENT(IN) :: pos
+    REAL(DP), INTENT(IN) :: delta
+    REAL(DP), DIMENSION(:,:), INTENT(IN) :: A, B_prev
+    INTEGER, INTENT(IN), OPTIONAL :: Ndim
+    INTEGER :: y, Ny
+    REAL(DP) :: c0, c1
+    REAL(DP), INTENT(OUT), OPTIONAL :: determinant
+    REAL(DP), DIMENSION(SIZE(A,1),SIZE(A,2)) :: invert_SM
+
+    IF (PRESENT(Ndim)) THEN
+      Ny = Ndim
+    ELSE
+      Ny = SIZE(A,2)
+    END IF
+
+    !! Calculate invert matrix
+    invert_SM(:,:) = 0._DP
+    c0 = 1 + B_prev(pos(2),pos(1)) * delta
+
+    IF (c0/=0._DP) THEN
+      invert_SM(pos(2),:) = B_prev(pos(2),:) / c0
+      invert_SM(:,pos(1)) = B_prev(:,pos(1)) / c0
+
+      c1 = delta / c0
+      FORALL (y=1:Ny,y/=pos(1)) &
+        invert_SM(:,y) = B_prev(:,y) - B_prev(:,pos(1))*B_prev(pos(2),y)*c1
+
+    END IF    
+    
+    IF (PRESENT(determinant)) PRINT*, 'COUCOU'
+
+  END FUNCTION invert_SM
+
+  !!-------------------------------------------------------
+  !!
+  !! Modified Sherman-Morrison approach to invert matrices
+  !!
+  !!-------------------------------------------------------
+  FUNCTION invert_mSM( A, B_prev, pos, delta, Ndim, determinant )
+
+    USE utilities, ONLY: DP, strike
+    IMPLICIT NONE
+    
+    INTEGER, DIMENSION(2), INTENT(IN) :: pos
+    REAL(DP), INTENT(IN) :: delta
+    REAL(DP), DIMENSION(:,:), INTENT(IN) :: A, B_prev
+    INTEGER, INTENT(IN), OPTIONAL :: Ndim
+    INTEGER :: Ny
+    INTEGER, DIMENSION(2) :: pos_trans
+    REAL(DP), DIMENSION(SIZE(A,1),SIZE(A,2)) :: A1, B1
+    REAL(DP), INTENT(OUT), OPTIONAL :: determinant
+    REAL(DP), DIMENSION(SIZE(A,1),SIZE(A,2)) :: invert_mSM
+
+    IF (PRESENT(Ndim)) THEN
+      Ny = Ndim
+    ELSE
+      Ny = SIZE(A,2)
+    END IF
+    
+    !! Create intermediate matrix A1
+    A1(:,:) = A(:,:)
+    A1(pos(1),pos(2)) = A(pos(1),pos(2)) - delta
+
+    pos_trans(:) = [pos(2), pos(1)]
+
+    !! Calculate invert matrix
+    B1(:,:) = invert_SM(A1, B_prev, pos_trans, delta, Ny)
+    invert_mSM(:,:) = invert_SM(A, B1, pos, delta, Ny)
+    
+    IF (PRESENT(determinant)) PRINT*, 'COUCOU'
+
+  END FUNCTION invert_mSM
   
   !!-------------------------------------------------------
   !!

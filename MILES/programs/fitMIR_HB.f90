@@ -1,6 +1,6 @@
 !******************************************************************************
 !*
-!*                      Fit Simulation Parameters (HB)
+!*                         Fit MIR spectra (HB)
 !*
 !******************************************************************************
 
@@ -14,16 +14,17 @@
   !    - 20210120: Created.
   !==========================================================================
 
+
 PROGRAM fitMIR_HB
 
   USE utilities, ONLY: DP, pring, trimLR, trimeq, swap, timinfo, tinyDP, &
                        banner_program, ustd, isNaN, strike, warning, &
-                       initiate_clock, time_type
-  USE arrays, ONLY: iwhere, closest
+                       initiate_clock, time_type, today
+  USE arrays, ONLY: iwhere, closest, reallocate
   USE constants, ONLY: MKS
   USE matrices, ONLY: invert_cholesky
-  USE statistics, ONLY: mean, sigma, correlate, correl_index
-  USE inout, ONLY: read_hdf5, write_hdf5, h5ext, ascext, lenpar, lenpath
+  USE statistics, ONLY: mean, sigma, correlate, correl_index, corr2Rmat
+  USE inout, ONLY: read_hdf5, write_hdf5, check_hdf5, h5ext, ascext, lenpar, lenpath
   USE grain_optics, ONLY: lendustQ
   USE random, ONLY: generate_newseed, rand_general
   USE auxil, ONLY: read_master, specModel, initparam
@@ -31,9 +32,9 @@ PROGRAM fitMIR_HB
                     FnuOBS, dFnuOBS, cenlnS0, siglnS0, &
                     i2ih, ipar, ihpar, icorr, icorr2ij, &
                     parcurr, parhypcurr, allparhypcurr, &
-                    cov_prev, invcov_prev, &
+                    cov_prev, invcov_prev, invcorr_prev, &
                     mucurr, sigcurr, corrcurr, Nparhyp, Ncorrhyp, &
-                    lnpost_par, lnlhobs_par, &
+                    lnpost_par, lnlhobs_par, detcorr, noposdef_prev, &
                     lnpost_mu, lnpost_sig, lnpost_corr, covariance, &
                     mask, maskpar, maskhyp, maskhypcurr, maskS, &!maskextra, &
                     ind, parinfo, parhypinfo, Qabs, extinct
@@ -53,16 +54,15 @@ PROGRAM fitMIR_HB
   LOGICAL, PARAMETER :: debug = .FALSE.
   
   !! Input variables
-  INTEGER :: x, y, i, ih, indhyp!, iw, j
+  INTEGER :: x, y, i, ih, indhyp, indres0!, iw, j
   INTEGER :: Npar, Nmcmc, NiniMC, Nsou, Nparfree!, Nwfree
-  INTEGER :: Ncont, Nband, Nline, Npabs, Nstar, Nextra
-  INTEGER, DIMENSION(:), ALLOCATABLE :: itied
+  INTEGER :: Ncont, Nband, Nline, Nextc, Nstar, Nextra
+  INTEGER, DIMENSION(:), ALLOCATABLE :: indresume, itied
   INTEGER, DIMENSION(:,:,:), ALLOCATABLE :: maskint ! convert mask=0 to mask=T
-  LOGICAL :: verbose, calib, newseed, newinit, dostop, nohi
+  LOGICAL :: verbose, calib, newseed, newinit, dostop, resume, nohi
   CHARACTER(lenpath) :: dirIN, dirOUT, filOBS, filOUT, filMCMC, fiLOG
   CHARACTER(lenpar) :: spec_unit
   CHARACTER(lenpath), DIMENSION(:), ALLOCATABLE :: Parr1d
-  CHARACTER(lendustQ), DIMENSION(:), ALLOCATABLE :: labQ
   CHARACTER(lenpar), DIMENSION(:), ALLOCATABLE :: labB, labL
 
   !! MCMC parameters
@@ -74,6 +74,7 @@ PROGRAM fitMIR_HB
   REAL(DP), DIMENSION(:,:), ALLOCATABLE :: dblarr2d
   REAL(DP), DIMENSION(:,:), ALLOCATABLE :: mumcmc, sigmcmc, corrmcmc
   REAL(DP), DIMENSION(:,:,:,:), ALLOCATABLE :: parini, parmcmc
+  LOGICAL :: fileOK
 
   !! Output variables
   INTEGER :: Ncorr
@@ -90,12 +91,11 @@ PROGRAM fitMIR_HB
   REAL(DP), DIMENSION(:,:,:,:), ALLOCATABLE :: parpix, par4D
 
   
-  
   !!------------------------------------------------------------------------
   !!                            I. Read the inputs
   !!------------------------------------------------------------------------
 
-  CALL READ_HDF5(STRARR1D=Parr1d, FILE='../out2/input_path'//h5ext, NAME='input path')
+  CALL READ_HDF5(STRARR1D=Parr1d, FILE='../out1/set_input'//h5ext, NAME='input dir')
   dirIN = Parr1d(1)
   filOBS = TRIMLR(dirIN)//'observation_MIR'//h5ext
   
@@ -105,18 +105,18 @@ PROGRAM fitMIR_HB
   CALL READ_MASTER(WAVALL=wOBS(:), DIRIN=dirIN, DIROUT=dirOUT, &
                    VERBOSE=verbose, NMCMC=Nmcmc, NINIMC=NiniMC, &
                    CALIB=calib, NEWSEED=newseed, NEWINIT=newinit, &
-                   LABQ=labQ, LABL=labL, LABB=labB, QABS=Qabs, EXTINCT=extinct, &
+                   LABL=labL, LABB=labB, QABS=Qabs, EXTINCT=extinct, &
                    NCONT=Ncont, NBAND=Nband, NLINE=Nline, &
-                   NPABS=Npabs, NSTAR=Nstar, NEXTRA=Nextra, &
-                   DOSTOP=dostop, NCORR=Ncorr, NOHI=nohi, &
+                   NEXTC=Nextc, NSTAR=Nstar, NEXTRA=Nextra, NCORR=Ncorr, &
+                   DOSTOP=dostop, RESUME=resume, INDRESUME=indres0, NOHI=nohi, &
                    PARINFO=parinfo, INDPAR=ind, NPAR=Npar, SPEC_UNIT=spec_unit, &
                    PARHYPINFO=parhypinfo, NPARHYP=Nparhyp, NCORRHYP=Ncorrhyp)
 
   !! Output settings
   IF (nohi) THEN
-    filOUT = TRIMLR(dirOUT)//'fitMIR_nhB'//h5ext
-    filMCMC = TRIMLR(dirOUT)//'parlog_fitMIR_nhB'//h5ext
-    fiLOG = TRIMLR(dirOUT)//'log_fitMIR_nhB'//ascext
+    filOUT = TRIMLR(dirOUT)//'fitMIR_BB'//h5ext
+    filMCMC = TRIMLR(dirOUT)//'parlog_fitMIR_BB'//h5ext
+    fiLOG = TRIMLR(dirOUT)//'log_fitMIR_BB'//ascext
   ELSE
     filOUT = TRIMLR(dirOUT)//'fitMIR_HB'//h5ext
     filMCMC = TRIMLR(dirOUT)//'parlog_fitMIR_HB'//h5ext
@@ -124,17 +124,25 @@ PROGRAM fitMIR_HB
   END IF
   
   CALL INITIATE_CLOCK(timestr)
-  OPEN (ulog,FILE=fiLOG,STATUS="REPLACE",ACTION="WRITE")
+  OPEN (ulog,FILE=fiLOG,STATUS=MERGE("OLD    ","REPLACE",resume), &
+        ACTION="WRITE",POSITION=MERGE("APPEND","REWIND",resume))
   unitlog(:) = [ ulog, ustd ]
-  
-  PRINT*, " - Nparhyp = ", Nparhyp
-  PRINT*, " - Ncorrhyp = ", Ncorrhyp
 
   IF (newseed) CALL GENERATE_NEWSEED()
   IF (verbose) PRINT*
   DO i=1,MERGE(2,1,verbose)
-    CALL BANNER_PROGRAM("HIBARI: HIerarchical BAyesian fitting Routine of mid-IR emission", &
-                        UNIT=unitlog(i), SWING=.True.)
+    IF (.NOT. resume) THEN
+      CALL BANNER_PROGRAM("HIBARI: HIerarchical BAyesian fitting Routine of mid-IR emission", &
+                          UNIT=unitlog(i), SWING=.True.)
+    ELSE
+      WRITE(unitlog(i),*) 
+      WRITE(unitlog(i),*) REPEAT("*",80)
+      WRITE(unitlog(i),*) 
+      WRITE(unitlog(i),*) "...RESUMING WHERE THE RUN STOPPED!!!"
+      WRITE(unitlog(i),*) 
+      WRITE(unitlog(i),"(A80)") ADJUSTR("("//TRIMLR(TODAY())//")")
+      WRITE(unitlog(i),*) 
+    END IF
   END DO
   
   !! 2) Observation sample
@@ -190,14 +198,18 @@ PROGRAM fitMIR_HB
   !! 3) Summary of the sample properties
   !!-------------------------------------
   Nsou = COUNT(ANY(mask(:,:,:),DIM=3))
-  DO i=1,MERGE(2,1,verbose)
-    WRITE(unitlog(i),*)
-    WRITE(unitlog(i),*) " - Number of spectra/pixels to be fitted = " &
-                        //TRIMLR(PRING(Nsou))
-    WRITE(unitlog(i),*) " - Size of spectral sampling = " &
-                        //TRIMLR(PRING(NwOBS))
-    WRITE(unitlog(i),*)
-  END DO
+  summary: IF (.NOT. resume) THEN
+    DO i=1,MERGE(2,1,verbose)
+      WRITE(unitlog(i),*)
+      WRITE(unitlog(i),*) " - Number of spectra/pixels to be fitted = " &
+                          //TRIMLR(PRING(Nsou))
+      WRITE(unitlog(i),*) " - Size of spectral sampling = " &
+                          //TRIMLR(PRING(NwOBS))
+      WRITE(unitlog(i),*) " - Nparhyp = "//TRIMLR(PRING(Nparhyp))
+      WRITE(unitlog(i),*) " - Ncorrhyp = "//TRIMLR(PRING(Ncorrhyp))
+      WRITE(unitlog(i),*)
+    END DO
+  END IF summary
 
   !! 4) aux
   !!--------
@@ -317,10 +329,8 @@ PROGRAM fitMIR_HB
   !! Initialize the parameters of the chain
   ALLOCATE (parmcmc(Nx,Ny,Npar,2))!,ln1pdmcmc(Ncalib,2))
   DO i=1,2 
-    FORALL (x=1:Nx,y=1:Ny,ANY(maskpar(x,y,:)))
-      parmcmc(x,y,:,i) = parini(x,y,:,1)
-      ! ln1pdmcmc(:,i) = ln1pd0(:)
-    END FORALL
+    FORALL (x=1:Nx,y=1:Ny,ANY(maskpar(x,y,:))) parmcmc(x,y,:,i) = parini(x,y,:,1)
+    ! ln1pdmcmc(:,i) = ln1pd0(:)
   END DO
 
   !! Initialize the hyperparameters. If the run is non hierarchical, we
@@ -375,25 +385,70 @@ PROGRAM fitMIR_HB
     ALLOCATE (maskhypcurr(Nparhyp))         ! current parameters' mask
   END IF
 
-  !! Initialize the files
-  CALL WRITE_HDF5(STRARR1D=parinfo(:)%name, NAME="Parameter label", &
-                  FILE=filMCMC, COMPRESS=compress, VERBOSE=debug, APPEND=.FALSE.)
-  CALL WRITE_HDF5(INTARR1D=[Nmcmc], NAME="Length of MCMC", &
-                  FILE=filMCMC, COMPRESS=compress, verbose=debug, APPEND=.TRUE.)
-  CALL WRITE_HDF5(INITDBLARR=[Nx,Ny,Npar,Nmcmc], NAME=nampar, &
-                  FILE=filMCMC, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
-  CALL WRITE_HDF5(STRARR1D=parhypinfo(:)%name,NAME="Hyper parameter label",&
-                  FILE=filMCMC, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
-  CALL WRITE_HDF5(INITDBLARR=[Nparhyp,Nmcmc], NAME=nammu, &
-                  FILE=filMCMC, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
-  CALL WRITE_HDF5(INITDBLARR=[Nparhyp,Nmcmc], NAME=namsig, &
-                  FILE=filMCMC, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
-  CALL WRITE_HDF5(INITDBLARR=[Ncorrhyp,Nmcmc], NAME=namcorr, &
-                  FILE=filMCMC, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
+  !! Open the output file
+  fileresume: IF (.NOT. resume) THEN
 
+    !! Initialize the files
+    CALL WRITE_HDF5(STRARR1D=parinfo(:)%name, NAME="Parameter label", &
+                    FILE=filMCMC, COMPRESS=compress, VERBOSE=debug, APPEND=.FALSE.)
+    CALL WRITE_HDF5(STRARR1D=parhypinfo(:)%name,NAME="Hyper parameter label",&
+                    FILE=filMCMC, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
+    CALL WRITE_HDF5(INTARR1D=[Nmcmc], NAME="Length of MCMC", &
+                    FILE=filMCMC, COMPRESS=compress, verbose=debug, APPEND=.TRUE.)
+    CALL WRITE_HDF5(INITDBLARR=[Nx,Ny,Npar,Nmcmc], NAME=nampar, &
+                    FILE=filMCMC, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
+    CALL WRITE_HDF5(INITDBLARR=[Nparhyp,Nmcmc], NAME=nammu, &
+                    FILE=filMCMC, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
+    CALL WRITE_HDF5(INITDBLARR=[Nparhyp,Nmcmc], NAME=namsig, &
+                    FILE=filMCMC, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
+    CALL WRITE_HDF5(INITDBLARR=[Ncorrhyp,Nmcmc], NAME=namcorr, &
+                    FILE=filMCMC, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
+    CALL WRITE_HDF5(INITINTARR=[1], NAME="Last index", &
+                    FILE=filMCMC, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
+  ELSE
+
+    !! Resume the run from one index before the stop (Last index)
+    fileOK = CHECK_HDF5(FILE=filMCMC)
+    IF (fileOK) THEN
+      !! Auto-resume
+      CALL READ_HDF5(INTARR1D=indresume,FILE=filMCMC,NAME="Last index")
+      
+      IF (indres0 > 0) THEN
+        IF (indres0 > indresume(1)) THEN
+          CALL WARNING( 'FITPAR_HB', &
+            'Resuming from an index after the stop! ' &
+            //'Returned to the last index = '//TRIMLR(PRING(indresume(1))) )
+        ELSE
+          !! Input-resume
+          CALL REALLOCATE(indresume,1)
+          indresume(1) = indres0
+          
+        END IF
+      END IF
+      
+      IF (counter < indresume(1)) counter = indresume(1)
+
+      IF (counter > 1) THEN
+        !! Read the lastest values
+        !! - Parameters
+        CALL READ_HDF5(DBLARR4D=parmcmc,FILE=filMCMC,NAME=nampar, &
+                       IND4=[counter-1,counter])
+        !! - Hyperparameters or moments of parameters (BB)
+        CALL READ_HDF5(DBLARR2D=mumcmc,FILE=filMCMC,NAME=nammu, &
+                       IND2=[counter-1,counter])
+        CALL READ_HDF5(DBLARR2D=sigmcmc,FILE=filMCMC,NAME=namsig, &
+                       IND2=[counter-1,counter])
+        CALL READ_HDF5(DBLARR2D=corrmcmc,FILE=filMCMC,NAME=namcorr, &
+                       IND2=[counter-1,counter])
+
+      END IF
+    END IF
+
+  END IF fileresume
+  
   DO i=1,MERGE(2,1,verbose)
     WRITE(unitlog(i),*)
-    WRITE(unitlog(i),*) 'Initial parameters [done]'
+    WRITE(unitlog(i),*) 'Prepare the MCMC [done]'
     WRITE(unitlog(i),*) REPEAT('=',textwid)//NEW_LINE('')
   END DO
 
@@ -426,9 +481,12 @@ PROGRAM fitMIR_HB
     IF (ANY(parinfo(:)%hyper)) THEN
       cov_prev(:,:) = COVARIANCE(sigmcmc(:,iprev),corrmcmc(:,iprev))
       invcov_prev(:,:) = INVERT_CHOLESKY(cov_prev(:,:))
+      invcorr_prev(:,:) = INVERT_CHOLESKY( &
+                            corr2Rmat(corrmcmc(:,iprev),Nparhyp), &
+                            DETERMINANT=detcorr, NOPOSDEF=noposdef_prev ) ! new
       mucurr(:) = mumcmc(:,iprev)
     END IF
-
+    
     !! Draw the model parameters
     parmcmc(:,:,:,icurr) = parmcmc(:,:,:,iprev)
     param: DO ipar=1,Npar
@@ -517,7 +575,6 @@ END DO
             corrmcmc(icorr-1:icorr,icurr) = corrmcmc(icorr-1:icorr,iprev)
           ELSE 
             corrmcmc(icorr,icurr) = corrmcmc(icorr,iprev)
-print*, "corrmcmc", corrmcmc(:,1)
             CALL WARNING("FITMIR_HB", &
                          "first element in the correlation matrix was a NaN")
           END IF
@@ -560,6 +617,9 @@ END DO
     CALL WRITE_HDF5(DBLARR2D=corrmcmc(:,icurr:icurr),FILE=filMCMC(:), &
                     NAME=namcorr,COMPRESS=compress,VERBOSE=debug, &
                     IND2=[counter,counter])
+    CALL WRITE_HDF5(INTARR1D=[counter],FILE=filMCMC, &
+                    NAME="Last index",COMPRESS=compress,VERBOSE=debug, &
+                    IND1=[1,1])
     
     !! Check output for debugging
     IF (debug) THEN
@@ -665,32 +725,22 @@ END DO
   ALLOCATE(FnuMOD(Nx,Ny,NwOBS))
 
   FnuMOD(:,:,:) = specModel( wOBS(:), INDPAR=ind, PARVAL=meanpar(:,:,:), &
-                             QABS=Qabs(:), EXTINCT=extinct(:), &
+                             QABS=Qabs(:), EXTINCT=extinct(:,:), &
                              FNUCONT=FnuCONT, FNUBAND=FnuBAND, FNUSTAR=FnuSTAR, &
                              PABS=Pabs, FNULINE=FnuLINE, &
                              FNUCONT_TAB=FnuCONT_tab, FNUBAND_TAB=FnuBAND_tab, &
                              FNUSTAR_TAB=FnuSTAR_tab, PABS_TAB=Pabs_tab, &
                              FNULINE_TAB=FnuLINE_tab )
 
-  DO i=1,Npabs
-    FnuCONT_tab(:,:,:,i) = FnuCONT_tab(:,:,:,i) * Pabs(:,:,:)
-  END DO 
   CALL WRITE_HDF5(DBLARR4D=FnuCONT_tab, NAME='FnuCONT ('//TRIMLR(spec_unit)//')', &
                   FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
-  DO i=1,Nline
-    FnuLINE_tab(:,:,:,i) = FnuLINE_tab(:,:,:,i) + (FnuCONT(:,:,:)+FnuSTAR(:,:,:))*Pabs(:,:,:)
-  END DO
   CALL WRITE_HDF5(DBLARR4D=FnuLINE_tab, NAME='FnuLINE ('//TRIMLR(spec_unit)//')', &
                   FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
-  DO i=1,Nband
-    FnuBAND_tab(:,:,:,i) = FnuBAND_tab(:,:,:,i) + (FnuCONT(:,:,:)+FnuSTAR(:,:,:))*Pabs(:,:,:)
-  END DO
   CALL WRITE_HDF5(DBLARR4D=FnuBAND_tab, NAME='FnuBAND ('//TRIMLR(spec_unit)//')', &
                   FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
-  DO i=1,Nstar
-    FnuSTAR_tab(:,:,:,i) = FnuSTAR_tab(:,:,:,i) * Pabs(:,:,:)
-  END DO
   CALL WRITE_HDF5(DBLARR4D=FnuSTAR_tab, NAME='FnuSTAR ('//TRIMLR(spec_unit)//')', &
+                  FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
+  CALL WRITE_HDF5(DBLARR4D=Pabs_tab, NAME='PABS', &
                   FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
   CALL WRITE_HDF5(DBLARR3D=FnuMOD, NAME='FnuMOD ('//TRIMLR(spec_unit)//')', &
                   FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)

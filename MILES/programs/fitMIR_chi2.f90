@@ -82,7 +82,7 @@ PROGRAM fitMIR_chi2
   !!                            I. Read the inputs
   !!------------------------------------------------------------------------
 
-  CALL READ_HDF5(STRARR1D=Parr1d, FILE='../out1/input_path'//h5ext, NAME='Input path')
+  CALL READ_HDF5(STRARR1D=Parr1d, FILE='../out1/set_input'//h5ext, NAME='input dir')
   dirIN = Parr1d(1)
   filOBS = TRIMLR(dirIN)//'observation_MIR'//h5ext
   
@@ -122,40 +122,17 @@ PROGRAM fitMIR_chi2
   !! For the input, the convention is mask=1 => blocks; mask=0 => passes.
   !! However, within Fortran, the convention is the Fortran mask=T => passes.
   CALL READ_HDF5(INTARR3D=maskint, FILE=filOBS, NAME='NaN mask')
-  ! print*, size(maskint, dim=3)
   ALLOCATE(mask(Nx,Ny,NwOBS))
   mask(:,:,:) = ( maskint(:,:,:) == 0 )
-  ! print*, count(isnan(dfnuobs) .and. mask)
 
   ALLOCATE(nuOBS(NwOBS))
   nuOBS(:) = MKS%clight/MKS%micron / wOBS(:)
-
-  !! dfnu positive -> 0 ???
-  ! WHERE (isNaN(FnuOBS(:,:,:))) FnuOBS(:,:,:) = 0._DP
-  ! WHERE (isNaN(dFnuOBS(:,:,:))) dFnuOBS(:,:,:) = 0._DP
-  
   
   Nwfree = COUNT( ALL(ALL(.NOT. mask(:,:,:) &
                             .AND. dFnuOBS(:,:,:) > 0._DP,DIM=1),DIM=1) )
   IF (Nwfree > 0) &
     CALL IWHERE(ALL(ALL(.NOT. mask(:,:,:) &
                         .AND. dFnuOBS(:,:,:) > 0._DP,DIM=1),DIM=1), iwfree)
-
-  !! Median signal-to-noise ratio
-  ! ALLOCATE(medSovN(Nx,Ny))
-  ! medSovN(:,:) = 0._DP
-  ! DO x=1,Nx
-  !   DO y=1,Ny
-  !     IF (ANY(mask(x,y,:))) THEN
-  !       medSovN(x,y) = MEDIAN(FnuOBS(x,y,:)/dFnuOBS(x,y,:),MASK=mask(x,y,:))
-  !       IF (medSovN(x,y) < 0._DP) medSovN(x,y) = 0._DP
-
-  !     END IF
-  !   END DO
-  ! END DO
-
-  !! Read the instrumental covariance matrix (TBD)
-
 
   !! Constraints
   ALLOCATE(itied(Npar))
@@ -164,10 +141,6 @@ PROGRAM fitMIR_chi2
     IF (.NOT. TRIMEQ(parinfo(i)%tied,"")) &
       CALL IWHERE(TRIMEQ(parinfo(:)%name,parinfo(i)%tied),itied(i))
   END DO
-  ! CALL IWHERE(( .NOT. parinfo(:)%fixed ) .AND. ( itied(:) == 0 ),ifree)
-  ! Ncons = NwOBS - Nfreefilt
-  ! Nfreepar = COUNT( (.NOT. parinfo(:)%fixed ) .AND. ( itied(:) == 0 ) )
-  ! Ndof = Ncons - Nfreepar
   
   !! c. Compute the covariance matrix of the uncertainties
   !!-------------------------------------------------------
@@ -223,7 +196,6 @@ PROGRAM fitMIR_chi2
   !!------------------------------------------------------------------------
   
   DO i=1,MERGE(2,1,verbose)
-    WRITE(unitlog(i),*)
     WRITE(unitlog(i),*) "ESTIMATING THE INITIAL VALUES OF THE PARAMETERS (" &
                         //TRIMLR(TIMINFO(timestr))//")"
   END DO
@@ -355,13 +327,6 @@ PROGRAM fitMIR_chi2
           WRITE(unitlog(i),*) '<<<'
         END DO
 
-        ! PRINT*
-        ! PRINT*, "Covariance matrix:"
-        ! DO i=1,Npar
-        !   PRINT*, REAL(covpar(xOBS,yOBS,:,i), KIND(0.))
-        ! END DO
-        ! PRINT*
-
         CALL WRITE_HDF5(DBLARR3D=par(xOBS:xOBS,yOBS:yOBS,:), &
                         NAME='Best fitted parameter value', &
                         FILE=filOUT, COMPRESS=compress, VERBOSE=debug, &
@@ -401,25 +366,15 @@ PROGRAM fitMIR_chi2
                              FNUSTAR_TAB=FnuSTAR_tab, PABS_TAB=Pabs_tab, &
                              FNULINE_TAB=FnuLINE_tab )
 
-  DO i=1,Nextc
-    FnuCONT_tab(:,:,:,i) = FnuCONT_tab(:,:,:,i) * Pabs(:,:,:)
-  END DO
   CALL WRITE_HDF5(DBLARR4D=FnuCONT_tab, NAME='FnuCONT ('//TRIMLR(spec_unit)//')', &
                   FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
-  DO i=1,Nline
-    FnuLINE_tab(:,:,:,i) = FnuLINE_tab(:,:,:,i) + (FnuCONT(:,:,:)+FnuSTAR(:,:,:))*Pabs(:,:,:)
-  END DO
   CALL WRITE_HDF5(DBLARR4D=FnuLINE_tab, NAME='FnuLINE ('//TRIMLR(spec_unit)//')', &
                   FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
-  DO i=1,Nband
-    FnuBAND_tab(:,:,:,i) = FnuBAND_tab(:,:,:,i) + (FnuCONT(:,:,:)+FnuSTAR(:,:,:))*Pabs(:,:,:)
-  END DO
   CALL WRITE_HDF5(DBLARR4D=FnuBAND_tab, NAME='FnuBAND ('//TRIMLR(spec_unit)//')', &
                   FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
-  DO i=1,Nstar
-    FnuSTAR_tab(:,:,:,i) = FnuSTAR_tab(:,:,:,i) * Pabs(:,:,:)
-  END DO
   CALL WRITE_HDF5(DBLARR4D=FnuSTAR_tab, NAME='FnuSTAR ('//TRIMLR(spec_unit)//')', &
+                  FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
+  CALL WRITE_HDF5(DBLARR4D=Pabs_tab, NAME='PABS', &
                   FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
   CALL WRITE_HDF5(DBLARR3D=FnuMOD, NAME='FnuMOD ('//TRIMLR(spec_unit)//')', &
                   FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
