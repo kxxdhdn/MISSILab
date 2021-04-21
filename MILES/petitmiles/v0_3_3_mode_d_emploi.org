@@ -10,36 +10,36 @@
 * Generate simulated spectra
 #+BEGIN_SRC bash
 pip install astylo # optional
-python /your_testing_place/petitmiles/python/input_genpar.py
+python /your_testing_place/petitmiles/pynout/input_genpar.py
 cd /your_testing_place/petitmiles/programs
 make
 ./genpar
-python /your_testing_place/petitmiles/python/show_genpar.py # optional
+python /your_testing_place/petitmiles/pynout/show_genpar.py # optional
 ./simulate_MIR
 ## Line 40-42 & 65 may can be modified according to simulate_MIR.90
-python /your_testing_place/petitmiles/python/show_galspec.py # optional
+python /your_testing_place/petitmiles/pynout/show_galspec.py # optional
 #+END_SRC
 * Fitting
 #+BEGIN_SRC bash
-python /your_testing_place/petitmiles/python/input_fitpar_chi2.py
+python /your_testing_place/petitmiles/pynout/input_fitpar_chi2.py
 ./fitpar_chi2
 ## (Alternative) analysis.f90 line 59 (chi2ana = .TRUE.)
 ./analysis
 ## Open show_fitpar.py and comment line 23 (mod = 'HB')
 ## The x & y ranges in line 24 & 25 should be coherent with simulate_MIR.f90
-python /your_testing_place/petitmiles/python/show_fitpar.py # optional
+python /your_testing_place/petitmiles/pynout/show_fitpar.py # optional
 ## Open show_corr.py and comment line 23 (mod = 'HB')
-python /your_testing_place/petitmiles/python/show_corr.py # optional
+python /your_testing_place/petitmiles/pynout/show_corr.py # optional
 
 ## Open input_fitpar_HB.py and modify line 65 (Nmcmc)
-python /your_testing_place/petitmiles/python/input_fitpar_HB.py
+python /your_testing_place/petitmiles/pynout/input_fitpar_HB.py
 ./fitpar_HB
 ## (Alternative) analysis.f90 line 60 (HBana = .TRUE.)
 ./analysis
 ## Open show_fitpar.py and uncomment line 23 (mod = 'HB')
-python /your_testing_place/petitmiles/python/show_fitpar.py # optional
+python /your_testing_place/petitmiles/pynout/show_fitpar.py # optional
 ## Open show_corr.py and uncomment line 23 (mod = 'HB')
-python /your_testing_place/petitmiles/python/show_corr.py # optional
+python /your_testing_place/petitmiles/pynout/show_corr.py # optional
 
 ## Plots can be found in /your_testing_place/petitmiles/out1/Figures/
 #+END_SRC

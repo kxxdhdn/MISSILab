@@ -10,7 +10,7 @@
 HOST = $(shell hostname)
 ifeq ($(HOST),dapmcw18)
 	MKSW = /Users/dhu/SwING/Fortran/make_common.mk
-else ifeq ($(HOST),iclustgate*)
+else
 	MKSW = /dsm/herschel1/nuages/Codes/SwING/Fortran/make_common.mk
 endif
 $(info The current machine is $(HOST))
@@ -30,7 +30,7 @@ MILIB = miles
 MILIBAR = lib$(MILIB).a
 ifeq ($(HOST),dapmcw18)
 	MILIBDIR = /Users/dhu/ownCloud/MILES/
-else ifeq ($(HOST),iclustgate*)
+else
 	MILIBDIR = /dsm/herschel1/nuages/dhu/MISSILE/MILES/
 endif
 

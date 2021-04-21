@@ -33,7 +33,12 @@ FnuOBS = read_hdf5(filobs, 'FnuOBS ('+spec_unit+')')
 dFnuOBS = read_hdf5(filobs, 'dFnuOBS ('+spec_unit+')')
 Ny, Nx = FnuOBS.shape[1:3]
 
-mode = ['chi2','BB','HB']
+labelist = ['c1_SN5','c3_SN5','c9_SN5',
+            'c1_SN20','c3_SN20','c9_SN20',
+            'c1_SN80','c3_SN80','c9_SN80',]
+
+mode = ['chi2']
+# mode = ['chi2','BB','HB']
 for m in mode:
     filfit = mroot+'fitpar_'+m
 
@@ -108,34 +113,34 @@ for m in mode:
                                 
                 p = plot2d_m(wvl, Fnu_tab[:,:,y,x], 
                              xall=wvl, xlog=0, ylog=0, xlim=(4., 22.), #ylim=(0.,1.e3), 
-                             title=title, xlab=xlab, ylab=ylab, 
+                             title=title+' -['+labelist[y]+']', xlab=xlab, ylab=ylab, 
                              lablist=lab_tab, legend='upper left', cl=col_tab)
                 
                 p.save(filename)
 
         ## Plot individual band in table
         ##-------------------------------
-        for x in range(Nx):
-            filename = path_fig+'fitpar_'+m+'_x='+str(x+1)+'.png'
-            # filename = path_fig+'x='+str(x+1)+'_fitpar_'+m+'.png'
+        # for x in range(Nx):
+        #     filename = path_fig+'fitpar_'+m+'_x='+str(x+1)+'.png'
+        #     # filename = path_fig+'x='+str(x+1)+'_fitpar_'+m+'.png'
         
-            fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(9,9))
-            plt.subplots_adjust(left=.1, bottom=.05, \
-                                right=.99, top=.95, wspace=.3, hspace=.4)
-            for y in range(Ny):
-                px, py = int(y/3), y%3
-                axes[px,py].plot(wvl, Fnu_tab[0,:,y,x],c='k')
-                for i in range(2):
-                    i += 4
-                    axes[px,py].plot(wvl, FnuBAND[i,:,y,x],c='b')
-                axes[px,py].set_xlim((6., 6.4))
-                axes[px,py].set_ylim((0, 6.e2))
-                axes[px,py].set_xlabel(xlab)
-                axes[px,py].set_ylabel(ylab)
-                axes[px,py].set_title(
-                    fr'$Spectra ({x+1},{y+1})$')
+        #     fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(9,9))
+        #     plt.subplots_adjust(left=.1, bottom=.05, \
+        #                         right=.99, top=.95, wspace=.3, hspace=.4)
+        #     for y in range(Ny):
+        #         px, py = int(y/3), y%3
+        #         axes[px,py].plot(wvl, Fnu_tab[0,:,y,x],c='k')
+        #         for i in range(2):
+        #             i += 4
+        #             axes[px,py].plot(wvl, FnuBAND[i,:,y,x],c='b')
+        #         axes[px,py].set_xlim((6., 6.4))
+        #         axes[px,py].set_ylim((0, 6.e2))
+        #         axes[px,py].set_xlabel(xlab)
+        #         axes[px,py].set_ylabel(ylab)
+        #         axes[px,py].set_title(
+        #             fr'$Spectra ({x+1},{y+1})$')
         
-            # plt.savefig(filename)
+        #     plt.savefig(filename)
     
 # plt.show()
 

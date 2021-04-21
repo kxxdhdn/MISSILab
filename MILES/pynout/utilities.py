@@ -5,7 +5,7 @@
 
 Available variables and functions:
 
-  PATH: croot, mroot, froot
+  PATH: croot, mroot
   DATA: res, TABLine, TABand
   FUNC: partuning, 
 
@@ -19,10 +19,6 @@ import numpy as np
 croot = os.path.dirname(os.path.abspath(__file__))+'/'
 ## MILES root path
 mroot = '/Users/dhu/ownCloud/MILES/'
-## Figure path
-froot = croot+'Figures/'
-if not os.path.exists(froot):
-    os.makedirs(froot)
 
 
 res = [ dict([ ('name','CAM'),('dwovw',0.010373835) ]),
@@ -224,7 +220,7 @@ def partuning(dictune, Ncont, Nline, Nband, Nextc,
     for tune in dictune:
         if 'namall' in tune:
             ind = []
-            if tune['namall']=='lnMovd2':
+            if tune['namall']=='lnFcont':
                 i0 = 0
                 ind = [i0+2*i for i in range(Ncont)]
             elif tune['namall']=='lnT':

@@ -67,7 +67,7 @@ else:
 ##--------------------------------
 dirout = mroot
 verbose = 'T'
-Nmcmc = 100
+Nmcmc = 10000
 NiniMC = 0 # no need for BB
 calib = 'F'
 robust_RMS = 'F'
@@ -75,7 +75,7 @@ robust_cal = 'F'
 skew_RMS = 'F'
 newseed = 'F'
 dostop = 'F'
-resume = 'F'
+resume = 'T'
 indresume = -1 # set a negative value if auto-resume
 newinit = 'F'
 nohi = 'T'
@@ -139,6 +139,7 @@ labB = ['Main 3.3     ', # 1
 labE = ['D03']
 
 refB = ['Main 11.2    ']
+refw = 15.0
 
 ALline = False
 ALband = True
@@ -170,9 +171,9 @@ dictune = [ dict([ ('name','default'),
             ##=======================
 
             ## Extensive param:
-            ## lnMovd2, lnRline, lnRband, lnFstar,
+            ## lnFcont, lnRline, lnRband, lnFstar,
             ##-------------------------------------
-            dict([ ('namall','lnMovd2'),('fixed','F'),('hyper','T'),]),
+            dict([ ('namall','lnFcont'),('fixed','F'),('hyper','T'),]),
             
             dict([ ('namall','lnRline'),('fixed','F'),('hyper','T'),]),
             
@@ -223,6 +224,7 @@ dictune = [ dict([ ('name','default'),
                    ('fixed','F'),('hyper','T') ]),
             
             dict([ ('namall','lnAv'),('fixed','F'),('hyper','T'), ]), # LOG( 1 mag )
+            # dict([ ('namall','lnAv'),('fixed','T'),('value','0.5'), ]), # LOG( 1 mag )
             
             dict() ]
 
@@ -263,9 +265,9 @@ value = np.array([0. for i in range(Npar)])
 ## Param assignment
 i0 = 0
 for i in range(Ncont):
-    name[i0+2*i] = 'lnMovd2'+str(i+1)
-    namall[i0+2*i] = 'lnMovd2'
-    value[i0+2*i] = -4. # 1.83e-2 [Msun/pc2]
+    name[i0+2*i] = 'lnFcont'+str(i+1)
+    namall[i0+2*i] = 'lnFcont'
+    value[i0+2*i] = 0. # 1 [W/m2/sr]
     name[i0+2*i+1] = 'lnT'+str(i+1)
     namall[i0+2*i+1] = 'lnT'
     value[i0+2*i+1] = 4. # 54.60 [K]
@@ -275,7 +277,7 @@ i0 += 2*Ncont
 for i in range(Nline):
     name[i0+3*i] = 'lnRline'+str(i+1)
     namall[i0+3*i] = 'lnRline'
-    value[i0+3*i] = -20. # 2.06e-9 [MJyovsr]
+    value[i0+3*i] = 0.
     name[i0+3*i+1] = 'Cline'+str(i+1)
     namall[i0+3*i+1] = 'Cline'
     value[i0+3*i+1] = TABLine[indL[i]]['wave']
@@ -297,7 +299,7 @@ i0 += 3*Nline
 for i in range(Nband):
     name[i0+4*i] = 'lnRband'+str(i+1)
     namall[i0+4*i] = 'lnRband'
-    value[i0+4*i] = -20. # 2.06e-9 [MJyovsr]
+    value[i0+4*i] = 0.
     name[i0+4*i+1] = 'Cband'+str(i+1)
     namall[i0+4*i+1] = 'Cband'
     value[i0+4*i+1] = TABand[indB[i]]['wave']
@@ -319,7 +321,7 @@ i0 += Nextc
 for i in range(Nstar):
     name[i0+i] = 'lnFstar'+str(i+1)
     namall[i0+i] = 'lnFstar'
-    value[i0+i] = -7. # 9.12e-4 [Lsun/pc2]
+    value[i0+i] = 0. # 1 [W/m2/sr]
     comp[i0+i] = 'STAR'
     
 ## Param tuning
@@ -334,6 +336,7 @@ write_hdf5(h5_model, 'label band', labB, append=True, verbose=noisy)
 write_hdf5(h5_model, 'label line', labL, append=True, verbose=noisy)
 write_hdf5(h5_model, 'label extc', labE, append=True, verbose=noisy)
 write_hdf5(h5_model, 'ref band', refB, append=True, verbose=noisy)
+write_hdf5(h5_model, 'ref wavelength', refw, append=True, verbose=noisy)
 write_hdf5(h5_model, 'parinfo name', name, append=True, verbose=noisy)
 write_hdf5(h5_model, 'parinfo comp', comp, append=True, verbose=noisy)
 write_hdf5(h5_model, 'parinfo fixed', fixed, append=True, verbose=noisy)
@@ -361,10 +364,11 @@ write_hdf5(h5_extra, 'Nextra', [Nextra], append=True, verbose=noisy)
 ##-----------------------------
 ## Append galspec.h5 (part 2)
 ##-----------------------------
+
 ## These init param are supposed to be the default param in the fitting model,
 ## with the possibility of reasonable modifications by this script.
 write_hdf5(h5_obs, 'Initial parameter label', name, append=True, verbose=noisy)
-val2 = np.repeat(value[:,np.newaxis], data.shape[2], axis=1) # expand Nx
-val3 = np.repeat(val2[:,:,np.newaxis], data.shape[1], axis=2) # expand Ny
+val2 = np.repeat(value[:,np.newaxis], data.shape[1], axis=1) # expand Ny
+val3 = np.repeat(val2[:,:,np.newaxis], data.shape[2], axis=2) # expand Nx
 write_hdf5(h5_obs, 'Initial parameter value', val3, append=True, verbose=noisy)
-    
+

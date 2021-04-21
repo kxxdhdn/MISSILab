@@ -146,6 +146,7 @@ labB = ['Main 3.3     ', # 1
 labE = ['D03']
 
 refB = ['Main 11.2    ']
+refw = 15.0
 
 ALline = False
 ALband = True
@@ -177,9 +178,12 @@ dictune = [ dict([ ('name','default'),
             ##=======================
 
             ## Extensive param:
-            ## lnMovd2, lnRline, lnRband, lnFstar,
+            ## lnFcont, lnRline, lnRband, lnFstar,
             ##-------------------------------------
-            dict([ ('namall','lnMovd2'),('fixed','F'),]),
+            dict([ ('namall','lnFcont'),('fixed','F'),
+                   ('limited',('T','T')),
+                   ('limits',(1.,4.)),
+            ]),
             
             dict([ ('namall','lnRline'),('fixed','F'),]),
             
@@ -196,6 +200,10 @@ dictune = [ dict([ ('name','default'),
                    ('limited',('T','T')),
                    ('limits',(np.log(50.),np.log(500.))),
             ]), # LOG( (50,500) K )
+            # dict([ ('name','lnT2'), ('limits',(2.,6.)),
+            # ]),
+            # dict([ ('name','lnT3'), ('limits',(2.,6.)),
+            # ]),
             
             # dict([ ('namall','Cline'),('fixed','F'),]),
             
@@ -216,7 +224,7 @@ dictune = [ dict([ ('name','default'),
             dict([ ('name','WSband'+str(labB.index('Main 11.2')+1)),('fixed','F') ]),
             dict([ ('name','WLband'+str(labB.index('Main 11.2')+1)),('fixed','F') ]),
             
-            # dict([ ('namall','lnAv'),('fixed','F'),]), # LOG( 1 mag )
+            dict([ ('namall','lnAv'),('fixed','T'),('value',0.5)]), # LOG( exp(.5) mag )
             
             dict() ]
 
@@ -257,9 +265,9 @@ value = np.array([0. for i in range(Npar)])
 ## Param assignment
 i0 = 0
 for i in range(Ncont):
-    name[i0+2*i] = 'lnMovd2'+str(i+1)
-    namall[i0+2*i] = 'lnMovd2'
-    value[i0+2*i] = -4. # 1.83e-2 [Msun/pc2]
+    name[i0+2*i] = 'lnFcont'+str(i+1)
+    namall[i0+2*i] = 'lnFcont'
+    value[i0+2*i] = 0. # 1 [W/m2/sr]
     name[i0+2*i+1] = 'lnT'+str(i+1)
     namall[i0+2*i+1] = 'lnT'
     value[i0+2*i+1] = 4. # 54.60 [K]
@@ -313,7 +321,7 @@ i0 += Nextc
 for i in range(Nstar):
     name[i0+i] = 'lnFstar'+str(i+1)
     namall[i0+i] = 'lnFstar'
-    value[i0+i] = -7. # 9.12e-4 [Lsun/pc2]
+    value[i0+i] = 0. # 1 [W/m2/sr]
     comp[i0+i] = 'STAR'
 
 ## Param tuning
@@ -328,6 +336,7 @@ write_hdf5(h5_model, 'label band', labB, append=True, verbose=noisy)
 write_hdf5(h5_model, 'label line', labL, append=True, verbose=noisy)
 write_hdf5(h5_model, 'label extc', labE, append=True, verbose=noisy)
 write_hdf5(h5_model, 'ref band', refB, append=True, verbose=noisy)
+write_hdf5(h5_model, 'ref wavelength', refw, append=True, verbose=noisy)
 write_hdf5(h5_model, 'parinfo name', name, append=True, verbose=noisy)
 write_hdf5(h5_model, 'parinfo comp', comp, append=True, verbose=noisy)
 write_hdf5(h5_model, 'parinfo fixed', fixed, append=True, verbose=noisy)

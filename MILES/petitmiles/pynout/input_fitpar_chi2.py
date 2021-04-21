@@ -22,7 +22,7 @@ from astylo.iolib import read_fits, write_hdf5, read_hdf5
 
 ## local
 from utilities import res, TABLine, TABand, partuning
-
+         
 ## Path
 ##------
 mroot = os.path.dirname(os.path.abspath(__file__))+'/../out1/'
@@ -34,12 +34,11 @@ h5_extra = mroot+'input_fitMIR_extra'
 ##-----------------------------
 ## Set parameters
 ##-----------------------------
-program = 'fitpar_BB'
+program = 'fitpar_chi2'
 noisy = False # verbose/debug for this routine
-chi2init = True # True if using chi2 results as BB init param
 
 ##-----------------------------
-## Append galspec.h5 (part 1)
+## Append galspec.h5
 ##-----------------------------
 # spec_unit = 'MKS' # W.m-2.Hz-1.sr-1
 spec_unit = 'MJyovsr' # MJy.sr-1
@@ -52,38 +51,27 @@ mask = np.isnan(data) * 1
 
 ## Write HDF5
 ##------------
-if (not chi2init):
-    write_hdf5(h5_obs, 'NaN mask', mask, append=True, verbose=noisy)
-    write_hdf5(h5_obs, 'Chi2init', ['F'], append=True, verbose=noisy)
-else:
-    write_hdf5(h5_obs, 'Chi2init', ['T'], append=True, verbose=noisy)
+write_hdf5(h5_obs, 'NaN mask', mask, append=True, verbose=noisy)
 
 ##--------------------------------
 ## Write input_fitMIR_master.h5
 ##--------------------------------
 dirout = mroot
 verbose = 'T'
-Nmcmc = 500
-NiniMC = 0 # no need for BB
+Nmcmc = 1000 # no need for chi2
+NiniMC = 0
 calib = 'F'
 robust_RMS = 'F'
 robust_cal = 'F'
 skew_RMS = 'F'
 newseed = 'F'
 dostop = 'F'
-resume = 'F'
-indresume = -1 # set a negative value if auto-resume
 newinit = 'F'
-nohi = 'T'
-
-## Chi2 results are used as BB init param
-if (chi2init):
-    newinit = 'T'
 
 ## Write HDF5
 ##------------
 write_hdf5(h5_master, 'program', [program], verbose=noisy)
-write_hdf5(h5_master, 'output dir', [dirout], verbose=noisy)
+write_hdf5(h5_master, 'output dir', [dirout], append=True, verbose=noisy)
 write_hdf5(h5_master, 'Spectral unit', [spec_unit], append=True, verbose=noisy)
 write_hdf5(h5_master, 'verbose', [verbose], append=True, verbose=noisy)
 write_hdf5(h5_master, 'Nmcmc', [Nmcmc], append=True, verbose=noisy)
@@ -95,9 +83,6 @@ write_hdf5(h5_master, 'skew_RMS', [skew_RMS], append=True, verbose=noisy)
 write_hdf5(h5_master, 'newseed', [newseed], append=True, verbose=noisy)
 write_hdf5(h5_master, 'newinit', [newinit], append=True, verbose=noisy)
 write_hdf5(h5_master, 'dostop', [dostop], append=True, verbose=noisy)
-write_hdf5(h5_master, 'resume', [resume], append=True, verbose=noisy)
-write_hdf5(h5_master, 'indresume', [indresume], append=True, verbose=noisy)
-write_hdf5(h5_master, 'nohi', [nohi], append=True, verbose=noisy)
 
 ##--------------------------------
 ## Write input_fitMIR_model.h5
@@ -135,6 +120,7 @@ labB = ['Main 3.3     ', # 1
 labE = ['D03']
 
 refB = ['Main 11.2    ']
+refw = 15.0
 
 ALline = False
 ALband = True
@@ -166,59 +152,46 @@ dictune = [ dict([ ('name','default'),
             ##=======================
 
             ## Extensive param:
-            ## lnMovd2, lnRline, lnRband, lnFstar,
+            ## lnFcont, lnRline, lnRband, lnFstar,
             ##-------------------------------------
-            dict([ ('namall','lnMovd2'),('fixed','F'),('hyper','T'),]),
+            dict([ ('namall','lnFcont'),('fixed','F'),]),
             
-            dict([ ('namall','lnRline'),('fixed','F'),('hyper','T'),]),
+            dict([ ('namall','lnRline'),('fixed','F'),]),
             
-            dict([ ('namall','lnRband'),('fixed','F'),('hyper','T'),]),
+            dict([ ('namall','lnRband'),('fixed','F'),]),
             
-            dict([ ('namall','lnFstar'),('fixed','F'),('hyper','T'),]),
+            dict([ ('namall','lnFstar'),('fixed','F'),]),
             
             ## Intensive param:
             ## lnT, Cline, Cband,
             ## (fixed) Wline, WSband, WLband, lnAv,
             ##--------------------------------------
             dict([ ('namall','lnT'),
-                   ('fixed','F'),('hyper','T'),
+                   ('fixed','F'),
                    ('limited',('T','T')),
                    ('limits',(np.log(50.),np.log(500.))),
-                   ('hyper','T'),
             ]), # LOG( (50,500) K )
             
-            # dict([ ('namall','Cline'),('fixed','F'),('hyper','T'),]),
+            # dict([ ('namall','Cline'),('fixed','F'),]),
             
             ## Main 6.2 (1)
-            dict([ ('name','Cband'+str(labB.index('Main 6.2 (1)')+1)),
-                   ('fixed','F'),('hyper','T') ]),
-            dict([ ('name','WSband'+str(labB.index('Main 6.2 (1)')+1)),
-                   ('fixed','F'),('hyper','T'), ]),
-            dict([ ('name','WLband'+str(labB.index('Main 6.2 (1)')+1)),
-                   ('fixed','F'),('hyper','T') ]),
+            dict([ ('name','Cband'+str(labB.index('Main 6.2 (1)')+1)),('fixed','F') ]),
+            dict([ ('name','WSband'+str(labB.index('Main 6.2 (1)')+1)),('fixed','F') ]),
+            dict([ ('name','WLband'+str(labB.index('Main 6.2 (1)')+1)),('fixed','F') ]),
             ## Main 7.7 (1)
-            dict([ ('name','Cband'+str(labB.index('Main 7.7 (1)')+1)),
-                   ('fixed','F'),('hyper','T') ]),
-            dict([ ('name','WSband'+str(labB.index('Main 7.7 (1)')+1)),
-                   ('fixed','F'),('hyper','T') ]),
-            dict([ ('name','WLband'+str(labB.index('Main 7.7 (1)')+1)),
-                   ('fixed','F'),('hyper','T') ]),
+            dict([ ('name','Cband'+str(labB.index('Main 7.7 (1)')+1)),('fixed','F') ]),
+            dict([ ('name','WSband'+str(labB.index('Main 7.7 (1)')+1)),('fixed','F') ]),
+            dict([ ('name','WLband'+str(labB.index('Main 7.7 (1)')+1)),('fixed','F') ]),
             ## Main 8.6
-            dict([ ('name','Cband'+str(labB.index('Main 8.6')+1)),
-                   ('fixed','F'),('hyper','T') ]),
-            dict([ ('name','WSband'+str(labB.index('Main 8.6')+1)),
-                   ('fixed','F'),('hyper','T') ]),
-            dict([ ('name','WLband'+str(labB.index('Main 8.6')+1)),
-                   ('fixed','F'),('hyper','T') ]),
+            dict([ ('name','Cband'+str(labB.index('Main 8.6')+1)),('fixed','F') ]),
+            dict([ ('name','WSband'+str(labB.index('Main 8.6')+1)),('fixed','F') ]),
+            dict([ ('name','WLband'+str(labB.index('Main 8.6')+1)),('fixed','F') ]),
             ## Main 11.2
-            dict([ ('name','Cband'+str(labB.index('Main 11.2')+1)),
-                   ('fixed','F'),('hyper','T') ]),
-            dict([ ('name','WSband'+str(labB.index('Main 11.2')+1)),
-                   ('fixed','F'),('hyper','T') ]),
-            dict([ ('name','WLband'+str(labB.index('Main 11.2')+1)),
-                   ('fixed','F'),('hyper','T') ]),
+            dict([ ('name','Cband'+str(labB.index('Main 11.2')+1)),('fixed','F') ]),
+            dict([ ('name','WSband'+str(labB.index('Main 11.2')+1)),('fixed','F') ]),
+            dict([ ('name','WLband'+str(labB.index('Main 11.2')+1)),('fixed','F') ]),
             
-            dict([ ('namall','lnAv'),('fixed','F'),('hyper','T'), ]), # LOG( 1 mag )
+            dict([ ('namall','lnAv'),('fixed','F'),]), # LOG( 1 mag )
             
             dict() ]
 
@@ -259,9 +232,9 @@ value = np.array([0. for i in range(Npar)])
 ## Param assignment
 i0 = 0
 for i in range(Ncont):
-    name[i0+2*i] = 'lnMovd2'+str(i+1)
-    namall[i0+2*i] = 'lnMovd2'
-    value[i0+2*i] = -4. # 1.83e-2 [Msun/pc2]
+    name[i0+2*i] = 'lnFcont'+str(i+1)
+    namall[i0+2*i] = 'lnFcont'
+    value[i0+2*i] = 0. # 1 [W/m2/sr]
     name[i0+2*i+1] = 'lnT'+str(i+1)
     namall[i0+2*i+1] = 'lnT'
     value[i0+2*i+1] = 4. # 54.60 [K]
@@ -271,7 +244,7 @@ i0 += 2*Ncont
 for i in range(Nline):
     name[i0+3*i] = 'lnRline'+str(i+1)
     namall[i0+3*i] = 'lnRline'
-    value[i0+3*i] = -20. # 2.06e-9 [MJyovsr]
+    value[i0+3*i] = 0.
     name[i0+3*i+1] = 'Cline'+str(i+1)
     namall[i0+3*i+1] = 'Cline'
     value[i0+3*i+1] = TABLine[indL[i]]['wave']
@@ -293,7 +266,7 @@ i0 += 3*Nline
 for i in range(Nband):
     name[i0+4*i] = 'lnRband'+str(i+1)
     namall[i0+4*i] = 'lnRband'
-    value[i0+4*i] = -20. # 2.06e-9 [MJyovsr]
+    value[i0+4*i] = 0.
     name[i0+4*i+1] = 'Cband'+str(i+1)
     namall[i0+4*i+1] = 'Cband'
     value[i0+4*i+1] = TABand[indB[i]]['wave']
@@ -309,17 +282,17 @@ i0 += 4*Nband
 for i in range(Nextc):
     name[i0+i] = 'lnAv'+str(i+1)
     namall[i0+i] = 'lnAv'
-    value[i0+i] = 0. # 1 [mag] ?
+    value[i0+i] = 0. # 1 [mag]
     comp[i0+i] = 'EXTC'
 i0 += Nextc
 for i in range(Nstar):
     name[i0+i] = 'lnFstar'+str(i+1)
     namall[i0+i] = 'lnFstar'
-    value[i0+i] = -7. # 9.12e-4 [Lsun/pc2]
+    value[i0+i] = 0. # 1 [W/m2/sr]
     comp[i0+i] = 'STAR'
 
 ## Param tuning
-partuning(dictune, Ncont, Nline, Nband,
+partuning(dictune, Ncont, Nline, Nband, Nextc,
           name, fixed, limited, limits, model, hyper, tied, value)
 
 ## Write HDF5
@@ -330,6 +303,7 @@ write_hdf5(h5_model, 'label band', labB, append=True, verbose=noisy)
 write_hdf5(h5_model, 'label line', labL, append=True, verbose=noisy)
 write_hdf5(h5_model, 'label extc', labE, append=True, verbose=noisy)
 write_hdf5(h5_model, 'ref band', refB, append=True, verbose=noisy)
+write_hdf5(h5_model, 'ref wavelength', refw, append=True, verbose=noisy)
 write_hdf5(h5_model, 'parinfo name', name, append=True, verbose=noisy)
 write_hdf5(h5_model, 'parinfo comp', comp, append=True, verbose=noisy)
 write_hdf5(h5_model, 'parinfo fixed', fixed, append=True, verbose=noisy)
@@ -353,14 +327,15 @@ Nextra = 0
 write_hdf5(h5_extra, 'program', [program], verbose=noisy)
 write_hdf5(h5_extra, 'Nextra', [Nextra], append=True, verbose=noisy)
 
-
 ##-----------------------------
 ## Append galspec.h5 (part 2)
 ##-----------------------------
+
 ## These init param are supposed to be the default param in the fitting model,
 ## with the possibility of reasonable modifications by this script.
 write_hdf5(h5_obs, 'Initial parameter label', name, append=True, verbose=noisy)
-val2 = np.repeat(value[:,np.newaxis], data.shape[2], axis=1) # expand Nx
-val3 = np.repeat(val2[:,:,np.newaxis], data.shape[1], axis=2) # expand Ny
+val2 = np.repeat(value[:,np.newaxis], data.shape[1], axis=1) # expand Ny
+val3 = np.repeat(val2[:,:,np.newaxis], data.shape[2], axis=2) # expand Nx
 write_hdf5(h5_obs, 'Initial parameter value', val3, append=True, verbose=noisy)
-    
+write_hdf5(h5_obs, 'Chi2init', ['F'], append=True, verbose=noisy)
+

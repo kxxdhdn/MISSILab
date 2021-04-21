@@ -6,16 +6,28 @@ The Python package [[https://github.com/kxxdhdn/astylo][astylo]] is required by 
 * Version log
 ** v1 (202104xx, HB release)
 - Update tests/
-** v0.3.4 (2021xxxx, Chi2 enhanced)
-- Input separated spectra (of each module) + calib error
+** v0.3.4 (202104xx, calib)
+- Add calib error of stitched spectra (from different modules) in ~specModel~
 - Calculate derived parameter errors with gradient function
 - Fractional date saving during program running
-** v0.3.3 (202104xx, reparam2)
-- Reparametrise ~specModel~ with contimuum param (Movd2 & T)
+- Enhence analysis
+  + Add autocorrelation timers
+  + Add ~anaMIR.f90~
+** v0.3.3 (20210421, reparam2)
+- Reparametrise ~specModel~ with contimuum param
+  + lnMovd2 \rarr lnFcont (Flux normalised at indpar%refw)
+  + lnT \rarr lnT represents lndT if indpar%ordQ > 0
+- Correct the error of implementing S-M in ~lnhyper_corr~ in ~HB_kit~
+  + Add ~tests/test_invert.f90~
+- Correct the error of initializing hyperparameter sampling
+- Change HB routine name from HIBARI to HISTOIRE
+  + HISTOIRE: HIerarchical bayeSian fitting Tool Of mid-IR Emission
 ** v0.3.2 (20210412, SMinverse)
 - Adopte Sherman-Morrison formula for (covariance) matrix inversion
 ** v0.3.1 (20210407, reparam)
 - Reparametrise ~specModel~ with band ratios instead of band intensities
+  + lnIband \rarr lnRband (represents lnIband for indpar%refB)
+  + lnIline \rarr lnRline
 ** v0.3 (20210331, HB beta)
 - Add simulated galaxy spectral fitting
 - Add uncertainty propagation for band ratios
@@ -38,6 +50,7 @@ The Python package [[https://github.com/kxxdhdn/astylo][astylo]] is required by 
 - Update tests/dat/
 ** v0.2 (20210114, Bayes beta)
 - HIBARI: HIerarchical BAyesian fitting Routine of mid-IR emission
+  + BB: Non-hierarchical run
 ** v0.1 (20201221, Chi2 release)
 - HDF5 file fractional writing
 - Add generic interface
@@ -56,7 +69,8 @@ The Python package [[https://github.com/kxxdhdn/astylo][astylo]] is required by 
   + Av \rarr lnAv
   + Fstar \rarr lnFstar
 - Unit revisit (unit consistent with inputs; all conversions within interface; MKS presented in comments as dimensional analysis)
-- Corrected vital error in ~test_fitChi2syn~ external residual function
+- Corrected vital error in ~test_fitChi2syn.f90~ external residual function
 - Add iniMC test for chi2 convergence
 - Create Python UI
 ** v0 (20200619, Chi2 beta)
+- LE MIROIR: LEast-squares fitting of Mid-IR emission OptImized Routine

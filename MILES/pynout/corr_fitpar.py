@@ -115,9 +115,9 @@ for m in mode:
         clist2 = ['r','r','r',
                   'g','g','g',
                   'b','b','b']
-        labelist = ['c.1_SN1','c1_SN1','c10_SN1',
-                    'c.1_SN25','c1_SN25','c10_SN25',
-                    'c.1_SN125','c1_SN125','c10_SN125',]
+        labelist = ['c1_SN5','c3_SN5','c9_SN5',
+                    'c1_SN20','c3_SN20','c9_SN20',
+                    'c1_SN80','c3_SN80','c9_SN80',]
         
         for i in range(Ncorr):
             
@@ -193,11 +193,11 @@ for i in range(Ncorr):
     title1 = 'corr'+str(i+1)
     for j in range(int(Nq/3)):
         if j==0:
-            title = title1+'_SN_c.1'
-        elif j==1:
             title = title1+'_SN_c1'
+        elif j==1:
+            title = title1+'_SN_c3'
         elif j==2:
-            title = title1+'_SN_c10'
+            title = title1+'_SN_c9'
         filename = path_fig+title+'.png'
         
         fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(9,9))
@@ -286,11 +286,11 @@ for i in range(Ncorr):
     title1 = 'corr'+str(i+1)
     for j in range(int(Nq/3)):
         if j==0:
-            title = title1+'_c_SN1'
+            title = title1+'_c_SN5'
         elif j==1:
-            title = title1+'_c_SN25'
+            title = title1+'_c_SN20'
         elif j==2:
-            title = title1+'_c_SN125'
+            title = title1+'_c_SN80'
         filename = path_fig+title+'.png'
         
         fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(9,9))

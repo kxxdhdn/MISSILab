@@ -92,9 +92,9 @@ PROGRAM simulate_MIR
   ALLOCATE(multiCONT(Nq))
   
   IF (varCONT) THEN
-    multiCONT(:) = [ 1._DP, 3._DP, 10._DP, &
-                     1._DP, 3._DP, 10._DP, &
-                     1._DP, 3._DP, 10._DP ]
+    multiCONT(:) = [ 1._DP, 3._DP, 9._DP, &
+                     1._DP, 3._DP, 9._DP, &
+                     1._DP, 3._DP, 9._DP ]
   ELSE
     multiCONT(:) = 1._DP
   END IF
@@ -244,7 +244,7 @@ PROGRAM simulate_MIR
   !! Generate spectra with the model
   !!--------------------------------
   FORALL (p=1:Np,q=1:Nq) &
-    par(p,q,ind%lnMovd2(:Ncont)) = par(p,q,ind%lnMovd2(:Ncont)) + LOG(multiCONT(q))
+    par(p,q,ind%lnFcont(:Ncont)) = par(p,q,ind%lnFcont(:Ncont)) + LOG(multiCONT(q))
 
   par(:,:,ind%lnAv(:)) = 0.5_DP
   

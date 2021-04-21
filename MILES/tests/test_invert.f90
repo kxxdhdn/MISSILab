@@ -1,15 +1,21 @@
 PROGRAM test_invert
 
   USE auxil, ONLY: check_SM, invert_SM, invert_mSM
-  USE utilities, ONLY: DP
-  USE matrices, ONLY: invert_cholesky
+  USE utilities, ONLY: DP, time_type, timinfo, initiate_clock, trimlr, pring
+  USE matrices, ONLY: invert_cholesky, invert_matrix, determinant_matrix
   IMPLICIT NONE
 
+  INTEGER, PARAMETER :: N = 65, Ntry = 1000000
+  INTEGER :: i
   INTEGER, DIMENSION(2) :: pos
-  REAL(DP) :: delta
+  REAL(DP) :: delta, detV, detV2
   REAL(DP), DIMENSION(4,4) :: C0, invC0, C, invC
-  REAL(DP), DIMENSION(3,3) :: A0, invA0, A1, A, invA, invA_ch
-
+  REAL(DP), DIMENSION(3,3) :: A0, invA0, A1, A, invA, invAC
+  REAL(DP), DIMENSION(N,N) :: S, R, V, invV
+  REAL(DP), DIMENSION(N,N) :: V2, invVS, invVC
+  LOGICAL :: noposdef
+  TYPE(time_type) :: timestr
+  
   !! Sherman-Morrison (ex via Sherman&Morrison50)
   !!------------------
   C0(1,:) = [2.384_DP, 1.238_DP, 0.861_DP, 2.413_DP]
@@ -28,6 +34,11 @@ PROGRAM test_invert
   CALL check_SM(C, C0, pos, delta)
   invC(:,:) = invert_SM(C, invC0, pos, delta)
   PRINT*, '- invC via Sherman-Morrison: '
+  PRINT*, invC
+  PRINT*
+
+  invC(:,:) = invert_matrix(C)
+  PRINT*, '- invC via LU: '
   PRINT*, invC
   PRINT*
 
@@ -59,12 +70,82 @@ PROGRAM test_invert
   PRINT*, 'delta = ', delta
   PRINT*
   invA(:,:) = invert_mSM(A, invA0, pos, delta)
-  invA_ch(:,:) = invert_cholesky(A)
+  invAC(:,:) = invert_cholesky(A)
   PRINT*, '- invA via modified Sherman-Morrison: '
   PRINT*, invA
   PRINT*
-  PRINT*, '- discrepancy between invA and invA_ch: '
-  PRINT*, invA - invA_ch
+  PRINT*, '- discrepancy between invA and invAC: '
+  PRINT*, invA - invAC
   PRINT*
+
+  !! Speed mesurement
+  !!------------------
+
+  ! Initial matrix
+  PRINT*, "INITIAL MATRIX"
+  PRINT*
+  S(:,:) = 0._DP
+  R(:,:) = 0.2_DP
+  FORALL (i=1:N) 
+     S(i,i) = i
+     R(i,i) = 1._DP
+  END FORALL
+  V(:,:) = MATMUL(MATMUL(S(:,:),R(:,:)),S(:,:))
+  invV(:,:) = INVERT_CHOLESKY(V(:,:), DETERMINANT=detV)
+  IF (N <= 5) THEN
+    PRINT*, "V="
+    DO i=1,N
+      PRINT*, REAL(V(i,:))
+    END DO
+    PRINT*
+    PRINT*, "V-1="
+    DO i=1,N
+      PRINT*, REAL(invV(i,:))
+    END DO
+    PRINT*
+  END IF
+
+  PRINT*, "UPDATING THE MATRIX"
+  PRINT*
+  pos = [2,3]
+  delta = 0.3_DP
+  V2(:,:) = V(:,:)
+  V2(pos(1),pos(2)) = V2(pos(1),pos(2)) + delta
+  V2(pos(2),pos(1)) = V2(pos(2),pos(1)) + delta
+  
+  ! Cholesky
+  CALL INITIATE_CLOCK(timestr)
+  DO i=1,Ntry
+    invVC(:,:) = INVERT_CHOLESKY(V2(:,:), DETERMINANT=detV2, &
+                                 NOPOSDEF=noposdef)
+  END DO
+  PRINT*, "Cholesky ("//TRIMLR(PRING(N))//"x"//TRIMLR(PRING(N))//"), " &
+          //TRIMLR(PRING(Ntry))//" times: "//TIMINFO(timestr)
+  IF (N <= 5) THEN
+    PRINT*, "V2-1(Cholesky)="
+    DO i=1,N
+      PRINT*, REAL(invVC(i,:))
+    END DO
+    PRINT*, "detV2", detV2
+    PRINT*
+  END IF
+
+  ! Sherman-Morrison
+  CALL INITIATE_CLOCK(timestr)
+  DO i=1,Ntry
+    invVS(:,:) = INVERT_MSM(V(:,:),invV(:,:),pos(:),delta, &
+                            DETA=detV,DETERMINANT=detV2)!, &
+                            ! NOPOSDEF=noposdef)
+  END DO
+  PRINT*, "Sherman-Morrison ("//TRIMLR(PRING(N))//"x"//TRIMLR(PRING(N))//"), " &
+          //TRIMLR(PRING(Ntry))//" times: "//TIMINFO(timestr)
+  IF (N <= 5) THEN
+    PRINT*, "V2-1(SHERMANN-MORRISON)="
+    DO i=1,N
+      PRINT*, REAL(invVS(i,:))
+    END DO
+    PRINT*, "detV2", detV2
+    PRINT*
+  END IF
   
 END PROGRAM test_invert

@@ -29,7 +29,7 @@ MODULE HB_kit
   INTEGER, SAVE, PUBLIC :: xOBS, yOBS, ipar, ihpar, icorr
   INTEGER, DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: i2ih
   INTEGER, DIMENSION(:,:), ALLOCATABLE, SAVE, PUBLIC :: icorr2ij
-  REAL(DP), SAVE, PUBLIC :: detcorr
+  REAL(DP), SAVE, PUBLIC :: detcov_prev, detcorr
   REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: cenlnS0
   REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: wOBS, nuOBS
   REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: parcurr, parhypcurr
@@ -297,7 +297,7 @@ CONTAINS
       lnpind(ix,iy,i) = MERGE( &
         LOG( DOT_PRODUCT(allpar0(ix,iy,:), &
                          MATMUL(invcov(:,:,i),allpar0(ix,iy,:))) &
-           / Df_prior + 1._DP ) * (-(Df_prior+Nparhyp)/2._DP) &
+             / Df_prior + 1._DP ) * (-(Df_prior+Nparhyp)/2._DP) &
         - 0.5_DP * LOG(detcov(i)), - hugeDP, (.NOT. noposdef_prev) )
     END FORALL
 
@@ -314,62 +314,56 @@ CONTAINS
 
     USE utilities, ONLY: DP, hugeDP!, &
                          ! pring, trimLR, timinfo, initiate_clock, time_type
-    ! USE linear_system, ONLY: cholesky_decomp
-    USE matrices, ONLY: invert_cholesky!, determinant_cholesky
-    ! USE auxil, ONLY: invert_mSM
+    USE matrices, ONLY: invert_cholesky, determinant_cholesky
+    USE auxil, ONLY: invert_mSM
     IMPLICIT NONE
 
     REAL(DP), DIMENSION(:), INTENT(IN) :: corrgrid
     REAL(DP), DIMENSION(SIZE(corrgrid)) :: lnhyper_corr
 
-    INTEGER :: ic, ix, iy, i, Ngrid
-    ! REAL(DP) :: delta
-    ! REAL(DP), DIMENSION(Nparhyp,Nparhyp) :: Chdcp
-    REAL(DP), DIMENSION(Ncorrhyp,SIZE(corrgrid)) :: allcorrgrid
+    INTEGER :: ix, iy, ipar, jpar, i, Ngrid!, ic
+    REAL(DP), DIMENSION(SIZE(corrgrid)) :: delta
+    ! REAL(DP), DIMENSION(Ncorrhyp,SIZE(corrgrid)) :: allcorrgrid
     REAL(DP), DIMENSION(Nx,Ny,SIZE(corrgrid)) :: lnpind
     REAL(DP), DIMENSION(Nx,Ny,Nparhyp) :: allpar0
-    REAL(DP), DIMENSION(Nparhyp,Nparhyp,SIZE(corrgrid)) :: covar, invcov
+    REAL(DP), DIMENSION(Nparhyp,Nparhyp,SIZE(corrgrid)) :: invcov!, covar
     REAL(DP), DIMENSION(SIZE(corrgrid)) :: detcov
     LOGICAL, DIMENSION(SIZE(corrgrid)) :: noposdef
 
     ! TYPE(time_type) :: timestr
     ! CALL INITIATE_CLOCK(timestr)
 
-    ! Covariance matrices and inverses for the grid
     Ngrid = SIZE(corrgrid(:))
-    FORALL (ic=1:Ncorrhyp) &
-      allcorrgrid(ic,:) = MERGE( SPREAD(corrcurr(ic),DIM=1,NCOPIES=Ngrid), &
-                                 corrgrid(:), (ic /= icorr) )
-    FORALL (i=1:Ngrid) &
-      covar(:,:,i) = COVARIANCE( sigcurr(:), allcorrgrid(:,i) )
 
     !! Calculate invcov and detcov (opt.1: Cholesky)
-    DO i=1,Ngrid
-      invcov(:,:,i) = INVERT_CHOLESKY( covar(:,:,i), DETERMINANT=detcov(i), &
-                                       NOPOSDEF=noposdef(i) )
-    END DO
+    !!-----------------------------------------------
+    !! Covariance matrices and inverses for the grid
+    ! FORALL (ic=1:Ncorrhyp) &
+    !   allcorrgrid(ic,:) = MERGE( SPREAD(corrcurr(ic),DIM=1,NCOPIES=Ngrid), &
+    !                              corrgrid(:), (ic /= icorr) )
+    ! FORALL (i=1:Ngrid) &
+    !   covar(:,:,i) = COVARIANCE( sigcurr(:), allcorrgrid(:,i) )
+
+    ! DO i=1,Ngrid
+    !   invcov(:,:,i) = INVERT_CHOLESKY( covar(:,:,i), DETERMINANT=detcov(i), &
+    !                                    NOPOSDEF=noposdef(i) )
+    ! END DO
 
     !! Calculate invcov and detcov (opt.2: modified Sherman-Morrison)
-! PRINT*, 'icorr='//TRIMLR(pring(icorr))//' begin: '//TRIMLR(TIMINFO(timestr))
-    ! DO i=1,Ngrid
-    !   IF (i==1) THEN
-    !     invcov(:,:,i) = INVERT_CHOLESKY( covar(:,:,i), DETERMINANT=detcov(i), &
-    !                                      NOPOSDEF=noposdef(i) )
-    !   ELSE
-    !     Chdcp = CHOLESKY_DECOMP(covar(:,:,i), noposdef(i))
-    !     IF (noposdef(i)) RETURN
+    !!----------------------------------------------------------------
+    ipar = icorr2ij(icorr,1)
+    jpar = icorr2ij(icorr,2)
+    delta(:) = corrgrid(:)*sigcurr(ipar)*sigcurr(jpar) - cov_prev(ipar,jpar)
+    DO i=1,Ngrid
+      invcov(:,:,i) = INVERT_MSM( cov_prev(:,:), invcov_prev(:,:), &
+                                  icorr2ij(icorr,:), delta(i), Nparhyp, &
+                                  detcov_prev, detcov(i) )!, noposdef(i) )
+    END DO
 
-    !     delta = covar(icorr2ij(icorr,1),icorr2ij(icorr,2),i) &
-    !             - covar(icorr2ij(icorr,1),icorr2ij(icorr,2),i-1)
-    !     invcov(:,:,i) = INVERT_MSM(covar(:,:,i), invcov(:,:,i-1), &
-    !                                icorr2ij(icorr,:), delta, Nparhyp)
-        
-    !     detcov(i) = DETERMINANT_CHOLESKY(covar(:,:,i), NODECOMPOSITION=.TRUE.)
-    !   END IF
-    ! END DO
-! PRINT*, 'icorr='//TRIMLR(pring(icorr))//' end: '//TRIMLR(TIMINFO(timestr))
+    FORALL (i=1:Ngrid) noposdef(i) = ANY( isNaN(invcov(:,:,i)) )
+    ! PRINT*, 'icorr='//TRIMLR(pring(icorr))//' end: '//TRIMLR(TIMINFO(timestr))
 
-    ! Individual distributions
+    !! Individual distributions
     allpar0(:,:,:) = 0._DP
     FORALL (ix=1:Nx,iy=1:Ny,i=1:Nparhyp,maskhyp(ix,iy,i)) &
       allpar0(ix,iy,i) = allparhypcurr(ix,iy,i) - mucurr(i)
@@ -377,11 +371,11 @@ CONTAINS
       lnpind(ix,iy,i) = MERGE( &
         LOG( DOT_PRODUCT(allpar0(ix,iy,:), &
                          MATMUL(invcov(:,:,i),allpar0(ix,iy,:))) &
-           / Df_prior + 1._DP ) * (-(Df_prior+Nparhyp)/2._DP) &
+             / Df_prior + 1._DP ) * (-(Df_prior+Nparhyp)/2._DP) &
         - 0.5_DP * LOG(detcov(i)), - hugeDP, (.NOT. noposdef(i)) )
     END FORALL
-
-    ! Total distribution
+    
+    !! Total distribution
     lnhyper_corr(:) = 0._DP
     FORALL (i=1:Ngrid) &
       lnhyper_corr(i) = SUM(lnpind(:,:,i),MASK=(maskhyp(:,:,icorr2ij(icorr,1)) &

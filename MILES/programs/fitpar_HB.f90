@@ -14,6 +14,7 @@
   !    - 20210120: Created.
   !==========================================================================
 
+
 PROGRAM fitpar_HB
 
   USE utilities, ONLY: DP, pring, trimLR, trimEQ, swap, tinyDP, &
@@ -33,7 +34,8 @@ PROGRAM fitpar_HB
                     parcurr, parhypcurr, allparhypcurr, &
                     cov_prev, invcov_prev, invcorr_prev, &
                     mucurr, sigcurr, corrcurr, Nparhyp, Ncorrhyp, &
-                    lnpost_par, lnlhobs_par, detcorr, noposdef_prev, &
+                    lnpost_par, lnlhobs_par, &
+                    detcov_prev, detcorr, noposdef_prev, &
                     lnpost_mu, lnpost_sig, lnpost_corr, covariance, &
                     mask, maskpar, maskhyp, maskhypcurr, maskS, &!maskextra, &
                     ind, parinfo, parhypinfo, Qabs, extinct
@@ -90,7 +92,23 @@ PROGRAM fitpar_HB
     FnuBAND_tab, FnuSTAR_tab, Pabs_tab, FnuLINE_tab
   REAL(DP), DIMENSION(:,:,:,:), ALLOCATABLE :: parpix, par4D
 
+  !! Fixed seed
+  !!------------
+  ! INTEGER :: k, n
+  ! INTEGER, DIMENSION(:), ALLOCATABLE :: seed
+
+  ! REAL(DP) :: omega
   
+  ! CALL RANDOM_SEED(SIZE = n)
+  ! ALLOCATE(seed(n))
+  ! seed = (/ (3*k+6, k=1,n) /)
+  ! CALL RANDOM_SEED(PUT = seed)
+  ! CALL RANDOM_SEED(GET = seed)
+  
+  ! CALL RANDOM_NUMBER(omega)
+  ! PRINT*, omega
+  ! STOP
+
   !!------------------------------------------------------------------------
   !!                            I. Read the inputs
   !!------------------------------------------------------------------------
@@ -129,7 +147,7 @@ PROGRAM fitpar_HB
   IF (verbose) PRINT*
   DO i=1,MERGE(2,1,verbose)
     IF (.NOT. resume) THEN
-      CALL BANNER_PROGRAM("HIBARI: HIerarchical BAyesian fitting Routine of mid-IR emission", &
+      CALL BANNER_PROGRAM("HISTOIRE: HIerarchical bayeSian fitting Tool Of mid-IR Emission", &
                           UNIT=unitlog(i), SWING=.True.)
     ELSE
       WRITE(unitlog(i),*) 
@@ -481,7 +499,8 @@ PROGRAM fitpar_HB
       invcov_prev(:,:) = INVERT_CHOLESKY(cov_prev(:,:))
       invcorr_prev(:,:) = INVERT_CHOLESKY( &
                             corr2Rmat(corrmcmc(:,iprev),Nparhyp), &
-                            DETERMINANT=detcorr, NOPOSDEF=noposdef_prev ) ! new
+                            DETERMINANT=detcorr, &
+                            NOPOSDEF=noposdef_prev ) ! new
       mucurr(:) = mumcmc(:,iprev)
     END IF
 
@@ -518,17 +537,21 @@ PROGRAM fitpar_HB
         END DO xsource
       END IF
     END DO param
-! DO i=1,MERGE(2,1,verbose)
-!   WRITE(unitlog(i),*) 'Parameter sampling [done] - '// &
-!                         TRIMLR(TIMINFO(timestr))
-! END DO
+    ! PRINT*, 'parmcmc(1,1,1,icurr)', parmcmc(1,1,1,icurr) ! with fixed seed
+    ! DO i=1,MERGE(2,1,verbose)
+    !   WRITE(unitlog(i),*) 'Parameter sampling [done] - '// &
+    !                         TRIMLR(TIMINFO(timestr))
+    ! END DO
 
     !! 3) Hyperparameters
     !!--------------------
     hierarchy: IF (ANY(parinfo(:)%hyper)) THEN
+      FORALL (i=1:Nparhyp) allparhypcurr(:,:,i) = mucurr(i)
+      FORALL (xobs=1:Nx,yobs=1:Ny,i=1:Nparhyp,maskhyp(xobs,yobs,i)) &
+        allparhypcurr(xobs,yobs,i) = parmcmc(xobs,yobs,i2ih(i),icurr)
 
       !! a. Average
-      mumcmc(:,icurr) = mumcmc(:,iprev)      
+      mumcmc(:,icurr) = mumcmc(:,iprev)
       average: DO ihpar=1,Nparhyp    
         IF (debug) PRINT*, " - mu("//TRIMLR(parinfo(i2ih(ihpar))%name)//")"
         lim(:) = parinfo(i2ih(ihpar))%limits(:)
@@ -536,11 +559,13 @@ PROGRAM fitpar_HB
         mumcmc(ihpar,icurr) = RAND_GENERAL(lnpost_mu,lim(:),YLOG=.True., &
                                            VERBOSE=debug,LNFUNC=.True., &
                                            ACCURACY=accrand,NMAX=Ngibbsmax)
+        ! IF (ihpar==1) PRINT*, 'mumcmc(1,icurr)', mumcmc(ihpar,icurr) ! with fixed seed
+
       END DO average
-DO i=1,MERGE(2,1,verbose)
-  WRITE(unitlog(i),*) 'Average sampling [done] - '// &
-                        TRIMLR(TIMINFO(timestr))
-END DO
+      DO i=1,MERGE(2,1,verbose)
+        WRITE(unitlog(i),*) 'Average sampling [done] - '// &
+                              TRIMLR(TIMINFO(timestr))
+      END DO
 
       !! b. Variance
       mucurr(:) = mumcmc(:,icurr)
@@ -553,11 +578,13 @@ END DO
         sigmcmc(ihpar,icurr) = EXP(RAND_GENERAL(lnpost_sig,lim(:),YLOG=.True., &
                                                 VERBOSE=debug,LNFUNC=.True., &
                                                 ACCURACY=accrand,NMAX=Ngibbsmax))
+        ! IF (ihpar==1) PRINT*, 'sigmcmc(1,icurr)', sigmcmc(ihpar,icurr) ! with fixed seed
+
       END DO variance
-DO i=1,MERGE(2,1,verbose)
-  WRITE(unitlog(i),*) 'Variance sampling [done] - '// &
-                        TRIMLR(TIMINFO(timestr))
-END DO
+      DO i=1,MERGE(2,1,verbose)
+        WRITE(unitlog(i),*) 'Variance sampling [done] - '// &
+                              TRIMLR(TIMINFO(timestr))
+      END DO
 
       !! c. Correlation
       !! Correlation coefficients are the tricky part. Indeed, the covariance
@@ -569,32 +596,41 @@ END DO
       !! iMCMC+1 that we realize that rho(iMCMC) was out, so we ignore also step
       !! iMCMC. This way we do not interfere with the MCMC statistics and avoid
       !! having a NaN introduced in the chain.
-      sigcurr(:) = sigmcmc(:,icurr)
-      corrmcmc(:,icurr) = corrmcmc(:,iprev)
-      correlation: DO icorr=1,Ncorrhyp
-        ! IF (debug) PRINT*, " - corr("//TRIMLR(corrhypname(icorr))//")"
-        corrcurr(:) = corrmcmc(:,icurr)
-        corrmcmc(icorr,icurr) = RAND_GENERAL(lnpost_corr,limR(:),YLOG=.True., &
-                                             VERBOSE=debug,LNFUNC=.True.,  &
-                                             ! ACCURACY=accrand,NMAX=Ngibbsmax)
-                                             ACCURACY=1.E-2_DP,NMAX=Ngibbsmax)
-        IF (isNaN(corrmcmc(icorr,icurr))) THEN
-          IF (icorr > 1) THEN
-            corrmcmc(icorr-1:icorr,icurr) = corrmcmc(icorr-1:icorr,iprev)
-          ELSE 
-            corrmcmc(icorr,icurr) = corrmcmc(icorr,iprev)
-            CALL WARNING("FITPAR_HB", &
-                         "first element in the correlation matrix was a NaN")
+      IF (MODULO(counter,10)==1 .OR. counter>=Nmcmc-1) THEN
+        sigcurr(:) = sigmcmc(:,icurr)
+        corrmcmc(:,icurr) = corrmcmc(:,iprev)
+        correlation: DO icorr=1,Ncorrhyp
+          ! IF (debug) PRINT*, " - corr("//TRIMLR(corrhypname(icorr))//")"
+          corrcurr(:) = corrmcmc(:,icurr)
+          !! Used by S-M, cannot wait the next big loop to update
+          cov_prev(:,:) = COVARIANCE(sigmcmc(:,icurr),corrmcmc(:,icurr))
+          invcov_prev(:,:) = INVERT_CHOLESKY( cov_prev(:,:), &
+                                              DETERMINANT=detcov_prev, &
+                                              NOPOSDEF=noposdef_prev )
+          corrmcmc(icorr,icurr) = RAND_GENERAL(lnpost_corr,limR(:),YLOG=.True., &
+                                               VERBOSE=debug,LNFUNC=.True.,  &
+                                               ! ACCURACY=accrand,NMAX=Ngibbsmax)
+                                               ACCURACY=1.E-2_DP,NMAX=Ngibbsmax)
+          ! IF (icorr==1) PRINT*, 'corrmcmc(1,icurr)', corrmcmc(icorr,icurr) ! with fixed seed
+        
+          IF (isNaN(corrmcmc(icorr,icurr))) THEN
+            IF (icorr > 1) THEN
+              corrmcmc(icorr-1:icorr,icurr) = corrmcmc(icorr-1:icorr,iprev)
+            ELSE 
+              corrmcmc(icorr,icurr) = corrmcmc(icorr,iprev)
+              CALL WARNING("FITPAR_HB", &
+                           "first element in the correlation matrix was a NaN")
+            END IF
           END IF
-        END IF
-      END DO correlation
-DO i=1,MERGE(2,1,verbose)
-  WRITE(unitlog(i),*) 'Correlation sampling [done] - '// &
-                        TRIMLR(TIMINFO(timestr))
-END DO
+        END DO correlation
+        DO i=1,MERGE(2,1,verbose)
+          WRITE(unitlog(i),*) 'Correlation sampling [done] - '// &
+                                TRIMLR(TIMINFO(timestr))
+        END DO
+      END IF
 
     ELSE
-      PRINT*, "  HIBARI: Non-hierarchical run."
+      PRINT*, "  HISTOIRE: Non-hierarchical run."
       !! If the run is non hierarchical, we save in place of the hyperparameters
       !! the moments of the parameters
       FORALL (ipar=1:Nparhyp)

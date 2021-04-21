@@ -5,12 +5,20 @@
 
 Available variables and functions:
 
+  PATH: croot, mroot
   DATA: res, TABLine, TABand
   FUNC: partuning, 
 
 """
 
+import os
 import numpy as np
+
+
+## Path of current file
+croot = os.path.dirname(os.path.abspath(__file__))+'/'
+## MILES root path
+mroot = '/Users/dhu/ownCloud/MILES/'
 
 
 res = [ dict([ ('name','CAM'),('dwovw',0.010373835) ]),
@@ -182,7 +190,7 @@ TABand = [ dict([ ('label','Main 3.3'),('wave',3.3),
            dict([ ('label','Small 18.9'),('wave',18.925630),
                   ('sigmaS',0.034553879),('sigmaL',0.11570587) ]) ] # LL2 (6)
 
-def partuning(dictune, Ncont, Nline, Nband,
+def partuning(dictune, Ncont, Nline, Nband, Nextc,
               name, fixed, limited, limits, model, hyper, tied, value):
     '''
     ------ INPUT ------
@@ -198,6 +206,7 @@ def partuning(dictune, Ncont, Nline, Nband,
     Ncont               N of continuum components
     Nline               N of lines
     Nband               N of bands
+    Nextc               N of extinction compo
     name                parinfo name (list)
     fixed               parinfo fixed
     limited             parinfo limited
@@ -211,13 +220,13 @@ def partuning(dictune, Ncont, Nline, Nband,
     for tune in dictune:
         if 'namall' in tune:
             ind = []
-            if tune['namall']=='lnMovd2':
+            if tune['namall']=='lnFcont':
                 i0 = 0
                 ind = [i0+2*i for i in range(Ncont)]
             elif tune['namall']=='lnT':
                 i0 = 0
                 ind = [i0+2*i+1 for i in range(Ncont)]
-            elif tune['namall']=='lnIline':
+            elif tune['namall']=='lnRline':
                 i0 = 2*Ncont
                 ind = [i0+3*i for i in range(Nline)]
             elif tune['namall']=='Cline':
@@ -226,7 +235,7 @@ def partuning(dictune, Ncont, Nline, Nband,
             elif tune['namall']=='Wline':
                 i0 = 2*Ncont
                 ind = [i0+3*i+2 for i in range(Nline)]
-            elif tune['namall']=='lnIband':
+            elif tune['namall']=='lnRband':
                 i0 = 2*Ncont + 3*Nline
                 ind = [i0+4*i for i in range(Nband)]
             elif tune['namall']=='Cband':
@@ -240,9 +249,9 @@ def partuning(dictune, Ncont, Nline, Nband,
                 ind = [i0+4*i+3 for i in range(Nband)]
             elif tune['namall']=='lnAv':
                 i0 = 2*Ncont + 3*Nline + 4*Nband
-                ind = [i0]
+                ind = [i0+i for i in range(Nextc)]
             elif tune['namall']=='lnFstar':
-                i0 = 2*Ncont + 3*Nline + 4*Nband +1
+                i0 = 2*Ncont + 3*Nline + 4*Nband + Nextc
                 ind = [i0]
         if 'name' in tune:
             n = tune['name']

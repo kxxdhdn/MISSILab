@@ -139,6 +139,7 @@ labB = ['Main 3.3     ', # 1
 labE = ['D03']
 
 refB = ['Main 11.2    ']
+refw = 15.0
 
 ALline = False
 ALband = True
@@ -170,9 +171,9 @@ dictune = [ dict([ ('name','default'),
             ##=======================
 
             ## Extensive param:
-            ## lnMovd2, lnRline, lnRband, lnFstar,
+            ## lnFcont, lnRline, lnRband, lnFstar,
             ##-------------------------------------
-            dict([ ('namall','lnMovd2'),('fixed','F'),('hyper','T'),]),
+            dict([ ('namall','lnFcont'),('fixed','F'),('hyper','T'),]),
             
             dict([ ('namall','lnRline'),('fixed','F'),('hyper','T'),]),
             
@@ -264,9 +265,9 @@ value = np.array([0. for i in range(Npar)])
 ## Param assignment
 i0 = 0
 for i in range(Ncont):
-    name[i0+2*i] = 'lnMovd2'+str(i+1)
-    namall[i0+2*i] = 'lnMovd2'
-    value[i0+2*i] = -4. # 1.83e-2 [Msun/pc2]
+    name[i0+2*i] = 'lnFcont'+str(i+1)
+    namall[i0+2*i] = 'lnFcont'
+    value[i0+2*i] = 0. # 1 [W/m2/sr]
     name[i0+2*i+1] = 'lnT'+str(i+1)
     namall[i0+2*i+1] = 'lnT'
     value[i0+2*i+1] = 4. # 54.60 [K]
@@ -320,7 +321,7 @@ i0 += Nextc
 for i in range(Nstar):
     name[i0+i] = 'lnFstar'+str(i+1)
     namall[i0+i] = 'lnFstar'
-    value[i0+i] = -7. # 9.12e-4 [Lsun/pc2]
+    value[i0+i] = 0. # 1 [W/m2/sr]
     comp[i0+i] = 'STAR'
 
 ## Param tuning
@@ -335,6 +336,7 @@ write_hdf5(h5_model, 'label band', labB, append=True, verbose=noisy)
 write_hdf5(h5_model, 'label line', labL, append=True, verbose=noisy)
 write_hdf5(h5_model, 'label extc', labE, append=True, verbose=noisy)
 write_hdf5(h5_model, 'ref band', refB, append=True, verbose=noisy)
+write_hdf5(h5_model, 'ref wavelength', refw, append=True, verbose=noisy)
 write_hdf5(h5_model, 'parinfo name', name, append=True, verbose=noisy)
 write_hdf5(h5_model, 'parinfo comp', comp, append=True, verbose=noisy)
 write_hdf5(h5_model, 'parinfo fixed', fixed, append=True, verbose=noisy)
@@ -365,7 +367,7 @@ write_hdf5(h5_extra, 'Nextra', [Nextra], append=True, verbose=noisy)
 ## These init param are supposed to be the default param in the fitting model,
 ## with the possibility of reasonable modifications by this script.
 write_hdf5(h5_obs, 'Initial parameter label', name, append=True, verbose=noisy)
-val2 = np.repeat(value[:,np.newaxis], data.shape[2], axis=1) # expand Nx
-val3 = np.repeat(val2[:,:,np.newaxis], data.shape[1], axis=2) # expand Ny
+val2 = np.repeat(value[:,np.newaxis], data.shape[1], axis=1) # expand Ny
+val3 = np.repeat(val2[:,:,np.newaxis], data.shape[2], axis=2) # expand Nx
 write_hdf5(h5_obs, 'Initial parameter value', val3, append=True, verbose=noisy)
     

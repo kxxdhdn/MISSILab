@@ -59,6 +59,9 @@ for i, name in enumerate(parname):
         indB = int(name[5:])
         if labB[indB-1]==bname:
             ipar = i + bex
+
+## lnFcont4
+ipar = 6
             
 counter = np.arange(Nmcmc)
 for x in range(Nx):
@@ -70,14 +73,18 @@ for x in range(Nx):
     for y in range(Ny):
         px, py = int(y/3), y%3
         axes[px,py].scatter(parmcmc[:,ipar,y,x], counter, s=.5)
-        for band in TABand:
-            if band['label']==bname:
-                if bex==0:
-                    axes[px,py].vlines(band['wave'],0,Nmcmc,colors='r')
-                elif bex==1:
-                    axes[px,py].vlines(band['sigmaS'],0,Nmcmc,colors='r')
-                elif bex==2:
-                    axes[px,py].vlines(band['sigmaL'],0,Nmcmc,colors='r')
+        # for band in TABand:
+        #     if band['label']==bname:
+        #         if bex==0:
+        #             axes[px,py].vlines(band['wave'],0,Nmcmc,colors='r')
+        #         elif bex==1:
+        #             axes[px,py].vlines(band['sigmaS'],0,Nmcmc,colors='r')
+        #         elif bex==2:
+        #             axes[px,py].vlines(band['sigmaL'],0,Nmcmc,colors='r')
+        if fixed[ipar]=='F':
+            axes[px,py].vlines(chi2ini[ipar,y,x],0,Nmcmc,colors='r')
+            axes[px,py].vlines(parsim[ipar,y,x],0,Nmcmc,colors='g')
+        
         axes[px,py].set_xlabel('Parameter value')
         axes[px,py].set_ylabel('MCMC counter')
         axes[px,py].set_title(
@@ -114,7 +121,7 @@ for x in range(Nx):
 
 ## Parameter track (par)
 ##-----------------------
-x,y = 0,2
+x,y = 2,5
 for j in range(int(Npar/9)+1):
     filename = path_fig+'partrack_ipar='+str(j*9+1)+'-'+str(j*9+9)+'.png'
     
