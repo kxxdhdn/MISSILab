@@ -1,0 +1,10 @@
+#+TITLE: MISSILE packages
+#+AUTHOR: Dangning HU
+
+* MISSILE
+MISSILE (Mid-Infrared Spectroscopy Softwares In Line Extraction) is a collection of several data processing/analyzing tools dedicated to _Spitzer_/IRS \& _AKARI_/IRC observations.
+** [[https://github.com/kxxdhdn/MISSILE/tree/master/MIRAGE][MIRAGE (Mid-InfraRed spectrocube Assembly enGinE)]] [Python + IDL + Fortran]
+** [[https://github.com/kxxdhdn/MISSILE/tree/master/MILES][MILES (Mid-Infrared Line Extraction Software)]] [Fortran + Python]
+* Helpdesk
+** Prerequisite: [[https://github.com/kxxdhdn/playtime][pip install playtime]]
+** Contact: dangning.hu@cea.fr

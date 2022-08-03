@@ -1,0 +1,13 @@
+================================================================================
+ Running LE MIROIR: LEast-squares fitting of Mid-IR emission OptImized Routine
+        from the SwING (SoftWares for Investigating Nebulae & Galaxies)
+                             written by F. Galliano
+================================================================================
+
+                                                    (February 9, 2021, at 15:54)
+
+
+ ESTIMATING THE INITIAL VALUES OF THE PARAMETERS (0s)
+
+ PROGRAM EXECUTED IN 20m 26s.
+

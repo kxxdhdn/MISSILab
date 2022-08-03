@@ -1,0 +1,367 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+
+This is the visualization of correlations
+
+"""
+
+import os, pathlib
+import numpy as np
+from scipy.optimize import curve_fit
+import matplotlib.pyplot as plt
+
+## astylo
+from astylo.iolib import read_hdf5
+
+## local
+from utilities import croot
+
+def func(x, a):
+    '''
+    f(x) = a * x
+    '''
+    return a * x
+
+def non_corr_df1(x, xerr):
+    '''
+    f(x) = exp(x)
+    df = exp(x) * dx
+    '''
+    return xerr * np.exp(x)
+
+def non_corr_df2(x, y, xerr, yerr):
+    '''
+    f(x/y) = exp(x-y)
+    df = exp(x)/exp(y) * sqrt(dx^2 + dy^2) (non-correlated)
+    '''
+    return np.sqrt(xerr**2 + yerr**2) * np.exp(x-y)
+
+
+## Path
+##------
+path_out = croot+'/../out/'
+path_fig = path_out+'Figures/'
+if not os.path.exists(path_fig):
+    os.makedirs(path_fig)
+# filobs = path_out+'observation_MIR' # after input_[src]_[chi2/bb/hb].py
+filsim = path_out+'simulation_MIR'
+
+## Correlations
+corrname = read_hdf5(filsim, 'Correlation name')
+Ncorr = np.size(corrname)
+
+## Simulation
+parsim = read_hdf5(filsim, 'Simulated parameter value')
+indpar = read_hdf5(filsim, 'Correlated band indpar') - 1
+Rname = read_hdf5(filsim, 'Band ratio name')
+Nq, Np = parsim.shape[1:3]
+Nbandr = len(indpar)
+Nrat = len(Rname)
+Rsim = np.ones((Nrat,Nq,Np))
+for i in range(Nrat):
+    if i==3:
+        Rsim[i,:,:] = np.exp(parsim[indpar[i+1]])
+    else:
+        Rsim[i,:,:] = np.exp(parsim[indpar[i]])
+
+## Point form distinguishes cont
+mlist = ['.','^','*',
+         '.','^','*',
+         '.','^','*']
+## Point color (sim) distinguishes SN
+clist1 = ['lightgrey','lightgrey','lightgrey',
+          'grey','grey','grey',
+          'k','k','k']
+## Point color (fit) distinguishes fitting methods
+clist2 = ['r','r','r',
+          'g','g','g',
+          'b','b','b']
+labelist = ['c1_SN5','c3_SN5','c9_SN5',
+            'c1_SN20','c3_SN20','c9_SN20',
+            'c1_SN80','c3_SN80','c9_SN80',]
+
+## Read fit
+mode = ['chi2','bb', 'hb']
+for m in mode:
+    filout = path_out+'fit_'+m
+
+    h5_out = pathlib.Path(filout+'.h5')
+    if h5_out.exists():
+        Rfit = np.ones((Nrat,Nq,Np))
+        Rerr = np.ones((Nrat,Nq,Np))
+        
+        ## Chi2 (suppose all par non-correlated)
+        if m=='chi2':
+            par = read_hdf5(filout, 'Best fitted parameter value')
+            parerr = read_hdf5(filout, 'Best fitted parameter error')
+            ## Band ratios
+            for i in range(Nrat):
+                if i==3:
+                    Rfit[i,:,:] = np.exp(par[indpar[i+1],:,:])
+                    Rerr[i,:,:] = non_corr_df1(par[indpar[i+1],:,:], parerr[indpar[i+1],:,:])
+                else:
+                    Rfit[i,:,:] = np.exp(par[indpar[i],:,:])
+                    Rerr[i,:,:] = non_corr_df1(par[indpar[i],:,:], parerr[indpar[i],:,:])
+            Rfit_chi2 = Rfit
+            Rerr_chi2 = Rerr
+        else:
+            filmcmc = path_out+'parlog_fit_'+m
+            par = read_hdf5(filmcmc, 'Parameter values')
+            # Nmcmc = read_hdf5(filmcmc, 'Length of MCMC')[0]
+            Nmcmc = read_hdf5(filmcmc, 'Last index')[0]
+            t_end = Nmcmc
+            t_burnin = int(t_end/10) - 1
+            ## Band ratios
+            for i in range(Nrat):
+                if i==3:
+                    Rfit[i,:,:] = np.mean( np.exp(par[t_burnin:t_end,indpar[i+1],:,:]), axis=0 )
+                    Rerr[i,:,:] = np.std( np.exp(par[t_burnin:t_end,indpar[i+1],:,:]), axis=0 )
+                else:
+                    Rfit[i,:,:] = np.mean( np.exp(par[t_burnin:t_end,indpar[i],:,:]), axis=0 )
+                    Rerr[i,:,:] = np.std( np.exp(par[t_burnin:t_end,indpar[i],:,:]), axis=0 )
+            if m=='bb':
+                Rfit_bb = Rfit
+                Rerr_bb = Rerr
+            elif m=='hb':
+                Rfit_hb = Rfit
+                Rerr_hb = Rerr
+
+        ## In one figure
+        ##---------------
+        for i in range(Ncorr):
+            
+            if i==0:
+                x = 0
+                y = 1
+            elif i==1:
+                x = 0
+                y = 2
+            elif i==2:
+                x = 0
+                y = 3
+            elif i==3:
+                x = 1
+                y = 2
+            elif i==4:
+                x = 1
+                y = 3
+            elif i==5:
+                x = 2
+                y = 3
+
+            title = 'corr'+str(i+1)+'_all_'+m
+            filename = path_fig+title+'.png'
+
+            plt.figure(figsize=(10,6))
+        
+            for q in range(Nq):
+                plt.scatter(Rsim[x,q,:], Rsim[y,q,:],
+                            c=clist1[q], marker=mlist[q], label='sim_'+labelist[q])
+                plt.errorbar(Rfit[x,q,:], Rfit[y,q,:], yerr=Rerr[y,q,:], xerr=Rerr[x,q,:],
+                             c=clist2[q], fmt=mlist[q], label='fit_'+labelist[q])
+                
+            plt.xlim(1.e-2,1.e1)
+            plt.ylim(1.e-1,1.e1)
+            plt.xscale('log')
+            plt.yscale('log')
+            plt.xlabel(Rname[x])
+            plt.ylabel(Rname[y])
+            plt.legend(loc='upper left')
+            
+            plt.savefig(filename)
+
+## Compare SN 
+##------------
+for i in range(Ncorr):
+    
+    if i==0:
+        x = 0
+        y = 1
+    elif i==1:
+        x = 0
+        y = 2
+    elif i==2:
+        x = 0
+        y = 3
+    elif i==3:
+        x = 1
+        y = 2
+    elif i==4:
+        x = 1
+        y = 3
+    elif i==5:
+        x = 2
+        y = 3
+
+    title1 = 'corr'+str(i+1)
+    for pz in range(3):
+        if pz==0:
+            title = title1+'_SN_c1'
+        elif pz==1:
+            title = title1+'_SN_c3'
+        elif pz==2:
+            title = title1+'_SN_c9'
+        filename = path_fig+title+'.png'
+        
+        fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(9,9))
+        plt.subplots_adjust(left=.1, bottom=.05, \
+                            right=.99, top=.95, wspace=.3, hspace=.4)
+        
+        for py in range(int(Nq/3)):
+            iq = py*3+pz
+            for px in range(3):
+                axes[px,py].scatter(Rsim[x,iq,:], Rsim[y,iq,:],
+                                    c=clist1[iq], marker=mlist[iq])
+                ## Log linear fit
+                popt, pcov = curve_fit(func, Rsim[x,iq,:], Rsim[y,iq,:])
+                axes[px,py].plot(Rsim[x,iq,:], func(Rsim[x,iq,:], *popt),
+                                 'k-', label='a(sim)={:.2}'.format(popt[0]))
+
+                ix = px*3+py
+                ## Chi2
+                if px==0:
+                    h5_out = pathlib.Path(path_out+'fit_chi2.h5')
+                    if h5_out.exists():
+                        axes[px,py].errorbar(Rfit_chi2[x,iq,:], Rfit_chi2[y,iq,:],
+                                             yerr=Rerr_chi2[y,iq,:], xerr=Rerr_chi2[x,iq,:],
+                                             c=clist2[ix], fmt=mlist[iq])
+                        axes[px,py].set_title('Chi2_'+labelist[iq])
+                        ## Log linear fit
+                        popt, pcov = curve_fit(func, Rfit_chi2[x,iq,:], Rfit_chi2[y,iq,:])
+                        axes[px,py].plot(Rfit_chi2[x,iq,:], func(Rfit_chi2[x,iq,:], *popt),
+                                         'y-', label='a(fit)={:.2}'.format(popt[0]))
+                ## BB
+                elif px==1:
+                    h5_out = pathlib.Path(path_out+'fit_bb.h5')
+                    if h5_out.exists():
+                        axes[px,py].errorbar(Rfit_bb[x,iq,:], Rfit_bb[y,iq,:],
+                                             yerr=Rerr_bb[y,iq,:], xerr=Rerr_bb[x,iq,:],
+                                             c=clist2[ix], fmt=mlist[iq])
+                        axes[px,py].set_title('BB_'+labelist[iq])
+                        ## Log linear fit
+                        popt, pcov = curve_fit(func, Rfit_bb[x,iq,:], Rfit_bb[y,iq,:])
+                        axes[px,py].plot(Rfit_bb[x,iq,:], func(Rfit_bb[x,iq,:], *popt),
+                                         'y-', label='a(fit)={:.2}'.format(popt[0]))
+                ## HB
+                elif px==2:
+                    h5_out = pathlib.Path(path_out+'fit_hb.h5')
+                    if h5_out.exists():
+                        axes[px,py].errorbar(Rfit_hb[x,iq,:], Rfit_hb[y,iq,:],
+                                             yerr=Rerr_hb[y,iq,:], xerr=Rerr_hb[x,iq,:],
+                                             c=clist2[ix], fmt=mlist[iq])
+                        axes[px,py].set_title('HB_'+labelist[iq])
+                        ## Log linear fit
+                        popt, pcov = curve_fit(func, Rfit_hb[x,iq,:], Rfit_hb[y,iq,:])
+                        axes[px,py].plot(Rfit_hb[x,iq,:], func(Rfit_hb[x,iq,:], *popt),
+                                         'y-', label='a(fit)={:.2}'.format(popt[0]))
+                
+                axes[px,py].set_xlim(1.e-2,1.e1)
+                axes[px,py].set_ylim(1.e-1,1.e1)
+                axes[px,py].set_xscale('log')
+                axes[px,py].set_yscale('log')
+                axes[px,py].set_xlabel(Rname[x])
+                axes[px,py].set_ylabel(Rname[y])
+                axes[px,py].legend(loc='upper left')
+        
+        plt.savefig(filename)
+
+## Compare cont
+##--------------
+for i in range(Ncorr):
+    
+    if i==0:
+        x = 0
+        y = 1
+    elif i==1:
+        x = 0
+        y = 2
+    elif i==2:
+        x = 0
+        y = 3
+    elif i==3:
+        x = 1
+        y = 2
+    elif i==4:
+        x = 1
+        y = 3
+    elif i==5:
+        x = 2
+        y = 3
+
+    title2 = 'corr'+str(i+1)
+    for pz in range(int(Nq/3)):
+        if pz==0:
+            title = title2+'_c_SN5'
+        elif pz==1:
+            title = title2+'_c_SN20'
+        elif pz==2:
+            title = title2+'_c_SN80'
+        filename = path_fig+title+'.png'
+        
+        fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(9,9))
+        plt.subplots_adjust(left=.1, bottom=.05, \
+                            right=.99, top=.95, wspace=.3, hspace=.4)
+        
+        for py in range(3):
+            iq = pz*3+py
+            for px in range(3):
+                axes[px,py].scatter(Rsim[x,iq,:], Rsim[y,iq,:],
+                                    c=clist1[iq], marker=mlist[iq])
+                ## Log linear fit
+                popt, pcov = curve_fit(func, Rsim[x,iq,:], Rsim[y,iq,:])
+                axes[px,py].plot(Rsim[x,iq,:], func(Rsim[x,iq,:], *popt),
+                                 'k-', label='a(sim)={:.2}'.format(popt[0]))
+                
+                ix = px*3+py
+                ## Chi2
+                if px==0:
+                    h5_out = pathlib.Path(path_out+'fit_chi2.h5')
+                    if h5_out.exists():
+                        axes[px,py].errorbar(Rfit_chi2[x,iq,:], Rfit_chi2[y,iq,:],
+                                             yerr=Rerr_chi2[y,iq,:], xerr=Rerr_chi2[x,iq,:],
+                                             c=clist2[ix], fmt=mlist[iq])
+                        axes[px,py].set_title('Chi2_'+labelist[iq])
+                    ## Log linear fit
+                    popt, pcov = curve_fit(func, Rfit_chi2[x,iq,:], Rfit_chi2[y,iq,:])
+                    axes[px,py].plot(Rfit_chi2[x,iq,:], func(Rfit_chi2[x,iq,:], *popt),
+                                     'y-', label='a(fit)={:.2}'.format(popt[0]))
+                ## BB
+                elif px==1:
+                    h5_out = pathlib.Path(path_out+'fit_bb.h5')
+                    if h5_out.exists():
+                        axes[px,py].errorbar(Rfit_bb[x,iq,:], Rfit_bb[y,iq,:],
+                                             yerr=Rerr_bb[y,iq,:], xerr=Rerr_bb[x,iq,:],
+                                             c=clist2[ix], fmt=mlist[iq])
+                        axes[px,py].set_title('BB_'+labelist[iq])
+                    ## Log linear fit
+                    popt, pcov = curve_fit(func, Rfit_bb[x,iq,:], Rfit_bb[y,iq,:])
+                    axes[px,py].plot(Rfit_bb[x,iq,:], func(Rfit_bb[x,iq,:], *popt),
+                                     'y-', label='a(fit)={:.2}'.format(popt[0]))
+                ## HB
+                elif px==2:
+                    h5_out = pathlib.Path(path_out+'fit_hb.h5')
+                    if h5_out.exists():
+                        axes[px,py].errorbar(Rfit_hb[x,iq,:], Rfit_hb[y,iq,:],
+                                             yerr=Rerr_hb[y,iq,:], xerr=Rerr_hb[x,iq,:],
+                                             c=clist2[ix], fmt=mlist[iq])
+                        axes[px,py].set_title('HB_'+labelist[iq])
+                    ## Log linear fit
+                    popt, pcov = curve_fit(func, Rfit_hb[x,iq,:], Rfit_hb[y,iq,:])
+                    axes[px,py].plot(Rfit_hb[x,iq,:], func(Rfit_hb[x,iq,:], *popt),
+                                     'y-', label='a(fit)={:.2}'.format(popt[0]))
+            
+                axes[px,py].set_xlim(1.e-2,1.e1)
+                axes[px,py].set_ylim(1.e-1,1.e1)
+                axes[px,py].set_xscale('log')
+                axes[px,py].set_yscale('log')
+                axes[px,py].set_xlabel(Rname[x])
+                axes[px,py].set_ylabel(Rname[y])
+                axes[px,py].legend(loc='upper left')
+        
+        plt.savefig(filename)
+        
+# plt.show()
+
+print('>>> Coucou show_sim_corr [Done] <<<')

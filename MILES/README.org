@@ -1,27 +1,125 @@
 #+TITLE: Mid-Infrared Line Extraction Software (MILES)
-#+AUTHOR: D. HU
+#+AUTHOR: Dangning HU
 
+* Mode d'emploi
+** Path
+- ~make_miles.mk~
+  + MKSW
+  + MILIBDIR
+- ~pylib/utilities.py~
+  + mroot
+** Make
+Go to ~src/~ and make
+** Generating simulated spectra
+#+BEGIN_SRC bash
+pip install astylo # optional
+python pylib/input_genpar.py
+cd ./src
+make
+./genpar
+python pylib/show_genpar.py # optional
+./simulate_MIR
+## Line 40-42 & 65 may can be modified according to simulate_MIR.90
+python pylib/show_galspec.py # optional
+#+END_SRC
+** How to modify ~simulate_MIR.f90~
+*** Line 80 & 81
+- Np: sample size for each configuration
+- Nq: number of configurations (varying S/N and continuum)
+*** Line 171-179
+- mean and stdev of 4 independent band ratios (fixing I11.3)
+*** Line 198-203
+- corr(Ncorr): correlation coefficients for different band ratios (R)
+*** Line 92-100
+- multiCONT(Nq): factor of multiplication for continua
+*** Line 104-112
+- SovN(Nq): parameter defining S/N (normalized at optional wavelengths, see Line 260-276)
+** Fitting
+#+BEGIN_SRC bash
+cd ./src
+make
+## Chi2 fit
+python ../pylib/input_fitpar_chi2.py
+./fitpar_chi2
+## HB fit
+python ../pylib/input_fitpar_HB.py
+./fitpar_HB
+## Post-processing
+./anapar
+## Line 36-38 should be coherent with simulate_MIR.f90
+python ../pylib/show_fitpar.py # optional
+python ../pylib/show_corr.py # optional
+## Plots can be found in ../out/Figures/
+#+END_SRC
 * Notices
-The Python package [[https://github.com/kxxdhdn/astylo][astylo]] is required by the MILES UI. You can install it with a single command: ~pip install astylo~
+The Python package [[https://github.com/kxxdhdn/astylo][astylo]] is required by the MILES UI (pylib). You can install it with a single command: ~pip install playtime~
 * Version log
-** v1 (202104xx, HB release)
+** v1 (202106xx, HB release)
+** v0.3.7 (202106xx, clean)
+- Simplified version of input UI available in pylib
+  + Add ~fast_input.py~
 - Update tests/
-** v0.3.4 (202104xx, calib)
-- Add calib error of stitched spectra (from different modules) in ~specModel~
-- Calculate derived parameter errors with gradient function
-- Fractional date saving during program running
-- Enhence analysis
+- Final clean before the first complete release
+- Add manueldocumentation files
+** v0.3.6 (202106xx, attenu)
+- Add attenuation (extinction with different geometries) in ~specModel~
+- Fractional data saving during program run
+** v0.3.5 (202106xx, calib)
+- Support full MIR (2.5-20 microns) fit
+  + Add wavelength masks
+  + Add calibration error of stitched spectra (from different modules) as a nuisance parameter in ~specModel~ (HB only)
+- Calculate derived parameter errors with gradient function (chi2 only)
+- Replace the prerequisite Python package ~astylo~ (v0.3) by ~playtime~ (v1.0)
+** ---------- WE ARE HERE ----------
+** v0.3.4 (20210526, postpro)
+- Enhence post-processing (~analysis.f90~)
+  + Allow to analyse unfinished fits (number of iterations less than the defined Nmcmc)
   + Add autocorrelation timers
-  + Add ~anaMIR.f90~
+  + Add median + quartile as an alternative to mean + sigma
+  + Add density of total model distribution
+  + Add ~input_analysis.py~
+  + Add ~read_analysis~ in ~aux/core.f90~
+- Add corrname & corrhypname in ~read_master~
+- In ~initparam~, add hard limits for lnRline and lnRband (except ref lnRband) which are also intensive parameters
+- Test full MIR (2.5-20 microns) fit
+- Rename layout
+  + archives/ \rarr arx/
+  + data/ \rarr lib/
+  + auxil/ \rarr aux/
+    * ~auxil.f90~ \rarr ~core.f90~
+    * ~datable.f90~ \rarr ~auxil.f90~
+    * ~chi2_kit.f90~ \rarr ~chi2.f90~
+    * ~HB_kit.f90~ \rarr ~hb.f90~
+    * Corret error in ~lnhyper_sig~ covar matrix inversion opt.2 (non-Cholesky)
+  + programs/ \rarr src/
+    * ~genpar.f90~ \rarr ~presimulation.f90~
+    * ~simulate_MIR.f90~ \rarr ~simulation.f90~
+    * ~fitpar_xx.f90~ \rarr ~fit_xx.f90~
+    * ~fitMIR_xx.f90~ \rarr ~fit_xx.f90~
+    * ~anapar.f90~ \rarr ~analysis.f90~
+    * ~anaMIR.f90~ \rarr ~analysis.f90~
+  + pynout/ \rarr pylib/
+    * ~input_genpar.py~ \rarr ~input_presimulation.py~
+    * ~show_genpar.py~ \rarr ~show_presimulation.py~
+    * ~show_galspec.py~ \rarr ~show_simulation.py~
+    * ~input_fitpar_xx.py~ \rarr ~input_sim_xx.py~
+    * ~input_fitMIR_xx.py~ \rarr ~input_xx.py~
+    * ~show_fitpar.py~ \rarr ~show_fit.py~
+    * ~partrack.py~ \rarr ~show_par.py~
+    * ~show_corr.py~ \rarr ~show_corr.py~
+  + out1/ \rarr out/
 ** v0.3.3 (20210421, reparam2)
 - Reparametrise ~specModel~ with contimuum param
   + lnMovd2 \rarr lnFcont (Flux normalised at indpar%refw)
   + lnT \rarr lnT represents lndT if indpar%ordQ > 0
 - Correct the error of implementing S-M in ~lnhyper_corr~ in ~HB_kit~
-  + Add ~tests/test_invert.f90~
+  + Add ~tests/test_invert.f90~ (S-M \sim20 times faster than Cholesky)
+  + Save \sim25% calculation time
 - Correct the error of initializing hyperparameter sampling
 - Change HB routine name from HIBARI to HISTOIRE
   + HISTOIRE: HIerarchical bayeSian fitting Tool Of mid-IR Emission
+- Sample hypercorr once per 10 MCMC steps
+  + save \sim90% calculation time)
 ** v0.3.2 (20210412, SMinverse)
 - Adopte Sherman-Morrison formula for (covariance) matrix inversion
 ** v0.3.1 (20210407, reparam)
@@ -45,7 +143,7 @@ The Python package [[https://github.com/kxxdhdn/astylo][astylo]] is required by 
 - Modify ~SpecModel~ inputs by adding extinct(:,:) and moving extCurve to ~read_master~ <speed problem solved>
 - Add resume option in ~read_master~ (used by HB only)
 - Update Python interface pynout/
-  + chi2, BB (Belgium/non-hierarchical Bayesian) and HB (hierarchical Bayesian)
+  + chi2, BB (non-hierarchical Bayesian) and HB (hierarchical Bayesian)
   + Add ~partrack~ to visualise MCMC sampling
 - Update tests/dat/
 ** v0.2 (20210114, Bayes beta)
@@ -69,7 +167,7 @@ The Python package [[https://github.com/kxxdhdn/astylo][astylo]] is required by 
   + Av \rarr lnAv
   + Fstar \rarr lnFstar
 - Unit revisit (unit consistent with inputs; all conversions within interface; MKS presented in comments as dimensional analysis)
-- Corrected vital error in ~test_fitChi2syn.f90~ external residual function
+- Correct vital error in ~test_fitChi2syn.f90~ external residual function
 - Add iniMC test for chi2 convergence
 - Create Python UI
 ** v0 (20200619, Chi2 beta)

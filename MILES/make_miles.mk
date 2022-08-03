@@ -19,10 +19,10 @@ include $(MKSW)
 
 ## MILES modules
 ##---------------
-MILMODS = datable.f90 \
-          auxil.f90 \
-          chi2_kit.f90 \
-          HB_kit.f90 \
+MILMODS = auxil.f90 \
+          core.f90 \
+          chi2.f90 \
+          hb.f90 \
 
 ## Name of the library and its paths
 ##-----------------------------------

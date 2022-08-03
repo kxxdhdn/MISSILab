@@ -5,8 +5,8 @@
 #+TODO: REPORT(r!) BUG(b!) KNOWNCAUSE(k!) | FIXED(f!)
 #+STARTUP: logdone
 
-Version: v0.3.3 (20210421)
-* DONE tests [12/12]
+Version: v0.3.4 (20210526)
+* DONE tests (tests/) [12/12]
 ** DONE invert
 CLOSED: [2021-04-14 Wed 10:42]
 ** DONE fitHB
@@ -78,7 +78,7 @@ CLOSED: [2020-06-10 Wed 12:06]
 - Note taken on [2020-05-11 Mon 14:32] \\
   Test chi2min with observation (M83), 3D FITS data imported via Python UI (fits2h5)
 - State "KNOWNCAUSE" from "DONE"       [2020-05-11 Mon 14:32]
-* TODO programs [87%]
+* DONE programs (src/) [100%]
 :PROPERTIES:
 :COOKIE_DATA: recursive
 :END:
@@ -86,51 +86,46 @@ CLOSED: [2020-06-10 Wed 12:06]
 *** INPUT files
 **** ~data/galgen.fits~
 **** ~data/galgen_unc.fits~
-**** ~out1/input_fitMIR_master.h5~
-**** ~out1/input_fitMIR_model.h5~
-**** ~out1/input_fitMIR_extra.h5~
+**** ~out/input_master.h5~
+**** ~out/input_model.h5~
+**** ~out/input_extra.h5~
 *** OUTPUT files
-**** ~out1/galgen.h5~
-**** ~out1/log_genpar.h5~
-**** ~out1/pargen.h5~
-**** ~out1/galspec.h5~
-**** ~out1/log_fitpar_chi2.h5~
-**** ~out1/fitpar_chi2.h5~
-**** ~out1/log_fitpar_BB.h5~
-**** ~out1/parlog_fitpar_BB.h5~
-**** ~out1/fitpar_BB.h5~
-**** ~out1/log_fitpar_HB.h5~
-**** ~out1/parlog_fitpar_HB.h5~
-**** ~out1/fitpar_HB.h5~
-*** DONE ~pynout/input_genpar.py~
+**** ~out/observation_MIR.h5~
+**** ~out/presimulation.h5~
+**** ~out/simulation_MIR.h5~
+**** ~out/fit_chi2.h5~
+**** ~out/parlog_fit_bb.h5~
+**** ~out/fit_bb.h5~
+**** ~out/parlog_fit_hb.h5~
+**** ~out/fit_hb.h5~
+*** DONE ~pylib/input_presimulation.py~
 CLOSED: [2021-02-10 Wed 00:45]
-*** DONE ~genpar.f90~
+*** DONE ~src/presimulation.f90~
 CLOSED: [2021-02-10 Wed 00:45]
-*** DONE ~pynout/show_genpar.py~
+*** DONE ~pylib/show_presimulation.py~
 CLOSED: [2021-02-10 Wed 00:45]
-*** DONE ~simulate_MIR.f90~ 
+*** DONE ~src/simulation.f90~
 CLOSED: [2021-03-12 Fri 14:56]
 - Note taken on [2021-04-07 Wed 14:06] \\
   Reparameterization
-*** DONE ~pynout/show_galspec.py~
+*** DONE ~pylib/show_simulation.py~
 CLOSED: [2021-02-10 Wed 00:45]
-*** DONE ~pynout/input_fitpar_chi2.py~
+*** DONE ~pylib/input_sim_chi2.py~
 CLOSED: [2021-02-10 Wed 00:45]
-*** DONE ~pynout/input_fitpar_BB.py~
+*** DONE ~pylib/input_sim_bb.py~
 CLOSED: [2021-03-31 Wed 15:29]
-*** DONE ~pynout/input_fitpar_HB.py~
+*** DONE ~pylib/input_sim_hb.py~
 CLOSED: [2021-02-10 Wed 00:45]
-*** DONE ~pynout/show_fitpar.py~
+*** DONE ~pylib/show_sim_corr.py~
 CLOSED: [2021-02-10 Wed 00:45]
-*** DONE ~pynout/corr_fitpar.py~
-CLOSED: [2021-02-10 Wed 00:45]
+- Note taken on [2021-05-26 Wed 09:01] \\
+  Corrected subplot error
 - Note taken on [2021-04-07 Wed 14:07] \\
   Seperated figures
-** TODO Analysis [50%]
-*** DONE ~anapar.f90~
+** DONE Post-processing [100%]
+*** DONE ~analysis.f90~
 CLOSED: [2021-04-14 Wed 10:42]
-*** TODO ~anaMIR.f90~
-** DONE Hierarchical Bayesian (HISTOIRE): ~fitMIR_HB.f90~ [100%]
+** DONE Hierarchical Bayesian (HISTOIRE): ~fit_hb.f90~ [100%]
 - Note taken on [2021-04-21 Wed 23:20] \\
   + Replaced Cholesky invert by modified Sherman-Morrison formula in ~lnhyper_corr~
   + Corrected the error of the initialization of hyperparameter sampling
@@ -141,7 +136,7 @@ CLOSED: [2021-01-13 Wed 18:55]
 CLOSED: [2021-01-13 Wed 18:55]
 *** DONE test HB with simulated spectra
 CLOSED: [2021-02-10 Wed 00:35]
-** DONE Belgium Bayesian (HISTOIRE): ~fitMIR_HB.f90~ [100%]
+** DONE Belgium Bayesian (HISTOIRE): ~fit_hb.f90~ [100%]
 *** DONE build structure according to ~fitSED_HB.f90~
 CLOSED: [2020-09-03 Thu 17:30]
 *** DONE test homogeneous prior dist. with synthetic spectrum
@@ -152,7 +147,7 @@ CLOSED: [2020-12-10 Thu 12:19]
 CLOSED: [2021-01-12 Tue 10:47]
 *** DONE test with (more realistic) simulated spectra
 CLOSED: [2021-02-10 Wed 00:34]
-** TODO Chi2 (LE MIROIR): ~fitMIR_chi2.f90~ [80%]
+** DONE Chi2 (LE MIROIR): ~fit_chi2.f90~ [100%]
 *** DONE test chi2min with synthetic spectrum
 CLOSED: [2020-06-04 Thu 11:27]
 *** DONE test chi2min with M83 (input 3D data)
@@ -161,7 +156,10 @@ CLOSED: [2020-06-18 Thu 16:50]
 CLOSED: [2020-12-10 Thu 12:15]
 *** DONE add Monte Carlo estimation for Chi2 convergence (in func ~initparam~)
 CLOSED: [2020-12-10 Thu 12:15]
-*** TODO seperate spectra from diff modules and add calib error param
+*** CNCL seperate spectra from diff modules and add calib error param
+CLOSED: [2021-05-12 Wed 10:52]
+- State "CNCL"       from "TODO"       [2021-05-26 Wed 10:52] \\
+  Added calib error as a nuisance parameter for HB fitting instead of doing it for Chi2
 ** CNCL Init [100%]
 - State "CNCL"       from "DONE"       [2021-01-14 Thu 15:23]
 *** DONE modeled spectrum
@@ -170,11 +168,11 @@ CLOSED: [2020-06-09 Tue 18:51]
 CLOSED: [2020-05-11 Mon 15:21]
 - Note taken on [2020-10-22 Thu 17:02] \\
   merged to ~input_master.py~ ([obsolete] fits2h5.py)
-* DONE auxil [100%]
+* DONE auxil (aux/) [100%]
 :PROPERTIES:
 :COOKIE_DATA: recursive
 :END:
-** DONE ~auxil.f90~ [100%]
+** DONE ~core.f90~ [100%]
 *** TYPE, PUBLIC
 **** DONE ~par_type~
 CLOSED: [2020-05-11 Mon 10:52]
@@ -332,7 +330,7 @@ CLOSED: [2020-12-08 Tue 16:05]
 - Note taken on [2020-05-26 Tue 16:41] \\
   Replace massStar by Fstar (total surface brightness of star), with BB normalized by Stefan-Boltzmann constant.
 - State "KNOWNCAUSE" from "DONE"       [2020-05-26 Tue 16:41]
-** DONE ~datable.f90~
+** DONE ~auxil.f90~
 CLOSED: [2021-01-14 Thu 16:07]
 *** PARAMETER, PUBLIC
 ~Ncont_max~, ~Nline_max~, ~Nband_max~, ~Npabs_max~, ~Nstar_max~, 
@@ -341,51 +339,50 @@ CLOSED: [2021-01-14 Thu 16:07]
 **** TYPE(~instr_res~) :: res
 **** TYPE(~line_type~) :: TABLine
 **** TYPE(~band_type~) :: TABand
-** DONE ~chi2_kit.f90~
+** DONE ~chi2.f90~
 CLOSED: [2021-02-10 Wed 01:17]
 Former ~fitMIR_chi2_external~ module
-** DONE ~HB_kit.f90~
+** DONE ~hb.f90~
 CLOSED: [2021-02-10 Wed 01:17]
+- Note taken on [2021-05-26 Wed 09:05] \\
+  Correted error in ~lnhyper_sig~ covar matrix inversion opt.2 (non-Cholesky): ~1._DP/EXP(lnSgrid(:))~ instead of ~EXP(1._DP/lnSgrid(:))~
 Former ~fitMIR_HB_external~ module
-* TODO pynout [78%]
+* DONE UI (pylib/) [100%]
 :PROPERTIES:
 :COOKIE_DATA: recursive
 :END:
 ** INPUT file organization
-*** ~out1/set_input.h5~
+*** ~out/set_input.h5~
 *** ~dirIN/observations_MIR.h5~
-*** ~dirIN/input_fitMIR_master.h5~
-*** ~dirIN/input_fitMIR_model.h5~
-*** ~dirIN/input_fitMIR_extra.h5~
+*** ~dirIN/input_master.h5~
+*** ~dirIN/input_model.h5~
+*** ~dirIN/input_extra.h5~
 ** OUTPUT file organization
-*** ~dirOUT/parlog_fitMIR_HB.h5~
-*** ~dirOUT/fitMIR_chi2.h5~
-*** ~dirOUT/parlog_fitMIR_BB.h5~
-*** ~dirOUT/fitMIR_BB.h5~
-*** ~dirOUT/parlog_fitMIR_HB.h5~
-*** ~dirOUT/fitMIR_HB.h5~
-** DONE inputs [6/6]
+*** ~dirOUT/fit_chi2.h5~
+*** ~dirOUT/parlog_fit_bb.h5~
+*** ~dirOUT/fit_bb.h5~
+*** ~dirOUT/parlog_fit_hb.h5~
+*** ~dirOUT/fit_hb.h5~
+** DONE inputs [7/7]
 - Note taken on [2020-12-14 Mon 20:00] \\
   Added redshift
 - Note taken on [2020-11-23 Mon 13:41] \\
   Added wvl auto detecting process to constrain band and line selection
-*** DONE ~input_fitMIR_HB.py~
+*** DONE ~input_analysis.py~
+CLOSED: [2021-06-08 Tue 12:00]
+*** DONE ~input_hb.py~
 CLOSED: [2021-04-14 Wed 10:43]
-*** DONE ~input_fitMIR_BB.py~
+*** DONE ~input_bb.py~
 CLOSED: [2021-04-21 Wed 15:59]
-*** DONE ~input_fitMIR_chi2.py~
+*** DONE ~input_chi2.py~
 CLOSED: [2021-04-14 Wed 10:43]
-*** DONE ~input_fitpar_HB.py~
-CLOSED: [2021-04-21 Wed 16:00]
-*** DONE ~input_fitpar_BB.py~
-CLOSED: [2021-04-21 Wed 16:00]
-*** DONE ~input_fitpar_chi2.py~
-CLOSED: [2021-04-21 Wed 15:59]
-** TODO visualisation [1/3]
-*** DONE ~partrack~
-CLOSED: [2021-04-21 Wed 18:48]
-*** TODO ~corr_fitMIR~
-*** TODO ~show_fitMIR~
+** DONE visualisation [3/3]
+*** DONE ~show_corr.py~
+CLOSED: [2021-06-08 Tue 11:58]
+*** DONE ~show_par.py~
+CLOSED: [2021-05-26 Wed 12:09]
+*** DONE ~show_fit.py~
+CLOSED: [2021-05-26 Wed 08:50]
 ** DONE ~utilities.py~
 *** DATA
 **** ~res~
