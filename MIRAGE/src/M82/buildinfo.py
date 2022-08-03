@@ -124,10 +124,10 @@ filog = path_out+'build_history_'
 # chnl = ['SH', 'LH']
 chnl = ['SL2', 'SL1', 'LL2', 'LL1', 'SL3', 'LL3']
 
-sub_SL = ['04','06S','06N','08','08c','09N3','09N2']
-sub_LL = ['04','05','06','08','09N3','09N5','09N2']
-# sub_SL = ['08']
-# sub_LL = ['08']
+# sub_SL = ['04','06S','06N','08','08c','09N3','09N2']
+# sub_LL = ['04','05','06','08','09N3','09N5','09N2']
+sub_SL = ['04','06S','06N','08c','09N3']
+sub_LL = ['04','05','06','08','09N3']
 sub_SH = []
 sub_LH = []
 
@@ -136,8 +136,8 @@ sub_LH = []
 ##                   Data homogenisation
 
 ##----------------------------------------------------------
-coadd_tool = 'swarp'
-# coadd_tool = 'reproject'
+# coadd_tool = 'swarp'
+coadd_tool = 'reproject'
 
 ## Convolution
 ##-------------

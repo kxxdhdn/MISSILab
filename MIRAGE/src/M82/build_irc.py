@@ -55,7 +55,7 @@ print('\n============================================================\n')
 
 Nobs = len(parobs)
 
-Nmc = 0
+Nmc = 2
 
 # exit()
 
@@ -140,7 +140,7 @@ if irc_coadd=='y':
         ## <imontage> coadding
         ##=====================
         mtg = imontage('exact', tmpdir=path_tmp, verbose=verbose)
-        mtg.coadd(fits_irc, refheader=footprint_irc,
+        mtg.coadd(slice_irc, refheader=footprint_irc,
                   filOUT=path_out+src+'_footprint')
 
     ## Crop NaN edge
@@ -771,7 +771,7 @@ if plot_spec=='y':
                           xlabel=r'${\rm Wavelengths}\ \lambda\ (\mu m)$',
                           ylabel=r'${\rm Surface\ brightness}\ F_{\nu}\ (MJy/sr)$',
                           figsize=(8,8), legend='upper left',
-                          title=src+'_'+subname+'_IRC',
+                          title='IRC_'+subname,
                           titlesize=20, labelsize=10, ticksize=10, legendsize=10)
                 ## Non-intercalib
                 p.add_plot(ds.wave, ds0.data[:,y,0],
@@ -783,5 +783,5 @@ if plot_spec=='y':
                 p.add_plot(wcen[0], dict_spec[i][subname], yerr=dict_spec_unc[i][subname],
                            c='g', marker='^', ms=10, zorder=101, label='IRC-'+phot)
                 
-                p.save(path_fig+src+'_'+subname+'_IRC')
+                p.save(path_fig+'IRC_'+subname)
 

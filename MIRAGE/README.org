@@ -2,8 +2,10 @@
 #+AUTHOR: Dangning HU
 
 * Helpdesk
-The Python package [[https://github.com/kxxdhdn/LAPUTAN][laputan]] is required by MIRAGE. You can install it in commandline: ~pip install laputan --upgrade~
+The Python package [[https://github.com/kxxdhdn/RAPYUTA][rapyuta]] is required by MIRAGE. You can install it in commandline: ~pip install rapyuta --upgrade~
 * Version log
+** v0.5.2 (20211017)
+- Tested ~coadd_tool='reproject'~
 ** v0.5.1 (20211015)
 - Interpolated wavelength grids of different IRC slits (~rapyuta~ v2.0.4 needed)
 - Fixed photometry processing not adding MC error bug

@@ -85,7 +85,7 @@ Nphot = len(phot)
 
 Nobs = len(out_irc)
 
-Nmc = 0
+Nmc = 2
 
 resume = False
 
@@ -114,35 +114,45 @@ if proc_SL=='y':
     hdr_SL = []
     for i in trange(Nsub_SL,# leave=False,
                     desc='Loading SL refheader'):
+        if not os.path.exists(path_tmp+'SL/'):
+            os.makedirs(path_tmp+'SL/')
         ref0 = []
         for c in chnl_SL:
-            ref0.append(path_irs+src+'_'+sub_SL[i]+'_'+c)
+            ds = read_fits(path_irs+src+'_'+sub_SL[i]+'_'+c)
+            write_fits(path_tmp+'SL/tmpref_'+sub_SL[i]+'_'+c, ds.header, ds.data[:2], ds.wave[:2])
+            ref0.append(path_tmp+'SL/tmpref_'+sub_SL[i]+'_'+c)
         swp0 = iswarp(ref0, tmpdir=path_tmp+'SL/')
         ref = []
         for c in chnl_SL:
-            swp0.combine(path_irs+src+'_'+sub_SL[i]+'_'+c,
+            swp0.combine(path_tmp+'SL/tmpref_'+sub_SL[i]+'_'+c,
                          keepedge=True,# cropedge=True,
                          filOUT=path_tmp+'SL/tmpref_'+c)
             ref.append(path_tmp+'SL/tmpref_'+c)
-        hdr_SL.append(concatenate(ref, cropedge=True,
-                                  wsort=False, keepfrag=False).header)
+        hdr = concatenate(ref, cropedge=True,
+                          wsort=False, keepfrag=False).header
+        hdr_SL.append(fixwcs(header=hdr).header)
     fclean(path_tmp+'SL/tmpref_*')
 if proc_LL=='y':
     hdr_LL = []
     for i in trange(Nsub_LL,# leave=False,
                     desc='Loading LL refheader'):
+        if not os.path.exists(path_tmp+'LL/'):
+            os.makedirs(path_tmp+'LL/')
         ref0 = []
         for c in chnl_LL:
-            ref0.append(path_irs+src+'_'+sub_LL[i]+'_'+c)
+            ds = read_fits(path_irs+src+'_'+sub_LL[i]+'_'+c)
+            write_fits(path_tmp+'LL/tmpref_'+sub_LL[i]+'_'+c, ds.header, ds.data[:2], ds.wave[:2])
+            ref0.append(path_tmp+'LL/tmpref_'+sub_LL[i]+'_'+c)
         swp0 = iswarp(ref0, tmpdir=path_tmp+'LL/')
         ref = []
         for c in chnl_LL:
-            swp0.combine(path_irs+src+'_'+sub_LL[i]+'_'+c,
+            swp0.combine(path_tmp+'LL/tmpref_'+sub_LL[i]+'_'+c,
                          keepedge=True,# cropedge=True,
                          filOUT=path_tmp+'LL/tmpref_'+c)
             ref.append(path_tmp+'LL/tmpref_'+c)
-        hdr_LL.append(concatenate(ref, cropedge=True,
-                                  wsort=False, keepfrag=False).header)
+        hdr = concatenate(ref, cropedge=True,
+                          wsort=False, keepfrag=False).header
+        hdr_LL.append(fixwcs(header=hdr).header)
     fclean(path_tmp+'LL/tmpref_*')
 
 for iph in range(Nphot):
@@ -196,12 +206,12 @@ for iph in range(Nphot):
                     elif coadd_tool=='reproject':
                         mtg = imontage('exact', tmpdir=path_tmp_XX)
                         if j==0:
-                            mtg.reproject(f0nam_in, refheader=refheader,
-                                          filOUT=f0nam_out)
+                            mtg.coadd(f0nam_in, refheader=refheader,
+                                      filOUT=f0nam_out)
                         else:
-                            mtg.reproject(f0nam_in, refheader=refheader,
-                                          dist='norm', sig_pt=.2,
-                                          filOUT=f0nam_out)
+                            mtg.coadd(f0nam_in, refheader=refheader,
+                                      dist='norm', sig_pt=.2,
+                                      filOUT=f0nam_out)
     
                     ## PSF Convolution with both sources of errors (MC)
                     ##--------------------------------------------------
@@ -383,10 +393,10 @@ for j in trange(Nmc+1,#-iresume,# leave=False,
                         filOUT=path_tmp+src+'_LH_'+str(j))
         elif coadd_tool=='reproject':
             mtg = imontage('exact', tmpdir=path_tmp)
-            mtg.reproject(path_tmp+src+'_SH_'+str(j), refheader=refheader,
-                          filOUT=path_tmp+src+'_SH_'+str(j))
-            mtg.reproject(path_tmp+src+'_LH_'+str(j), refheader=refheader,
-                          filOUT=path_tmp+src+'_LH_'+str(j))
+            mtg.coadd(path_tmp+src+'_SH_'+str(j), refheader=refheader,
+                      filOUT=path_tmp+src+'_SH_'+str(j))
+            mtg.coadd(path_tmp+src+'_LH_'+str(j), refheader=refheader,
+                      filOUT=path_tmp+src+'_LH_'+str(j))
         
         ## SH
         data_SH = read_fits(path_tmp+src+'_SH_'+str(j)).data
@@ -1314,7 +1324,7 @@ for iph in range(Nphot):
                            dist='norm', Nmc=Nmc, filOUT=tmp_phot+'_MC')
         elif coadd_tool=='reproject':
             mtg = imontage('exact', tmpdir=path_tmp)
-            mtg.reproject_mc(raw_phot, refheader=header_atlas,
+            mtg.reproject_mc(raw_phot, refheader=coadd_footprint,
                              dist='norm', Nmc=Nmc, filOUT=tmp_phot+'_MC')
 
     for iobs in trange(Nobs, #leave=False,
@@ -1655,7 +1665,7 @@ for iph in range(Nphot):
             unc = np.nanstd(mcimage, axis=0)
             write_fits(f2nam+'_unc', ds.header, unc, ds.wave)
 
-exit()
+
 ##----------------------------------------------------------
 
 ##                   Stitch IRC-IRS spectra
@@ -1825,7 +1835,7 @@ if plot_mir=='y':
                     pp = pplot(ds.wave, ds.data[:,y,0], yerr=ds.unc[:,y,0],
                                xlog=1, ylog=1, 
                                lw=1, ec='grey', label=subname,
-                               clib=['b','g','y','r','orange','c','m'],
+                               clib=['c','m','y','r','orange','b','g'],
                                ylim=ylim,
                                xlabel=r'${\rm Wavelengths}\ \lambda\ (\mu m)$',
                                ylabel=r'$F_{\nu}\ (MJy/sr)$',
