@@ -138,7 +138,7 @@ CONTAINS
     status = HOSTNM(host)
     SELECT CASE (host)
       CASE ("dapmcw18")
-        LibF = "/Users/dhu/ownCloud/MILES/swing/"
+        LibF = "/Users/dhu/Github/MISSILE/MILES/swing/"
       CASE ("iclustgate")
         LibF = "/dsm/herschel1/nuages/dhu/MILES/swing/"
     END SELECT
@@ -155,7 +155,7 @@ CONTAINS
     status = HOSTNM(host)
     SELECT CASE (host)
       CASE ("dapmcw18")
-        temproot = "/Users/dhu/ownCloud/MILES/swing/Model_templates/"
+        temproot = "/Users/dhu/Github/MISSILE/MILES/swing/Model_templates/"
       CASE ("iclustgate")
         temproot = "/dsm/herschel1/nuages/dhu/MILES/swing/Model_templates/"
     END SELECT

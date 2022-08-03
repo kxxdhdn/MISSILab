@@ -13,11 +13,12 @@ Modify the following paths
 - ~swing/Tools/utilities.f90~
   + ~LibF~
   + ~temproot~
-- ~pylib/auxil.py~
+- ~simu/auxil.py~ and ~work/auxil.py~
   + ~mroot~
-** Database
-Download ~Model_templates/Cross_sections/Data/~ (542.1 MB) and put it in ~swing/~
+** External libraries
+Download ~SwING/Model_templates/Cross_sections/Data/~ (542.1 MB) and put it in ~swing/~
 ** Make
+Use h5fc as Fortran compiler
 #+begin_src bash
 ## In swing/Programs/
 make
@@ -35,15 +36,23 @@ make mrproper
 #+BEGIN_SRC bash
 pip install rapyuta --upgrade
 
-## Fitting original parameters
-python pylib/input_presimulation.py
-./src/presimulation
-python pylib/show_presimulation.py # optional
+## Fit original parameters with least-square
+python simu/input_presimu_chi2.py
+./src/presimu_chi2
+## Add calibration offsets in simulated spectra (bb/hb only)
+python simu/input_presimu_bb.py # indeed non-HB (bb)
+./src/presimu_hb
+## Analyse pre-simulation fits
+python simu/input_presimu_an.py
+./src/presimu_ana
+## Show pre-simulation fits
+python simu/show_presimu_fit.py # optional
+python simu/show_presimu_par.py # optional
 
-## Generating models with new parameters
+## Generate models with new parameters
 ./src/simulation
-## Line 40-42 & 65 may can be modified according to simulation.90
-python pylib/show_simulation.py # optional
+## Line 40-42 & 65 may can be modified according to simulation.f90
+python simu/show_simulation.py
 #+END_SRC
 ** Facts (modifiable) in ~simulation.f90~
 *** Sample size
@@ -54,68 +63,96 @@ python pylib/show_simulation.py # optional
 - mean and stdev of ~Nrat~ band ratios to vary (fixing 11.2)
 *** ~corr~: ~Ncorr~ correlation coefficients for different band ratios (triangles of ~Rmat~)
 ** Fitting
-Put ~pylib/~ and ~data/~ in your work directory. 
-The outputs can be found in ~out/~.
+Put ~work/~ and ~data/~ in your work directory. 
+The outputs will be found in ~out/~.
 #+BEGIN_SRC bash
 pip install rapyuta --upgrade
 
 ## Chi2 fit
-python pylib/input_sim_chi2.py # simulation
-python pylib/input_chi2.py
+python simu/input_simu_chi2.py # simulation
+python work/input_chi2.py
 ./src/fit_chi2
 
 ## BB fit
-python pylib/input_sim_bb.py # simulation
-python pylib/input_bb.py
+python simu/input_simu_bb.py # simulation
+python work/input_bb.py
 ./src/fit_hb
 
 ## HB fit
-python pylib/input_sim_hb.py # simulation
-python pylib/input_hb.py
+python simu/input_simu_hb.py # simulation
+python work/input_hb.py
 ./src/fit_hb
 
 ## Post-processing
-python pylib/input_analysis.py
+python simu/input_simu_an.py
+python work/input_analysis.py
 ./src/analysis
 
-## Plot (results in out/Figures/)
-## Line 36-38 should be coherent with simulation.f90
-python pylib/show_fit.py # fitted spectra
-python pylib/show_par.py # parameter distribution
-python pylib/show_corr.py # feature correlations
+## Plot (results see out/Figures/)
+python simu/show_fit.py # fitted spectra
+python simu/show_par.py # parameter distribution
+python simu/correlations.py # feature correlations
+## Idem for work/
+python work/show_fit.py
+python work/show_par.py
+## Modify plotname(), plotcorr() and calcorr() in work/auxil.py
+python work/correlations.py
 #+END_SRC
 * Notices
-The Python package [[https://github.com/kxxdhdn/RAPYUTA][rapyuta]] is required by the MILES UI (pylib). You can install it in commandline: ~pip install rapyuta --upgrade~
+The Python package [[https://github.com/kxxdhdn/RAPYUTA][rapyuta]] is required by the MILES UI (work). You can install it in commandline: ~pip install rapyuta --upgrade~
 * Version log
-** v1.x (2021xxxx)
+** v1.x (2022xxxx, JWST beta)
 - Added robust/skewed RMS (student/split gaussian distribution) for likelihood
 - Attenuation (extinction with different geometries) in ~specModel~
 - Calculated derived parameter errors with gradient function
-  + exclusively for chi2, changes in ~aux/core.f90~ and ~src/fit_chi2.f90~
+  + exclusively for chi2
+  + changes in ~aux/core.f90~ and ~src/fit_chi2.f90~
 - Fractional data saving during program run
 - Parallelization
-- Simplified version of input UI ~pylib/fast_input.py~
-** v1 (2021xxxx, HB release)
-** v0.3.9 (2021xxxx, prelease)
+** v1 (2022xxxx, HB release)
+** v0.3.10 (2022xxxx, prelease)
 - Update tests/
 - Add manuel documentation files
 - Final clean before the first complete release
-** v0.3.8 (202111xx, paper)
+** v0.3.9 (202207xx, paper)
 - Update simulation
-  + (A bit) more realistic dust continuum by varying Tdust instead of M/d^2
-  + Ratios of summed bands
+  + Divide ~simulation.f90~ into ~simu_SovN.f90~ and ~simu_cont.f90~
+  + Support UI configurating (see ~simu/input_simaster.py~)
+- Improve UI
+  + Update dependency: ~rapyuta~ v2.2.2
+  + Distance-dependent plots
 - Add extinction curves of ices
-- Improve plots
+- Update ~tests/~
 ** ---------- WE ARE HERE ----------
-** v0.3.7 (20211119, thesis2)
-- Modify parameter limits
-  + ~lnAv~ ((0,1) \rarr (0,5)) 
-  + IRS calibration errors (15% \rarr 5%)
+** v0.3.8 (20220616, thesis3)
+- Fix a vital bug in stellar continuum sampling
+  + See the function ~specModel_gen()~ in ~aux/core.f90~
+  + Only bb/hb are concerned
+- Possible to input more than one stellar continuum component and leave the option for PEGASE stars by adding ~labS~
+  + Changes in all files in ~aux/~ and ~src/~ (similar to the variable ~extinct~)
+- Rename ~lnFstar~ to ~lnLstar~ and correct comments concerning parameter units in the function ~specModel()~ in ~core.f90~
+- Correct the lower limits (no smaller than that given by spectral resolution) of ~Wline~, ~WSband~ and ~WLband~ in the function ~initparam()~ in ~core.f90~
+- Rename repeated line labels in ~aux/auxil.f90~ and ~pylib/auxil.py~
 - Update simulation
-- presimulation
-  + Shorten file name
-  + Support bb/hb fitted param inputs (thus calib error included)
-- Correct ~auxil.py/calexpansion~ initialization (1 \rarr 0)
-- Improve plots
-  + Add ~pylib/lib_corr.py~
-** [[./arx/version_log_arx.org][Archived (v<0.3.7)]]
+  + Exclude 5.2 \mu{}m band (half band + IRS noisy edge)
+  + Only leave bands used to generate ratio correlations
+  + Summed bands for band ratios
+  + Update mode d'emploi
+- Improve UI
+  + Update dependency: ~rapyuta~ v2.2.1
+  + Update input files
+    * Move parameter attribution into ~partuning()~ in ~auxil.py~
+    * Correct band width degradation of ~initparam()~ in ~aux/core.f90~ and remove the repeated step within the function ~partuning()~ in ~auxil.py~
+    * Merge chi2init to newinit (see also ~aux/core.f90~)
+    * Rename ~input_presimu_hb.py~ as ~input_presimu_bb.py~
+  + Update plots
+    * Use cross/triangle subplots to show 2D parameter distributions
+    * Use cloud density plot to show correlations
+    * Merge ~lib_corr.py~ to ~auxil.py~ (resulting in functions: ~plotname()~, ~plotcorr()~ and ~calcorr()~)
+    * Merge ~sim_corr.py~ ~show_corr.py~ to ~correlations.py~
+    * Remove ~show_corr_int.py~
+    * Add tables, ~WAVLine~ and ~WAVBand~, in ~auxil.py~
+  + Divide ~pylib/~ into ~simu/~ (a priori embedded and pre-configured, but also portable and customizable) and ~work/~ (portable and customizable for each src)
+  + Separate out ~simu/band_sum.py~ from ~pylib/show_fit.py~
+  + Adapt to thesis manuscript (ultimate version)
+** [[./arx/version_log_arx.org][Archived (v<0.3.8)]]

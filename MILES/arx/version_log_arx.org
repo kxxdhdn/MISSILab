@@ -1,7 +1,18 @@
-#+TITLE: MILES archived version log (v<0.3.7)
+#+TITLE: MILES archived version log (v<0.3.8)
 #+AUTHOR: Dangning HU
 
 * Version log
+** v0.3.7 (20211119, thesis2)
+- Modify parameter limits
+  + ~lnAv~ ((0,1) \rarr (0,5)) 
+  + IRS calibration errors (15% \rarr 5%)
+- Update simulation
+- presimulation
+  + Shorten file name
+  + Support bb/hb fitted param inputs (thus calib error included)
+- Correct ~auxil.py/calexpansion~ initialization (1 \rarr 0)
+- Improve UI
+  + Add ~pylib/lib_corr.py~
 ** v0.3.6 (20211018, thesis)
 - Update calibrated band properties (3.3, 3.4 and 3.5 \mu{}m)
 - Update AKARI NG spectral resolution (changes in ~aux/auxil.f90~ and ~pylib/auxil.py~)

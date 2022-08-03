@@ -5,7 +5,7 @@
 !******************************************************************************
 
 
-PROGRAM presimu_hb
+PROGRAM fit_hb
 
   USE utilities, ONLY: DP, isNaN, pring, trimLR, trimeq, swap, tinyDP, &
                        banner_program, ustd, strike, warning, &
@@ -81,6 +81,7 @@ PROGRAM presimu_hb
   INTEGER :: Ncorr
   INTEGER, DIMENSION(2) :: unitlog
   TYPE(time_type) :: timestr
+
   
   !! Fixed seed
   !!------------
@@ -126,15 +127,14 @@ PROGRAM presimu_hb
 
   !! Output settings
   IF (nohi) THEN
-    filOUT = TRIMLR(dirOUT)//'presimu_bb'//h5ext
-    filMCMC = TRIMLR(dirOUT)//'parlog_presimu_bb'//h5ext
-    fiLOG = TRIMLR(dirOUT)//'log_presimu_bb'//ascext
+    filOUT = TRIMLR(dirOUT)//'fit_bb'//h5ext
+    filMCMC = TRIMLR(dirOUT)//'parlog_fit_bb'//h5ext
+    fiLOG = TRIMLR(dirOUT)//'log_fit_bb'//ascext
   ELSE
-    filOUT = TRIMLR(dirOUT)//'presimu_hb'//h5ext
-    filMCMC = TRIMLR(dirOUT)//'parlog_presimu_hb'//h5ext
-    fiLOG = TRIMLR(dirOUT)//'log_presimu_hb'//ascext
+    filOUT = TRIMLR(dirOUT)//'fit_hb'//h5ext
+    filMCMC = TRIMLR(dirOUT)//'parlog_fit_hb'//h5ext
+    fiLOG = TRIMLR(dirOUT)//'log_fit_hb'//ascext
   END IF
-
   
   CALL INITIATE_CLOCK(timestr)
   OPEN (ulog,FILE=fiLOG,STATUS=MERGE("OLD    ","REPLACE",resume), &
@@ -567,6 +567,7 @@ PROGRAM presimu_hb
     delp1(:,:,:) = 1._DP
     calibration: IF (calib) THEN
       ln1pdmcmc(:,:,:,icurr) = ln1pdmcmc(:,:,:,iprev)
+
       !! a. Compute the model for the current parameters
       Fnu_model(:,:,:) &
         = specModel( wOBS(:), INDPAR=ind, PARVAL=parmcmc(:,:,:,iprev), &
@@ -602,7 +603,6 @@ PROGRAM presimu_hb
       END DO
       
     END IF calibration
-
     ! DO i=1,MERGE(2,1,verbose)
     !   WRITE(unitlog(i),*) 'Calibration error sampling [done] - '// &
     !                         TRIMLR(TIMINFO(timestr))
@@ -728,9 +728,9 @@ PROGRAM presimu_hb
       !! iMCMC+1 that we realize that rho(iMCMC) was out, so we ignore also step
       !! iMCMC. This way we do not interfere with the MCMC statistics and avoid
       !! having a NaN introduced in the chain.
-      corrmcmc(:,icurr) = corrmcmc(:,iprev)
       IF (MODULO(counter,10)==1 .OR. counter==Nmcmc) THEN
         sigcurr(:) = sigmcmc(:,icurr)
+        corrmcmc(:,icurr) = corrmcmc(:,iprev)
         correlation: DO icorr=1,Ncorrhyp
           IF (maskhypall(icorr2ij(icorr,1)).AND.maskhypall(icorr2ij(icorr,2))) THEN
             IF (debug) PRINT*, " - corr("//TRIMLR(corrhypname(icorr))//")"
@@ -779,9 +779,9 @@ PROGRAM presimu_hb
               maskhypall(icorr2ij(icorr,1)).AND.maskhypall(icorr2ij(icorr,2))) &
         corrmcmc(icorr,icurr) &
           = CORRELATE(parmcmc(:,:,i2ih(icorr2ij(icorr,1)),icurr),&
-                       parmcmc(:,:,i2ih(icorr2ij(icorr,2)),icurr), &
-                       MASK=(maskhyp(:,:,icorr2ij(icorr,1)) &
-                             .AND. maskhyp(:,:,icorr2ij(icorr,2))))
+                      parmcmc(:,:,i2ih(icorr2ij(icorr,2)),icurr), &
+                      MASK=(maskhyp(:,:,icorr2ij(icorr,1)) &
+                            .AND. maskhyp(:,:,icorr2ij(icorr,2))))
 
     END IF hierarchy
     
@@ -842,4 +842,4 @@ PROGRAM presimu_hb
   DEALLOCATE(wOBS, FnuOBS, dFnuOBS, maskint, mask, maskpar, maskhyp, &
              maskwall, maskparall, maskhypall)
 
-END PROGRAM presimu_hb
+END PROGRAM fit_hb

@@ -20,8 +20,8 @@ PROGRAM fit_chi2
   USE core, ONLY: read_master, specModel, initparam
   USE ext_chi2, ONLY: Nx, Ny, NwOBS, wOBS, nuOBS, FnuOBS, dFnuOBS, &
                       residuals, Fnu_mod, resid, invLcovarOBS, &
-                      ind, parinfo, Qabs, extinct, xOBS, yOBS, iwfree, &
-                      mask, maskpar
+                      ind, parinfo, Qabs, extinct, labS, &
+                      xOBS, yOBS, iwfree, mask, maskpar
   IMPLICIT NONE
 
   !! Parameters
@@ -86,7 +86,7 @@ PROGRAM fit_chi2
   CALL READ_MASTER(WAVALL=wOBS(:), DIRIN=dirIN, DIROUT=dirOUT, &
                    VERBOSE=verbose, NINIMC=NiniMC, &
                    CALIB=calib, NEWSEED=newseed, NEWINIT=newinit, &
-                   LABL=labL, LABB=labB, QABS=Qabs, EXTINCT=extinct, &
+                   LABL=labL, LABB=labB, QABS=Qabs, EXTINCT=extinct, LABS=labS, &
                    NCONT=Ncont, NBAND=Nband, NLINE=Nline, &
                    NEXTC=Nextc, NSTAR=Nstar, NEXTRA=Nextra, DOSTOP=dostop, &
                    PARINFO=parinfo, INDPAR=ind, NPAR=Npar, SPEC_UNIT=spec_unit)
@@ -203,7 +203,7 @@ PROGRAM fit_chi2
   CALL INITPARAM(NiniMC, IND=ind, PAR=parini(:,:,:,:), PARINFO=parinfo(:), &
                  ITIED=itied(:), MASK=maskpar(:,:,:), &
                  NEWINIT=newinit, FILOBS=filOBS, &
-                 LABB=labB(:), LABL=labL(:), QABS=Qabs(:))
+                 LABB=labB(:), LABL=labL(:), QABS=Qabs(:), LABS=labS(:))
   
   Nparfree = COUNT((.NOT. parinfo(:)%fixed) .AND. (itied(:) <= 0))
 
@@ -369,7 +369,8 @@ PROGRAM fit_chi2
   ALLOCATE(FnuMOD(Nx,Ny,NwOBS))
 
   FnuMOD(:,:,:) = specModel( wOBS(:), INDPAR=ind, PARVAL=par(:,:,:), &
-                             MASK=mask(:,:,:), QABS=Qabs(:), EXTINCT=extinct(:,:), &
+                             MASK=mask(:,:,:), &
+                             QABS=Qabs(:), EXTINCT=extinct(:,:), LABS=labS(:), &
                              FNUCONT=FnuCONT, FNUBAND=FnuBAND, FNUSTAR=FnuSTAR, &
                              PABS=Pabs, FNULINE=FnuLINE, &
                              FNUCONT_TAB=FnuCONT_tab, FNUBAND_TAB=FnuBAND_tab, &

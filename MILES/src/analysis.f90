@@ -17,7 +17,7 @@ PROGRAM analysis
   USE inout, ONLY: read_hdf5, write_hdf5, check_hdf5, h5ext, ascext, &
                    lenpar, lenpath
   USE ext_hb, ONLY: Nx, Ny, NwOBS, FnuOBS, Nparhyp, Ncorrhyp, &
-                    mask, ind, parinfo, parhypinfo, Qabs, extinct, &
+                    mask, ind, parinfo, parhypinfo, Qabs, extinct, labS, &
                     specOBS, calib
   IMPLICIT NONE
 
@@ -81,7 +81,7 @@ PROGRAM analysis
 
   CALL READ_HDF5(wOBS, FILE=filOBS, NAME='wavelength (microns)', N1=NwOBS)
   CALL READ_MASTER(WAVALL=wOBS(:), DIRIN=dirIN, DIROUT=dirOUT, VERBOSE=verbose, &
-                   NMCMC=Nmcmc, QABS=Qabs, EXTINCT=extinct, CALIB=calib, &
+                   NMCMC=Nmcmc, QABS=Qabs, EXTINCT=extinct, LABS=labS, CALIB=calib, &
                    PARINFO=parinfo, INDPAR=ind, NPAR=Npar, SPEC_UNIT=spec_unit, &
                    PARHYPINFO=parhypinfo, NPARHYP=Nparhyp, NCORRHYP=Ncorrhyp)
   
@@ -126,7 +126,8 @@ PROGRAM analysis
     ALLOCATE(FnuMOD(Nx,Ny,NwOBS))
     
     FnuMOD(:,:,:) = specModel( wOBS(:), INDPAR=ind, PARVAL=par(:,:,:), &
-                               MASK=mask(:,:,:), QABS=Qabs(:), EXTINCT=extinct(:,:), &
+                               MASK=mask(:,:,:), &
+                               QABS=Qabs(:), EXTINCT=extinct(:,:), LABS=labS(:), &
                                FNUCONT=FnuCONT, FNUBAND=FnuBAND, FNUSTAR=FnuSTAR, &
                                PABS=Pabs, FNULINE=FnuLINE, &
                                FNUCONT_TAB=FnuCONT_tab, FNUBAND_TAB=FnuBAND_tab, &
@@ -202,7 +203,7 @@ PROGRAM analysis
       meanpar(:,:,:) = MEAN(parmcmc(:,:,:,t_burnin(j):t_end(j)), DIM=4)
       stdevpar(:,:,:) = SIGMA(parmcmc(:,:,:,t_burnin(j):t_end(j)), DIM=4)
 
-      !! Calculate 2nd and 4th 6-quantiles (sextiles)
+      !! Calculate 1st and 5th 6-quantiles (sextiles)
       ALLOCATE(xs(Nmcmc_eff), mask4D(Nx,Ny,Npar,Nmcmc_eff))
       mask4D(:,:,:,:) = .NOT. ISNAN(parmcmc(:,:,:,t_burnin(j):t_end(j)))
       ! qpar(:,:,:,2) = MEDIAN(parmcmc(:,:,:,t_burnin(j):t_end(j)), DIM=4, &
@@ -212,9 +213,9 @@ PROGRAM analysis
           DO ipar=1,Npar
             xs(:) = SORT(PACK(parmcmc(x,y,ipar,t_burnin(j):t_end(j)), &
                               MASK=mask4D(x,y,ipar,:)))
-            qpar(x,y,ipar,1) = xs(NINT(2._DP/6*Nmcmc_eff)) ! round
+            qpar(x,y,ipar,1) = xs(NINT(1._DP/6*Nmcmc_eff)) ! round
             qpar(x,y,ipar,2) = xs(NINT(3._DP/6*Nmcmc_eff))
-            qpar(x,y,ipar,3) = xs(NINT(4._DP/6*Nmcmc_eff))
+            qpar(x,y,ipar,3) = xs(NINT(5._DP/6*Nmcmc_eff))
           END DO
         END DO
       END DO
@@ -240,7 +241,7 @@ PROGRAM analysis
         meanln1pd(:,:,:) = MEAN(ln1pdmcmc(:,:,:,t_burnin(j):t_end(j)), DIM=4)
         stdevln1pd(:,:,:) = SIGMA(ln1pdmcmc(:,:,:,t_burnin(j):t_end(j)), DIM=4)
 
-        !! Calculate 2nd and 4th 6-quantiles (sextiles)
+        !! Calculate 1st and 5th 6-quantiles (sextiles)
         ALLOCATE(xs(Nmcmc_eff), mask4D(Nx,Ny,Npar,Nmcmc_eff))
         mask4D(:,:,:,:) = .NOT. ISNAN(ln1pdmcmc(:,:,:,t_burnin(j):t_end(j)))
         ! qcal(:,:,:,2) = MEDIAN(ln1pdmcmc(:,:,:,t_burnin(j):t_end(j)), DIM=4, &
@@ -250,9 +251,9 @@ PROGRAM analysis
             DO ical=1,Ncalib
               xs(:) = SORT(PACK(ln1pdmcmc(x,y,ical,t_burnin(j):t_end(j)), &
                                 MASK=mask4D(x,y,ical,:)))
-              qcal(x,y,ical,1) = xs(NINT(2._DP/6*Nmcmc_eff)) ! round
+              qcal(x,y,ical,1) = xs(NINT(1._DP/6*Nmcmc_eff)) ! round
               qcal(x,y,ical,2) = xs(NINT(3._DP/6*Nmcmc_eff))
-              qcal(x,y,ical,3) = xs(NINT(4._DP/6*Nmcmc_eff))
+              qcal(x,y,ical,3) = xs(NINT(5._DP/6*Nmcmc_eff))
             END DO
           END DO
         END DO
@@ -324,6 +325,7 @@ PROGRAM analysis
         END DO
         
         !! Means
+        !!-------
         CALL REALLOCATE(t_int,Nparhyp)
         CALL REALLOCATE(t_int2,Nparhyp)
         CALL REALLOCATE(Neff,Nparhyp)
@@ -369,8 +371,19 @@ PROGRAM analysis
         CALL WRITE_HDF5(INTARR1D=Neff2(:),FILE=fileHB,COMPRESS=compress, &
                         NAME="Effective sample size for the means after burn-in", &
                         VERBOSE=debug,APPEND=.True.)
+
+        !! Worst variables
+        DO i=1,MERGE(2,1,verbose)
+          WRITE(unitlog(i),*)
+          WRITE(unitlog(i),"(A50,F10.1,A10,I10)") "Means: "
+          WRITE(unitlog(i),"(A50,F10.1,A10,I10)") &
+            "=> Worst case (reliable): t_int = ", t_int_ref1, "; Neff =", Neff_ref1
+          WRITE(unitlog(i),"(A50,F10.1,A10,I10)") &
+            "=> Worst case (unreliable): t_int = ", t_int_ref2, "; Neff =", Neff_ref2
+        END DO
         
         !! Standard-deviations
+        !!---------------------
         DO ihyp=1,Nparhyp
           CALL AUTOCORREL(sigmcmc(ihyp,1:t_end(j)),autocorfun)
           CALL AUTOCORREL(sigmcmc(ihyp,t_burnin(j):t_end(j)),autocorfun2)
@@ -415,8 +428,19 @@ PROGRAM analysis
                         NAME="Effective sample size for the standard deviations " &
                            //"after burn-in", &
                         VERBOSE=debug,APPEND=.True.)
+
+        !! Worst variables
+        DO i=1,MERGE(2,1,verbose)
+          WRITE(unitlog(i),*)
+          WRITE(unitlog(i),"(A50,F10.1,A10,I10)") "Standard-deviations: "
+          WRITE(unitlog(i),"(A50,F10.1,A10,I10)") &
+            "=> Worst case (reliable): t_int = ", t_int_ref1, "; Neff =", Neff_ref1
+          WRITE(unitlog(i),"(A50,F10.1,A10,I10)") &
+            "=> Worst case (unreliable): t_int = ", t_int_ref2, "; Neff =", Neff_ref2
+        END DO
         
         !! Correlations
+        !!--------------
         CALL REALLOCATE(t_int,Ncorrhyp)
         CALL REALLOCATE(t_int2,Ncorrhyp)
         CALL REALLOCATE(Neff,Ncorrhyp)
@@ -469,6 +493,7 @@ PROGRAM analysis
         !! Worst variables
         DO i=1,MERGE(2,1,verbose)
           WRITE(unitlog(i),*)
+          WRITE(unitlog(i),"(A50,F10.1,A10,I10)") "Correlations: "
           WRITE(unitlog(i),"(A50,F10.1,A10,I10)") &
             "=> Worst case (reliable): t_int = ", t_int_ref1, "; Neff =", Neff_ref1
           WRITE(unitlog(i),"(A50,F10.1,A10,I10)") &
@@ -482,7 +507,8 @@ PROGRAM analysis
       ALLOCATE(FnuMOD(Nx,Ny,NwOBS))
       
       FnuMOD(:,:,:) = specModel( wOBS(:), INDPAR=ind, PARVAL=qpar(:,:,:,2), &
-                                 MASK=mask(:,:,:), QABS=Qabs(:), EXTINCT=extinct(:,:), &
+                                 MASK=mask(:,:,:), &
+                                 QABS=Qabs(:), EXTINCT=extinct(:,:), LABS=labS(:), &
                                  FNUCONT=FnuCONT, FNUBAND=FnuBAND, FNUSTAR=FnuSTAR, &
                                  PABS=Pabs, FNULINE=FnuLINE, &
                                  FNUCONT_TAB=FnuCONT_tab, FNUBAND_TAB=FnuBAND_tab, &
@@ -525,17 +551,18 @@ PROGRAM analysis
               FnuMOD_mcmc(:,it) = specModel( wOBS(:), INDPAR=ind, &
                                              PARVAL=parmcmc(x,y,:,t_burnin(j)+it-1), &
                                              ! MASK=mask(:,:,:), &
-                                             QABS=Qabs(:), EXTINCT=extinct(:,:) )
+                                             QABS=Qabs(:), EXTINCT=extinct(:,:), &
+                                             LABS=labS(:) )
             END DO
             
-            !! Calculate 2nd, 3rd (median) and 4th 6-quantiles (sextiles)
+            !! Calculate 1st, 3rd (median) and 5th 6-quantiles (sextiles)
             ALLOCATE(mask2D(NwOBS,Nmcmc_eff), xs(Nmcmc_eff))      
             mask2D(:,:) = .NOT. ISNAN(FnuMOD_mcmc(:,:))
             DO iw=1,NwOBS
               xs(:) = SORT(PACK(FnuMOD_mcmc(iw,:),MASK=mask2D(iw,:)))
-              n_FnuMOD(iw,1) = xs(NINT(2._DP/6*Nmcmc_eff)) ! round
+              n_FnuMOD(iw,1) = xs(NINT(1._DP/6*Nmcmc_eff)) ! round
               n_FnuMOD(iw,2) = xs(NINT(3._DP/6*Nmcmc_eff))
-              n_FnuMOD(iw,3) = xs(NINT(4._DP/6*Nmcmc_eff))
+              n_FnuMOD(iw,3) = xs(NINT(5._DP/6*Nmcmc_eff))
             END DO
             DEALLOCATE(xs, mask2D)
           END IF

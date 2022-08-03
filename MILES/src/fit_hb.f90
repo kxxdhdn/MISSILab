@@ -30,7 +30,7 @@ PROGRAM fit_hb
                     detcov_prev, detcorr, noposdef_prev, &
                     lnpost_mu, lnpost_sig, lnpost_corr, covariance, &
                     mask, maskpar, maskhyp, maskhypcurr, maskS, &!maskextra, &
-                    ind, parinfo, parhypinfo, Qabs, extinct, &
+                    ind, parinfo, parhypinfo, Qabs, extinct, labS, &
                     robust_RMS, skew_RMS, robust_cal, calib, &
                     jcal, iw2ical, Ncalib, sigcal, calibool, NwCAL, &
                     delp1, lnpost_del, specOBS ! Calibration errors
@@ -117,7 +117,7 @@ PROGRAM fit_hb
                    ROBUST_RMS=robust_RMS, SKEW_RMS=skew_RMS, &
                    CALIB=calib, ROBUST_CAL=robust_cal, &
                    NEWSEED=newseed, NEWINIT=newinit, &
-                   LABL=labL, LABB=labB, QABS=Qabs, EXTINCT=extinct, &
+                   LABL=labL, LABB=labB, QABS=Qabs, EXTINCT=extinct, LABS=labS, &
                    NCONT=Ncont, NBAND=Nband, NLINE=Nline, &
                    NEXTC=Nextc, NSTAR=Nstar, NEXTRA=Nextra, NCORR=Ncorr, &
                    DOSTOP=dostop, RESUME=resume, INDRESUME=indres0, NOHI=nohi, &
@@ -251,8 +251,11 @@ PROGRAM fit_hb
         WRITE(unitlog(i),*) " - Calibration errors are not taken " &
                             //"into account"
       END IF
-      WRITE(unitlog(i),*) " - Nparhyp = "//TRIMLR(PRING(Nparhyp))
-      WRITE(unitlog(i),*) " - Ncorrhyp = "//TRIMLR(PRING(Ncorrhyp))
+      WRITE(unitlog(i),*) " - Nparfree = "//TRIMLR(PRING(Nparfree))
+      IF (.NOT. nohi) THEN
+        WRITE(unitlog(i),*) " - Nparhyp = "//TRIMLR(PRING(Nparhyp))
+        WRITE(unitlog(i),*) " - Ncorrhyp = "//TRIMLR(PRING(Ncorrhyp))
+      END IF
       WRITE(unitlog(i),*)
     END DO
   END IF summary
@@ -313,7 +316,7 @@ PROGRAM fit_hb
   CALL INITPARAM(NiniMC, IND=ind, PAR=parini(:,:,:,:), PARINFO=parinfo(:), &
                  ITIED=itied(:), MASK=maskpar(:,:,:), &
                  NEWINIT=newinit, FILOBS=filOBS, &
-                 LABB=labB(:), LABL=labL(:), QABS=Qabs(:))
+                 LABB=labB(:), LABL=labL(:), QABS=Qabs(:), LABS=labS(:))
 
   !! Update 3D hyper mask
   FORALL (x=1:Nx,y=1:Ny,i=1:Nparhyp,.NOT.maskpar(x,y,i2ih(i))) &
@@ -385,12 +388,14 @@ PROGRAM fit_hb
   ln1pd0(:,:,:) = 0._DP
 
   !! Print the initial values
-  DO i=1,MERGE(2,1,debug)
-    WRITE(unitlog(i),*) "mu0 = ", mu0
-    WRITE(unitlog(i),*) "sig0 = ", sig0
-    WRITE(unitlog(i),*) "corr0 = ", corr0
-    WRITE(unitlog(i),*) "ln1pd = ", ln1pd0
-  END DO
+  IF (.NOT. nohi) THEN
+    DO i=1,MERGE(2,1,debug)
+      WRITE(unitlog(i),*) "mu0 = ", mu0
+      WRITE(unitlog(i),*) "sig0 = ", sig0
+      ! WRITE(unitlog(i),*) "corr0 = ", corr0
+      ! WRITE(unitlog(i),*) "ln1pd = ", ln1pd0
+    END DO
+  END IF
   
   !! Initialize the parameters of the chain
   ALLOCATE (parmcmc(Nx,Ny,Npar,2),ln1pdmcmc(Nx,Ny,Ncalib,2))
@@ -566,7 +571,8 @@ PROGRAM fit_hb
       !! a. Compute the model for the current parameters
       Fnu_model(:,:,:) &
         = specModel( wOBS(:), INDPAR=ind, PARVAL=parmcmc(:,:,:,iprev), &
-                     MASK=mask(:,:,:), QABS=Qabs(:), EXTINCT=extinct(:,:) )
+                     MASK=mask(:,:,:), &
+                     QABS=Qabs(:), EXTINCT=extinct(:,:), LABS=labS(:) )
 
       !! b. Draw the calibration errors
       DO jcal=1,Ncalib
@@ -722,9 +728,9 @@ PROGRAM fit_hb
       !! iMCMC+1 that we realize that rho(iMCMC) was out, so we ignore also step
       !! iMCMC. This way we do not interfere with the MCMC statistics and avoid
       !! having a NaN introduced in the chain.
+      corrmcmc(:,icurr) = corrmcmc(:,iprev) ! à tester
       IF (MODULO(counter,10)==1 .OR. counter==Nmcmc) THEN
         sigcurr(:) = sigmcmc(:,icurr)
-        corrmcmc(:,icurr) = corrmcmc(:,iprev)
         correlation: DO icorr=1,Ncorrhyp
           IF (maskhypall(icorr2ij(icorr,1)).AND.maskhypall(icorr2ij(icorr,2))) THEN
             IF (debug) PRINT*, " - corr("//TRIMLR(corrhypname(icorr))//")"
@@ -773,9 +779,9 @@ PROGRAM fit_hb
               maskhypall(icorr2ij(icorr,1)).AND.maskhypall(icorr2ij(icorr,2))) &
         corrmcmc(icorr,icurr) &
           = CORRELATE(parmcmc(:,:,i2ih(icorr2ij(icorr,1)),icurr),&
-                       parmcmc(:,:,i2ih(icorr2ij(icorr,2)),icurr), &
-                       MASK=(maskhyp(:,:,icorr2ij(icorr,1)) &
-                             .AND. maskhyp(:,:,icorr2ij(icorr,2))))
+                      parmcmc(:,:,i2ih(icorr2ij(icorr,2)),icurr), &
+                      MASK=(maskhyp(:,:,icorr2ij(icorr,1)) &
+                            .AND. maskhyp(:,:,icorr2ij(icorr,2))))
 
     END IF hierarchy
     

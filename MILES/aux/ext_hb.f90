@@ -41,7 +41,7 @@ MODULE ext_hb
   LOGICAL, DIMENSION(:,:), ALLOCATABLE, SAVE, PUBLIC :: maskS, calibool
   LOGICAL, DIMENSION(:,:,:), ALLOCATABLE, SAVE, PUBLIC :: mask, maskextra
   LOGICAL, DIMENSION(:,:,:), ALLOCATABLE, SAVE, PUBLIC :: maskhyp, maskpar
-  CHARACTER(lenpar), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: specOBS
+  CHARACTER(lenpar), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: specOBS, labS
   TYPE(irrintarr_type), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: iw2ical
 
   !! Init param
@@ -130,11 +130,11 @@ CONTAINS
     LOGICAL, DIMENSION(SIZE(pargrid),NwOBS) :: mask2D
 
     !! Model
-    Fnu_mod(:,:) = specModel(wOBS(:), PARVEC=pargrid(:), &
-                             PARNAME=parinfo(ipar)%name, &
-                             PARINFO=parinfo(:), INDPAR=ind, &
-                             PARVAL=parcurr(:), &
-                             QABS=Qabs(:), EXTINCT=extinct(:,:))
+    Fnu_mod(:,:) = specModel( wOBS(:), PARVEC=pargrid(:), &
+                              PARNAME=parinfo(ipar)%name, &
+                              PARINFO=parinfo(:), INDPAR=ind, &
+                              PARVAL=parcurr(:), &
+                              QABS=Qabs(:), EXTINCT=extinct(:,:), LABS=labS(:) )
 
     !! Likelihoods
     varred(:,:) = 0._DP

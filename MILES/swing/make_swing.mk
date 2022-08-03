@@ -40,7 +40,7 @@ LIB = swing
 LIBAR = lib$(LIB).a
 HOST = $(shell hostname)
 ifeq ($(HOST),dapmcw18)
-       LIBDIR = /Users/dhu/ownCloud/MILES/swing/Programs/
+       LIBDIR = /Users/dhu/Github/MISSILE/MILES/swing/Programs/
 else
        LIBDIR = /dsm/herschel1/nuages/dhu/MILES/swing/Programs/
 endif

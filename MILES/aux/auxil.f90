@@ -12,7 +12,7 @@ MODULE auxil
   PRIVATE
 
   INTEGER, PARAMETER, PUBLIC :: Ncont_max = 31, Nline_max = 46, Nband_max = 34
-  INTEGER, PARAMETER, PUBLIC :: Nextc_max = 10,  Nstar_max = 1
+  INTEGER, PARAMETER, PUBLIC :: Nextc_max = 10,  Nstar_max = 10
   REAL(DP), PARAMETER, PUBLIC :: Cband_sig = 0.1_DP ! band center var range [micron]
   
   !!-------------------------
@@ -54,7 +54,7 @@ MODULE auxil
   !! Calibration errors
   !!--------------------
   TYPE spect_err
-    REAL(DP) :: caliberr_AKARI_NG = 0.1_DP ! Ohyama+2007
+    REAL(DP) :: caliberr_AKARI_NG = 0.2_DP ! Ohyama+2007
     REAL(DP) :: caliberr_SL = 0.05_DP
     REAL(DP) :: caliberr_LL = 0.05_DP
     REAL(DP) :: caliberr_SH = 0.2_DP
@@ -142,9 +142,9 @@ MODULE auxil
        line_type(name='[Ne!E !NVI] 2P!U0!N-2P!U0!N', &
                 label='NeVI', wave=7.6524_DP), &
        line_type(name='[Fe!E !NVII] 3F!U3!N-3F!U4!N', &
-                label='FeVII', wave=7.8145_DP), &
+                label='FeVII1', wave=7.8145_DP), &
        line_type(name='[Ar!E !NV] 3P!U1!N-3P!U2!N', &
-                label='ArV', wave=7.90158_DP), &
+                label='ArV1', wave=7.90158_DP), &
        line_type(name='H!D2!N 0-0 S(4)', &
                 label='H2S4', wave=8.02505_DP), &
        line_type(name='H!E !NI 7-10', &
@@ -154,7 +154,7 @@ MODULE auxil
        line_type(name='[Ni!E !NVI] 4P!U5/2!N-4F!U5/2!N', &
                 label='NiVI', wave=9.042_DP), &
        line_type(name='[Fe!E !NVII] 3F!D2!N-3F!D3!N', &
-                label='FeVII', wave=9.5267_DP), &
+                label='FeVII2', wave=9.5267_DP), &
        line_type(name='H!D2!N 0-0 S(3)', &
                 label='H2S3', wave=9.66491_DP), &
        line_type(name='He!E !NII 9-10', &
@@ -170,7 +170,7 @@ MODULE auxil
        line_type(name='[Ne!E !NII] 2P!D3/2!N-2P!D1/2!N', &
                 label='NeII', wave=12.81355_DP), &
        line_type(name='[Ar!E !NV] 3P!D0!N-3P!D1!N', &
-                label='ArV', wave=13.10219_DP), &
+                label='ArV2', wave=13.10219_DP), &
        line_type(name='[Mg!E !NV] 3P!D1!N-3P!D0!N', &
                 label='MgV2', wave=13.521_DP), & ! SL1 (17)
        line_type(name='[Ne!E !NV] 3P!D1!N-3P!D2!N', &
