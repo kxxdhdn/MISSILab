@@ -24,8 +24,8 @@ from laputan.arrays import closest
 from laputan.inout import read_fits, write_hdf5, read_hdf5
 
 ## local
-from librarian import (croot, mroot,
-                       res, TABLine, TABand, partuning)
+from auxil import (croot, mroot,
+                   res, TABLine, TABand, partuning)
 
 ## Path
 ##------
@@ -51,8 +51,9 @@ noisy = False # verbose/debug for this routine
 z = 0.00068
 fits_obs = croot+'../data/M82' # obs
 fits_unc = fits_obs+'_unc' # unc
-wvl_inf = 2.5 # min wvl
-wvl_sup = 20.5 # max wvl
+wvl_inf = 2.50 # min wvl
+wvl_sup = 20.00 # max wvl
+# wvl_sup = 38.00 # max wvl
 x_inf = None # 4*2 pix: (23,22) - (26,23)
 y_inf = None
 x_sup = None
@@ -78,6 +79,13 @@ if spec_unit=='MKS':
 
 ## Mask NaNs
 mask = np.isnan(data) * 1
+## Additional mask
+# mask[:3,:,:] = 1 # AKARI wvl edge
+# mask[237:265,:,:] = 1 # AKARI wvl edge
+# mask[:,:6,2] = 1
+# mask[:,55:,2] = 1
+# mask[:,:,:] = 1
+# mask[:,:,18:19] = 0
 
 ## Write HDF5
 ##------------
@@ -132,7 +140,8 @@ labQ = ['BE_Z96               ', # 10
         'BE_Z96               ', # 10
         'Sil_D03              '] # 23
 labL = ['Bra   ', # 1
-        'H2S7  ', # 3
+        # 'H2S7  ', # 3
+        'Huc   ', # 5
         'H2S5  ', # 9
         'ArII  ', # 11
         'ArIII1', # 20
@@ -144,6 +153,11 @@ labL = ['Bra   ', # 1
         'NeIII1', # 33
         'H2S1  ', # 34
         'SIII1 '] # 36
+        # 'ArIII2', # 38
+        # 'FeII1 ', # 41
+        # 'H2S0. ', # 42
+        # 'SIII2 ', # 43
+        # 'NeIII2'] # 46
 labB = ['Main 3.3     ', # 1
         'Main 3.4     ', # 2
         'Main 6.2 (1) ', # 7*

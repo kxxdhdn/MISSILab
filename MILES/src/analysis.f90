@@ -9,7 +9,7 @@ PROGRAM analysis
 
   USE core, ONLY: read_master, read_analysis, specModel
   USE utilities, ONLY: DP, pring, trimLR, &
-                       banner_program, ustd, isNaN, warning, &
+                       banner_program, ustd, isNaN, NaN, warning, &
                        trimeq, time_type, timinfo, initiate_clock
   USE arrays, ONLY: closest, reallocate, sort
   USE statistics, ONLY: mean, sigma, median, autocorrel, intautocorrtime
@@ -33,7 +33,7 @@ PROGRAM analysis
   LOGICAL, PARAMETER :: debug = .FALSE.
   
   !! Input variables
-  INTEGER :: i, j, x, y, iw, ical, ipar, ihyp, icorr
+  INTEGER :: i, j, x, y, iw, ical, ipar, ihyp, icorr, it
   INTEGER :: Npar, Nmcmc, lastind, Ncalib
   ! INTEGER :: Ncont, Nband, Nline, Nextc, Nstar, Nextra
   INTEGER, DIMENSION(:), ALLOCATABLE :: indresume
@@ -49,19 +49,21 @@ PROGRAM analysis
   INTEGER, DIMENSION(:), ALLOCATABLE :: Neff, Neff2
   REAL(DP) :: t_int_ref1, t_int_ref2
   REAL(DP), DIMENSION(:), ALLOCATABLE :: xs
-  REAL(DP), DIMENSION(:), ALLOCATABLE :: meanln1pd, stdevln1pd
   REAL(DP), DIMENSION(:), ALLOCATABLE :: meanmu, stdevmu, meansig, stdevsig
   REAL(DP), DIMENSION(:), ALLOCATABLE :: meancorr, stdevcorr
   REAL(DP), DIMENSION(:), ALLOCATABLE :: autocorfun, autocorfun2
   REAL(DP), DIMENSION(:), ALLOCATABLE :: t_int, t_int2
-  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: ln1pdmcmc, mumcmc, sigmcmc, corrmcmc
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: mumcmc, sigmcmc, corrmcmc
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: FnuMOD_mcmc, n_FnuMOD
+  REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: meanln1pd, stdevln1pd
   REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: meanpar, stdevpar
   REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: FnuCONT, &
     FnuBAND, FnuSTAR, Pabs, FnuLINE, FnuMOD
   REAL(DP), DIMENSION(:,:,:,:), ALLOCATABLE :: FnuCONT_tab, &
-    FnuBAND_tab, FnuSTAR_tab, Pabs_tab, FnuLINE_tab, FnuMOD_mcmc, n_FnuMOD
-  REAL(DP), DIMENSION(:,:,:,:), ALLOCATABLE :: parmcmc, qpar
+    FnuBAND_tab, FnuSTAR_tab, Pabs_tab, FnuLINE_tab
+  REAL(DP), DIMENSION(:,:,:,:), ALLOCATABLE :: ln1pdmcmc, parmcmc, qpar
   LOGICAL :: chi2OK, hbOK, ACF, verbose
+  LOGICAL, DIMENSION(:,:), ALLOCATABLE :: mask2D
   LOGICAL, DIMENSION(:,:,:,:), ALLOCATABLE :: mask4D
 
   !! Output variables
@@ -230,24 +232,24 @@ PROGRAM analysis
       !! Calibration errors
       !!--------------------
       IF (calib) THEN
-        CALL READ_HDF5(DBLARR2D=ln1pdmcmc, FILE=filMCMC, &
-                                NAME=namln1pd, IND2=[1,t_end])
+        CALL READ_HDF5(DBLARR4D=ln1pdmcmc, FILE=filMCMC, &
+                       NAME=namln1pd, IND4=[1,t_end])
 
-        ALLOCATE (meanln1pd(Ncalib),stdevln1pd(Ncalib))
+        ALLOCATE (meanln1pd(Nx,Ny,Ncalib),stdevln1pd(Nx,Ny,Ncalib))
         
-        FORALL(ical=1:Ncalib)
-          meanln1pd(ical) = MEAN(ln1pdmcmc(ical,t_burnin:t_end))
-          stdevln1pd(ical) = SIGMA(ln1pdmcmc(ical,t_burnin:t_end))
+        FORALL(x=1:Nx,y=1:Ny,ical=1:Ncalib)
+          meanln1pd(x,y,ical) = MEAN(ln1pdmcmc(x,y,ical,t_burnin:t_end))
+          stdevln1pd(x,y,ical) = SIGMA(ln1pdmcmc(x,y,ical,t_burnin:t_end))
         END FORALL
 
-        CALL WRITE_HDF5(DBLARR1D=meanln1pd(:), NAME="Mean of ln(1+delta)", &
+        CALL WRITE_HDF5(DBLARR3D=meanln1pd(:,:,:), NAME="Mean of ln(1+delta)", &
                         FILE=fileHB, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
-        CALL WRITE_HDF5(DBLARR1D=stdevln1pd(:),NAME="Sigma of ln(1+delta)", &
+        CALL WRITE_HDF5(DBLARR3D=stdevln1pd(:,:,:),NAME="Sigma of ln(1+delta)", &
                         FILE=fileHB, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
       ELSE
-        ALLOCATE(meanln1pd(NwOBS))
+        ALLOCATE(meanln1pd(Nx,Ny,NwOBS))
 
-        meanln1pd(:) = 0._DP
+        meanln1pd(:,:,:) = 0._DP
       END IF
       
       !! Compute the average, standard deviations and correlations of each quantity
@@ -483,37 +485,51 @@ PROGRAM analysis
 
       !! Spectrum density
       !!------------------
-      ALLOCATE(FnuMOD_mcmc(Nx,Ny,NwOBS,Nmcmc_eff),n_FnuMOD(Nx,Ny,NwOBS,3), &
-               mask4D(Nx,Ny,NwOBS,Nmcmc_eff), xs(Nmcmc_eff))
+      ALLOCATE(FnuMOD_mcmc(NwOBS,Nmcmc_eff),n_FnuMOD(NwOBS,3), &
+               mask2D(NwOBS,Nmcmc_eff), xs(Nmcmc_eff))      
 
-forall(x=1:nx,y=1:ny) mask4D(x,y,:,:) = ALL(mask(x,y,:))
-      
-      DO i=1,Nmcmc_eff
-          FnuMOD_mcmc(:,:,:,i) = specModel( wOBS(:), INDPAR=ind, &
-                                            PARVAL=parmcmc(:,:,:,t_burnin+i-1), &
-                                            MASK=mask(:,:,:), &
-                                            QABS=Qabs(:), EXTINCT=extinct(:,:) )
-      END DO
+      CALL WRITE_HDF5(INITDBLARR=[Nx,Ny,NwOBS,3], NAME='n_FnuMOD ('//TRIMLR(spec_unit)//')', &
+                      FILE=fileHB, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
 
-      ! mask4D(:,:,:,:) = .NOT. ISNAN(FnuMOD_mcmc(:,:,:,t_burnin:t_end))
-      
-      !! Calculate 1st and 5th 6-quantiles (sextiles)
       DO x=1,Nx
         DO y=1,Ny
-          DO iw=1,NwOBS
-            xs(:) = SORT(PACK(FnuMOD_mcmc(x,y,iw,:),MASK=mask4D(x,y,iw,:)))
-            n_FnuMOD(x,y,iw,1) = xs(NINT(1._DP/6*Nmcmc_eff)) ! round
-            n_FnuMOD(x,y,iw,2) = xs(NINT(3._DP/6*Nmcmc_eff))
-            n_FnuMOD(x,y,iw,3) = xs(NINT(5._DP/6*Nmcmc_eff))
-          END DO
+          FnuMOD_mcmc(:,:) = NaN()
+          n_FnuMOD(:,:) = NaN()
+          IF (ANY(mask(x,y,:))) THEN
+            DO i=1,MERGE(2,1,verbose)
+              WRITE(unitlog(i),*) "CALCULATING sextiles (" &
+                   //TRIMLR(PRING(x))//","//TRIMLR(PRING(y))//") - " &
+                   //TRIMLR(TIMINFO(timestr))//"."!//NEW_LINE('')
+            END DO
+            
+            !! Calculate MCMC models
+            DO it=1,Nmcmc_eff
+              FnuMOD_mcmc(:,it) = specModel( wOBS(:), INDPAR=ind, &
+                                             PARVAL=parmcmc(x,y,:,t_burnin+it-1), &
+                                             ! MASK=mask(:,:,:), &
+                                             QABS=Qabs(:), EXTINCT=extinct(:,:) )
+            END DO
+            
+            mask2D(:,:) = .NOT. ISNAN(FnuMOD_mcmc(:,:))
+            
+            !! Calculate 1st, 3rd (median) and 5th 6-quantiles (sextiles)
+            DO iw=1,NwOBS
+              xs(:) = SORT(PACK(FnuMOD_mcmc(iw,:),MASK=mask2D(iw,:)))
+              n_FnuMOD(iw,1) = xs(NINT(1._DP/6*Nmcmc_eff)) ! round
+              n_FnuMOD(iw,2) = xs(NINT(3._DP/6*Nmcmc_eff))
+              n_FnuMOD(iw,3) = xs(NINT(5._DP/6*Nmcmc_eff))
+            END DO
+          END IF
+          
+          CALL WRITE_HDF5(DBLARR4D=RESHAPE(n_FnuMOD(:,:),[1,1,NwOBS,3]), &
+                          NAME='n_FnuMOD ('//TRIMLR(spec_unit)//')', &
+                          FILE=fileHB, COMPRESS=compress, VERBOSE=debug, &
+                          IND1=[x,x],IND2=[y,y])          
         END DO
       END DO
 
-      CALL WRITE_HDF5(DBLARR4D=n_FnuMOD, NAME='n_FnuMOD ('//TRIMLR(spec_unit)//')', &
-                      FILE=fileHB, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
-      
       !! Free memory space
-      DEALLOCATE(meanpar, stdevpar, qpar, xs, FnuMOD, FnuMOD_mcmc, n_FnuMOD, mask4D)
+      DEALLOCATE(meanpar, stdevpar, qpar, xs, FnuMOD, FnuMOD_mcmc, n_FnuMOD, mask2D)
 
     END IF
   END DO

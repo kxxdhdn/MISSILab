@@ -14,9 +14,10 @@ import matplotlib.pyplot as plt
 
 ## laputan
 from laputan.inout import read_hdf5
+from laputan.plots import pplot
 
 ## local
-from utilities import croot
+from auxil import croot
 
 
 def func(x, a, b):
@@ -40,7 +41,7 @@ def non_corr_df2(x, y, xerr, yerr):
     return np.sqrt(xerr**2 + yerr**2) * np.exp(x-y)
 
 
-mode = ['chi2','bb', 'hb']
+mode = ['chi2', 'bb', 'hb']
 
 ## Path
 ##------
@@ -55,8 +56,6 @@ h5_analysis = path_out+'input_analysis'
 ##----------
 labB = read_hdf5(h5_model, 'label band')
 labL = read_hdf5(h5_model, 'label line')
-t_burnin = read_hdf5(h5_analysis, 't_burnin')[0]
-t_end = read_hdf5(h5_analysis, 't_end')[0]
 
 for m in mode:
     filout = path_out+'fit_'+m
@@ -80,6 +79,7 @@ for m in mode:
             parname = read_hdf5(filout, 'Parameter label')
             par = read_hdf5(filout, 'Best fitted parameter value')
             parerr = read_hdf5(filout, 'Best fitted parameter error')
+            par[par==0] = np.nan
             
             ## I11.3/I3.3 - I7.7/I11.3
             iband = np.where(labB=='Main 3.3')[0][0]+1
@@ -153,6 +153,8 @@ for m in mode:
             filmcmc = path_out+'parlog_fit_'+m
             parname = read_hdf5(filmcmc, 'Parameter label')
             parmcmc = read_hdf5(filmcmc, 'Parameter values')
+            t_end = read_hdf5(filmcmc, 'Last index')[0]
+            t_burnin = int(t_end/10) - 1
             
             ## I11.3/I3.3 - I7.7/I11.3
             iband = np.where(labB=='Main 3.3')[0][0]+1
@@ -236,28 +238,38 @@ for m in mode:
         Nsamp = np.size(corr_x[0])
 
         for icorr in range(Ncorr):
+            ## Remove NaNs
+            cx = []
+            cy = []
+            cxe = []
+            cye = []
+            for ix, x in enumerate(corr_x[icorr]):
+                if not (np.isnan(x) or np.isnan(corr_y[icorr][ix])):
+                    cx.append(x)
+                    cy.append(corr_y[icorr][ix])
+                    cxe.append(err_x[icorr][ix])
+                    cye.append(err_y[icorr][ix])
+            
             filename = path_fig+'corr_'+str(icorr+1)+'_'+m+'.png'
 
-            plt.figure(figsize=(10,6))
+            p = pplot(cx, cy, yerr=cye, xerr=cxe,
+                      fmt='o', markersize=.8, c='k', ec='r',
+                      xlog=1, ylog=1, nonposx='clip', nonposy='clip',
+                      # xlim=(1.e-1,1.e1), ylim=(1.e-1,1.1e2),
+                      xlab=label_x[icorr], ylab=label_y[icorr],
+                      figsize=(8,8),
+                      legend='upper left', label=m, title='M82')
 
-            plt.errorbar(corr_x[icorr],corr_y[icorr],
-                         yerr=err_y[icorr],xerr=err_x[icorr],
-                         c='k',fmt='o',label=m)
             ## Log linear fit
-            popt, pcov = curve_fit(func,corr_x[icorr],corr_y[icorr])
+            popt, pcov = curve_fit(func,cx,cy)#,sigma=cye)
             # print(popt)
-            x = np.array(sorted(corr_x[icorr]))
+            xarr = np.array(sorted(cx))
             
-            plt.plot(x,func(x,*popt),'y-',
-                     label='y={:.2}x+{:.2}'.format(popt[0],popt[1]))
+            p.add_plot(xarr, func(xarr,*popt),
+                       fmt='y-',
+                       label='y={:.2}x+{:.2}'.format(popt[0],popt[1]))
             
-            plt.xscale('log')
-            plt.yscale('log')
-            plt.xlabel(label_x[icorr])
-            plt.ylabel(label_y[icorr])
-            plt.legend(loc='upper left')
-
-            plt.savefig(filename)
+            p.save(filename)
 
 
 

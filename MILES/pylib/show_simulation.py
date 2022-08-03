@@ -15,7 +15,7 @@ from laputan.inout import read_hdf5
 from laputan.plots import pplot
 
 ## local
-from librarian import croot
+from auxil import croot
 
 col_tab = ['darkred','r','pink',
            # 'orange','gold','y',

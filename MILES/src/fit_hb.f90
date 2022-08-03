@@ -7,9 +7,9 @@
 
 PROGRAM fit_hb
 
-  USE utilities, ONLY: DP, pring, trimLR, trimeq, swap, timinfo, tinyDP, &
-                       banner_program, ustd, isNaN, strike, warning, &
-                       initiate_clock, time_type, today
+  USE utilities, ONLY: DP, isNaN, pring, trimLR, trimeq, swap, tinyDP, &
+                       banner_program, ustd, strike, warning, &
+                       timinfo, initiate_clock, time_type, today
   USE arrays, ONLY: iwhere, closest, reallocate
   USE constants, ONLY: MKS
   USE matrices, ONLY: invert_cholesky
@@ -19,20 +19,21 @@ PROGRAM fit_hb
   USE random, ONLY: generate_newseed, rand_general
   USE core, ONLY: read_master, initparam, lencorr, specModel, set_indcal
   USE ext_hb, ONLY: Nx, Ny, NwOBS, wOBS, nuOBS, xOBS, yOBS, &
-                    NwFIT, wFIT, iwFIT, maskspec, & ! Spectral mask
+                    NwFIT, iwFIT, wFIT, nuFIT, &
+                    maskwall, maskparall, maskhypall, &
                     FnuOBS, dFnuOBS, cenlnS0, siglnS0, &
                     i2ih, ipar, ihpar, icorr, icorr2ij, &
                     parcurr, parhypcurr, allparhypcurr, &
                     cov_prev, invcov_prev, invcorr_prev, &
                     mucurr, sigcurr, corrcurr, Nparhyp, Ncorrhyp, &
-                    lnpost_par, lnlhobs_par, Fnu_model, &
+                    lnpost_par, Fnu_model, &
                     detcov_prev, detcorr, noposdef_prev, &
                     lnpost_mu, lnpost_sig, lnpost_corr, covariance, &
                     mask, maskpar, maskhyp, maskhypcurr, maskS, &!maskextra, &
                     ind, parinfo, parhypinfo, Qabs, extinct, &
                     robust_RMS, skew_RMS, robust_cal, calib, &
-                    jcal, iw2ical, Ncalib, sigcal, calibool, &
-                    ln1pd, delp1, lnpost_del, specOBS ! Calibration errors
+                    jcal, iw2ical, Ncalib, sigcal, calibool, NwCAL, &
+                    delp1, lnpost_del, specOBS ! Calibration errors
   IMPLICIT NONE
 
   !! Parameters
@@ -68,11 +69,13 @@ PROGRAM fit_hb
   !! MCMC parameters
   INTEGER :: icurr, iprev, counter
   REAL(DP), DIMENSION(2) :: lim, limlnS0, limR
-  REAL(DP), DIMENSION(:), ALLOCATABLE :: mu0, sig0, corr0, ln1pd0
-  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: ln1pdmcmc, mumcmc, sigmcmc, corrmcmc
+  REAL(DP), DIMENSION(:), ALLOCATABLE :: mu0, sig0, corr0
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: mumcmc, sigmcmc, corrmcmc
   REAL(DP), DIMENSION(:,:), ALLOCATABLE :: limln1pd
-  REAL(DP), DIMENSION(:,:,:,:), ALLOCATABLE :: parini, parmcmc
+  REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: ln1pd0
+  REAL(DP), DIMENSION(:,:,:,:), ALLOCATABLE :: parini, parmcmc, ln1pdmcmc
   LOGICAL :: fileOK
+  LOGICAL, DIMENSION(:), ALLOCATABLE :: fixed, hyper
 
   !! Output variables
   INTEGER :: Ncorr
@@ -173,7 +176,8 @@ PROGRAM fit_hb
   !! - MASKHYP(Nx,Ny,Nparhyp) selects the parameters of pixels which having to
   !!   be treated hierarchically. For extra parameters, it is MASKEXTRA.
   !! - MASKPAR(Nx,Ny,Npar) is the same as MASKHYP but for the parameter list.
-  !! - MASKSPEC(NwOBS) is the wavelength mask selected to fit
+  !! - MASKWALL(NwOBS) selects wavelengths presented in at least one pixel
+  !! - MASKHYPALL(Nparhyp) selects hyper parameter not masked in all pixels
   ALLOCATE(mask(Nx,Ny,NwOBS))
   mask(:,:,:) = ( maskint(:,:,:) == 0 )
   WHERE (isNaN(FnuOBS(:,:,:)) .OR. .NOT. mask(:,:,:)) FnuOBS(:,:,:) = 0._DP
@@ -185,14 +189,18 @@ PROGRAM fit_hb
     dFnuOBS(:,:,:) = 0._DP
     mask(:,:,:) = .FALSE.
   END WHERE
-  ALLOCATE(maskspec(NwOBS))
-  maskspec(:) = ANY(ANY(mask(:,:,:),DIM=1),DIM=1)
-  NwFIT = COUNT(maskspec(:))
-  CALL IWHERE(maskspec(:),iwFIT) ! i=1,NwFIT => iwFIT(i)=1,NwOBS
+
+  !! Not all-NaN wavelength grid wFIT
+  ALLOCATE(maskwall(NwOBS))
+  maskwall(:) = ANY(ANY(mask(:,:,:),DIM=1),DIM=1)
+  NwFIT = COUNT(maskwall(:))
+  CALL IWHERE(maskwall(:),iwFIT) ! i=1,NwFIT => iwFIT(i)=1,NwOBS
   ALLOCATE(wFIT(NwFIT))
-  wFIT(:) = wOBS(iwFIT(:))
-  ALLOCATE(nuOBS(NwOBS))
+  wFIT(:) = wOBS(iwFIT(:)) ! new wavelength grid excluding NaN wvl
+
+  ALLOCATE(nuOBS(NwOBS),nuFIT(NwFIT))
   nuOBS(:) = MKS%clight/MKS%micron / wOBS(:)
+  nuFIT(:) = MKS%clight/MKS%micron / wFIT(:)
 
   !! Read the instrumental covariance matrix
   calibread: IF (calib) THEN
@@ -200,13 +208,17 @@ PROGRAM fit_hb
     ALLOCATE (iw2ical(Ncalib)) ! iw=1,NwOBS => iw2ical(ical)%indw=1,Nwcal
     ALLOCATE(calibool(Ncalib,NwOBS),sigcal(Ncalib))
     DO ical=1,Ncalib
-      CALL set_indcal(iw2ical(ical)%indw, wOBS(:), INSTR=specOBS(ical), &
+      CALL set_indcal(iw2ical(ical)%arr1d, wOBS(:), INSTR=specOBS(ical), &
                       CALIBOOL=calibool(ical,:), CALIBERR=sigcal(ical))
     END DO
   ELSE
     Ncalib = 1
-    ALLOCATE(iw2ical(1))
-    iw2ical(1)%indw = [(i,i=1,NwOBS)]
+    ALLOCATE(iw2ical(Ncalib))
+    ALLOCATE(iw2ical(1)%arr1d(NwOBS))
+    ALLOCATE(calibool(Ncalib,NwOBS),sigcal(Ncalib))
+    iw2ical(1)%arr1d(:) = [(i,i=1,NwOBS)]
+    calibool(1,:) = .TRUE.
+    sigcal(1) = 0._DP
   END IF calibread
   
   !! Indices of tied parameters
@@ -231,7 +243,7 @@ PROGRAM fit_hb
       WRITE(unitlog(i),*) " - Number of spectra/pixels to be fitted = " &
                           //TRIMLR(PRING(Nsou))
       WRITE(unitlog(i),*) " - Size of spectral sampling = " &
-                          //TRIMLR(PRING(NwOBS))
+                          //TRIMLR(PRING(NwFIT))
       IF (calib) THEN
         WRITE(unitlog(i),*) " - Calibration errors are taken into " &
                             //"account"
@@ -258,14 +270,22 @@ PROGRAM fit_hb
   !! 3D hyper mask
   ALLOCATE (maskhyp(Nx,Ny,Nparhyp))
   DO i=1,Nparhyp
-    maskhyp(:,:,i) = ANY(mask(:,:,:),DIM=3)
+    IF (parinfo(i2ih(i))%model) THEN
+      maskhyp(:,:,i) = ANY(mask(:,:,:),DIM=3)
+    ELSE
+      maskhyp(:,:,i) = .FALSE.
+    END IF
   END DO
 
   !! 3D parameter mask
   ALLOCATE (maskpar(Nx,Ny,Npar))
   DO i=1,Npar
-    maskpar(:,:,i) = ANY(mask(:,:,:),DIM=3)
-  END DO  
+    IF (parinfo(i)%model) THEN
+      maskpar(:,:,i) = ANY(mask(:,:,:),DIM=3)
+    ELSE
+      maskpar(:,:,i) = .FALSE.
+    END IF
+  END DO
   
   DO i=1,MERGE(2,1,verbose)
     WRITE(unitlog(i),*)
@@ -289,11 +309,20 @@ PROGRAM fit_hb
   !!------------------------------------------
   ALLOCATE(parini(Nx,Ny,Npar,1))
   parini(:,:,:,:) = 0._DP
+  
   CALL INITPARAM(NiniMC, IND=ind, PAR=parini(:,:,:,:), PARINFO=parinfo(:), &
                  ITIED=itied(:), MASK=maskpar(:,:,:), &
                  NEWINIT=newinit, FILOBS=filOBS, &
                  LABB=labB(:), LABL=labL(:), QABS=Qabs(:))
 
+  !! Update 3D hyper mask
+  FORALL (x=1:Nx,y=1:Ny,i=1:Nparhyp,.NOT.maskpar(x,y,i2ih(i))) &
+    maskhyp(x,y,i) = .FALSE.
+
+  ALLOCATE(maskparall(Npar),maskhypall(Nparhyp))
+  maskparall(:) = ANY(ANY(maskpar(:,:,:),DIM=1),DIM=1)
+  maskhypall(:) = ANY(ANY(maskhyp(:,:,:),DIM=1),DIM=1)
+  
   !! c. Range of parameters for Gibbs sampling
   !!-------------------------------------------
   !! Calibration errors
@@ -326,10 +355,10 @@ PROGRAM fit_hb
   !! Initial hyper parameters
   IF (ANY(parinfo(:)%hyper)) THEN
     ALLOCATE (mu0(Nparhyp),sig0(Nparhyp),corr0(Ncorrhyp))
-    DO i=1,Nparhyp
-      mu0(i) = MEAN(PACK(parini(:,:,i2ih(i),1),maskhyp(:,:,i)))
-      sig0(i) = SIGMA(PACK(parini(:,:,i2ih(i),1),maskhyp(:,:,i)))
-    END DO
+    FORALL (i=1:Nparhyp,maskhypall(i))
+      mu0(i) = MEAN(parini(:,:,i2ih(i),1),MASK=maskhyp(:,:,i))
+      sig0(i) = SIGMA(parini(:,:,i2ih(i),1),MASK=maskhyp(:,:,i))
+    END FORALL
     WHERE (ABS(sig0(:)) < 1.E-5_DP*ABS(mu0(:)/sig0(:))) &
       sig0(:) = MERGE( ABS(mu0(:)), 1._DP, (mu0(:) > 0._DP) )
     WHERE (sig0(:) <= 0._DP) &
@@ -338,19 +367,19 @@ PROGRAM fit_hb
     corr0(:) = 0._DP
   ELSE
     ALLOCATE (mu0(Npar),sig0(Npar),corr0(Ncorr))
-    DO i=1,Npar
-      mu0(i) = MEAN(PACK(parini(:,:,i,1),maskpar(:,:,i)))
-      sig0(i) = SIGMA(PACK(parini(:,:,i,1),maskpar(:,:,i)))
-    END DO
+    FORALL (i=1:Nparhyp,maskhypall(i))
+      mu0(i) = MEAN(parini(:,:,i2ih(i),1),MASK=maskpar(:,:,i))
+      sig0(i) = SIGMA(parini(:,:,i2ih(i),1),MASK=maskpar(:,:,i))
+    END FORALL
     WHERE (ABS(sig0(:)) < tinyDP) &
       sig0(:) = MERGE( ABS(mu0(:)), 1._DP, (mu0(:) > 0._DP) )
     WHERE (sig0(:) <= 0._DP) &
       sig0(:) = 0.5_DP * ( parinfo(:)%limits(2) - parinfo(:)%limits(1) )
     corr0(:) = 0._DP
   END IF
-  ALLOCATE (ln1pd0(Ncalib))
-  ln1pd0(:) = 0._DP
-  
+  ALLOCATE (ln1pd0(Nx,Ny,Ncalib))
+  ln1pd0(:,:,:) = 0._DP
+
   !! Print the initial values
   DO i=1,MERGE(2,1,debug)
     WRITE(unitlog(i),*) "mu0 = ", mu0
@@ -360,10 +389,12 @@ PROGRAM fit_hb
   END DO
   
   !! Initialize the parameters of the chain
-  ALLOCATE (parmcmc(Nx,Ny,Npar,2),ln1pdmcmc(Ncalib,2))
+  ALLOCATE (parmcmc(Nx,Ny,Npar,2),ln1pdmcmc(Nx,Ny,Ncalib,2))
   DO i=1,2 
-    FORALL (x=1:Nx,y=1:Ny,ANY(maskpar(x,y,:))) parmcmc(x,y,:,i) = parini(x,y,:,1)
-    ln1pdmcmc(:,i) = ln1pd0(:)
+    FORALL (x=1:Nx,y=1:Ny,ANY(maskpar(x,y,:)))
+      parmcmc(x,y,:,i) = parini(x,y,:,1)
+      ln1pdmcmc(x,y,:,i) = ln1pd0(x,y,:)
+    END FORALL
   END DO
 
   !! Initialize the hyperparameters. If the run is non hierarchical, we
@@ -405,9 +436,10 @@ PROGRAM fit_hb
   
   !! Allocate arrays
   ALLOCATE (Fnu_model(Nx,Ny,NwOBS)) ! spectral model
-  ALLOCATE (ln1pd(Ncalib)) ! LN(1+delta) for the current iteration
-  ALLOCATE (delp1(NwOBS)) ! delta+1 for the current iteration
+  ! ALLOCATE (ln1pd(Nx,Ny,Ncalib)) ! LN(1+delta) for the current iteration
+  ALLOCATE (delp1(Nx,Ny,NwOBS)) ! delta+1 for the current iteration
   ALLOCATE (parcurr(Npar)) ! current parameters
+  ALLOCATE (fixed(Npar), hyper(Npar))
   IF (ANY(parinfo(:)%hyper)) THEN
     ALLOCATE (allparhypcurr(Nx,Ny,Nparhyp))  ! parameter grid
     ALLOCATE (cov_prev(Nparhyp,Nparhyp))     ! correlation matrix
@@ -436,7 +468,7 @@ PROGRAM fit_hb
     CALL WRITE_HDF5(INITDBLARR=[Nx,Ny,Npar,Nmcmc], NAME=nampar, &
                     FILE=filMCMC, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
     !! - calibration errors
-    CALL WRITE_HDF5(INITDBLARR=[Ncalib,Nmcmc], NAME=namln1pd, &
+    CALL WRITE_HDF5(INITDBLARR=[Nx,Ny,Ncalib,Nmcmc], NAME=namln1pd, &
                     FILE=filMCMC, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
     !! - hyperparameters or moments of the parameters (/NOHYPER)
     CALL WRITE_HDF5(INITDBLARR=[Nparhyp,Nmcmc], NAME=nammu, &
@@ -477,8 +509,8 @@ PROGRAM fit_hb
         CALL READ_HDF5(DBLARR4D=parmcmc,FILE=filMCMC,NAME=nampar, &
                        IND4=[counter-1,counter])
         !! - calibration errors
-        CALL READ_HDF5(DBLARR2D=ln1pdmcmc,FILE=filMCMC,NAME=namln1pd, &
-                       IND2=[counter-1,counter])
+        CALL READ_HDF5(DBLARR4D=ln1pdmcmc,FILE=filMCMC,NAME=namln1pd, &
+                       IND4=[counter-1,counter])
         !! - Hyperparameters or moments of parameters (BB)
         CALL READ_HDF5(DBLARR2D=mumcmc,FILE=filMCMC,NAME=nammu, &
                        IND2=[counter-1,counter])
@@ -504,10 +536,13 @@ PROGRAM fit_hb
 
   !! Banner
   DO i=1,MERGE(2,1,verbose)
-
     WRITE(unitlog(i),*) "RUNNING THE MARKOV CHAIN MONTE-CARLO (" &
                         //TRIMLR(TIMINFO(timestr))//")"//NEW_LINE('')
   END DO
+
+  !! Backup initial parinfo(:)%fixed and %hyper
+  fixed(:) = parinfo(:)%fixed
+  hyper(:) = parinfo(:)%hyper
 
   !! MCMC
   !!======
@@ -520,9 +555,9 @@ PROGRAM fit_hb
 
     !! 1) Calibration errors
     !!-----------------------
-    delp1(:) = 1._DP
+    delp1(:,:,:) = 1._DP
     calibration: IF (calib) THEN
-      ln1pdmcmc(:,icurr) = ln1pdmcmc(:,iprev)
+      ln1pdmcmc(:,:,:,icurr) = ln1pdmcmc(:,:,:,iprev)
 
       !! a. Compute the model for the current parameters
       Fnu_model(:,:,:) &
@@ -531,59 +566,43 @@ PROGRAM fit_hb
 
       !! b. Draw the calibration errors
       DO jcal=1,Ncalib
-        IF (debug) PRINT*, " - ln(1+d("//TRIMLR(specOBS(jcal))//"))"
-        ln1pd(jcal) = ln1pdmcmc(jcal,icurr)
-        ln1pdmcmc(jcal,icurr) = RAND_GENERAL(lnpost_del, limln1pd(jcal,:), &
-                                             YLOG=.TRUE., VERBOSE=debug, &
-                                             LNFUNC=.TRUE., ACCURACY=accrand, &
-                                             LIMITED=limT(:), NMAX=Ngibbsmax)
-        IF (debug) PRINT*, "ln1pd(", jcal, ") = ", ln1pdmcmc(jcal,icurr)
-
-        WHERE (calibool(jcal,:)) &
-          delp1(:) = EXP(ln1pdmcmc(jcal,icurr))
+        NwCAL = COUNT(calibool(jcal,:))
+        
+        DO xOBS=1,Nx
+          DO yOBS=1,Ny
+            notmasked: IF (ANY( mask(xOBS,yOBS,:) )) THEN
+              !! Take the first as ref
+              ref: IF (jcal/=1) THEN
+                IF (debug) PRINT*, " - ln(1+d("//TRIMLR(specOBS(jcal))//"))"
+                ! ln1pd(xOBS,yOBS,jcal) = ln1pdmcmc(xOBS,yOBS,jcal,icurr)
+                
+                ln1pdmcmc(xOBS,yOBS,jcal,icurr) &
+                  = RAND_GENERAL(lnpost_del, limln1pd(jcal,:), &
+                                 YLOG=.TRUE., VERBOSE=debug, &
+                                 LNFUNC=.TRUE., ACCURACY=accrand, &
+                                 LIMITED=limT(:), NMAX=Ngibbsmax)
+                IF (debug) PRINT*, "ln1pd(",xOBS,yOBS,jcal,") = ", &
+                                   ln1pdmcmc(xOBS,yOBS,jcal,icurr)
+                
+              END IF ref
+              WHERE (calibool(jcal,:)) &
+                delp1(xOBS,yOBS,:) = EXP(ln1pdmcmc(xOBS,yOBS,jcal,icurr))
+            END IF notmasked
+          END DO
+        END DO
       END DO
-! print*, delp1
-
-    !! 1) Calibration errors (per pixel)
-    !!-----------------------
-    ! delp1(:) = 1._DP
-    ! calibration: IF (calib) THEN
-    !   ln1pdmcmc(:,icurr) = ln1pdmcmc(:,iprev)
-
-    !   !! a. Compute the model for the current parameters
-    !   Fnu_model(:,:,:) &
-    !     = specModel( wOBS(:), INDPAR=ind, PARVAL=parmcmc(:,:,:,iprev), &
-    !                  MASK=mask(:,:,:), QABS=Qabs(:), EXTINCT=extinct(:,:) )
-
-    !   !! b. Draw the calibration errors
-    !   DO jcal=1,Ncalib
-    !     DO xOBS=1,Nx
-    !       DO yOBS=1,Ny
-    !         IF (debug) PRINT*, " - ln(1+d("//TRIMLR(specOBS(jcal))//"))"
-    !         ln1pd(xOBS,yOBS,jcal) = ln1pdmcmc(xOBS,yOBS,jcal,icurr)
-    !         ln1pdmcmc(xOBS,yOBS,jcal,icurr) &
-    !           = RAND_GENERAL(lnpost_del, limln1pd(jcal,:), &
-    !                          YLOG=.TRUE., VERBOSE=debug, &
-    !                          LNFUNC=.TRUE., ACCURACY=accrand, &
-    !                          LIMITED=limT(:), NMAX=Ngibbsmax)
-    !         IF (debug) PRINT*, "ln1pd(",xOBS,yOBS,jcal,") = ", &
-    !                            ln1pdmcmc(xOBS,yOBS,jcal,icurr)
-            
-    !         WHERE (calibool(jcal,:)) &
-    !           delp1(:) = EXP(ln1pdmcmc(jcal,icurr))
-
-    !       END DO
-    !     END DO
-    !   END DO
-! print*, delp1
       
     END IF calibration
+    ! DO i=1,MERGE(2,1,verbose)
+    !   WRITE(unitlog(i),*) 'Calibration error sampling [done] - '// &
+    !                         TRIMLR(TIMINFO(timestr))
+    ! END DO
     
     !! 2) Physical parameters
     !!------------------------
 
     !! Covariance matrix of the hyperparameters
-    IF (ANY(parinfo(:)%hyper)) THEN
+    IF (ANY(hyper(:))) THEN
       cov_prev(:,:) = COVARIANCE(sigmcmc(:,iprev),corrmcmc(:,iprev))
       invcov_prev(:,:) = INVERT_CHOLESKY(cov_prev(:,:))
       invcorr_prev(:,:) = INVERT_CHOLESKY( &
@@ -592,21 +611,30 @@ PROGRAM fit_hb
                             NOPOSDEF=noposdef_prev ) ! new
       mucurr(:) = mumcmc(:,iprev)
     END IF
-    
+
     !! Draw the model parameters
     parmcmc(:,:,:,icurr) = parmcmc(:,:,:,iprev)
     param: DO ipar=1,Npar
-      IF (.NOT. parinfo(ipar)%fixed) THEN
-        IF (debug) PRINT*, " - "//TRIMLR(parinfo(ipar)%name) 
+      IF (.NOT. fixed(ipar)) THEN
+        IF (debug) PRINT*, " - "//TRIMLR(parinfo(ipar)%name)
 
         !! Even the parinfo-not-limited par need this limits
         !! See c. Range of parameters for Gibbs sampling
         lim(:) = parinfo(ipar)%limits(:)
+
+        !! Update parinfo(:)%fixed with maskpar
+        IF (maskpar(xOBS,yOBS,ipar)) THEN
+          parinfo(ipar)%fixed = fixed(ipar)
+          parinfo(ipar)%hyper = hyper(ipar)
+        ELSE
+          parinfo(ipar)%fixed = .TRUE.
+          parinfo(ipar)%hyper = .FALSE.
+        END IF
         xsource: DO xOBS=1,Nx
           ysource: DO yOBS=1,Ny
             IF (maskpar(xOBS,yOBS,ipar)) THEN
               parcurr(:) = parmcmc(xOBS,yOBS,:,icurr)
-              IF (parinfo(ipar)%hyper) THEN
+              IF (hyper(ipar)) THEN
                 maskhypcurr(:) = maskhyp(xOBS,yOBS,:)
                 WHERE (maskhyp(xOBS,yOBS,:))
                   parhypcurr(:) = parmcmc(xOBS,yOBS,i2ih(:),icurr)
@@ -614,13 +642,13 @@ PROGRAM fit_hb
                   parhypcurr(:) = mucurr(:)
                 END WHERE
               ENDIF
+              
               parmcmc(xOBS,yOBS,ipar,icurr) &
                 = RAND_GENERAL(lnpost_par, lim(:), YLOG=.TRUE., VERBOSE=debug, &
                                LNFUNC=.TRUE., ACCURACY=accrand, NMAX=Ngibbsmax)
 
               IF (debug) PRINT*, "par(",xOBS,yOBS,ipar,") = ", &
                                  parmcmc(xOBS,yOBS,ipar,icurr)
-              
             END IF
           END DO ysource
         END DO xsource
@@ -634,22 +662,24 @@ PROGRAM fit_hb
 
     !! 3) Hyperparameters
     !!--------------------
-    hierarchy: IF (ANY(parinfo(:)%hyper)) THEN
-      FORALL (i=1:Nparhyp) allparhypcurr(:,:,i) = mucurr(i)
+    hierarchy: IF (ANY(hyper(:))) THEN
+      FORALL (i=1:Nparhyp,maskhypall(i)) allparhypcurr(:,:,i) = mucurr(i)
       FORALL (xOBS=1:Nx,yOBS=1:Ny,i=1:Nparhyp,maskhyp(xOBS,yOBS,i)) &
         allparhypcurr(xOBS,yOBS,i) = parmcmc(xOBS,yOBS,i2ih(i),icurr)
 
       !! a. Average
       mumcmc(:,icurr) = mumcmc(:,iprev)      
-      average: DO ihpar=1,Nparhyp    
-        IF (debug) PRINT*, " - mu("//TRIMLR(parinfo(i2ih(ihpar))%name)//")"
-        lim(:) = parinfo(i2ih(ihpar))%limits(:)
-        mucurr(:) = mumcmc(:,icurr)
-        mumcmc(ihpar,icurr) = RAND_GENERAL(lnpost_mu, lim(:), YLOG=.TRUE., &
-                                           VERBOSE=debug, LNFUNC=.TRUE., &
-                                           ACCURACY=accrand, NMAX=Ngibbsmax)
-        ! IF (ihpar==1) PRINT*, 'mumcmc(1,icurr)', mumcmc(ihpar,icurr) ! with fixed seed
+      average: DO ihpar=1,Nparhyp
+        IF (maskhypall(ihpar)) THEN
+          IF (debug) PRINT*, " - mu("//TRIMLR(parinfo(i2ih(ihpar))%name)//")"
+          lim(:) = parinfo(i2ih(ihpar))%limits(:)
+          mucurr(:) = mumcmc(:,icurr)
+          mumcmc(ihpar,icurr) = RAND_GENERAL(lnpost_mu, lim(:), YLOG=.TRUE., &
+                                             VERBOSE=debug, LNFUNC=.TRUE., &
+                                             ACCURACY=accrand, NMAX=Ngibbsmax)
+          ! IF (ihpar==1) PRINT*, 'mumcmc(1,icurr)', mumcmc(ihpar,icurr) ! with fixed seed
 
+        END IF
       END DO average
       ! DO i=1,MERGE(2,1,verbose)
       !   WRITE(unitlog(i),*) 'Average sampling [done] - '// &
@@ -661,15 +691,17 @@ PROGRAM fit_hb
       sigmcmc(:,icurr) = sigmcmc(:,iprev)
       corrcurr(:) = corrmcmc(:,iprev)
       variance: DO ihpar=1,Nparhyp
-        IF (debug) PRINT*, " - sig("//TRIMLR(parinfo(i2ih(ihpar))%name)//")"
-        lim(:) = cenlnS0(ihpar) + limlnS0(:)
-        sigcurr(:) = sigmcmc(:,icurr)
+        IF (maskhypall(ihpar)) THEN
+          IF (debug) PRINT*, " - sig("//TRIMLR(parinfo(i2ih(ihpar))%name)//")"
+          lim(:) = cenlnS0(ihpar) + limlnS0(:)
+          sigcurr(:) = sigmcmc(:,icurr)
+  
+          sigmcmc(ihpar,icurr) = EXP(RAND_GENERAL(lnpost_sig, lim(:), YLOG=.TRUE., &
+                                                  VERBOSE=debug, LNFUNC=.TRUE., &
+                                                  ACCURACY=accrand, NMAX=Ngibbsmax))
+          ! IF (ihpar==1) PRINT*, 'sigmcmc(1,icurr)', sigmcmc(ihpar,icurr) ! with fixed seed
 
-        sigmcmc(ihpar,icurr) = EXP(RAND_GENERAL(lnpost_sig, lim(:), YLOG=.TRUE., &
-                                                VERBOSE=debug, LNFUNC=.TRUE., &
-                                                ACCURACY=accrand, NMAX=Ngibbsmax))
-        ! IF (ihpar==1) PRINT*, 'sigmcmc(1,icurr)', sigmcmc(ihpar,icurr) ! with fixed seed
-
+        END IF
       END DO variance
       ! DO i=1,MERGE(2,1,verbose)
       !   WRITE(unitlog(i),*) 'Variance sampling [done] - '// &
@@ -686,31 +718,34 @@ PROGRAM fit_hb
       !! iMCMC+1 that we realize that rho(iMCMC) was out, so we ignore also step
       !! iMCMC. This way we do not interfere with the MCMC statistics and avoid
       !! having a NaN introduced in the chain.
-      IF (MODULO(counter,10)==1 .OR. counter>=Nmcmc-1) THEN
+      IF (MODULO(counter,10)==1 .OR. counter==Nmcmc) THEN
         sigcurr(:) = sigmcmc(:,icurr)
         corrmcmc(:,icurr) = corrmcmc(:,iprev)
         correlation: DO icorr=1,Ncorrhyp
-          IF (debug) PRINT*, " - corr("//TRIMLR(corrhypname(icorr))//")"
-          corrcurr(:) = corrmcmc(:,icurr)
-          !! Used by S-M, cannot wait the next big loop to update
-          cov_prev(:,:) = COVARIANCE(sigmcmc(:,icurr),corrmcmc(:,icurr))
-          invcov_prev(:,:) = INVERT_CHOLESKY( cov_prev(:,:), &
-                                              DETERMINANT=detcov_prev, &
-                                              NOPOSDEF=noposdef_prev )
-          corrmcmc(icorr,icurr) = RAND_GENERAL(lnpost_corr, limR(:), YLOG=.TRUE., &
-                                               VERBOSE=debug, LNFUNC=.TRUE.,  &
-                                               ! ACCURACY=accrand, NMAX=Ngibbsmax)
-                                               ACCURACY=1.E-2_DP, NMAX=Ngibbsmax)
-          ! IF (icorr==1) PRINT*, 'corrmcmc(1,icurr)', corrmcmc(icorr,icurr) ! with fixed seed
-        
-          IF (isNaN(corrmcmc(icorr,icurr))) THEN
-            IF (icorr > 1) THEN
-              corrmcmc(icorr-1:icorr,icurr) = corrmcmc(icorr-1:icorr,iprev)
-            ELSE 
-              corrmcmc(icorr,icurr) = corrmcmc(icorr,iprev)
-              CALL WARNING("HISTOIRE", &
-                           "first element in the correlation matrix was a NaN")
+          IF (maskhypall(icorr2ij(icorr,1)).AND.maskhypall(icorr2ij(icorr,2))) THEN
+            IF (debug) PRINT*, " - corr("//TRIMLR(corrhypname(icorr))//")"
+            corrcurr(:) = corrmcmc(:,icurr)
+            !! Used by S-M, cannot wait the next big loop to update
+            cov_prev(:,:) = COVARIANCE(sigmcmc(:,icurr),corrmcmc(:,icurr))
+            invcov_prev(:,:) = INVERT_CHOLESKY( cov_prev(:,:), &
+                                                DETERMINANT=detcov_prev, &
+                                                NOPOSDEF=noposdef_prev )
+            corrmcmc(icorr,icurr) = RAND_GENERAL(lnpost_corr, limR(:), YLOG=.TRUE., &
+                                                 VERBOSE=debug, LNFUNC=.TRUE.,  &
+                                                 ! ACCURACY=accrand, NMAX=Ngibbsmax)
+                                                 ACCURACY=1.E-2_DP, NMAX=Ngibbsmax)
+            ! IF (icorr==1) PRINT*, 'corrmcmc(1,icurr)', corrmcmc(icorr,icurr) ! with fixed seed
+            
+            IF (isNaN(corrmcmc(icorr,icurr))) THEN
+              IF (icorr > 1) THEN
+                corrmcmc(icorr-1:icorr,icurr) = corrmcmc(icorr-1:icorr,iprev)
+              ELSE 
+                corrmcmc(icorr,icurr) = corrmcmc(icorr,iprev)
+                CALL WARNING("HISTOIRE", &
+                             "first element in the correlation matrix was a NaN")
+              END IF
             END IF
+          
           END IF
         END DO correlation
         DO i=1,MERGE(2,1,verbose)
@@ -723,13 +758,15 @@ PROGRAM fit_hb
       PRINT*, "  HISTOIRE: Non-hierarchical run."
       !! If the run is non hierarchical, we save in place of the hyperparameters
       !! the moments of the parameters
-      FORALL (ipar=1:Nparhyp)
+      FORALL (ipar=1:Nparhyp,maskhypall(ipar))
         mumcmc(ipar,icurr) = MEAN(parmcmc(:,:,i2ih(ipar),icurr), &
                                   MASK=maskhyp(:,:,ipar))
         sigmcmc(ipar,icurr) = SIGMA(parmcmc(:,:,i2ih(ipar),icurr), &
                                     MASK=maskhyp(:,:,ipar))
       END FORALL
-      FORALL (icorr=1:Ncorrhyp) &
+
+      FORALL (icorr=1:Ncorrhyp, &
+              maskhypall(icorr2ij(icorr,1)).AND.maskhypall(icorr2ij(icorr,2))) &
         corrmcmc(icorr,icurr) &
           = CORRELATE(parmcmc(:,:,i2ih(icorr2ij(icorr,1)),icurr),&
                        parmcmc(:,:,i2ih(icorr2ij(icorr,2)),icurr), &
@@ -743,9 +780,9 @@ PROGRAM fit_hb
     CALL WRITE_HDF5(DBLARR4D=parmcmc(:,:,:,icurr:icurr), FILE=filMCMC, &
                     NAME=nampar, COMPRESS=compress, VERBOSE=debug, &
                     IND4=[counter,counter])
-    CALL WRITE_HDF5(DBLARR2D=ln1pdmcmc(:,icurr:icurr), FILE=filMCMC, &
+    CALL WRITE_HDF5(DBLARR4D=ln1pdmcmc(:,:,:,icurr:icurr), FILE=filMCMC, &
                     NAME=namln1pd, COMPRESS=compress, VERBOSE=debug, &
-                    IND2=[counter,counter])
+                    IND4=[counter,counter])
     CALL WRITE_HDF5(DBLARR2D=mumcmc(:,icurr:icurr), FILE=filMCMC, &
                     NAME=nammu, COMPRESS=compress, VERBOSE=debug, &
                     IND2=[counter,counter])
@@ -767,7 +804,7 @@ PROGRAM fit_hb
         PRINT*, "  sigma = ", sigmcmc(:,icurr)
         PRINT*, "  corr = ", corrmcmc(:,icurr)
       END IF
-      IF (calib) PRINT*, "  ln1pd = ",ln1pdmcmc(:,icurr)
+      IF (calib) PRINT*, "  ln1pd = ",ln1pdmcmc(:,:,:,icurr)
       WRITE(unitlog(i),*)
     END IF
     
@@ -792,6 +829,7 @@ PROGRAM fit_hb
   END DO
   
   !! Free memory space
-  DEALLOCATE(wOBS, FnuOBS, dFnuOBS, maskint, mask)
+  DEALLOCATE(wOBS, FnuOBS, dFnuOBS, maskint, mask, maskpar, maskhyp, &
+             maskwall, maskparall, maskhypall)
 
 END PROGRAM fit_hb

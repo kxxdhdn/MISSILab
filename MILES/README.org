@@ -54,32 +54,56 @@ python ../pylib/show_corr.py # optional
 * Notices
 The Python package [[https://github.com/kxxdhdn/LAPUTAN][laputan]] is required by the MILES UI (pylib). You can install it in commandline: ~pip install laputan~
 * Version log
-** v1.0 (202108xx, HB release)
-** v0.3.6 (202108xx, clean)
+** v1.0 (2021xxxx, HB release)
+** v0.3.6 (2021xxxx, clean)
 - Support error ellipses
 - Add attenuation (extinction with different geometries) in ~specModel~
 - Fractional data saving during program run
+- Calculate derived parameter errors with gradient function
+  + exclusively for chi2, changes in ~aux/ext_chi2.f90~ and ~src/fit_chi2.f90~
 - Simplified version of input UI ~pylib/fast_input.py~
 - Update tests/
 - Final clean before the first complete release
 - Add manuel documentation files
 ** ---------- WE ARE HERE ----------
-** v0.3.5 (202108xx, calib)
+** v0.3.5 (20210908, maskalib)
 - Support full MIR (2.5-20 microns) fit
   + Add Ns-SL-LL case in ~degradeRes~ for the use of ~initparam~
-- Add wavelength masks (taking into account features at masked wavelengths)
-  + Add mask for ~specModel_nD~
+- Add wavelength masks (taking into account features/parameters at masked wavelengths)
+  + ~aux/core.f90~
+    * Change ~initparam~ mask (param mask instead of wvl mask) I/O as ~INOUT~
+    * Add mask for ~specModel_3D~ as well as an optional output maskpar
+    * Add ~NaN2zero~ and ~zero2NaN~
+  + ~src/fit_hb.f90~ & ~aux/ext_hb.f90~
+    * Update ~maskhyp~ following changes of maskpar in ~initparam~
+    * Add ~maskhypall~ and ~maskparall~
+    * Add ~maskwall~ as well as NaN excluded wvl grid ~wFIT~
 - Add a nuisance parameter for calibration errors from spectral stitching
-  + IRC-SL2-SL1-LL2-LL1 with SL2 as the benchmark
-  + exclusively for HB, various changes in ~aux/auxil.f90~, ~aux/core.f90~, ~aux/ext_hb.f90~ and ~src/fit_hb.f90~
-- Calculate derived parameter errors with gradient function
-  + exclusively for chi2, changes in ~aux/ext_chi2.f90~ and ~src/fit_chi2.f90~
-- Fix ~analysis.f90~ memory problem when writing data table (once a pixel using loop)
+  + Support IRC-SL2-SL1-LL2-LL1
+  + ~pylib/auxil.py~
+    * Add ~calibexpansion~ and ~calibextraction~
+  + ~pylib/input_bb/hb.py~
+    * within the input ~calibmod~, the first in list is fixed as benchmark
+  + ~src/fit_hb.f90~
+    * Add ~specOBS~ as ~calibmod~ in input
+    * Calculate calibration errors for each pixel
+  + ~aux/ext_hb.f90~
+    * Add ~lnLHobs_del~, ~lnprior_del~ and ~lnpost_del~
+    * Add ~delp1~ in ~lnLHobs_par~
+  + ~aux/core.f90~
+    + Add ~set_indcal~
+    + Add ~irrintarr_type~, ~irrdblarr_type~, ~irrcmparr_type~, ~irrlogarr_type~ and ~irrchararr_type~
+  + ~aux/auxil.f90~
+    * ~instr_res~ \rarr ~spect_res~: ~dw_w_AKARI_Ns~ \rarr ~dw_w_AKARI_NG~
+    * Add ~spect_ran~
+    * Add ~spect_err~
+  + exclusively for BB/HB
+- Fix ~analysis.f90~ memory problem when writing data table (once a pixel using loops)
 - Replace the prerequisite Python package ~astylo~ (v0.3) by ~laputan~ (v1.2.4 or later)
 - Rename layout
   + ~aux/chi2.f90~ \rarr ~aux/ext_chi2~
   + ~aux/hb.f90~ \rarr ~aux/ext_hb~
-  + ~pylib/utilities~ \rarr ~pylib/librarian~ (conflict with ~laputan.utilities~)
+  + ~pylib/utilities.py~ \rarr ~pylib/auxil.py~ (conflict with ~laputan.utilities~)
 ** v0.3.4 (20210526, postpro)
 - Enhence post-processing (~analysis.f90~)
   + Allow to analyse unfinished fits (number of iterations less than the defined Nmcmc)
@@ -128,7 +152,7 @@ The Python package [[https://github.com/kxxdhdn/LAPUTAN][laputan]] is required b
 - Change HB routine name from HIBARI to HISTOIRE
   + HISTOIRE: HIerarchical bayeSian fitting Tool Of mid-IR Emission
 - Sample hypercorr once per 10 MCMC steps
-  + save \sim90% calculation time)
+  + Save \sim90% calculation time)
 ** v0.3.2 (20210412, matinv)
 - Adopte Sherman-Morrison formula for (covariance) matrix inversion
 ** v0.3.1 (20210407, reparam)
@@ -145,9 +169,9 @@ The Python package [[https://github.com/kxxdhdn/LAPUTAN][laputan]] is required b
   + Create out1/ and programs/ repertories
   + PyUI/ \rarr pynout/ (move all test interface scripts into tests/)
 - ~initparam~/iniMC test revisit
-  + modify parameter ranges
-  + involve profile functions (~modifBB~, ~gaussLine~ & ~lorentzBand~) into the auto limits
-  + force limited=.TRUE. for intensive param
+  + Modify parameter ranges
+  + Involve profile functions (~modifBB~, ~gaussLine~ & ~lorentzBand~) into the auto limits
+  + Force limited=.TRUE. for intensive param
 - Add ~auxil/chi2_kit.f90~ and ~auxil/HB_kit.f90~
 - Modify ~SpecModel~ inputs by adding extinct(:,:) and moving extCurve to ~read_master~ <speed problem solved>
 - Add resume option in ~read_master~ (used by HB only)
@@ -161,9 +185,9 @@ The Python package [[https://github.com/kxxdhdn/LAPUTAN][laputan]] is required b
 ** v0.1 (20201221, Chi2 release)
 - HDF5 file fractional writing
 - Add generic interface
-  + add parvec for Gibbs sampling
+  + Add parvec for Gibbs sampling
   + parr \rarr parval
-  + add indpar
+  + Add indpar
 - ~par_type~ \rarr ~set_indpar~
 - ~make_par~ \rarr ~read_master~ (update inspired by HerBIE)
 - Add ~initparam~

@@ -13,9 +13,10 @@ import matplotlib.pyplot as plt
 
 ## laputan
 from laputan.inout import read_hdf5
+from laputan.plots import pplot
 
 ## local
-from librarian import croot, TABand
+from auxil import croot, TABand
 
 ## Path
 ##------
@@ -43,6 +44,9 @@ for m in mode:
         t_burnin = int(t_end/10) - 1
         parname = read_hdf5(filmcmc, 'Parameter label')
         parmcmc = read_hdf5(filmcmc, 'Parameter values')
+        instr = read_hdf5(filobs, 'spectroscopic module labels')
+        ln1pdmcmc = read_hdf5(filmcmc, 'ln(1+delta)')
+        
         Npar, Ny, Nx = parmcmc.shape[1:4]
         meanpar = read_hdf5(filout, 'Mean of parameter value')
         # mu = np.mean(parmcmc[t_burnin:t_end,:,:,:], axis=0)
@@ -52,6 +56,10 @@ for m in mode:
         # print(sig-stdevpar)
         # exit()
         qpar = read_hdf5(filout, 'Quantiles of parameter value')
+
+        Ncal = ln1pdmcmc.shape[1]
+        meanln1pd = read_hdf5(filout, 'Mean of ln(1+delta)')
+        stdevln1pd = read_hdf5(filout, 'Sigma of ln(1+delta)')
         
         filmod = path_out+'input_model'
         fixed = read_hdf5(filmod, 'parinfo fixed')
@@ -74,91 +82,91 @@ for m in mode:
         
         ## Parameter track (pix)
         ##-----------------------
-        for x in range(Nx):
-            filename = path_fig+'partrack_'+m+'_x='+str(x+1)+'.png'
+        # for x in range(Nx):
+        #     filename = path_fig+'partrack_'+m+'_x='+str(x+1)+'.png'
             
-            fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(12,9))
-            plt.subplots_adjust(left=.1, bottom=.05, \
-                                right=.99, top=.95, wspace=.3, hspace=.4)
-            for y in range(Ny):
-                px, py = int(y/3), y%3
-                axes[px,py].scatter(parmcmc[:Nmcmc,ipar,y,x], counter, s=.5)
-                # for band in TABand:
-                #     if band['label']==bname:
-                #         if bex==0:
-                #             axes[px,py].vlines(band['wave'],0,Nmcmc,colors='r')
-                #         elif bex==1:
-                #             axes[px,py].vlines(band['sigmaS'],0,Nmcmc,colors='r')
-                #         elif bex==2:
-                #             axes[px,py].vlines(band['sigmaL'],0,Nmcmc,colors='r')
-                if fixed[ipar]=='F':
-                    axes[px,py].vlines(chi2ini[ipar,y,x],0,Nmcmc,colors='r',label='Chi2')
-                    if h5_sim.exists():
-                        axes[px,py].vlines(simpar[ipar,y,x],0,Nmcmc,colors='g',label='True')
+        #     fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(12,9))
+        #     plt.subplots_adjust(left=.1, bottom=.05, \
+        #                         right=.99, top=.95, wspace=.3, hspace=.4)
+        #     for y in range(Ny):
+        #         px, py = int(y/3), y%3
+        #         axes[px,py].scatter(parmcmc[:Nmcmc,ipar,y,x], counter, s=.5)
+        #         # for band in TABand:
+        #         #     if band['label']==bname:
+        #         #         if bex==0:
+        #         #             axes[px,py].vlines(band['wave'],0,Nmcmc,colors='r')
+        #         #         elif bex==1:
+        #         #             axes[px,py].vlines(band['sigmaS'],0,Nmcmc,colors='r')
+        #         #         elif bex==2:
+        #         #             axes[px,py].vlines(band['sigmaL'],0,Nmcmc,colors='r')
+        #         if fixed[ipar]=='F':
+        #             axes[px,py].vlines(chi2ini[ipar,y,x],0,Nmcmc,colors='r',label='Chi2')
+        #             if h5_sim.exists():
+        #                 axes[px,py].vlines(simpar[ipar,y,x],0,Nmcmc,colors='g',label='True')
                 
-                axes[px,py].set_xlabel('Parameter value')
-                axes[px,py].set_ylabel('MCMC counter')
-                axes[px,py].set_title(
-                    # fr'${parname[ipar]}({x+1},{y+1})\ [{meanpar[ipar,y,x]:.2f},{stdevpar[ipar,y,x]:.2f}]$')
-                    fr'${parname[ipar]}({x+1},{y+1})={qpar[1,ipar,y,x]:.2f}$')
-                axes[px,py].legend(loc='upper left')
+        #         axes[px,py].set_xlabel('Parameter value')
+        #         axes[px,py].set_ylabel('MCMC counter')
+        #         axes[px,py].set_title(
+        #             # fr'${parname[ipar]}({x+1},{y+1})\ [{meanpar[ipar,y,x]:.2f},{stdevpar[ipar,y,x]:.2f}]$')
+        #             fr'${parname[ipar]}({x+1},{y+1})={qpar[1,ipar,y,x]:.2f}$')
+        #         axes[px,py].legend(loc='upper left')
             
-            plt.savefig(filename)
+        #     plt.savefig(filename)
         
         
             
         ## Parameter distribution (pix)
         ##------------------------------
-        if Nmcmc<100:
-            Nbin = Nmcmc
-        elif Nmcmc<1000:
-            Nbin = int(Nmcmc/10)
-        else:
-            Nbin = int(Nmcmc/100)
+        # if Nmcmc<100:
+        #     Nbin = Nmcmc
+        # elif Nmcmc<1000:
+        #     Nbin = int(Nmcmc/10)
+        # else:
+        #     Nbin = int(Nmcmc/100)
             
-        for x in range(Nx):
-            filename = path_fig+'pardist_'+m+'_x='+str(x+1)+'.png'
+        # for x in range(Nx):
+        #     filename = path_fig+'pardist_'+m+'_x='+str(x+1)+'.png'
         
-            fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(12,9))
-            plt.subplots_adjust(left=.1, bottom=.05,
-                                right=.99, top=.95, wspace=.3, hspace=.4)
-            for y in range(Ny):
-                px, py = int(y/3), y%3
-                n, bins, patches = axes[px,py].hist(parmcmc[:Nmcmc,ipar,y,x],Nbin,
-                                                    facecolor='g',alpha=.5,label='HB')
-                if fixed[ipar]=='F':
-                    axes[px,py].vlines(chi2ini[ipar,y,x],0,Nmcmc,colors='r',label='Chi2')
-                    if h5_sim.exists():
-                        axes[px,py].vlines(simpar[ipar,y,x],0,Nmcmc,colors='g',label='True')
-                # for band in TABand:
-                #     if band['label']=='Main 11.2':
-                #         if bex==0:
-                #             axes[px,py].vlines(band['wave'],0,Nmcmc,colors='r')
-                #         elif bex==1:
-                #             axes[px,py].vlines(band['sigmaS'],0,Nmcmc,colors='r')
-                #         elif bex==2:
-                #             axes[px,py].vlines(band['sigmaL'],0,Nmcmc,colors='r')
-                axes[px,py].set_xlabel('Parameter value')
-                axes[px,py].set_ylabel('Counts')
-                axes[px,py].set_title(
-                    # fr'${parname[ipar]}({x+1},{y+1})\ [{meanpar[ipar,y,x]:.2f},{stdevpar[ipar,y,x]:.2f}]$')
-                    fr'${parname[ipar]}({x+1},{y+1})={qpar[1,ipar,y,x]:.2f}$')
-                axes[px,py].legend(loc='upper left')
+        #     fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(12,9))
+        #     plt.subplots_adjust(left=.1, bottom=.05,
+        #                         right=.99, top=.95, wspace=.3, hspace=.4)
+        #     for y in range(Ny):
+        #         px, py = int(y/3), y%3
+        #         n, bins, patches = axes[px,py].hist(parmcmc[:Nmcmc,ipar,y,x],Nbin,
+        #                                             facecolor='g',alpha=.5,label='HB')
+        #         if fixed[ipar]=='F':
+        #             axes[px,py].vlines(chi2ini[ipar,y,x],0,Nmcmc,colors='r',label='Chi2')
+        #             if h5_sim.exists():
+        #                 axes[px,py].vlines(simpar[ipar,y,x],0,Nmcmc,colors='g',label='True')
+        #         # for band in TABand:
+        #         #     if band['label']=='Main 11.2':
+        #         #         if bex==0:
+        #         #             axes[px,py].vlines(band['wave'],0,Nmcmc,colors='r')
+        #         #         elif bex==1:
+        #         #             axes[px,py].vlines(band['sigmaS'],0,Nmcmc,colors='r')
+        #         #         elif bex==2:
+        #         #             axes[px,py].vlines(band['sigmaL'],0,Nmcmc,colors='r')
+        #         axes[px,py].set_xlabel('Parameter value')
+        #         axes[px,py].set_ylabel('Counts')
+        #         axes[px,py].set_title(
+        #             # fr'${parname[ipar]}({x+1},{y+1})\ [{meanpar[ipar,y,x]:.2f},{stdevpar[ipar,y,x]:.2f}]$')
+        #             fr'${parname[ipar]}({x+1},{y+1})={qpar[1,ipar,y,x]:.2f}$')
+        #         axes[px,py].legend(loc='upper left')
             
-            plt.savefig(filename)
+        #     plt.savefig(filename)
         
         
         
+        x,y = 6,6
         ## Parameter track (par)
         ##-----------------------
-        x,y = 1,6
         for j in range(int(Npar/9)+1):
             filename = path_fig+'partrack_'+m+'_ipar='+str(j*9+1)+'-'+str(j*9+9)+'.png'
             
             fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(12,9))
             plt.subplots_adjust(left=.1, bottom=.05, \
                                 right=.99, top=.95, wspace=.3, hspace=.4)
-        
+
             for jpar in range(9):
                 jpar += j*9
                 px, py = int(jpar%9/3), jpar%9%3
@@ -166,7 +174,7 @@ for m in mode:
                     axes[px,py].scatter(parmcmc[:Nmcmc,jpar,y,x], counter, s=.5)
         
                     ## Fitted (and after burning) param in magenta
-                    axes[px,py].vlines(qpar[1,jpar,y,x],0,Nmcmc,colors='m',label='HB')
+                    axes[px,py].vlines(qpar[1,jpar,y,x],0,Nmcmc,colors='m',label=m)
                     axes[px,py].vlines(qpar[0,jpar,y,x],0,Nmcmc,colors='m',linestyles='dashed')
                     axes[px,py].vlines(qpar[2,jpar,y,x],0,Nmcmc,colors='m',linestyles='dashed')
                     # axes[px,py].vlines(meanpar[jpar,y,x],0,Nmcmc,colors='m')
@@ -178,7 +186,7 @@ for m in mode:
                     ## Initial param in red
                     if fixed[jpar]=='F':
                         # axes[px,py].vlines(parini[jpar],0,Nmcmc,colors='r')
-                        axes[px,py].vlines(chi2ini[jpar,y,x],0,Nmcmc,colors='r',label='Chi2')
+                        axes[px,py].vlines(chi2ini[jpar,y,x],0,Nmcmc,colors='r',label='chi2')
                         if h5_sim.exists():
                             axes[px,py].vlines(simpar[jpar,y,x],0,Nmcmc,colors='g',label='True')
                     
@@ -190,42 +198,65 @@ for m in mode:
                     axes[px,py].legend(loc='upper left')
             
             plt.savefig(filename)
-        
-        
+
+        ## Parameter track (calib)
+        ##-------------------------
+        for j in range(Ncal):
+            filename = path_fig+'partrack_'+m+'_ical('+instr[j]+').png'
+            
+            fig, axes = plt.subplots(figsize=(8,8))
+            plt.subplots_adjust(left=.1, bottom=.05, \
+                                right=.99, top=.95, wspace=.3, hspace=.4)
+            
+            p = pplot(np.exp(ln1pdmcmc[:Nmcmc,j,y,x]), counter,
+                      fmt='.', markersize=.5, c='b',
+                      xlab='Calib factor', ylab='MCMC counter',
+                      title='Calibration factor of '+instr[j],
+                      legend='upper left')
+            p.ax.vlines(np.exp(meanln1pd[j,y,x]),
+                        0,Nmcmc,colors='m',label=m)
+            p.ax.vlines(np.exp(meanln1pd[j,y,x]-stdevln1pd[j,y,x]),
+                        0,Nmcmc,colors='m',linestyles='dashed')
+            p.ax.vlines(np.exp(meanln1pd[j,y,x]+stdevln1pd[j,y,x]),
+                        0,Nmcmc,colors='m',linestyles='dashed')
+                    
+            p.save(filename)
+
+
         
         ## ACFs
         ##------
-        ihyp = 23 # lnRband5 6.2 (1)
-        icorr = 1867
-        hyparname = read_hdf5(filout, 'Hyperparameter label')
+        # ihyp = 25 # lnRband5 6.2 (1)
+        # icorr = 1320
+        # hyparname = read_hdf5(filout, 'Hyperparameter label')
         
-        autocor_mu = read_hdf5(filout, 'Autocorrelation function for mu('+hyparname[ihyp]+')')
-        autocor_sig = read_hdf5(filout, 'Autocorrelation function for sig('+hyparname[ihyp]+')')
-        mcmc_hyp = np.arange(len(autocor_mu))
+        # autocor_mu = read_hdf5(filout, 'Autocorrelation function for mu('+hyparname[ihyp]+')')
+        # autocor_sig = read_hdf5(filout, 'Autocorrelation function for sig('+hyparname[ihyp]+')')
+        # mcmc_hyp = np.arange(len(autocor_mu))
         
-        autocor_corr = read_hdf5(filout, 'Autocorrelation function for corr('+str(icorr)+')')
-        # autocor_corr = read_hdf5(filout, 'Autocorrelation function for corr('+str(icorr)+') after burn-in')
-        mcmc_corr = np.arange(len(autocor_corr))
+        # autocor_corr = read_hdf5(filout, 'Autocorrelation function for corr('+str(icorr)+')')
+        # # autocor_corr = read_hdf5(filout, 'Autocorrelation function for corr('+str(icorr)+') after burn-in')
+        # mcmc_corr = np.arange(len(autocor_corr))
         
-        fig, axes = plt.subplots(nrows=3, ncols=1, figsize=(8,8))
-        plt.subplots_adjust(left=.1, bottom=.05, \
-                            right=.99, top=.95, wspace=.3, hspace=.4)
+        # fig, axes = plt.subplots(nrows=3, ncols=1, figsize=(8,8))
+        # plt.subplots_adjust(left=.1, bottom=.05, \
+        #                     right=.99, top=.95, wspace=.3, hspace=.4)
         
-        axes[0].plot(mcmc_hyp, autocor_mu)
-        axes[0].set_xlabel('Lag')
-        axes[0].set_ylabel('ACF of mu('+hyparname[ihyp]+')')
-        axes[1].plot(mcmc_hyp, autocor_sig)
-        axes[1].set_xlabel('Lag')
-        axes[1].set_ylabel('ACF of sig('+hyparname[ihyp]+')')
-        axes[2].plot(mcmc_corr, autocor_corr)
-        axes[2].set_xlabel('Lag')
-        axes[2].set_ylabel('ACF of corr'+str(icorr))
-        xmin, xmax = 0, 50
-        axes[0].set_xlim((xmin,xmax))
-        axes[1].set_xlim((xmin,xmax))
-        axes[2].set_xlim((xmin,xmax))
+        # axes[0].plot(mcmc_hyp, autocor_mu)
+        # axes[0].set_xlabel('Lag')
+        # axes[0].set_ylabel('ACF of mu('+hyparname[ihyp]+')')
+        # axes[1].plot(mcmc_hyp, autocor_sig)
+        # axes[1].set_xlabel('Lag')
+        # axes[1].set_ylabel('ACF of sig('+hyparname[ihyp]+')')
+        # axes[2].plot(mcmc_corr, autocor_corr)
+        # axes[2].set_xlabel('Lag')
+        # axes[2].set_ylabel('ACF of corr'+str(icorr))
+        # xmin, xmax = 0, 50
+        # axes[0].set_xlim((xmin,xmax))
+        # axes[1].set_xlim((xmin,xmax))
+        # axes[2].set_xlim((xmin,xmax))
         
-        plt.savefig(path_fig+'partrack_'+m+'_ACFs.png')
+        # plt.savefig(path_fig+'partrack_'+m+'_ACFs.png')
 
 # plt.show()
 

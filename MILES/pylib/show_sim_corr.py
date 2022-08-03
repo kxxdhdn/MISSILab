@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 from laputan.inout import read_hdf5
 
 ## local
-from librarian import croot
+from auxil import croot
 
 def func(x, a):
     '''

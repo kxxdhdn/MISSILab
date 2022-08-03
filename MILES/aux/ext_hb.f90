@@ -9,15 +9,15 @@ MODULE ext_hb
 
   USE utilities, ONLY: DP
   USE inout, ONLY: lenpar
-  USE core, ONLY: parinfo_type, indpar_type, indcal_type, Qabs_type
+  USE core, ONLY: parinfo_type, indpar_type, irrintarr_type, Qabs_type
   IMPLICIT NONE
   PRIVATE
 
   INTEGER, PARAMETER, PUBLIC :: Df_prior = 8!, Df_RMS = 3, Df_cal = 3
   REAL(DP), PARAMETER, PUBLIC :: siglnS0 = 10._DP
 
-  INTEGER, SAVE, PUBLIC :: Nx, Ny, NwOBS, Nparhyp, Ncorrhyp, NwFIT
-  INTEGER, SAVE, PUBLIC :: Ncalib
+  INTEGER, SAVE, PUBLIC :: Nx, Ny, NwOBS, Nparhyp, Ncorrhyp
+  INTEGER, SAVE, PUBLIC :: Ncalib, NwFIT, NwCAL
   INTEGER, SAVE, PUBLIC :: xOBS, yOBS, jcal, ipar, ihpar, icorr
   INTEGER, DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: i2ih
   INTEGER, DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: iwFIT ! (NwOBS)
@@ -25,23 +25,24 @@ MODULE ext_hb
   REAL(DP), SAVE, PUBLIC :: detcov_prev, detcorr
   REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: sigcal, cenlnS0
   REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: wOBS, nuOBS ! (NwOBS)
-  REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: wFIT ! (NwFIT)
-  REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: ln1pd, delp1
+  REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: wFIT, nuFIT ! (NwFIT)
   REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: parcurr, parhypcurr
   REAL(DP), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: mucurr, corrcurr, sigcurr
   REAL(DP), DIMENSION(:,:), ALLOCATABLE, SAVE, PUBLIC :: extinct
   REAL(DP), DIMENSION(:,:), ALLOCATABLE, SAVE, PUBLIC :: cov_prev, invcov_prev ! S-1
   REAL(DP), DIMENSION(:,:), ALLOCATABLE, SAVE, PUBLIC :: invcorr_prev ! R^-1
+  REAL(DP), DIMENSION(:,:,:), ALLOCATABLE, SAVE, PUBLIC :: delp1!, ln1pd
   REAL(DP), DIMENSION(:,:,:), ALLOCATABLE, SAVE, PUBLIC :: FnuOBS, dFnuOBS
   REAL(DP), DIMENSION(:,:,:), ALLOCATABLE, SAVE, PUBLIC :: allparhypcurr
   REAL(DP), DIMENSION(:,:,:), ALLOCATABLE, SAVE, PUBLIC :: Fnu_model
   LOGICAL, SAVE, PUBLIC :: noposdef_prev, calib, robust_cal, robust_RMS, skew_RMS
-  LOGICAL, DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: maskhypcurr, maskspec
+  LOGICAL, DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: maskhypcurr
+  LOGICAL, DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: maskwall, maskparall, maskhypall
   LOGICAL, DIMENSION(:,:), ALLOCATABLE, SAVE, PUBLIC :: maskS, calibool
   LOGICAL, DIMENSION(:,:,:), ALLOCATABLE, SAVE, PUBLIC :: mask, maskextra
   LOGICAL, DIMENSION(:,:,:), ALLOCATABLE, SAVE, PUBLIC :: maskhyp, maskpar
   CHARACTER(lenpar), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: specOBS
-  TYPE(indcal_type), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: iw2ical
+  TYPE(irrintarr_type), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: iw2ical
 
   !! Init param
   !!------------
@@ -49,7 +50,7 @@ MODULE ext_hb
   TYPE(parinfo_type), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: parinfo, parhypinfo
   TYPE(Qabs_type), DIMENSION(:), ALLOCATABLE, SAVE, PUBLIC :: Qabs
   
-  PUBLIC :: lnpost_del, lnpost_par, lnlhobs_par, lnpost_mu, lnpost_sig
+  PUBLIC :: lnpost_del, lnpost_par, lnpost_mu, lnpost_sig
   PUBLIC :: lnpost_corr, covariance
 
 CONTAINS
@@ -87,31 +88,29 @@ CONTAINS
     USE utilities, ONLY: DP
     IMPLICIT NONE
 
-    REAL(DP), INTENT(IN), DIMENSION(:) :: ln1pdgrid
+    REAL(DP), DIMENSION(:), INTENT(IN) :: ln1pdgrid
     REAL(DP), DIMENSION(SIZE(ln1pdgrid)) :: lnLHobs_del
 
-    INTEGER :: x, y, i, Ngrid, NwCAL
-    INTEGER, DIMENSION(:), ALLOCATABLE :: indcal
-    REAL(DP), DIMENSION(Nx,Ny,SIZE(ln1pdgrid)) :: varred, lnpind
+    INTEGER :: iw
+    INTEGER, DIMENSION(NwCAL) :: indcal
+    REAL(DP), DIMENSION(SIZE(ln1pdgrid),NwCAL) :: &
+      varred, lnpind
+    LOGICAL, DIMENSION(SIZE(ln1pdgrid),NwCAL) :: mask2D
     
     !! Reduced variable
-    Ngrid = SIZE(ln1pdgrid(:))
-    indcal = iw2ical(jcal)%indw(:)
-    NwCAL = SIZE(indcal)
-    IF (NwCAL>0) THEN
-      FORALL (x=1:Nx,y=1:Ny,i=1:Ngrid,ANY(mask(x,y,indcal(:)))) &
-        varred(x,y,i) = SUM( ( FnuOBS(x,y,indcal(:)) &
-                               - Fnu_model(x,y,indcal(:))*EXP(ln1pdgrid(i)) ) &
-                             / dFnuOBS(x,y,indcal(:)) )
+    indcal(:) = iw2ical(jcal)%arr1d(:)
     
-      !! Distribution
-      lnpind(:,:,:) = - 0.5_DP * varred(:,:,:)**2
+    varred(:,:) = 0._DP
+    FORALL (iw=1:NwCAL) mask2D(:,iw) = mask(xOBS,yOBS,indcal(iw))
+    FORALL (iw=1:NwCAL,mask(xOBS,yOBS,indcal(iw))) &
+      varred(:,iw) = ( FnuOBS(xOBS,yOBS,indcal(iw)) &
+                       - Fnu_model(xOBS,yOBS,indcal(iw))*EXP(ln1pdgrid(:)) ) &
+                     / dFnuOBS(xOBS,yOBS,indcal(iw))
 
-      FORALL (i=1:Ngrid) &
-        lnLHobs_del(i) = SUM( lnpind(:,:,i),MASK=ANY(mask(:,:,indcal(:)),DIM=3) )
-    ELSE
-      lnLHobs_del(:) = 0._DP
-    END IF
+    !! Distribution
+    lnpind(:,:) = - 0.5_DP * varred(:,:)**2
+
+    lnLHobs_del(:) = SUM(lnpind(:,:),DIM=2,MASK=mask2D(:,:))
     
   END FUNCTION lnLHobs_del
   
@@ -127,11 +126,11 @@ CONTAINS
     REAL(DP), DIMENSION(SIZE(pargrid)) :: lnLHobs_par
 
     INTEGER :: iw
-    REAL(DP), DIMENSION(SIZE(pargrid),NwFIT) :: Fnu_mod, varred, lnpind
-    LOGICAL, DIMENSION(SIZE(pargrid),NwFIT) :: mask2D
+    REAL(DP), DIMENSION(SIZE(pargrid),NwOBS) :: Fnu_mod, varred, lnpind
+    LOGICAL, DIMENSION(SIZE(pargrid),NwOBS) :: mask2D
 
     !! Model
-    Fnu_mod(:,:) = specModel(wOBS(iwFIT(:)), PARVEC=pargrid(:), &
+    Fnu_mod(:,:) = specModel(wOBS(:), PARVEC=pargrid(:), &
                              PARNAME=parinfo(ipar)%name, &
                              PARINFO=parinfo(:), INDPAR=ind, &
                              PARVAL=parcurr(:), &
@@ -139,15 +138,16 @@ CONTAINS
 
     !! Likelihoods
     varred(:,:) = 0._DP
-    FORALL (iw=1:NwFIT) mask2D(:,iw) = mask(xOBS,yOBS,iwFIT(iw))
-    FORALL (iw=1:NwFIT, mask(xOBS,yOBS,iwFIT(iw))) &
-      varred(:,iw) = ( FnuOBS(xOBS,yOBS,iwFIT(iw)) - Fnu_mod(:,iw)*delp1(iwFIT(iw)) ) &
-                     / dFnuOBS(xOBS,yOBS,iwFIT(iw))
+    FORALL (iw=1:NwOBS) mask2D(:,iw) = mask(xOBS,yOBS,iw)
+    FORALL (iw=1:NwOBS,mask(xOBS,yOBS,iw)) &
+      varred(:,iw) = ( FnuOBS(xOBS,yOBS,iw) &
+                       - Fnu_mod(:,iw)*delp1(xOBS,yOBS,iw) ) &
+                     / dFnuOBS(xOBS,yOBS,iw)
 
     lnpind(:,:) = - 0.5_DP * varred(:,:)**2
 
     !! Global likelihood, accounting for the excesses
-    lnLHobs_par(:) = SUM(lnpind(:,:), DIM=2, MASK=mask2D(:,:))
+    lnLHobs_par(:) = SUM(lnpind(:,:),DIM=2,MASK=mask2D(:,:))
     
     !! Extra parameters
     !!-----------------
@@ -203,7 +203,7 @@ CONTAINS
       lnprior_par(i) = LOG( DOT_PRODUCT(allpargrid(:,i), &
                               MATMUL(invcov_prev(:,:), allpargrid(:,i))) &
                             / Df_prior + 1._DP ) * (-(Df_prior+Nparhyp)/2._DP)
-
+    
   END FUNCTION lnprior_par
 
   !! For the variance
@@ -405,9 +405,9 @@ CONTAINS
     
     !! Total distribution
     lnhyper_corr(:) = 0._DP
-    FORALL (i=1:Ngrid) &
+    FORALL (i=1:Ngrid,ANY(maskhypall(:))) &
       lnhyper_corr(i) = SUM(lnpind(:,:,i),MASK=(maskhyp(:,:,icorr2ij(icorr,1)) &
-                                          .AND. maskhyp(:,:,icorr2ij(icorr,2))))
+                                               .AND. maskhyp(:,:,icorr2ij(icorr,2))))
     
   END FUNCTION lnhyper_corr
 
@@ -426,7 +426,7 @@ CONTAINS
 
     REAL(DP), INTENT(IN), DIMENSION(:)   :: ln1pdgrid
     REAL(DP), DIMENSION(SIZE(ln1pdgrid)) :: lnpost_del
-    
+
     lnpost_del(:) = LNLHOBS_DEL(ln1pdgrid(:)) + LNPRIOR_DEL(ln1pdgrid(:))
 
   END FUNCTION lnpost_del
@@ -482,7 +482,7 @@ CONTAINS
 
     !! Total distribution
     lnpost_mu(:) = 0._DP
-    FORALL (i=1:Ngrid) &
+    FORALL (i=1:Ngrid,ANY(maskhypall(:))) &
       lnpost_mu(i) = SUM(lnpind(:,:,i),MASK=maskhyp(:,:,ihpar))
 
   END FUNCTION lnpost_mu

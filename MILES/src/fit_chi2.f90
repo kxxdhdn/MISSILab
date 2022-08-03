@@ -7,8 +7,9 @@
 
 PROGRAM fit_chi2
 
-  USE utilities, ONLY: DP, pring, trimLR, trimeq, timinfo, &
-                       banner_program, ustd, isNaN, initiate_clock, time_type
+  USE utilities, ONLY: DP, isNaN, pring, trimLR, trimeq, &
+                       banner_program, ustd, strike, warning, &
+                       timinfo, initiate_clock, time_type, today
   USE arrays, ONLY: iwhere, closest
   USE constants, ONLY: MKS
   USE statistics, ONLY: MEDIAN
@@ -19,7 +20,8 @@ PROGRAM fit_chi2
   USE core, ONLY: read_master, specModel, initparam
   USE ext_chi2, ONLY: Nx, Ny, NwOBS, wOBS, nuOBS, FnuOBS, dFnuOBS, &
                       residuals, Fnu_mod, resid, invLcovarOBS, &
-                      ind, parinfo, Qabs, extinct, xOBS, yOBS, mask, iwfree
+                      ind, parinfo, Qabs, extinct, xOBS, yOBS, iwfree, &
+                      mask, maskpar
   IMPLICIT NONE
 
   !! Parameters
@@ -30,7 +32,7 @@ PROGRAM fit_chi2
   LOGICAL, PARAMETER :: debug = .FALSE.
   
   !! Input variables
-  INTEGER :: i, j, x, y, Npar, Nparfree, Nwfree, NiniMC
+  INTEGER :: i, j, x, y, ipar, Npar, Nparfree, Nwfree, NiniMC, Nsou
   INTEGER :: Ncont, Nband, Nline, Nextc, Nstar, Nextra
   INTEGER, DIMENSION(:,:,:), ALLOCATABLE :: maskint ! convert mask=0 to mask=T
   LOGICAL :: verbose, calib, newseed, newinit, dostop
@@ -53,7 +55,8 @@ PROGRAM fit_chi2
   REAL(DP), DIMENSION(:,:), ALLOCATABLE :: limits!, medSovN
   REAL(DP), DIMENSION(:,:), ALLOCATABLE :: chi2red
   REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: parerr, par
-  REAL(DP), DIMENSION(:,:,:,:), ALLOCATABLE :: covarOBS, covpar
+  REAL(DP), DIMENSION(:,:,:,:), ALLOCATABLE :: covpar!, covarOBS
+  LOGICAL, DIMENSION(:), ALLOCATABLE :: fixed
   LOGICAL, DIMENSION(:,:), ALLOCATABLE :: limited, maskS
   
   !! Output variables
@@ -77,7 +80,7 @@ PROGRAM fit_chi2
   dirIN = path1d(1)
   filOBS = TRIMLR(dirIN)//'observation_MIR'//h5ext
   
-  !! a. Main settings
+  !! 1) Main settings
   !!------------------
   CALL READ_HDF5(wOBS, FILE=filOBS, NAME='wavelength (microns)', N1=NwOBS)
   CALL READ_MASTER(WAVALL=wOBS(:), DIRIN=dirIN, DIROUT=dirOUT, &
@@ -103,7 +106,7 @@ PROGRAM fit_chi2
                         //"OptImized Routine", UNIT=unitlog(i), SWING=.TRUE.)
   END DO
 
-  !! b. Observation sample
+  !! 2) Observation sample
   !!-----------------------
   CALL READ_HDF5(DBLARR3D=FnuOBS, FILE=filOBS, &
                  NAME='FnuOBS ('//TRIMLR(spec_unit)//')', N1=Nx, N2=Ny)
@@ -133,48 +136,45 @@ PROGRAM fit_chi2
       CALL IWHERE(TRIMEQ(parinfo(:)%name,parinfo(i)%tied),itied(i))
   END DO
   
-  !! c. Compute the covariance matrix of the uncertainties
+  !! 3) Compute the covariance matrix of the uncertainties
   !!-------------------------------------------------------
   !! Mask for the RMS covariance (diagonal)
   ALLOCATE(maskS(NwOBS,NwOBS))
   maskS(:,:) = .FALSE.
   FORALL (i=1:NwOBS) maskS(i,i) = .TRUE.
 
-  !! 4D mask for the covariance matrix
-  ! ALLOCATE(mask4D(Nx,Ny,NwOBS,NwOBS))
-  ! mask4D(:,:,:,:) = .TRUE.
-  ! FORALL (x=1:Nx,y=1:Ny,i=1:NwOBS, .NOT. mask(x,y,i))
-  !   mask4D(x,y,i,:) = .FALSE.
-  !   mask4D(x,y,:,i) = .FALSE.
-  ! END FORALL
-
   !! Covariance matrix for each pixel and its inverse
-  ALLOCATE(covarOBS(Nx,Ny,NwOBS,NwOBS), invLcovarOBS(Nx,Ny,NwOBS,NwOBS))
+  ! ALLOCATE(covarOBS(Nx,Ny,NwOBS,NwOBS))
+  ALLOCATE(invLcovarOBS(Nx,Ny,NwOBS,NwOBS))
 
-  covarOBS(:,:,:,:) = 0._DP
+  ! covarOBS(:,:,:,:) = 0._DP
   !! invLcovarOBS is a lower triangle matrix L (Likelihood) results from 
   !! the Cholesky decomposition of the covariance matrix (Appendix C2, Galliano18a)
   invLcovarOBS(:,:,:,:) = 0._DP
-  FORALL (x=1:Nx,y=1:Ny,ALL(mask(x,y,:)))
-    covarOBS(x,y,:,:) = UNPACK(dFnuOBS(x,y,:)**2, maskS, FIELD=0._DP)
+  FORALL (x=1:Nx,y=1:Ny,ANY(mask(x,y,:)))
+    ! covarOBS(x,y,:,:) = UNPACK(dFnuOBS(x,y,:)**2, maskS, FIELD=0._DP)
     invLcovarOBS(x,y,:,:) = UNPACK(1._DP/dFnuOBS(x,y,:), maskS, FIELD=0._DP)
-
   END FORALL
+  DO x=1,Nx
+    DO y=1,Ny
+      DO i=1,NwOBS
+        IF (.NOT. mask(x,y,i)) THEN
+          invLcovarobs(x,y,i,:) = 0._DP
+          invLcovarobs(x,y,:,i) = 0._DP
+        END IF
+      END DO
+    END DO
+  END DO
 
-  !! No wave calib (between diff instr/module)
-  ! DO x=1,Nx
-  !   DO y=1,Ny
-  !     DO i=1,NwOBS
-  !       IF (.NOT. mask(x,y,i)) THEN
-  !         invLcovarOBS(x,y,i,:) = 0._DP
-  !         invLcovarOBS(x,y,:,i) = 0._DP
-
-  !       END IF
-  !     END DO
-  !   END DO
-  ! END DO
-
-  ! DEALLOCATE(covarOBS)
+  !! 3D parameter mask
+  ALLOCATE (maskpar(Nx,Ny,Npar))
+  DO i=1,Npar
+    IF (parinfo(i)%model) THEN
+      maskpar(:,:,i) = ANY(mask(:,:,:),DIM=3)
+    ELSE
+      maskpar(:,:,i) = .FALSE.
+    END IF
+  END DO
 
   DO i=1,MERGE(2,1,verbose)
     WRITE(unitlog(i),*)
@@ -198,16 +198,31 @@ PROGRAM fit_chi2
   !!-----------------------------------
   ALLOCATE(parini(Nx, Ny, Npar, MAX(NiniMC,1)))
   parini(:,:,:,:) = 0._DP
+  
   CALL INITPARAM(NiniMC, IND=ind, PAR=parini(:,:,:,:), PARINFO=parinfo(:), &
-                 ITIED=itied(:), MASK=mask(:,:,:), &
+                 ITIED=itied(:), MASK=maskpar(:,:,:), &
                  NEWINIT=newinit, FILOBS=filOBS, &
                  LABB=labB(:), LABL=labL(:), QABS=Qabs(:))
   
   Nparfree = COUNT((.NOT. parinfo(:)%fixed) .AND. (itied(:) <= 0))
 
+  !! Summary of the sample properties
+  !!----------------------------------
+  Nsou = COUNT(ANY(mask(:,:,:),DIM=3))
   DO i=1,MERGE(2,1,verbose)
-    WRITE(unitlog(i),*) 'Number of free param: '//TRIMLR(PRING(Nparfree))
-    
+    WRITE(unitlog(i),*) &
+      " - Number of spectra/pixels to be fitted = "//TRIMLR(PRING(Nsou))
+    WRITE(unitlog(i),*) &
+      " - Size of spectral sampling = "//TRIMLR(PRING(NwOBS-Nwfree))
+    WRITE(unitlog(i),*) &
+      " - Number of free param (masked): "//TRIMLR(PRING(Nparfree))
+    WRITE(unitlog(i),*)
+    IF (NiniMC > 0) &
+      WRITE(unitlog(i),*) " - Performing "//TRIMLR(PRING(NiniMC)) &
+        //" fits with Monte-Carlo initial parameters"
+  END DO
+  
+  DO i=1,MERGE(2,1,verbose)
     WRITE(unitlog(i),*)
     WRITE(unitlog(i),*) 'LE MIROIR: Initial parameters [done]'
     WRITE(unitlog(i),*) REPEAT('=',textwid)//NEW_LINE('')
@@ -219,7 +234,7 @@ PROGRAM fit_chi2
   
   ALLOCATE(par(Nx,Ny,Npar), status(Nx,Ny), resid(NwOBS), chi2red(Nx,Ny), &
            parerr(Nx,Ny,Npar), covpar(Nx,Ny,Npar,Npar), Niter(Nx,Ny), &
-           Fnu_mod(NwOBS), limits(Npar,2), limited(Npar,2))
+           Fnu_mod(NwOBS), limits(Npar,2), limited(Npar,2), fixed(Npar))
 
   FORALL (i=1:Npar)
     limits(i,:) = parinfo(i)%limits(:)
@@ -230,7 +245,6 @@ PROGRAM fit_chi2
             parerrMC(Npar,MAX(NiniMC,1)),chi2redMC(MAX(NiniMC,1)), &
             covarMC(Npar,Npar,MAX(NiniMC,1)))
 
-  par(:,:,:) = parini(:,:,:,1)
   CALL WRITE_HDF5(STRARR1D=parinfo(:)%name, NAME='Parameter label', &
                   FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.FALSE.)
   CALL WRITE_HDF5(INITDBLARR=[Nx,Ny,Npar], NAME='Best fitted parameter value', &
@@ -240,22 +254,28 @@ PROGRAM fit_chi2
 
   chi2fitx: DO xOBS=1,Nx
     chi2fity: DO yOBS=1,Ny
-      notmasked: IF (ANY( mask(xOBS,yOBS,:) )) THEN
+      notmasked: IF (ANY(mask(xOBS,yOBS,:))) THEN
         DO i=1,MERGE(2,1,verbose)
-          WRITE(unitlog(i),*) 'pos: ('//TRIMLR(PRING(xOBS))//', '//TRIMLR(PRING(yOBS))//'): '
           WRITE(unitlog(i),*)
+          WRITE(unitlog(i),*) 'pos: ('//TRIMLR(PRING(xOBS))//', '//TRIMLR(PRING(yOBS))//'): '
         END DO
+
+        !! Update parinfo(:)%fixed with maskpar
+        fixed(:) = parinfo(:)%fixed
+        FORALL (ipar=1:Npar, .NOT. maskpar(xOBS,yOBS,ipar)) fixed(ipar) = .TRUE.
 
         !! a. Levenberg-Marquardt method
         !!-------------------------------
         pariniMC: IF (NiniMC == 0) THEN
-
+          par(xOBS,yOBS,:) = parini(xOBS,yOBS,:,1)
+          
           CALL CHI2MIN_LM (residuals, NwOBS, PAR=par(xOBS,yOBS,:), VERBOSE=debug, &
                            STATUS=status(xOBS,yOBS), PARNAME=parinfo(:)%name, &
                            LIMITED=limited(:,:), LIMITS=limits(:,:), &
-                           FIXED=parinfo(:)%fixed, ITIED=itied(:), &
+                           FIXED=fixed(:), ITIED=itied(:), &
                            CHI2RED=chi2red(xOBS,yOBS), NITER=Niter(xOBS,yOBS), &
                            PARERR=parerr(xOBS,yOBS,:), COVAR=covpar(xOBS,yOBS,:,:))
+          chi2red(xOBS,yOBS) = chi2red(xOBS,yOBS) / COUNT(mask(xOBS,yOBS,:))
 
           DO i=1,MERGE(2,1,verbose)
             WRITE(unitlog(i),*) "PROGRAM EXECUTED IN "//TRIMLR(TIMINFO(timestr))//"."
@@ -273,13 +293,13 @@ PROGRAM fit_chi2
             CALL CHI2MIN_LM (residuals, NwOBS, PAR=parini(xOBS,yOBS,:,j), VERBOSE=debug, &
                              STATUS=statusMC(j), PARNAME=parinfo(:)%name, &
                              LIMITED=limited(:,:), LIMITS=limits(:,:), &
-                             FIXED=parinfo(:)%fixed, ITIED=itied(:), &
+                             FIXED=fixed(:), ITIED=itied(:), &
                              CHI2RED=chi2redMC(j), NITER=NiterMC(j), &
                              PARERR=parerrMC(:,j), COVAR=covarMC(:,:,j))
-
+            chi2redMC(j) = chi2redMC(j) / COUNT(mask(xOBS,yOBS,:))
+            
             DO i=1,MERGE(2,1,verbose)
               WRITE(unitlog(i),*) "PROGRAM EXECUTED IN "//TRIMLR(TIMINFO(timestr))//"."
-              WRITE(unitlog(i),*)
             END DO
           
           END DO
@@ -295,7 +315,6 @@ PROGRAM fit_chi2
             WRITE(unitlog(i),*) "  MC chi2red is between " &
               //TRIMLR(PRING(MINVAL(chi2redMC(:)),NDEC=6))//" and " &
               //TRIMLR(PRING(MAXVAL(chi2redMC(:)),NDEC=6))
-          
           END DO
 
         END IF pariniMC
@@ -384,6 +403,6 @@ PROGRAM fit_chi2
   END DO
   
   !! Free memory space
-  DEALLOCATE(wOBS, FnuOBS, dFnuOBS, maskint, mask)
+  DEALLOCATE(wOBS, FnuOBS, dFnuOBS, maskint, mask, maskpar)
 
 END PROGRAM fit_chi2

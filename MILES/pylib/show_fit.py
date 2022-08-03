@@ -17,7 +17,7 @@ from laputan.inout import read_hdf5
 from laputan.plots import pplot
 
 ## local
-from librarian import croot, TABand
+from auxil import croot, TABand
 
 ## Path
 ##------

@@ -8,8 +8,8 @@
 MODULE core
 
   USE auxil, ONLY: Ncont_max, Nline_max, Nband_max, Nextc_max, Nstar_max, Cband_sig
-  USE utilities, ONLY: DP
-  USE constants, ONLY: 
+  USE utilities, ONLY: DP, CDP
+  ! USE constants, ONLY: 
   USE inout, ONLY: lenpar
   IMPLICIT NONE
   PRIVATE
@@ -19,9 +19,19 @@ MODULE core
   
   PUBLIC :: set_indpar, set_indref, set_indcal
   PUBLIC :: make_Qabs, read_master, initparam, read_analysis
-  PUBLIC :: check_SM, invert_SM, invert_mSM
+  PUBLIC :: check_SM, invert_SM, invert_mSM, NaN2zero, zero2NaN
   PUBLIC :: degradeRes, modifBB, gaussLine, lorentzBand, extCurve, specModel
 
+  INTERFACE NaN2zero
+    MODULE PROCEDURE NaN2zero_int1D, NaN2zero_int2D, NaN2zero_int3D, NaN2zero_int4D
+    MODULE PROCEDURE NaN2zero_dbl1D, NaN2zero_dbl2D, NaN2zero_dbl3D, NaN2zero_dbl4D
+  END INTERFACE NaN2zero
+  
+  INTERFACE zero2NaN
+    MODULE PROCEDURE zero2NaN_int1D, zero2NaN_int2D, zero2NaN_int3D, zero2NaN_int4D
+    MODULE PROCEDURE zero2NaN_dbl1D, zero2NaN_dbl2D, zero2NaN_dbl3D, zero2NaN_dbl4D
+  END INTERFACE zero2NaN
+  
   INTERFACE modifBB
     MODULE PROCEDURE modifBB_0, modifBB_1
   END INTERFACE modifBB
@@ -79,11 +89,31 @@ MODULE core
     INTEGER, DIMENSION(:), ALLOCATABLE :: extra
   END TYPE indpar_type
 
-  TYPE, PUBLIC :: indcal_type
+  TYPE, PUBLIC :: irrintarr_type
     !! Used to create irregular integer arrays
-    INTEGER, DIMENSION(:), ALLOCATABLE :: indw
-  END TYPE indcal_type
+    INTEGER, DIMENSION(:), ALLOCATABLE :: arr1d
+  END TYPE irrintarr_type
 
+  TYPE, PUBLIC :: irrdblarr_type
+    !! Used to create irregular real arrays
+    REAL(DP), DIMENSION(:), ALLOCATABLE :: arr1d
+  END TYPE irrdblarr_type
+  
+  TYPE, PUBLIC :: irrcmparr_type
+    !! Used to create irregular complex arrays
+    COMPLEX(CDP), DIMENSION(:), ALLOCATABLE :: arr1d
+  END TYPE irrcmparr_type
+
+  TYPE, PUBLIC :: irrlogarr_type
+    !! Used to create irregular logical arrays
+    LOGICAL, DIMENSION(:), ALLOCATABLE :: arr1d
+  END TYPE irrlogarr_type
+
+  TYPE, PUBLIC :: irrchararr_type
+    !! Used to create irregular character arrays
+    CHARACTER(lenpar), DIMENSION(:), ALLOCATABLE :: arr1d
+  END TYPE irrchararr_type
+  
   TYPE, PUBLIC :: Qabs_type
     !! rho(kg/m3); wave(micron); nu(Hz); kappa(m2/kg)
     REAL(DP) :: rho
@@ -301,7 +331,7 @@ CONTAINS
         lim(:) = ran%wlim_SL2
         caliberr = err%caliberr_SL
       CASE('IRS_SL1')
-        lim(:) = ran%wlim_SL2
+        lim(:) = ran%wlim_SL1
         caliberr = err%caliberr_SL
       CASE('IRS_LL2')
         lim(:) = ran%wlim_LL2
@@ -349,7 +379,7 @@ CONTAINS
     USE utilities, ONLY: DP, strike, warning, trimeq, trimlr, pring!, verbatim
     USE inout, ONLY: lenpar, lenpath, read_input_line, read_hdf5, h5ext
     USE constants, ONLY: pi, MKS
-    USE arrays, ONLY: incrarr, iwhere, reallocate, closest
+    USE arrays, ONLY: reallocate, closest
     USE interpolation, ONLY: interp_lin_sorted
     USE statistics, ONLY: correl_parlist, N_corr
     USE grain_optics, ONLY: lendustQ, rho_grain, read_optics
@@ -758,7 +788,7 @@ CONTAINS
     USE auxil, ONLY: TABLine, TABand
     USE utilities, ONLY: DP, trimeq, trimlr, pring, isNaN
     USE constants, ONLY: pi, MKS
-    USE arrays, ONLY: iwhere, closest, reallocate, incrarr, reverse
+    USE arrays, ONLY: reallocate, iwhere, incrarr, closest, reverse
     USE inout, ONLY: read_hdf5, lenpar
     USE statistics, ONLY: mean
     USE statistical_physics, ONLY: blackbody
@@ -769,18 +799,20 @@ CONTAINS
     REAL(DP), DIMENSION(:,:,:,:), INTENT(INOUT) :: par ! (Nx,Ny,Npar,NiniMC)
     TYPE(parinfo_type), DIMENSION(:), INTENT(INOUT) :: parinfo
     INTEGER, DIMENSION(:), INTENT(IN) :: itied
-    LOGICAL, DIMENSION(:,:,:), INTENT(IN) :: mask
+    LOGICAL, DIMENSION(:,:,:), INTENT(INOUT) :: mask ! maskpar(Nx,Ny,Npar)
     LOGICAL, INTENT(IN), OPTIONAL :: newinit
     CHARACTER(*), INTENT(IN), OPTIONAL :: filobs
     CHARACTER(*), DIMENSION(:), INTENT(IN), OPTIONAL :: labB, labL
     TYPE(Qabs_type), DIMENSION(:), INTENT(IN), OPTIONAL :: Qabs
     
-    INTEGER :: i, j, k, ipar, iw, x, y, Nx, Ny, Nw, Nmc, Nwc, itab, indref
+    INTEGER :: i, j, k, ipar, iw, x, y, Nx, Ny, Nw, Nmc, NwCONT, itab, indref
     INTEGER :: Npar, Ncont, Nline, Nband, Nextc, Nstar!, Nextra
-    INTEGER, DIMENSION(:), ALLOCATABLE :: indwi, indw, indwc
+    INTEGER, DIMENSION(:), ALLOCATABLE :: indw
     INTEGER, DIMENSION(SIZE(par,1),SIZE(par,2)) :: iw2
-    REAL(DP) :: limi, lims, wcen, dw, val, sig, Tstar
+    REAL(DP) :: limi, lims, val, sig, Tstar
+    REAL(DP) :: Cband, WSband, WLband, Cline, Wline
     REAL(DP), DIMENSION(:), ALLOCATABLE :: wOBS, nuOBS
+    REAL(DP), DIMENSION(MAX(NiniMC,1)) :: theta
     REAL(DP), DIMENSION(:,:), ALLOCATABLE :: mu
     REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: iniparval, FnuOBS, val3
     REAL(DP), DIMENSION(SIZE(par,1),SIZE(par,2)) :: limi2, lims2, val2, lnT
@@ -789,24 +821,31 @@ CONTAINS
     LOGICAL, DIMENSION(:,:), ALLOCATABLE :: maskxy
     CHARACTER(lenpar) :: spec_unit
     CHARACTER(lenpar), DIMENSION(:), ALLOCATABLE :: iniparname, strarr1d
+    TYPE(irrintarr_type), DIMENSION(SIZE(par,1),SIZE(par,2)) :: &
+      iwFIT, iwBL, iwCONT
 
+    !!---------------
     !! Preliminaries
+    !!---------------
     Nx = SIZE(par(:,:,:,:),1)
     Ny = SIZE(par(:,:,:,:),2)
-    Npar = SIZE(parinfo(:))
-    Ncont = SIZE( PACK(parinfo(:), TRIMEQ(parinfo(:)%comp, 'CONT')) ) / NparCONT
-    Nline = SIZE( PACK(parinfo(:), TRIMEQ(parinfo(:)%comp, 'LINE')) ) / NparLINE
-    Nband = SIZE( PACK(parinfo(:), TRIMEQ(parinfo(:)%comp, 'BAND')) ) / NparBAND
-    Nextc = SIZE( PACK(parinfo(:), TRIMEQ(parinfo(:)%comp, 'EXTC')) ) / NparEXTC
-    Nstar = SIZE( PACK(parinfo(:), TRIMEQ(parinfo(:)%comp, 'STAR')) ) / NparSTAR
+    Npar = SIZE(par(:,:,:,:),3)
+    ! Ncont = SIZE( PACK(parinfo(:), TRIMEQ(parinfo(:)%comp, 'CONT')) ) / NparCONT
+    ! Nline = SIZE( PACK(parinfo(:), TRIMEQ(parinfo(:)%comp, 'LINE')) ) / NparLINE
+    ! Nband = SIZE( PACK(parinfo(:), TRIMEQ(parinfo(:)%comp, 'BAND')) ) / NparBAND
+    ! Nextc = SIZE( PACK(parinfo(:), TRIMEQ(parinfo(:)%comp, 'EXTC')) ) / NparEXTC
+    ! Nstar = SIZE( PACK(parinfo(:), TRIMEQ(parinfo(:)%comp, 'STAR')) ) / NparSTAR
+    Ncont = SIZE(Qabs(:))
+    Nband = COUNT(ind%lnRband(:) .NE. -1)
+    Nline = COUNT(ind%lnRline(:) .NE. -1)
+    Nextc = COUNT(ind%lnAv(:) .NE. -1)
+    Nstar = COUNT(ind%lnFstar(:) .NE. -1)
+
     IF (PRESENT(newinit)) THEN
       newini = newinit
     ELSE
       newini = .FALSE.
     END IF
-    ALLOCATE(maskxy(Nx,Ny))
-    FORALL (x=1:Nx,y=1:Ny) maskxy(x,y) = ALL(mask(x,y,:))
-    !! ANY is too strict, e.g. for spectra interpolated to the common grid
 
     Tstar = 5.E4_DP ! [K] high enough to stay in Rayleigh-Jeans limit (T>>5000K for 3um)
 
@@ -821,7 +860,22 @@ CONTAINS
 
     indref = ind%refB
     lnIref(:,:,:) = 1._DP
-      
+    
+    !! Mask
+    ALLOCATE(maskxy(Nx,Ny))
+    FORALL (x=1:Nx,y=1:Ny) maskxy(x,y) = ANY(mask(x,y,:))
+    !! Find (indices of) all wavelengths where FnuOBS is not NaN
+    DO x=1,Nx
+      DO y=1,Ny
+        IF (maskxy(x,y)) THEN
+          !! iwFIT is NOT-NaN wvl index list
+          CALL IWHERE( .NOT. isNaN(FnuOBS(x,y,:)), iwFIT(x,y)%arr1d )
+        ELSE
+          ALLOCATE(iwFIT(x,y)%arr1d(0))
+        END IF
+      END DO
+    END DO
+    
     newinipar: IF (.NOT. newini) THEN
       
       !!----------------------------------------------------
@@ -835,19 +889,21 @@ CONTAINS
 
         DO i=1,Nband
           CALL IWHERE( TRIMEQ(TABand(:)%label, labB(i)), itab ) ! itab = ind of TABand
-  
+          Cband = TABand(itab)%wave
+          WSband = TABand(itab)%sigmaS
+          WLband = TABand(itab)%sigmaL
+          
           !! Cband
           IF (parinfo(ind%Cband(i))%fixed) THEN
             par(:,:,ind%Cband(i),:) = parinfo(ind%Cband(i))%value
           ELSE
-            val = TABand(itab)%wave
-            par(:,:,ind%Cband(i),:) = val
+            par(:,:,ind%Cband(i),:) = Cband
             !! If Cband is not fixed, limits are indispensable
             sig = Cband_sig
             IF (.NOT. parinfo(ind%Cband(i))%limited(1)) &
-              parinfo(ind%Cband(i))%limits(1) = val-sig
+              parinfo(ind%Cband(i))%limits(1) = Cband-sig
             IF (.NOT. parinfo(ind%Cband(i))%limited(2)) &
-              parinfo(ind%Cband(i))%limits(2) = val+sig
+              parinfo(ind%Cband(i))%limits(2) = Cband+sig
             parinfo(ind%Cband(i))%limited = .TRUE.
           END IF
           
@@ -855,12 +911,11 @@ CONTAINS
           IF (parinfo(ind%WSband(i))%fixed) THEN
             par(:,:,ind%WSband(i),:) = parinfo(ind%WSband(i))%value
           ELSE
-            val = TABand(itab)%sigmaS
-            par(:,:,ind%WSband(i),:) = val
+            par(:,:,ind%WSband(i),:) = WSband
             IF (.NOT. parinfo(ind%WSband(i))%limited(1)) &
-              parinfo(ind%WSband(i))%limits(1) = val*0.5_DP
+              parinfo(ind%WSband(i))%limits(1) = WSband*0.5_DP
             IF (.NOT. parinfo(ind%WSband(i))%limited(2)) &
-              parinfo(ind%WSband(i))%limits(2) = val*2._DP
+              parinfo(ind%WSband(i))%limits(2) = WSband*2._DP
             parinfo(ind%WSband(i))%limited = .TRUE.
           END IF
      
@@ -868,20 +923,48 @@ CONTAINS
           IF (parinfo(ind%WLband(i))%fixed) THEN
             par(:,:,ind%WLband(i),:) = parinfo(ind%WLband(i))%value
           ELSE
-            val = TABand(itab)%sigmaL
-            par(:,:,ind%WLband(i),:) = val
+            par(:,:,ind%WLband(i),:) = WLband
             IF (.NOT. parinfo(ind%WLband(i))%limited(1)) &
-              parinfo(ind%WLband(i))%limits(1) = val*0.5_DP
+              parinfo(ind%WLband(i))%limits(1) = WLband*0.5_DP
             IF (.NOT. parinfo(ind%WLband(i))%limited(2)) &
-              parinfo(ind%WLband(i))%limits(2) = val*2._DP
+              parinfo(ind%WLband(i))%limits(2) = WLband*2._DP
             parinfo(ind%WLband(i))%limited = .TRUE.
           END IF
+          
+          !! Check wavelength mask to decide if mask par
+          DO x=1,Nx
+            DO y=1,Ny
+              IF (maskxy(x,y)) THEN
+                !! Update par
+                Cband = par(x,y,ind%Cband(i),1)
+                WSband = par(x,y,ind%WSband(i),1)
+                WLband = par(x,y,ind%WLband(i),1)
+                limi = Cband - WSband
+                lims = Cband + WLband
+                IF ( ALL( wOBS(iwFIT(x,y)%arr1d(:)).LE.limi &
+                          .OR. wOBS(iwFIT(x,y)%arr1d(:)).GE.lims ) ) THEN
+                  mask(x,y,ind%lnRband(i)) = .FALSE.
+                  mask(x,y,ind%Cband(i)) = .FALSE.
+                  mask(x,y,ind%WSband(i)) = .FALSE.
+                  mask(x,y,ind%WLband(i)) = .FALSE.
+                  !! Update maskxy
+                  maskxy(x,y) = ANY(mask(x,y,:))
+                ELSE
+                  CALL IWHERE( wOBS(:)>limi .AND. wOBS(:)<lims, indw )
+                  DO iw=1,SIZE(indw)
+                    CALL INCRARR( iwBL(x,y)%arr1d, indw(iw) )
+                  END DO
+                  DEALLOCATE(indw)
+                END IF
+              END IF
+            END DO
+          END DO
           
           !! lnRband
           IF (parinfo(ind%lnRband(i))%fixed) THEN
             par(:,:,ind%lnRband(i),:) = parinfo(ind%lnRband(i))%value
           ELSE
-            FORALL (x=1:Nx,y=1:Ny,maskxy(x,y))
+            FORALL (x=1:Nx,y=1:Ny,mask(x,y,ind%lnRband(i)))
               iw2(x,y) = CLOSEST( wOBS(:), par(x,y,ind%Cband(i),1) )
               !! Same estimation as lnRline
               par(x,y,ind%lnRband(i),:) = LOG( ABS(FnuOBS(x,y,iw2(x,y))) / &
@@ -889,18 +972,8 @@ CONTAINS
                                    par(x,y,ind%WSband(i),1), &
                                    par(x,y,ind%WLband(i),1),.TRUE.)) )
             END FORALL
-            
-            IF (i == indref) lnIref(:,:,:) = par(:,:,ind%lnRband(i),:)
-          END IF
 
-          !! Find indw
-          limi = par(1,1,ind%Cband(i),1) - par(1,1,ind%WLband(i),1)
-          lims = par(1,1,ind%Cband(i),1) + par(1,1,ind%WSband(i),1)
-          IF (ANY(wOBS(:)>limi .AND. wOBS(:)<lims)) THEN
-            CALL IWHERE( wOBS(:)>limi .AND. wOBS(:)<lims, indwi )
-            DO iw=1,SIZE(indwi)
-              CALL INCRARR( indw, indwi(iw) )
-            END DO
+            IF (i == indref) lnIref(:,:,:) = par(:,:,ind%lnRband(i),:)
           END IF
 
         END DO
@@ -910,25 +983,25 @@ CONTAINS
             par(:,:,ind%lnRband(i),:) = par(:,:,ind%lnRband(i),:) - lnIref(:,:,:)
         END DO
         
-        
         DO i=1,Nline
           CALL IWHERE( TRIMEQ(TABLine(:)%label, labL(i)), itab ) ! itab = ind of TABLine
+          Cline = TABLine(itab)%wave
+          Wline = degradeRes(TABLine(itab)%wave, .01_DP, 'NG-SL-LL')
 
           !! Cline
           IF (parinfo(ind%Cline(i))%fixed) THEN
             par(:,:,ind%Cline(i),:) = parinfo(ind%Cline(i))%value
           ELSE
-            val = TABLine(itab)%wave
-            par(:,:,ind%Cline(i),:) = val
+            par(:,:,ind%Cline(i),:) = Cline
             !! If Cline is not fixed, limits are indispensable
             !! FWHM = 2*sqrt(2*log(2))*sigma ~ 2.355 (suppose PSF is gaussian)
             !! R = lambda / FWHM
             !! => sigma = lambda / R / 2.355
-            sig = degradeRes(val, 0.01_DP, 'NG-SL-LL') / 2.355_DP
+            sig = degradeRes(Cline, 0.01_DP, 'NG-SL-LL') / 2.355_DP
             IF (.NOT. parinfo(ind%Cline(i))%limited(1)) &
-              parinfo(ind%Cline(i))%limits(1) = val-sig
+              parinfo(ind%Cline(i))%limits(1) = Cline-sig
             IF (.NOT. parinfo(ind%Cline(i))%limited(2)) &
-              parinfo(ind%Cline(i))%limits(2) = val+sig
+              parinfo(ind%Cline(i))%limits(2) = Cline+sig
             parinfo(ind%Cline(i))%limited = .TRUE.
           END IF
           
@@ -936,20 +1009,46 @@ CONTAINS
           IF (parinfo(ind%Wline(i))%fixed) THEN
             par(:,:,ind%Wline(i),:) = parinfo(ind%Wline(i))%value
           ELSE
-            val = degradeRes(TABLine(itab)%wave, .01_DP, 'NG-SL-LL')
-            par(:,:,ind%Wline(i),:) = val
+            par(:,:,ind%Wline(i),:) = Wline
             IF (.NOT. parinfo(ind%Wline(i))%limited(1)) &
-              parinfo(ind%Wline(i))%limits(1) = val*0.5_DP
+              parinfo(ind%Wline(i))%limits(1) = Wline*0.5_DP
             IF (.NOT. parinfo(ind%Wline(i))%limited(2)) &
-              parinfo(ind%Wline(i))%limits(2) = val*2._DP
+              parinfo(ind%Wline(i))%limits(2) = Wline*2._DP
             parinfo(ind%Wline(i))%limited = .TRUE.
           END IF
+          
+          !! Check wavelength mask to decide if mask par
+          DO x=1,Nx
+            DO y=1,Ny
+              IF (maskxy(x,y)) THEN
+                !! Update param
+                Cline = par(x,y,ind%Cline(i),1)
+                Wline = par(x,y,ind%Wline(i),1)
+                limi = Cline - Wline
+                lims = Cline + Wline
+                IF ( ALL( wOBS(iwFIT(x,y)%arr1d(:)).LE.limi &
+                          .OR. wOBS(iwFIT(x,y)%arr1d(:)).GE.lims ) ) THEN
+                  mask(x,y,ind%lnRline(i)) = .FALSE.
+                  mask(x,y,ind%Cline(i)) = .FALSE.
+                  mask(x,y,ind%Wline(i)) = .FALSE.
+                  !! Update maskxy
+                  maskxy(x,y) = ANY(mask(x,y,:))
+                ELSE
+                  CALL IWHERE( wOBS(:)>limi .AND. wOBS(:)<lims, indw )
+                  DO iw=1,SIZE(indw)
+                    CALL INCRARR( iwBL(x,y)%arr1d, indw(iw) )
+                  END DO
+                  DEALLOCATE(indw)
+                END IF
+              END IF
+            END DO
+          END DO
           
           !! lnRline
           IF (parinfo(ind%lnRline(i))%fixed) THEN
             par(:,:,ind%lnRline(i),:) = parinfo(ind%lnRline(i))%value
           ELSE
-            FORALL (x=1:Nx,y=1:Ny,maskxy(x,y))
+            FORALL (x=1:Nx,y=1:Ny,mask(x,y,ind%lnRline(i)))
               iw2(x,y) = CLOSEST( wOBS(:), par(x,y,ind%Cline(i),1) )
               !! lnRline is auto determined by the spectrum to fit (idem. for lnRband)
               !! Can be overestimated (should subtract other compo from FnuOBS)
@@ -962,92 +1061,96 @@ CONTAINS
             END FORALL
           END IF
           
-          !! Find indw
-          !! Take (1,1) Cline and Wline since they are supposed to vary little
-          limi = par(1,1,ind%Cline(i),1) - par(1,1,ind%Wline(i),1)
-          lims = par(1,1,ind%Cline(i),1) + par(1,1,ind%Wline(i),1)
-          IF (ANY(wOBS(:)>limi .AND. wOBS(:)<lims)) THEN
-            CALL IWHERE( wOBS(:)>limi .AND. wOBS(:)<lims, indwi )
-            DO iw=1,SIZE(indwi)
-              CALL INCRARR( indw, indwi(iw) )
-            END DO
-          END IF
-          
         END DO
 
-        !! Create wvl grid with indices (indwc) for band & line free spectra (cont only)
-        Nwc = Nw - SIZE(indw(:)) ! Nb of wvl for the cont grid
-        DO iw=1,Nw
-          IF ( ALL(indw(:).NE.iw) ) THEN
-            CALL INCRARR( indwc, iw )
-
-          END IF
-        END DO
-        !! Larger T corresponds to smaller wvl
-        indwc(:) = REVERSE(indwc(:))
-        ! CALL REALLOCATE(indw, Nwc)
-        ! indw(:) = indwc(:)
-        ! indwc(:) = indw(Nwc:1:-1)
+        !! Create wvl grid with indices for band & line free spectra
+        wcontx: DO x=1,Nx
+          wconty: DO y=1,Ny
+            IF (maskxy(x,y)) THEN
+              NwCONT = Nw - SIZE(iwBL(x,y)%arr1d(:))
+              DO iw=1,Nw
+                IF ( ALL(iwBL(x,y)%arr1d(:).NE.iw) ) THEN
+                  CALL INCRARR( iwCONT(x,y)%arr1d, iw )
+                END IF
+              END DO
+              !! Larger T corresponds to smaller wvl
+              iwCONT(x,y)%arr1d(:) = REVERSE(iwCONT(x,y)%arr1d(:))
         
-        DO i=1,Ncont
-          !! lnT LOG[K]
-          IF (parinfo(ind%lnT(i))%fixed) THEN
-            par(:,:,ind%lnT(i),:) = parinfo(ind%lnT(i))%value
-          ELSE
-            !! Create lnT grid: LOG(50,500) - (Wien Law: 58-5.8um)
-            IF (ind%ordQ(i)>0) THEN
-              !! lnT(i) becomes lndT(i) = LOG( EXP(lnT(i)) - EXP(lnT(i-1)) )
-              limi = MERGE(parinfo(ind%lnT(i))%limits(1), &
-                           0._DP, &
-                           parinfo(ind%lnT(i))%limited(1))
-              lims = MERGE(parinfo(ind%lnT(i))%limits(2), &
-                           LOG(500._DP-50._DP), &
-                           parinfo(ind%lnT(i))%limited(2))
-              par(:,:,ind%lnT(i),:) = LOG( (EXP(lims)-EXP(limi))/Ncont )
-            ELSE
-              limi = MERGE(parinfo(ind%lnT(i))%limits(1), &
-                           LOG(50._DP), &
-                           parinfo(ind%lnT(i))%limited(1))
-              lims = MERGE(parinfo(ind%lnT(i))%limits(2), &
-                           LOG(500._DP), &
-                           parinfo(ind%lnT(i))%limited(2))
-              par(:,:,ind%lnT(i),:) = LOG( (EXP(lims)-EXP(limi)) &
-                                           *REAL(i)/Ncont+EXP(limi) ) !!! i/Ncont
-            END IF
-            parinfo(ind%lnT(i))%limits(1) = limi
-            parinfo(ind%lnT(i))%limits(2) = lims
-            parinfo(ind%lnT(i))%limited = .TRUE.
+              DO i=1,Ncont
+                !! lnT LOG[K]
+                IF (parinfo(ind%lnT(i))%fixed) THEN
+                  par(x,y,ind%lnT(i),:) = parinfo(ind%lnT(i))%value
+                ELSE
+                  !! Create lnT grid: LOG(50,500) - (Wien Law: 58-5.8um)
+                  IF (ind%ordQ(i)>0) THEN
+                    !! lnT(i) becomes lndT(i) = LOG( EXP(lnT(i)) - EXP(lnT(i-1)) )
+                    limi = MERGE(parinfo(ind%lnT(i))%limits(1), &
+                                 0._DP, &
+                                 parinfo(ind%lnT(i))%limited(1))
+                    lims = MERGE(parinfo(ind%lnT(i))%limits(2), &
+                                 LOG(500._DP-50._DP), &
+                                 parinfo(ind%lnT(i))%limited(2))
+                    par(x,y,ind%lnT(i),:) = LOG( (EXP(lims)-EXP(limi))/Ncont )
+                  ELSE
+                    limi = MERGE(parinfo(ind%lnT(i))%limits(1), &
+                                 LOG(50._DP), &
+                                 parinfo(ind%lnT(i))%limited(1))
+                    lims = MERGE(parinfo(ind%lnT(i))%limits(2), &
+                                 LOG(500._DP), &
+                                 parinfo(ind%lnT(i))%limited(2))
+                    par(x,y,ind%lnT(i),:) = LOG( (EXP(lims)-EXP(limi)) &
+                                                 *REAL(i)/Ncont+EXP(limi) ) !!! i/Ncont
+                  END IF
+                  parinfo(ind%lnT(i))%limits(1) = limi
+                  parinfo(ind%lnT(i))%limits(2) = lims
+                  parinfo(ind%lnT(i))%limited = .TRUE.
 
-          END IF
+                END IF
           
-          !! lnFcont LOG[W/m2/sr]
-          IF ( parinfo(ind%lnFcont(i))%fixed ) THEN
-            par(:,:,ind%lnFcont(i),:) = parinfo(ind%lnFcont(i))%value
-          ELSE
-            !! lnFcont is auto determined by modifBB(lnT) & the spectrum to fit
-            IF (Nwc/Ncont .GE. 1) THEN
-              iw = INT(Nwc/Ncont) * i ! iw is NOT wOBS's index, but is indwc's index
-            ELSE
-              !! Case where there are more CONT compo than its wvl grid (Ncont>Nwc)
-              IF (i>Nwc) THEN
-                iw = Nwc
-              ELSE
-                iw = i
-              END IF
-            END IF
-            k = ind%ordQ(i)
-            lnT(:,:) = par(:,:,ind%lnT(i-k),1)
-            IF (k>0) &
-              lnT(:,:) = LOG( EXP(lnT(:,:)) &
-                              +SUM(EXP(par(:,:,ind%lnT(i-k+1:i),1)),DIM=3) )
-            FORALL (x=1:Nx,y=1:Ny,maskxy(x,y))
-              val3(x,y,:) = MODIFBB(wOBS(:),EXP(lnT(x,y)),Qabs(i),.TRUE.,ind%refw)
-              par(x,y,ind%lnFcont(i),:) = LOG( ABS(FnuOBS(x,y,indwc(iw))) / &
-                                                   val3(x,y,indwc(iw)) / Ncont )
-            END FORALL
-          END IF
-        END DO
+                !! lnFcont LOG[W/m2/sr]
+                IF ( parinfo(ind%lnFcont(i))%fixed ) THEN
+                  par(x,y,ind%lnFcont(i),:) = parinfo(ind%lnFcont(i))%value
+                ELSE
+                  !! lnFcont is auto determined by modifBB(lnT) & the spectrum to fit
+                  IF (NwCONT/Ncont.GE.1) THEN
+                    iw = INT(NwCONT/Ncont) * i ! iw is NOT wOBS's index, but iwCONT(x,y)%arr1d's
+                  ELSE
+                    !! Case where there are more CONT compo than its wvl grid (Ncont>NwCONT)
+                    IF (i>NwCONT) THEN
+                      iw = NwCONT
+                    ELSE
+                      iw = i
+                    END IF
+                  END IF
+                  k = ind%ordQ(i)
+                  lnT(x,y) = par(x,y,ind%lnT(i-k),1)
+                  IF (k>0) &
+                    lnT(x,y) = LOG( EXP(lnT(x,y)) &
+                                    +SUM(EXP(par(x,y,ind%lnT(i-k+1:i),1))) )
+                  val3(x,y,:) = MODIFBB(wOBS(:),EXP(lnT(x,y)),Qabs(i),.TRUE.,ind%refw)
+                  par(x,y,ind%lnFcont(i),:) = LOG( ABS(FnuOBS(x,y,iwCONT(x,y)%arr1d(iw))) &
+                                                   / val3(x,y,iwCONT(x,y)%arr1d(iw)) / Ncont )
+                END IF
+              END DO
 
+              DO i=1,Nstar
+                !! lnFstar LOG[W/m2/sr]
+                IF (parinfo(ind%lnFstar(i))%fixed) THEN
+                  par(x,y,ind%lnFstar(i),:) = parinfo(ind%lnFstar(i))%value
+                ELSE
+                  !! lnFstar is auto determined by BB & the spectrum to fit
+                  iw = NwCONT - 10 ! avoid wvl edge
+                  val3(x,y,:) = BLACKBODY(nuOBS(:),Tstar) / MKS%stefan/Tstar**4
+                  val2(x,y) = LOG( ABS(FnuOBS(x,y,iwCONT(x,y)%arr1d(iw))) &
+                                   / val3(x,y,iwCONT(x,y)%arr1d(iw)) /pi )
+                  par(x,y,ind%lnFstar(i),:) = val2(x,y)
+                END IF
+              END DO
+
+            END IF
+          END DO wconty
+        END DO wcontx
+        
         DO i=1,Nextc
           !! lnAv LOG[mag]
           IF (parinfo(ind%lnAv(i))%fixed) THEN
@@ -1062,22 +1165,6 @@ CONTAINS
           END IF
 
         END DO
-
-        DO i=1,Nstar
-          !! lnFstar LOG[W/m2/sr]
-          IF (parinfo(ind%lnFstar(i))%fixed) THEN
-            par(:,:,ind%lnFstar(i),:) = parinfo(ind%lnFstar(i))%value
-          ELSE
-            !! lnFstar is auto determined by BB & the spectrum to fit
-            iw = Nwc - 10 ! avoid wvl edge
-            FORALL (x=1:Nx,y=1:Ny,maskxy(x,y))
-              val3(x,y,:) = BLACKBODY(nuOBS(:),Tstar) / MKS%stefan/Tstar**4
-              val2(x,y) = LOG( ABS(FnuOBS(x,y,indwc(iw)))/val3(x,y,indwc(iw)) /pi )
-              par(x,y,ind%lnFstar(i),:) = val2(x,y)
-            END FORALL
-          END IF
-
-        END DO
         
       ELSE
 
@@ -1086,33 +1173,35 @@ CONTAINS
 
         DO i=1,Nband
           CALL IWHERE( TRIMEQ(TABand(:)%label, labB(i)), itab ) ! itab = ind of TABand
-  
+          Cband = TABand(itab)%wave
+          WSband = TABand(itab)%sigmaS
+          WLband = TABand(itab)%sigmaL
+          
           !! Cband
           IF (parinfo(ind%Cband(i))%fixed) THEN
             par(:,:,ind%Cband(i),:) = parinfo(ind%Cband(i))%value
           ELSE
-            val = TABand(itab)%wave
-            ! sig = degradeRes(val, 0.01_DP, 'NG-SL-LL') / 2.355_DP
+            ! sig = degradeRes(Cband, 0.01_DP, 'NG-SL-LL') / 2.355_DP
             sig = Cband_sig
             limi = MERGE( parinfo(ind%Cband(i))%limits(1), &
-                          val-sig, &
+                          Cband-sig, &
                           parinfo(ind%Cband(i))%limited(1) ) ! lim inf
             lims = MERGE( parinfo(ind%Cband(i))%limits(2), &
-                          val+sig, &
+                          Cband+sig, &
                           parinfo(ind%Cband(i))%limited(2) ) ! lim sup
             CALL RANDOM_NUMBER(theta3(:,:,:))
             DO j=1,NiniMC
               IF (j == 1) THEN
-                par(:,:,ind%Cband(i),j) = val
+                par(:,:,ind%Cband(i),j) = Cband
               ELSE
                 !! Uniform distribution
                 par(:,:,ind%Cband(i),j) = (lims - limi) * theta3(:,:,j) + limi
               END IF
             END DO
             IF (.NOT. parinfo(ind%Cband(i))%limited(1)) &
-              parinfo(ind%Cband(i))%limits(1) = val-sig
+              parinfo(ind%Cband(i))%limits(1) = Cband-sig
             IF (.NOT. parinfo(ind%Cband(i))%limited(2)) &
-              parinfo(ind%Cband(i))%limits(2) = val+sig
+              parinfo(ind%Cband(i))%limits(2) = Cband+sig
             parinfo(ind%Cband(i))%limited = .TRUE.
           END IF
           
@@ -1120,26 +1209,25 @@ CONTAINS
           IF (parinfo(ind%WSband(i))%fixed) THEN
             par(:,:,ind%WSband(i),:) = parinfo(ind%WSband(i))%value
           ELSE
-            val = TABand(itab)%sigmaS
             limi = MERGE( parinfo(ind%WSband(i))%limits(1), &
-                          val*0.5_DP, &
+                          WSband*0.5_DP, &
                           parinfo(ind%WSband(i))%limited(1) ) ! lim inf
             lims = MERGE( parinfo(ind%WSband(i))%limits(2), &
-                          val*2._DP, &
+                          WSband*2._DP, &
                           parinfo(ind%WSband(i))%limited(2) ) ! lim sup
             CALL RANDOM_NUMBER(theta3(:,:,:))
             DO j=1,NiniMC
               IF (j == 1) THEN
-                par(:,:,ind%WSband(i),j) = val
+                par(:,:,ind%WSband(i),j) = WSband
               ELSE
                 !! Uniform distribution
                 par(:,:,ind%WSband(i),j) = (lims - limi) * theta3(:,:,j) + limi
               END IF
             END DO
             IF (.NOT. parinfo(ind%WSband(i))%limited(1)) &
-              parinfo(ind%WSband(i))%limits(1) = val*0.5_DP
+              parinfo(ind%WSband(i))%limits(1) = WSband*0.5_DP
             IF (.NOT. parinfo(ind%WSband(i))%limited(2)) &
-              parinfo(ind%WSband(i))%limits(2) = val*2._DP
+              parinfo(ind%WSband(i))%limits(2) = WSband*2._DP
             parinfo(ind%WSband(i))%limited = .TRUE.
           END IF
      
@@ -1147,17 +1235,16 @@ CONTAINS
           IF (parinfo(ind%WLband(i))%fixed) THEN
             par(:,:,ind%WLband(i),:) = parinfo(ind%WLband(i))%value
           ELSE
-            val = TABand(itab)%sigmaL
             limi = MERGE( parinfo(ind%WLband(i))%limits(1), &
-                          val*0.5_DP, &
+                          WLband*0.5_DP, &
                           parinfo(ind%WLband(i))%limited(1) ) ! lim inf
             lims = MERGE( parinfo(ind%WLband(i))%limits(2), &
-                          val*2._DP, &
+                          WLband*2._DP, &
                           parinfo(ind%WLband(i))%limited(2) ) ! lim sup
             CALL RANDOM_NUMBER(theta3(:,:,:))
             DO j=1,NiniMC
               IF (j == 1) THEN
-                par(:,:,ind%WLband(i),j) = val
+                par(:,:,ind%WLband(i),j) = WLband
               ELSE
                 !! Uniform distribution
                 par(:,:,ind%WLband(i),j) = (lims - limi) * theta3(:,:,j) + limi
@@ -1169,7 +1256,36 @@ CONTAINS
               parinfo(ind%WLband(i))%limits(2) = lims
             parinfo(ind%WLband(i))%limited = .TRUE.
           END IF
-  
+          
+          !! Check wavelength mask to decide if mask par
+          DO x=1,Nx
+            DO y=1,Ny
+              IF (maskxy(x,y)) THEN
+                !! Update par
+                Cband = par(x,y,ind%Cband(i),1)
+                WSband = par(x,y,ind%WSband(i),1)
+                WLband = par(x,y,ind%WLband(i),1)
+                limi = Cband - WSband
+                lims = Cband + WLband
+                IF ( ALL( wOBS(iwFIT(x,y)%arr1d(:)).LE.limi &
+                          .OR. wOBS(iwFIT(x,y)%arr1d(:)).GE.lims ) ) THEN
+                  mask(x,y,ind%lnRband(i)) = .FALSE.
+                  mask(x,y,ind%Cband(i)) = .FALSE.
+                  mask(x,y,ind%WSband(i)) = .FALSE.
+                  mask(x,y,ind%WLband(i)) = .FALSE.
+                  !! Update maskxy
+                  maskxy(x,y) = ANY(mask(x,y,:))
+                ELSE
+                  CALL IWHERE( wOBS(:)>limi .AND. wOBS(:)<lims, indw )
+                  DO iw=1,SIZE(indw)
+                    CALL INCRARR( iwBL(x,y)%arr1d, indw(iw) )
+                  END DO
+                  DEALLOCATE(indw)
+                END IF
+              END IF
+            END DO
+          END DO
+          
           !! lnRband
           IF (parinfo(ind%lnRband(i))%fixed) THEN
             par(:,:,ind%lnRband(i),:) = parinfo(ind%lnRband(i))%value
@@ -1177,7 +1293,7 @@ CONTAINS
             CALL RANDOM_NUMBER(theta3(:,:,:))
             DO j=1,NiniMC
               IF (j == 1) THEN
-                FORALL (x=1:Nx,y=1:Ny,maskxy(x,y))
+                FORALL (x=1:Nx,y=1:Ny,mask(x,y,ind%lnRband(i)))
                   iw2(x,y) = CLOSEST( wOBS(:), par(x,y,ind%Cband(i),j) )
                   !! Estimated via feature peak
                   par(x,y,ind%lnRband(i),j) = LOG( ABS(FnuOBS(x,y,iw2(x,y))) / &
@@ -1187,7 +1303,7 @@ CONTAINS
   
                 END FORALL
               ELSE
-                FORALL (x=1:Nx,y=1:Ny,maskxy(x,y))
+                FORALL (x=1:Nx,y=1:Ny,mask(x,y,ind%lnRband(i)))
                   iw2(x,y) = CLOSEST( wOBS(:), par(x,y,ind%Cband(i),j) )
                   !! Estimated via feature peak
                   val2(x,y) = LOG( ABS(FnuOBS(x,y,iw2(x,y))) / &
@@ -1210,16 +1326,6 @@ CONTAINS
             
             IF (i == indref) lnIref(:,:,:) = par(:,:,ind%lnRband(i),:)
           END IF
-                    
-          !! Find indw
-          limi = par(1,1,ind%Cband(i),1) - par(1,1,ind%WLband(i),1)
-          lims = par(1,1,ind%Cband(i),1) + par(1,1,ind%WSband(i),1)
-          IF (ANY(wOBS(:)>limi .AND. wOBS(:)<lims)) THEN
-            CALL IWHERE( wOBS(:)>limi .AND. wOBS(:)<lims, indwi )
-            DO iw=1,SIZE(indwi)
-              CALL INCRARR( indw, indwi(iw) )
-            END DO
-          END IF
           
         END DO
 
@@ -1230,6 +1336,8 @@ CONTAINS
         
         DO i=1,Nline
           CALL IWHERE( TRIMEQ(TABLine(:)%label, labL(i)), itab ) ! itab = ind of TABLine
+          Cline = TABLine(itab)%wave
+          Wline = degradeRes(TABLine(itab)%wave, .01_DP, 'NG-SL-LL')
           
           !! Cline
           IF (parinfo(ind%Cline(i))%fixed) THEN
@@ -1238,27 +1346,26 @@ CONTAINS
             !! FWHM = 2*sqrt(2*log(2))*sigma ~ 2.355 (suppose PSF is gaussian)
             !! R = lambda / FWHM
             !! => sigma = lambda / R / 2.355
-            val = TABLine(itab)%wave
-            sig = degradeRes(val, 0.01_DP, 'NG-SL-LL') / 2.355_DP
+            sig = degradeRes(Cline, 0.01_DP, 'NG-SL-LL') / 2.355_DP
             limi = MERGE( parinfo(ind%Cline(i))%limits(1), &
-                          val-sig, &
+                          Cline-sig, &
                           parinfo(ind%Cline(i))%limited(1)) ! lim inf
             lims = MERGE( parinfo(ind%Cline(i))%limits(2), &
-                          val+sig, &
+                          Cline+sig, &
                           parinfo(ind%Cline(i))%limited(2)) ! lim sup
             CALL RANDOM_NUMBER(theta3(:,:,:))
             DO j=1,NiniMC
               IF (j == 1) THEN
-                par(:,:,ind%Cline(i),j) = val
+                par(:,:,ind%Cline(i),j) = Cline
               ELSE
                 !! Uniform distribution
                 par(:,:,ind%Cline(i),j) = (lims - limi) * theta3(:,:,j) + limi
               END IF
             END DO
             IF (.NOT. parinfo(ind%Cline(i))%limited(1)) &
-              parinfo(ind%Cline(i))%limits(1) = val-sig
+              parinfo(ind%Cline(i))%limits(1) = Cline-sig
             IF (.NOT. parinfo(ind%Cline(i))%limited(2)) &
-              parinfo(ind%Cline(i))%limits(2) = val+sig
+              parinfo(ind%Cline(i))%limits(2) = Cline+sig
             parinfo(ind%Cline(i))%limited = .TRUE.
           END IF
           
@@ -1266,28 +1373,54 @@ CONTAINS
           IF (parinfo(ind%Wline(i))%fixed) THEN
             par(:,:,ind%Wline(i),:) = parinfo(ind%Wline(i))%value
           ELSE
-            val = degradeRes(TABLine(itab)%wave, .01_DP, 'NG-SL-LL')
             limi = MERGE( parinfo(ind%Wline(i))%limits(1), &
-                          val*0.5_DP, &
+                          Wline*0.5_DP, &
                           parinfo(ind%Wline(i))%limited(1)) ! lim inf
             lims = MERGE( parinfo(ind%Wline(i))%limits(2), &
-                          val*2._DP, &
+                          Wline*2._DP, &
                           parinfo(ind%Wline(i))%limited(2)) ! lim sup
             CALL RANDOM_NUMBER(theta3(:,:,:))
             DO j=1,NiniMC
               IF (j == 1) THEN
-                par(:,:,ind%Wline(i),j) = val
+                par(:,:,ind%Wline(i),j) = Wline
               ELSE
                 !! Uniform distribution
                 par(:,:,ind%Wline(i),j) = (lims - limi) * theta3(:,:,j) + limi
               END IF
             END DO
             IF (.NOT. parinfo(ind%Wline(i))%limited(1)) &
-              parinfo(ind%Wline(i))%limits(1) = val*0.5_DP
+              parinfo(ind%Wline(i))%limits(1) = Wline*0.5_DP
             IF (.NOT. parinfo(ind%Wline(i))%limited(2)) &
-              parinfo(ind%Wline(i))%limits(2) = val*2._DP
+              parinfo(ind%Wline(i))%limits(2) = Wline*2._DP
             parinfo(ind%Wline(i))%limited = .TRUE.
           END IF
+          
+          !! Check wavelength mask to decide if mask par
+          DO x=1,Nx
+            DO y=1,Ny
+              IF (maskxy(x,y)) THEN
+                !! Update param
+                Cline = par(x,y,ind%Cline(i),1)
+                Wline = par(x,y,ind%Wline(i),1)
+                limi = Cline - Wline
+                lims = Cline + Wline
+                IF ( ALL( wOBS(iwFIT(x,y)%arr1d(:)).LE.limi &
+                          .OR. wOBS(iwFIT(x,y)%arr1d(:)).GE.lims ) ) THEN
+                  mask(x,y,ind%lnRline(i)) = .FALSE.
+                  mask(x,y,ind%Cline(i)) = .FALSE.
+                  mask(x,y,ind%Wline(i)) = .FALSE.
+                  !! Update maskxy
+                  maskxy(x,y) = ANY(mask(x,y,:))
+                ELSE
+                  CALL IWHERE( wOBS(:)>limi .AND. wOBS(:)<lims, indw )
+                  DO iw=1,SIZE(indw)
+                    CALL INCRARR( iwBL(x,y)%arr1d, indw(iw) )
+                  END DO
+                  DEALLOCATE(indw)
+                END IF
+              END IF
+            END DO
+          END DO
           
           !! lnRline
           IF (parinfo(ind%lnRline(i))%fixed) THEN
@@ -1296,7 +1429,7 @@ CONTAINS
             CALL RANDOM_NUMBER(theta3(:,:,:))
             DO j=1,NiniMC
               IF (j == 1) THEN
-                FORALL (x=1:Nx,y=1:Ny,maskxy(x,y))
+                FORALL (x=1:Nx,y=1:Ny,mask(x,y,ind%lnRline(i)))
                   iw2(x,y) = CLOSEST( wOBS(:), par(x,y,ind%Cline(i),j) )
                   !! Estimated via feature peak
                   par(x,y,ind%lnRline(i),j) = LOG( ABS(FnuOBS(x,y,iw2(x,y))) / &
@@ -1306,7 +1439,7 @@ CONTAINS
 
                 END FORALL
               ELSE
-                FORALL (x=1:Nx,y=1:Ny,maskxy(x,y))
+                FORALL (x=1:Nx,y=1:Ny,mask(x,y,ind%lnRline(i)))
                   iw2(x,y) = CLOSEST( wOBS(:), par(x,y,ind%Cline(i),j) )
                   !! Estimated via feature peak
                   val2(x,y) = LOG( ABS(FnuOBS(x,y,iw2(x,y))) / &
@@ -1328,119 +1461,140 @@ CONTAINS
             END DO
           END IF
           
-          !! Find indw
-          limi = par(1,1,ind%Cline(i),1) - par(1,1,ind%Wline(i),1)
-          lims = par(1,1,ind%Cline(i),1) + par(1,1,ind%Wline(i),1)
-          IF (ANY(wOBS(:)>limi .AND. wOBS(:)<lims)) THEN
-            CALL IWHERE( wOBS(:)>limi .AND. wOBS(:)<lims, indwi )
-            DO iw=1,SIZE(indwi)
-              CALL INCRARR( indw, indwi(iw) )
-            END DO
-          END IF
-          
         END DO
 
-        !! Create wvl grid with indices (indwc) for band & line free spectra (cont only)
-        Nwc = Nw - SIZE(indw(:)) ! Nb of wvl for the cont grid
-        DO iw=1,Nw
-          IF ( ALL(indw(:).NE.iw) ) THEN
-            CALL INCRARR( indwc, iw )
-
-          END IF
-        END DO
-        !! Larger T corresponds to smaller wvl
-        indwc(:) = REVERSE(indwc(:))
-        ! CALL REALLOCATE(indw, Nwc)
-        ! indw(:) = indwc(:)
-        ! indwc(:) = indw(Nwc:1:-1)
+        !! Create wvl grid with indices for band & line free spectra
+        wcontx_mc: DO x=1,Nx
+          wconty_mc: DO y=1,Ny
+            IF (maskxy(x,y)) THEN
+              NwCONT = Nw - SIZE(iwBL(x,y)%arr1d(:))
+              DO iw=1,Nw
+                IF ( ALL(iwBL(x,y)%arr1d(:).NE.iw) ) THEN
+                  CALL INCRARR( iwCONT(x,y)%arr1d, iw )
+                END IF
+              END DO
+              !! Larger T corresponds to smaller wvl
+              iwCONT(x,y)%arr1d(:) = REVERSE(iwCONT(x,y)%arr1d(:))
         
-        DO i=1,Ncont
-          !! lnT LOG[K]
-          IF (parinfo(ind%lnT(i))%fixed) THEN
-            par(:,:,ind%lnT(i),:) = parinfo(ind%lnT(i))%value
-          ELSE
-            !! Generate a random value on lnT grid: LOG(50,500)
-            IF (ind%ordQ(i)>0) THEN
-              !! lnT(i) becomes lndT(i) = LOG( EXP(lnT(i)) - EXP(lnT(i-1)) )
-              limi = MERGE(parinfo(ind%lnT(i))%limits(1), &
-                           0._DP, &
-                           parinfo(ind%lnT(i))%limited(1))
-              lims = MERGE(parinfo(ind%lnT(i))%limits(2), &
-                           LOG(500._DP-50._DP), &
-                           parinfo(ind%lnT(i))%limited(2))
-            ELSE
-              limi = MERGE(parinfo(ind%lnT(i))%limits(1), &
-                           LOG(50._DP), &
-                           parinfo(ind%lnT(i))%limited(1))
-              lims = MERGE(parinfo(ind%lnT(i))%limits(2), &
-                           LOG(500._DP), &
-                           parinfo(ind%lnT(i))%limited(2))
-            END IF
-            parinfo(ind%lnT(i))%limits(1) = limi
-            parinfo(ind%lnT(i))%limits(2) = lims
-            parinfo(ind%lnT(i))%limited = .TRUE.
-            CALL RANDOM_NUMBER(theta3(:,:,:))
-            IF (ind%ordQ(i)>0) THEN
-              FORALL (j=1:NiniMC) &
-                par(:,:,ind%lnT(i),j) = LOG( &
-                  (EXP(lims)-EXP(limi))/Ncont * theta3(:,:,j) + EXP(limi) )
-            ELSE
-              FORALL (j=1:NiniMC) &
-                par(:,:,ind%lnT(i),j) = LOG( &
-                  (EXP(lims)-EXP(limi))/Ncont * theta3(:,:,j) + EXP(limi) &
-                  + (EXP(lims)-EXP(limi))* REAL(i-1)/Ncont ) !!! i/Ncont
-            END IF
-          END IF
+              DO i=1,Ncont
+                !! lnT LOG[K]
+                IF (parinfo(ind%lnT(i))%fixed) THEN
+                  par(x,y,ind%lnT(i),:) = parinfo(ind%lnT(i))%value
+                ELSE
+                  !! Generate a random value on lnT grid: LOG(50,500)
+                  IF (ind%ordQ(i)>0) THEN
+                    !! lnT(i) becomes lndT(i) = LOG( EXP(lnT(i)) - EXP(lnT(i-1)) )
+                    limi = MERGE(parinfo(ind%lnT(i))%limits(1), &
+                                 0._DP, &
+                                 parinfo(ind%lnT(i))%limited(1))
+                    lims = MERGE(parinfo(ind%lnT(i))%limits(2), &
+                                 LOG(500._DP-50._DP), &
+                                 parinfo(ind%lnT(i))%limited(2))
+                  ELSE
+                    limi = MERGE(parinfo(ind%lnT(i))%limits(1), &
+                                 LOG(50._DP), &
+                                 parinfo(ind%lnT(i))%limited(1))
+                    lims = MERGE(parinfo(ind%lnT(i))%limits(2), &
+                                 LOG(500._DP), &
+                                 parinfo(ind%lnT(i))%limited(2))
+                  END IF
+                  parinfo(ind%lnT(i))%limits(1) = limi
+                  parinfo(ind%lnT(i))%limits(2) = lims
+                  parinfo(ind%lnT(i))%limited = .TRUE.
+                  CALL RANDOM_NUMBER(theta(:))
+                  IF (ind%ordQ(i)>0) THEN
+                    FORALL (j=1:NiniMC) &
+                      par(x,y,ind%lnT(i),j) = LOG( &
+                        (EXP(lims)-EXP(limi))/Ncont * theta(j) + EXP(limi) )
+                  ELSE
+                    FORALL (j=1:NiniMC) &
+                      par(x,y,ind%lnT(i),j) = LOG( &
+                        (EXP(lims)-EXP(limi))/Ncont * theta(j) + EXP(limi) &
+                        + (EXP(lims)-EXP(limi))* REAL(i-1)/Ncont ) !!! i/Ncont
+                  END IF
+                END IF
           
-          !! lnFcont LOG[W/m2/sr]
-          IF (parinfo(ind%lnFcont(i))%fixed) THEN
-            par(:,:,ind%lnFcont(i),:) = parinfo(ind%lnFcont(i))%value
-          ELSE
-            CALL RANDOM_NUMBER(theta3(:,:,:))
-            !! lnFcont is auto determined by modifBB(lnT) & the spectrum to fit
-            IF (Nwc/Ncont .GE. 1) THEN
-              iw = INT(Nwc/Ncont) * i ! iw is NOT wOBS's index, but is indwc's index
-            ELSE
-              !! Case where there are more CONT compo than its wvl grid (Ncont>Nwc)
-              IF (i>Nwc) THEN
-                iw = Nwc
-              ELSE
-                iw = i
+                !! lnFcont LOG[W/m2/sr]
+                IF (parinfo(ind%lnFcont(i))%fixed) THEN
+                  par(x,y,ind%lnFcont(i),:) = parinfo(ind%lnFcont(i))%value
+                ELSE
+                  CALL RANDOM_NUMBER(theta(:))
+                  !! lnFcont is auto determined by modifBB(lnT) & the spectrum to fit
+                  IF (Nw/Ncont.GE.1) THEN
+                    iw = INT(NwCONT/Ncont) * i ! iw is NOT wOBS's index, but iwCONT(x,y)%arr1d
+                  ELSE
+                    !! Case where there are more CONT compo than its wvl grid (Ncont>NwCONT)
+                    IF (i>NwCONT) THEN
+                      iw = NwCONT
+                    ELSE
+                      iw = i
+                    END IF
+                  END IF
+                  k = ind%ordQ(i)
+                  lnT(x,y) = par(x,y,ind%lnT(i-k),1)
+                  IF (k>0) &
+                    lnT(x,y) = LOG( EXP(lnT(x,y)) &
+                                    +SUM(EXP(par(x,y,ind%lnT(i-k+1:i),1))) )
+                  DO j=1,NiniMC
+                    IF (j == 1) THEN
+                        val3(x,y,:) = MODIFBB(wOBS(:),EXP(lnT(x,y)),Qabs(i),.TRUE.,ind%refw)
+                        val2(x,y) = LOG( ABS(FnuOBS(x,y,iwCONT(x,y)%arr1d(iw))) &
+                                         / val3(x,y,iwCONT(x,y)%arr1d(iw)) )
+                        par(x,y,ind%lnFcont(i),j) = val2(x,y)
+                
+                    ELSE
+                      val3(x,y,:) = MODIFBB(wOBS(:),EXP(lnT(x,y)),Qabs(i),.TRUE.,ind%refw)
+                      val2(x,y) = LOG( ABS(FnuOBS(x,y,iwCONT(x,y)%arr1d(iw))) &
+                                       / val3(x,y,iwCONT(x,y)%arr1d(iw)) )
+                      limi2(x,y) = MERGE( parinfo(ind%lnFcont(i))%limits(1), &
+                                          val2(x,y), &
+                                          parinfo(ind%lnFcont(i))%limited(1) ) ! lim inf
+                      lims2(x,y) = MERGE( parinfo(ind%lnFcont(i))%limits(2), &
+                                          val2(x,y), &
+                                          parinfo(ind%lnFcont(i))%limited(2) ) ! lim sup
+                      !! Uniform distribution
+                      par(x,y,ind%lnFcont(i),j) = (lims2(x,y) - limi2(x,y)) * theta3(x,y,j) &
+                                                   + limi2(x,y)
+                    END IF
+                  END DO
+                END IF
+              END DO
+              
+              DO i=1,Nstar
+                !! lnFstar LOG[W/m2/sr]
+                IF (parinfo(ind%lnFstar(i))%fixed) THEN
+                  par(x,y,ind%lnFstar(i),:) = parinfo(ind%lnFstar(i))%value
+                ELSE
+                  CALL RANDOM_NUMBER(theta(:))
+                  !! lnFstar is auto determined by BB & the spectrum to fit
+                  iw = NwCONT - 10 ! avoid wvl edge
+                  DO j=1,NiniMC
+                    IF (j == 1) THEN
+                      val3(x,y,:) = BLACKBODY(nuOBS(:),Tstar) / MKS%stefan/Tstar**4
+                      val2(x,y) = LOG( ABS(FnuOBS(x,y,iwCONT(x,y)%arr1d(iw))) &
+                                       /val3(x,y,iwCONT(x,y)%arr1d(iw)) /pi )
+                      par(x,y,ind%lnFstar(i),j) = val2(x,y)
+                    ELSE
+                      val3(x,y,:) = BLACKBODY(nuOBS(:),Tstar) / MKS%stefan/Tstar**4
+                      val2(x,y) = LOG( ABS(FnuOBS(x,y,iwCONT(x,y)%arr1d(iw))) &
+                                       /val3(x,y,iwCONT(x,y)%arr1d(iw)) /pi )
+                      limi2(x,y) = MERGE( parinfo(ind%lnFstar(i))%limits(1), &
+                                          val2(x,y)-.1_DP, & ! EXP(factor - 3)
+                                          parinfo(ind%lnFstar(i))%limited(1) ) ! lim inf
+                      lims2(x,y) = MERGE( parinfo(ind%lnFstar(i))%limits(2), &
+                                          val2(x,y)+.1_DP, &
+                                          parinfo(ind%lnFstar(i))%limited(2) ) ! lim sup
+                      !! Uniform distribution
+                      par(x,y,ind%lnFstar(i),j) = (lims2(x,y)-limi2(x,y)) * &
+                                                  theta3(x,y,j) + limi2(x,y)
+                    END IF
+                  END DO
+                END IF
+              END DO
+                   
               END IF
-            END IF
-            k = ind%ordQ(i)
-            lnT(:,:) = par(:,:,ind%lnT(i-k),1)
-            IF (k>0) &
-              lnT(:,:) = LOG( EXP(lnT(:,:)) &
-                              +SUM(EXP(par(:,:,ind%lnT(i-k+1:i),1)),DIM=3) )
-            DO j=1,NiniMC
-              IF (j == 1) THEN
-                FORALL (x=1:Nx,y=1:Ny,maskxy(x,y))
-                  val3(x,y,:) = MODIFBB(wOBS(:),EXP(lnT(x,y)),Qabs(i),.TRUE.,ind%refw)
-                  val2(x,y) = LOG( ABS(FnuOBS(x,y,indwc(iw)))/val3(x,y,indwc(iw)) )
-                  par(x,y,ind%lnFcont(i),j) = val2(x,y)
-
-                END FORALL
-              ELSE
-                FORALL (x=1:Nx,y=1:Ny,maskxy(x,y))
-                  val3(x,y,:) = MODIFBB(wOBS(:),EXP(lnT(x,y)),Qabs(i),.TRUE.,ind%refw)
-                  val2(x,y) = LOG( ABS(FnuOBS(x,y,indwc(iw)))/val3(x,y,indwc(iw)) )
-                  limi2(x,y) = MERGE( parinfo(ind%lnFcont(i))%limits(1), &
-                                      val2(x,y), &
-                                      parinfo(ind%lnFcont(i))%limited(1) ) ! lim inf
-                  lims2(x,y) = MERGE( parinfo(ind%lnFcont(i))%limits(2), &
-                                      val2(x,y), &
-                                      parinfo(ind%lnFcont(i))%limited(2) ) ! lim sup
-                  !! Uniform distribution
-                  par(x,y,ind%lnFcont(i),j) = (lims2(x,y) - limi2(x,y)) * theta3(x,y,j) &
-                                              + limi2(x,y)
-                  
-                END FORALL
-              END IF
-            END DO
-          END IF
-          
-        END DO
+            END DO wconty_mc
+          END DO wcontx_mc
         
         DO i=1,Nextc
           !! lnAv LOG[mag]
@@ -1473,44 +1627,8 @@ CONTAINS
 
         END DO
 
-        DO i=1,Nstar
-          !! lnFstar LOG[W/m2/sr]
-          IF (parinfo(ind%lnFstar(i))%fixed) THEN
-            par(:,:,ind%lnFstar(i),:) = parinfo(ind%lnFstar(i))%value
-          ELSE
-            CALL RANDOM_NUMBER(theta3(:,:,:))
-            !! lnFstar is auto determined by BB & the spectrum to fit
-            iw = Nwc - 10 ! avoid wvl edge
-            DO j=1,NiniMC
-              IF (j == 1) THEN
-                FORALL (x=1:Nx,y=1:Ny,maskxy(x,y))
-                  val3(x,y,:) = BLACKBODY(nuOBS(:),Tstar) / MKS%stefan/Tstar**4
-                  val2(x,y) = LOG( ABS(FnuOBS(x,y,indwc(iw)))/val3(x,y,indwc(iw)) /pi )
-                  par(x,y,ind%lnFstar(i),j) = val2(x,y)
-                END FORALL
-              ELSE
-                FORALL (x=1:Nx,y=1:Ny,maskxy(x,y))
-                  val3(x,y,:) = BLACKBODY(nuOBS(:),Tstar) / MKS%stefan/Tstar**4
-                  val2(x,y) = LOG( ABS(FnuOBS(x,y,indwc(iw)))/val3(x,y,indwc(iw)) /pi )
-                  limi2(x,y) = MERGE( parinfo(ind%lnFstar(i))%limits(1), &
-                                      val2(x,y)-.1_DP, & ! EXP(factor - 3)
-                                      parinfo(ind%lnFstar(i))%limited(1) ) ! lim inf
-                  lims2(x,y) = MERGE( parinfo(ind%lnFstar(i))%limits(2), &
-                                      val2(x,y)+.1_DP, &
-                                      parinfo(ind%lnFstar(i))%limited(2) ) ! lim sup
-                  !! Uniform distribution
-                  par(x,y,ind%lnFstar(i),j) = (lims2(x,y)-limi2(x,y)) * &
-                                              theta3(x,y,j) + limi2(x,y)
-    
-                END FORALL
-
-              END IF
-            END DO
-          END IF
-        END DO
-
       END IF
-      DEALLOCATE(indwi, indw, indwc, val3)
+      DEALLOCATE(val3)
       
     ELSE
       
@@ -1532,34 +1650,34 @@ CONTAINS
                        NAME='Initial parameter value')
       END IF
 
-      !! Set hard limits for intensive parameters
+      !! Set hard limits for (intensive) parameters
       !!------------------------------------------
       DO i=1,Nband
         CALL IWHERE( TRIMEQ(TABand(:)%label, labB(i)), itab ) ! itab = ind of TABand
-        wcen = TABand(itab)%wave
-        sig = Cband_sig
+        Cband = TABand(itab)%wave
+        WSband = TABand(itab)%sigmaS
+        WLband = TABand(itab)%sigmaL
         
         !! Cband
+        sig = Cband_sig
         IF (.NOT. parinfo(ind%Cband(i))%limited(1)) &
-          parinfo(ind%Cband(i))%limits(1) = wcen-sig
+          parinfo(ind%Cband(i))%limits(1) = Cband-sig
         IF (.NOT. parinfo(ind%Cband(i))%limited(2)) &
-          parinfo(ind%Cband(i))%limits(2) = wcen+sig
+          parinfo(ind%Cband(i))%limits(2) = Cband+sig
         parinfo(ind%Cband(i))%limited = .TRUE.
         
         !! WSband
-        val = TABand(itab)%sigmaS
         IF (.NOT. parinfo(ind%WSband(i))%limited(1)) &
-          parinfo(ind%WSband(i))%limits(1) = val*0.5_DP
+          parinfo(ind%WSband(i))%limits(1) = WSband*0.5_DP
         IF (.NOT. parinfo(ind%WSband(i))%limited(2)) &
-          parinfo(ind%WSband(i))%limits(2) = val*2._DP
+          parinfo(ind%WSband(i))%limits(2) = WSband*2._DP
         parinfo(ind%WSband(i))%limited = .TRUE.
    
         !! WLband
-        val = TABand(itab)%sigmaL
         IF (.NOT. parinfo(ind%WLband(i))%limited(1)) &
-          parinfo(ind%WLband(i))%limits(1) = val*0.5_DP
+          parinfo(ind%WLband(i))%limits(1) = WLband*0.5_DP
         IF (.NOT. parinfo(ind%WLband(i))%limited(2)) &
-          parinfo(ind%WLband(i))%limits(2) = val*2._DP
+          parinfo(ind%WLband(i))%limits(2) = WLband*2._DP
         parinfo(ind%WLband(i))%limited = .TRUE.
 
         !! lnRband
@@ -1570,7 +1688,30 @@ CONTAINS
             parinfo(ind%lnRband(i))%limits(2) = 10._DP
           parinfo(ind%lnRband(i))%limited = .TRUE.
         END IF
-
+        
+        !! Check wavelength mask to decide if mask par
+        DO x=1,Nx
+          DO y=1,Ny
+            IF (maskxy(x,y)) THEN
+              !! Update param
+              Cband = iniparval(x,y,ind%Cband(i))
+              WSband = iniparval(x,y,ind%WSband(i))
+              WLband = iniparval(x,y,ind%WLband(i))
+              limi = Cband - WSband
+              lims = Cband + WLband
+              IF ( ALL( wOBS(iwFIT(x,y)%arr1d(:)).LE.limi &
+                        .OR. wOBS(iwFIT(x,y)%arr1d(:)).GE.lims) ) THEN
+                mask(x,y,ind%lnRband(i)) = .FALSE.
+                mask(x,y,ind%Cband(i)) = .FALSE.
+                mask(x,y,ind%WSband(i)) = .FALSE.
+                mask(x,y,ind%WLband(i)) = .FALSE.
+                !! Update maskxy
+                maskxy(x,y) = ANY(mask(x,y,:))
+              END IF
+            END IF
+          END DO
+        END DO
+        
       END DO
       
       DO i=1,Nline
@@ -1578,22 +1719,22 @@ CONTAINS
         !! FWHM = 2*sqrt(2*log(2))*sigma ~ 2.355 (suppose PSF is gaussian)
         !! R = lambda / FWHM
         !! => sigma = lambda / R / 2.355
-        wcen = TABLine(itab)%wave
-        dw = degradeRes(TABLine(itab)%wave, .01_DP, 'NG-SL-LL')
-        sig = dw / 2.355_DP
-
+        Cline = TABLine(itab)%wave
+        Wline = degradeRes(TABLine(itab)%wave, .01_DP, 'NG-SL-LL')
+        
         !! Cline
+        sig = Wline / 2.355_DP
         IF (.NOT. parinfo(ind%Cline(i))%limited(1)) &
-          parinfo(ind%Cline(i))%limits(1) = wcen-sig
+          parinfo(ind%Cline(i))%limits(1) = Cline-sig
         IF (.NOT. parinfo(ind%Cline(i))%limited(2)) &
-          parinfo(ind%Cline(i))%limits(2) = wcen+sig
+          parinfo(ind%Cline(i))%limits(2) = Cline+sig
         parinfo(ind%Cline(i))%limited = .TRUE.
         
         !! Wline
         IF (.NOT. parinfo(ind%Wline(i))%limited(1)) &
-          parinfo(ind%Wline(i))%limits(1) = dw*0.5_DP
+          parinfo(ind%Wline(i))%limits(1) = Wline*0.5_DP
         IF (.NOT. parinfo(ind%Wline(i))%limited(2)) &
-          parinfo(ind%Wline(i))%limits(2) = dw*2._DP
+          parinfo(ind%Wline(i))%limits(2) = Wline*2._DP
         parinfo(ind%Wline(i))%limited = .TRUE.
 
         !! lnRline
@@ -1602,6 +1743,28 @@ CONTAINS
         IF (.NOT. parinfo(ind%lnRline(i))%limited(2)) &
           parinfo(ind%lnRline(i))%limits(2) = 10._DP
         parinfo(ind%lnRline(i))%limited = .TRUE.
+
+        !! Check wavelength mask to decide if mask par
+        DO x=1,Nx
+          DO y=1,Ny
+            IF (maskxy(x,y)) THEN
+              !! Update param
+              Cline = iniparval(x,y,ind%Cline(i))
+              Wline = iniparval(x,y,ind%Wline(i))
+              limi = Cline - Wline
+              lims = Cline + Wline
+              IF ( ALL( wOBS(iwFIT(x,y)%arr1d(:)).LE.limi &
+                        .OR. wOBS(iwFIT(x,y)%arr1d(:)).GE.lims) ) THEN
+                mask(x,y,ind%lnRband(i)) = .FALSE.
+                mask(x,y,ind%Cband(i)) = .FALSE.
+                mask(x,y,ind%WSband(i)) = .FALSE.
+                mask(x,y,ind%WLband(i)) = .FALSE.
+                !! Update maskxy
+                maskxy(x,y) = ANY(mask(x,y,:))
+              END IF
+            END IF
+          END DO
+        END DO
         
       END DO
       
@@ -1691,7 +1854,7 @@ CONTAINS
 
     USE utilities, ONLY: DP, warning, trimeq, trimlr, pring!, verbatim
     USE inout, ONLY: lenpar, lenpath, read_input_line, read_hdf5, h5ext
-    USE arrays, ONLY: incrarr, iwhere, reallocate, closest
+    USE arrays, ONLY: reallocate, iwhere
     USE interpolation, ONLY: interp_lin_sorted
     IMPLICIT NONE
 
@@ -1888,6 +2051,352 @@ CONTAINS
       noposdef = ANY( isNaN(invert_mSM(:,:)) )
 
   END FUNCTION invert_mSM
+
+  !!-------------------------------------------------------
+  !!
+  !!               Convert NaNs to zeros
+  !!
+  !!-------------------------------------------------------
+  FUNCTION NaN2zero_int1D( array )
+
+    USE utilities, ONLY: DP, isNaN, NaN
+    IMPLICIT NONE
+
+    INTEGER, DIMENSION(:), INTENT(IN) :: array
+    INTEGER :: i1
+    INTEGER, DIMENSION(SIZE(array)) :: NaN2zero_int1D
+
+    NaN2zero_int1D(:) = array(:)
+    DO i1=1,SIZE(array)
+      IF (isNaN(REAL(array(i1)))) NaN2zero_int1D(i1) = 0
+    END DO
+
+  END FUNCTION NaN2zero_int1D
+
+  !!==============================
+
+  FUNCTION NaN2zero_int2D( array )
+
+    USE utilities, ONLY: DP, isNaN, NaN
+    IMPLICIT NONE
+
+    INTEGER, DIMENSION(:,:), INTENT(IN) :: array
+    INTEGER :: i1, i2
+    INTEGER, DIMENSION(SIZE(array,1),SIZE(array,2)) :: NaN2zero_int2D
+
+    NaN2zero_int2D(:,:) = array(:,:)
+    DO i1=1,SIZE(array,1)
+      DO i2=1,SIZE(array,2)
+        IF (isNaN(REAL(array(i1,i2)))) NaN2zero_int2D(i1,i2) = 0
+      END DO
+    END DO
+
+  END FUNCTION NaN2zero_int2D
+
+  !!==============================
+
+  FUNCTION NaN2zero_int3D( array )
+
+    USE utilities, ONLY: DP, isNaN, NaN
+    IMPLICIT NONE
+
+    INTEGER, DIMENSION(:,:,:), INTENT(IN) :: array
+    INTEGER :: i1, i2, i3
+    INTEGER, DIMENSION(SIZE(array,1),SIZE(array,2),SIZE(array,3)) :: NaN2zero_int3D
+
+    NaN2zero_int3D(:,:,:) = array(:,:,:)
+    DO i1=1,SIZE(array,1)
+      DO i2=1,SIZE(array,2)
+        DO i3=1,SIZE(array,3)
+          IF (isNaN(REAL(array(i1,i2,i3)))) NaN2zero_int3D(i1,i2,i3) = 0
+        END DO
+      END DO
+    END DO
+
+  END FUNCTION NaN2zero_int3D
+
+  !!==============================
+
+  FUNCTION NaN2zero_int4D( array )
+
+    USE utilities, ONLY: DP, isNaN, NaN
+    IMPLICIT NONE
+
+    INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: array
+    INTEGER :: i1, i2, i3, i4
+    INTEGER, DIMENSION(SIZE(array,1),SIZE(array,2),SIZE(array,3),SIZE(array,4)) :: &
+      NaN2zero_int4D
+
+    NaN2zero_int4D(:,:,:,:) = array(:,:,:,:)
+    DO i1=1,SIZE(array,1)
+      DO i2=1,SIZE(array,2)
+        DO i3=1,SIZE(array,3)
+          DO i4=1,SIZE(array,4)
+            IF (isNaN(REAL(array(i1,i2,i3,i4)))) NaN2zero_int4D(i1,i2,i3,i4) = 0
+          END DO
+        END DO
+      END DO
+    END DO
+
+  END FUNCTION NaN2zero_int4D
+
+  !!==============================
+
+  FUNCTION NaN2zero_dbl1D( array )
+
+    USE utilities, ONLY: DP, isNaN, NaN
+    IMPLICIT NONE
+
+    REAL(DP), DIMENSION(:), INTENT(IN) :: array
+    INTEGER :: i1
+    REAL(DP), DIMENSION(SIZE(array)) :: NaN2zero_dbl1D
+
+    NaN2zero_dbl1D(:) = array(:)
+    DO i1=1,SIZE(array)
+      IF (isNaN(array(i1))) NaN2zero_dbl1D(i1) = 0._DP
+    END DO
+
+  END FUNCTION NaN2zero_dbl1D
+
+  !!==============================
+
+  FUNCTION NaN2zero_dbl2D( array )
+
+    USE utilities, ONLY: DP, isNaN, NaN
+    IMPLICIT NONE
+
+    REAL(DP), DIMENSION(:,:), INTENT(IN) :: array
+    INTEGER :: i1, i2
+    REAL(DP), DIMENSION(SIZE(array,1),SIZE(array,2)) :: NaN2zero_dbl2D
+
+    NaN2zero_dbl2D(:,:) = array(:,:)
+    DO i1=1,SIZE(array,1)
+      DO i2=1,SIZE(array,2)
+        IF (isNaN(array(i1,i2))) NaN2zero_dbl2D(i1,i2) = 0._DP
+      END DO
+    END DO
+
+  END FUNCTION NaN2zero_dbl2D
+
+  !!==============================
+
+  FUNCTION NaN2zero_dbl3D( array )
+
+    USE utilities, ONLY: DP, isNaN, NaN
+    IMPLICIT NONE
+
+    REAL(DP), DIMENSION(:,:,:), INTENT(IN) :: array
+    INTEGER :: i1, i2, i3
+    REAL(DP), DIMENSION(SIZE(array,1),SIZE(array,2),SIZE(array,3)) :: NaN2zero_dbl3D
+
+    NaN2zero_dbl3D(:,:,:) = array(:,:,:)
+    DO i1=1,SIZE(array,1)
+      DO i2=1,SIZE(array,2)
+        DO i3=1,SIZE(array,3)
+          IF (isNaN(array(i1,i2,i3))) NaN2zero_dbl3D(i1,i2,i3) = 0._DP
+        END DO
+      END DO
+    END DO
+
+  END FUNCTION NaN2zero_dbl3D
+
+  !!==============================
+
+  FUNCTION NaN2zero_dbl4D( array )
+
+    USE utilities, ONLY: DP, isNaN, NaN
+    IMPLICIT NONE
+
+    REAL(DP), DIMENSION(:,:,:,:), INTENT(IN) :: array
+    INTEGER :: i1, i2, i3, i4
+    REAL(DP), DIMENSION(SIZE(array,1),SIZE(array,2),SIZE(array,3),SIZE(array,4)) :: &
+      NaN2zero_dbl4D
+
+    NaN2zero_dbl4D(:,:,:,:) = array(:,:,:,:)
+    DO i1=1,SIZE(array,1)
+      DO i2=1,SIZE(array,2)
+        DO i3=1,SIZE(array,3)
+          DO i4=1,SIZE(array,4)
+            IF (isNaN(array(i1,i2,i3,i4))) NaN2zero_dbl4D(i1,i2,i3,i4) = 0._DP
+          END DO
+        END DO
+      END DO
+    END DO
+
+  END FUNCTION NaN2zero_dbl4D
+
+  !!-------------------------------------------------------
+  !!
+  !!               Convert zeros to NaNs
+  !!
+  !!-------------------------------------------------------
+  FUNCTION zero2NaN_int1D( array )
+
+    USE utilities, ONLY: DP, isNaN, NaN
+    IMPLICIT NONE
+
+    INTEGER, DIMENSION(:), INTENT(IN) :: array
+    INTEGER :: i1
+    INTEGER, DIMENSION(SIZE(array)) :: zero2NaN_int1D
+
+    zero2NaN_int1D(:) = array(:)
+    DO i1=1,SIZE(array)
+      IF (array(i1)==0) zero2NaN_int1D(i1) = INT(NaN())
+    END DO
+
+  END FUNCTION zero2NaN_int1D
+
+  !!==============================
+
+  FUNCTION zero2NaN_int2D( array )
+
+    USE utilities, ONLY: DP, isNaN, NaN
+    IMPLICIT NONE
+
+    INTEGER, DIMENSION(:,:), INTENT(IN) :: array
+    INTEGER :: i1, i2
+    INTEGER, DIMENSION(SIZE(array,1),SIZE(array,2)) :: zero2NaN_int2D
+
+    zero2NaN_int2D(:,:) = array(:,:)
+    DO i1=1,SIZE(array,1)
+      DO i2=1,SIZE(array,2)
+        IF (array(i1,i2)==0) zero2NaN_int2D(i1,i2) = INT(NaN())
+      END DO
+    END DO
+
+  END FUNCTION zero2NaN_int2D
+
+  !!==============================
+
+  FUNCTION zero2NaN_int3D( array )
+
+    USE utilities, ONLY: DP, isNaN, NaN
+    IMPLICIT NONE
+
+    INTEGER, DIMENSION(:,:,:), INTENT(IN) :: array
+    INTEGER :: i1, i2, i3
+    INTEGER, DIMENSION(SIZE(array,1),SIZE(array,2),SIZE(array,3)) :: zero2NaN_int3D
+
+    zero2NaN_int3D(:,:,:) = array(:,:,:)
+    DO i1=1,SIZE(array,1)
+      DO i2=1,SIZE(array,2)
+        DO i3=1,SIZE(array,3)
+          IF (array(i1,i2,i3)==0) zero2NaN_int3D(i1,i2,i3) = INT(NaN())
+        END DO
+      END DO
+    END DO
+
+  END FUNCTION zero2NaN_int3D
+
+  !!==============================
+
+  FUNCTION zero2NaN_int4D( array )
+
+    USE utilities, ONLY: DP, isNaN, NaN
+    IMPLICIT NONE
+
+    INTEGER, DIMENSION(:,:,:,:), INTENT(IN) :: array
+    INTEGER :: i1, i2, i3, i4
+    INTEGER, DIMENSION(SIZE(array,1),SIZE(array,2),SIZE(array,3),SIZE(array,4)) :: &
+      zero2NaN_int4D
+
+    zero2NaN_int4D(:,:,:,:) = array(:,:,:,:)
+    DO i1=1,SIZE(array,1)
+      DO i2=1,SIZE(array,2)
+        DO i3=1,SIZE(array,3)
+          DO i4=1,SIZE(array,4)
+            IF (array(i1,i2,i3,i4)==0) zero2NaN_int4D(i1,i2,i3,i4) = INT(NaN())
+          END DO
+        END DO
+      END DO
+    END DO
+
+  END FUNCTION zero2NaN_int4D
+
+  !!==============================
+
+  FUNCTION zero2NaN_dbl1D( array )
+
+    USE utilities, ONLY: DP, isNaN, NaN
+    IMPLICIT NONE
+
+    REAL(DP), DIMENSION(:), INTENT(IN) :: array
+    INTEGER :: i1
+    REAL(DP), DIMENSION(SIZE(array)) :: zero2NaN_dbl1D
+
+    zero2NaN_dbl1D(:) = array(:)
+    DO i1=1,SIZE(array)
+      IF (array(i1)==0) zero2NaN_dbl1D(i1) = NaN()
+    END DO
+
+  END FUNCTION zero2NaN_dbl1D
+
+  !!==============================
+
+  FUNCTION zero2NaN_dbl2D( array )
+
+    USE utilities, ONLY: DP, isNaN, NaN
+    IMPLICIT NONE
+
+    REAL(DP), DIMENSION(:,:), INTENT(IN) :: array
+    INTEGER :: i1, i2
+    REAL(DP), DIMENSION(SIZE(array,1),SIZE(array,2)) :: zero2NaN_dbl2D
+
+    zero2NaN_dbl2D(:,:) = array(:,:)
+    DO i1=1,SIZE(array,1)
+      DO i2=1,SIZE(array,2)
+        IF (array(i1,i2)==0) zero2NaN_dbl2D(i1,i2) = NaN()
+      END DO
+    END DO
+
+  END FUNCTION zero2NaN_dbl2D
+
+  !!==============================
+
+  FUNCTION zero2NaN_dbl3D( array )
+
+    USE utilities, ONLY: DP, isNaN, NaN
+    IMPLICIT NONE
+
+    REAL(DP), DIMENSION(:,:,:), INTENT(IN) :: array
+    INTEGER :: i1, i2, i3
+    REAL(DP), DIMENSION(SIZE(array,1),SIZE(array,2),SIZE(array,3)) :: zero2NaN_dbl3D
+
+    zero2NaN_dbl3D(:,:,:) = array(:,:,:)
+    DO i1=1,SIZE(array,1)
+      DO i2=1,SIZE(array,2)
+        DO i3=1,SIZE(array,3)
+          IF (array(i1,i2,i3)==0) zero2NaN_dbl3D(i1,i2,i3) = NaN()
+        END DO
+      END DO
+    END DO
+
+  END FUNCTION zero2NaN_dbl3D
+
+  !!==============================
+
+  FUNCTION zero2NaN_dbl4D( array )
+
+    USE utilities, ONLY: DP, isNaN, NaN
+    IMPLICIT NONE
+
+    REAL(DP), DIMENSION(:,:,:,:), INTENT(IN) :: array
+    INTEGER :: i1, i2, i3, i4
+    REAL(DP), DIMENSION(SIZE(array,1),SIZE(array,2),SIZE(array,3),SIZE(array,4)) :: &
+      zero2NaN_dbl4D
+
+    zero2NaN_dbl4D(:,:,:,:) = array(:,:,:,:)
+    DO i1=1,SIZE(array,1)
+      DO i2=1,SIZE(array,2)
+        DO i3=1,SIZE(array,3)
+          DO i4=1,SIZE(array,4)
+            IF (array(i1,i2,i3,i4)==0) zero2NaN_dbl4D(i1,i2,i3,i4) = NaN()
+          END DO
+        END DO
+      END DO
+    END DO
+
+  END FUNCTION zero2NaN_dbl4D
   
   !!-------------------------------------------------------
   !!
@@ -2154,8 +2663,8 @@ CONTAINS
     
     !! The SwING library defines the split Lorentzian distribution with
     !! the parameterization (lambda, tau) instead of (sigS, sigL).
-    !! In order to make the larger wavelength / the smaller frequency width
-    !! be at the longer wavelength side, we define (frequency grid):
+    !! In order to make the larger/smaller wavelength/frequency width
+    !! be at the longer wavelength side, we define (in frequency grid):
     !! lambda = 2sigL & tau = sigS/sigL,
     !! where S corresponds to short wavelength side and L long wavelength
     !! Note that mu is not the mean and that neither sigS nor sigL is
@@ -2269,13 +2778,13 @@ CONTAINS
   !! 3D version
   !!============
   FUNCTION specModel_3D( wvl, parval, indpar, mask, Qabs, extinct, verbose, &
-                         FnuCONT, FnuBAND, FnuSTAR, Pabs, FnuLINE, &
+                         FnuCONT, FnuBAND, FnuSTAR, Pabs, FnuLINE, maskpar, &
                          FnuCONT_tab, FnuBAND_tab, FnuSTAR_tab, Pabs_tab, FnuLINE_tab )
 
-    USE utilities, ONLY: DP, trimeq, trimlr, pring, &!verbatim, &
+    USE utilities, ONLY: DP, trimeq, trimlr, pring, strike, NaN, &!verbatim, &
                          initiate_clock, time_type, timinfo!, ustd
     USE constants, ONLY: pi, MKS
-    USE arrays, ONLY: reallocate
+    USE arrays, ONLY: reallocate, iwhere, incrarr
     USE statistical_physics, ONLY: blackbody
     IMPLICIT NONE
 
@@ -2285,22 +2794,30 @@ CONTAINS
     TYPE(indpar_type), INTENT(IN) :: indpar
     TYPE(Qabs_type), DIMENSION(:), INTENT(IN) :: Qabs
     LOGICAL, INTENT(IN), OPTIONAL :: verbose
-    LOGICAL, DIMENSION(:,:,:), INTENT(IN) :: mask ! 3D (Nx,Ny,Nw)
+    LOGICAL, DIMENSION(:,:,:), INTENT(IN), OPTIONAL :: mask ! 3D (Nx,Ny,Nw)
 
-    INTEGER :: Nw, Nx, Ny, Ncont, Nline, Nband, Nextc, Nstar
+    INTEGER :: Nw, Nx, Ny, Npar, Ncont, Nline, Nband, Nextc, Nstar
     INTEGER :: x, y, i, k, indref
+    INTEGER, DIMENSION(:), ALLOCATABLE :: indw
+    REAL(DP) :: Cband, WSband, WLband, Cline, Wline
     REAL(DP) :: Tstar
     REAL(DP), DIMENSION(SIZE(wvl)) :: nu
     REAL(DP), DIMENSION(SIZE(parval,1),SIZE(parval,2)) :: lnIref, lnT
     REAL(DP), DIMENSION(:,:,:,:), ALLOCATABLE :: dblarr4d ! (Nx,Ny,Nw,Ncomp)
     REAL(DP), DIMENSION(SIZE(parval,1),SIZE(parval,2),SIZE(wvl)) :: &
       FnuCONT0, FnuBAND0, FnuSTAR0, Pabs0, FnuLINE0
+    LOGICAL, DIMENSION(:,:), ALLOCATABLE :: maskxy
+    LOGICAL, DIMENSION(:,:,:), ALLOCATABLE :: mask3D
+
+    LOGICAL, DIMENSION(SIZE(parval,1),SIZE(parval,2),SIZE(parval,3)), INTENT(OUT), OPTIONAL :: &
+      maskpar
     REAL(DP), DIMENSION(:,:,:), ALLOCATABLE, INTENT(OUT), OPTIONAL :: &
       FnuCONT, FnuBAND, FnuSTAR, Pabs, FnuLINE
     REAL(DP), DIMENSION(:,:,:,:), ALLOCATABLE, INTENT(OUT), OPTIONAL :: &
       FnuCONT_tab, FnuBAND_tab, FnuSTAR_tab, Pabs_tab, FnuLINE_tab
     REAL(DP), DIMENSION(SIZE(parval,1),SIZE(parval,2),SIZE(wvl)) :: specModel_3D
 
+    !! Clock module
     LOGICAL :: printimer
     TYPE(time_type) :: timestr
 
@@ -2311,18 +2828,75 @@ CONTAINS
     Nw = SIZE(wvl(:))
     Nx = SIZE(parval(:,:,:),1)
     Ny = SIZE(parval(:,:,:),2)
+    Npar = SIZE(parval(:,:,:),3)
     Ncont = SIZE(Qabs(:))
     Nband = COUNT(indpar%lnRband(:) .NE. -1)
-    Tstar = 5.E4_DP ! [K] high enough to stay in Rayleigh-Jeans limit (T>>5000K for 3um)
     Nline = COUNT(indpar%lnRline(:) .NE. -1)
     Nextc = COUNT(indpar%lnAv(:) .NE. -1)
     Nstar = COUNT(indpar%lnFstar(:) .NE. -1)
+    Tstar = 5.E4_DP ! [K] high enough to stay in Rayleigh-Jeans limit (T>>5000K for 3um)
     nu(:) = MKS%clight / wvl(:) /MKS%micron ! [Hz] in BLACKBODY
 
     !! labB index of the reference band (default: 1)
     indref = indpar%refB
     !! (LOG) Intensity of the reference band
     lnIref(:,:) = parval(:,:,indpar%lnRband(indref))
+
+    !! Mask
+    ALLOCATE(maskxy(Nx,Ny),mask3D(Nx,Ny,Nw))
+    IF (PRESENT(mask)) THEN
+      mask3D(:,:,:) = mask(:,:,:)
+    ELSE
+      mask3D(:,:,:) = .TRUE.
+    END IF
+    FORALL (x=1:Nx,y=1:Ny) maskxy(x,y) = ANY(mask3D(x,y,:))
+
+    !! mask -> maskpar (see also initparam)
+    paramask: IF (PRESENT(maskpar)) THEN
+      FORALL (x=1:Nx,y=1:Ny) maskpar(x,y,:) = maskxy(x,y)
+      
+      IF (PRESENT(mask)) THEN
+        !! Find (indices of) all masked wavelengths
+        DO x=1,Nx
+          DO y=1,Ny
+            IF (maskxy(x,y)) THEN
+              !! indw is NOT-NaN index list
+              CALL IWHERE( mask3D(x,y,:), indw )
+              !! Check wavelength mask to decide if mask par
+              
+              !! Bands
+              DO i=1,Nband
+                Cband = parval(x,y,indpar%Cband(i))
+                WSband = parval(x,y,indpar%WSband(i))
+                WLband = parval(x,y,indpar%WLband(i))
+                IF ( ALL( wvl(indw(:)).LE.Cband-WSband &
+                          .OR. wvl(indw(:)).GE.Cband+WLband ) ) THEN
+                  maskpar(x,y,indpar%lnRband(i)) = .FALSE.
+                  maskpar(x,y,indpar%Cband(i)) = .FALSE.
+                  maskpar(x,y,indpar%WSband(i)) = .FALSE.
+                  maskpar(x,y,indpar%WLband(i)) = .FALSE.
+                END IF
+              END DO
+              
+              !! Lines
+              DO i=1,Nline
+                Cline = parval(x,y,indpar%Cline(i))
+                Wline = parval(x,y,indpar%Wline(i))
+                Wline = parval(x,y,indpar%Wline(i))
+                IF ( ALL( wvl(indw(:)).LE.Cline-Wline &
+                          .OR. wvl(indw(:)).GE.Cline+Wline ) ) THEN
+                  maskpar(x,y,indpar%lnRline(i)) = .FALSE.
+                  maskpar(x,y,indpar%Cline(i)) = .FALSE.
+                  maskpar(x,y,indpar%Wline(i)) = .FALSE.
+                END IF
+              END DO
+              
+            END IF
+          END DO
+        END DO
+      END IF
+      
+    END IF paramask
     
     !! Print timer
     printimer = .FALSE.
@@ -2331,9 +2905,10 @@ CONTAINS
     !! Initialization
     specModel_3D(:,:,:) = 0._DP
     
-    !! 1. Continuum
-    !!--------------
+    !! 1. Continua
+    !!-------------
     CALL REALLOCATE(dblarr4d,Nx,Ny,Nw,Ncont)
+    dblarr4d(:,:,:,:) = 0._DP
     !! The actual unit depends on the input spectrum.
     !! Here as an example, suppose the input is in MKS.
     !! FnuCONT [W/m2/sr/Hz] = Fcont [W/m2/sr] * modifBB [Hz-1]
@@ -2343,27 +2918,30 @@ CONTAINS
       IF (k>0) &
         lnT(:,:) = LOG( EXP(lnT(:,:)) &
                         +SUM(EXP(parval(:,:,indpar%lnT(i-k+1:i))),DIM=3) )
-      FORALL (x=1:Nx,y=1:Ny,ANY(mask(x,y,:))) &
+      FORALL (x=1:Nx,y=1:Ny,maskxy(x,y)) &
         dblarr4d(x,y,:,i) = EXP(parval(x,y,indpar%lnFcont(i))) * &
                             MODIFBB(wvl(:),EXP(lnT(x,y)),Qabs(i),.TRUE.,indpar%refw)
     END DO
     FnuCONT0(:,:,:) = SUM(dblarr4d(:,:,:,:),DIM=4)
     IF (PRESENT(FnuCONT)) FnuCONT = FnuCONT0(:,:,:)
     IF (PRESENT(FnuCONT_tab)) FnuCONT_tab = dblarr4d(:,:,:,:)
+    ! IF (PRESENT(FnuCONT)) FnuCONT = zero2NaN(FnuCONT0(:,:,:))
+    ! IF (PRESENT(FnuCONT_tab)) FnuCONT_tab = zero2NaN(dblarr4d(:,:,:,:))
     
     !! 2. Bands
     !!----------
     CALL REALLOCATE(dblarr4d,Nx,Ny,Nw,Nband)
+    dblarr4d(:,:,:,:) = 0._DP
     !! FnuBAND [W/m2/sr/Hz] = Iband [W/m2/sr] * lorentzBand [Hz-1]
     DO i=1,Nband
       IF (i == indref) THEN
-        FORALL (x=1:Nx,y=1:Ny,ANY(mask(x,y,:))) &
+        FORALL (x=1:Nx,y=1:Ny,maskxy(x,y)) &
           dblarr4d(x,y,:,i) = EXP( parval(x,y,indpar%lnRband(i)) ) * &
                               lorentzBand( wvl(:), parval(x,y,indpar%Cband(i)), &
                                 parval(x,y,indpar%WSband(i)), &
                                 parval(x,y,indpar%WLband(i)),.TRUE. )
       ELSE
-        FORALL (x=1:Nx,y=1:Ny,ANY(mask(x,y,:))) &
+        FORALL (x=1:Nx,y=1:Ny,maskxy(x,y)) &
           dblarr4d(x,y,:,i) = EXP( parval(x,y,indpar%lnRband(i))+lnIref(x,y) ) * &
                               lorentzBand( wvl(:), parval(x,y,indpar%Cband(i)), &
                                 parval(x,y,indpar%WSband(i)), &
@@ -2373,45 +2951,59 @@ CONTAINS
     FnuBAND0(:,:,:) = SUM(dblarr4d(:,:,:,:),DIM=4)
     IF (PRESENT(FnuBAND)) FnuBAND = FnuBAND0(:,:,:)
     IF (PRESENT(FnuBAND_tab)) FnuBAND_tab = dblarr4d(:,:,:,:)
+    ! IF (PRESENT(FnuBAND)) FnuBAND = zero2NaN(FnuBAND0(:,:,:))
+    ! IF (PRESENT(FnuBAND_tab)) FnuBAND_tab = zero2NaN(dblarr4d(:,:,:,:))
     
     !! 3. Stellar Continuum
     !!----------------------
     CALL REALLOCATE(dblarr4d,Nx,Ny,Nw,Nstar)
+    dblarr4d(:,:,:,:) = 0._DP
     !! FnuSTAR [W/m2/sr/Hz] = Fstar [W/m2] * BLACKBODY [W/m2/sr/Hz] /
     !!                        stefan [W/m2/K4] / Tstar4 [K4]
-    FORALL (x=1:Nx,y=1:Ny,i=1:Nstar,ANY(mask(x,y,:))) &
+    FORALL (x=1:Nx,y=1:Ny,i=1:Nstar,maskxy(x,y)) &
       dblarr4d(x,y,:,i) = EXP(parval(x,y,indpar%lnFstar(i))) * &
                           pi * BLACKBODY(nu(:), Tstar) /MKS%stefan/Tstar**4
     FnuSTAR0(:,:,:) = SUM(dblarr4d(:,:,:,:),DIM=4)
     IF (PRESENT(FnuSTAR)) FnuSTAR = FnuSTAR0(:,:,:)
     IF (PRESENT(FnuSTAR_tab)) FnuSTAR_tab = dblarr4d(:,:,:,:)
+    ! IF (PRESENT(FnuSTAR)) FnuSTAR = zero2NaN(FnuSTAR0(:,:,:))
+    ! IF (PRESENT(FnuSTAR_tab)) FnuSTAR_tab = zero2NaN(dblarr4d(:,:,:,:))
     
     !! 4. Screen extinction
     !!----------------------
     CALL REALLOCATE(dblarr4d,Nx,Ny,Nw,Nextc)
+    dblarr4d(:,:,:,:) = 0._DP
     !! Pabs [/] = EXP( Av [mag] * extinction [/] )
-    FORALL (x=1:Nx,y=1:Ny,i=1:Nextc,ANY(mask(x,y,:))) &
+    FORALL (x=1:Nx,y=1:Ny,i=1:Nextc,maskxy(x,y)) &
       dblarr4d(x,y,:,i) = -EXP(parval(x,y,indpar%lnAv(i)))/1.086_DP * extinct(i,:)
     Pabs0(:,:,:) = EXP( SUM(dblarr4d(:,:,:,:),DIM=4) )
     IF (PRESENT(Pabs)) Pabs = Pabs0(:,:,:)
     IF (PRESENT(Pabs_tab)) Pabs_tab = EXP( dblarr4d(:,:,:,:) )
+    ! IF (PRESENT(Pabs)) Pabs = zero2NaN(Pabs0(:,:,:))
+    ! IF (PRESENT(Pabs_tab)) Pabs_tab = EXP( zero2NaN(dblarr4d(:,:,:,:)) )
     
     !! 5. Lines
     !!----------
     CALL REALLOCATE(dblarr4d,Nx,Ny,Nw,Nline)
+    dblarr4d(:,:,:,:) = 0._DP
     !! FnuLINE [W/m2/sr/Hz] = Iline [W/m2/sr] * gaussLine [Hz-1]
-    FORALL (x=1:Nx,y=1:Ny,i=1:Nline,ANY(mask(x,y,:))) &
-      dblarr4d(x,y,:,i) = EXP( parval(x,y,indpar%lnRline(i))+lnIref(x,y) ) * &
-                          gaussLine(wvl(:), parval(x,y,indpar%Cline(i)), &
-                            parval(x,y,indpar%Wline(i)),.TRUE.)
+    DO i=1,Nline
+      FORALL (x=1:Nx,y=1:Ny,maskxy(x,y)) &
+        dblarr4d(x,y,:,i) = EXP( parval(x,y,indpar%lnRline(i))+lnIref(x,y) ) * &
+                            gaussLine(wvl(:), parval(x,y,indpar%Cline(i)), &
+                              parval(x,y,indpar%Wline(i)),.TRUE.)
+    END DO
     FnuLINE0(:,:,:) = SUM(dblarr4d(:,:,:,:),DIM=4)
     IF (PRESENT(FnuLINE)) FnuLINE = FnuLINE0(:,:,:)
     IF (PRESENT(FnuLINE_tab)) FnuLINE_tab = dblarr4d(:,:,:,:)
-    
+    ! IF (PRESENT(FnuLINE)) FnuLINE = zero2NaN(FnuLINE0(:,:,:))
+    ! IF (PRESENT(FnuLINE_tab)) FnuLINE_tab = zero2NaN(dblarr4d(:,:,:,:))
+
     !! Total model
     !!-------------
-    specModel_3D(:,:,:) = (FnuCONT0(:,:,:) + FnuBAND0(:,:,:) + FnuSTAR0(:,:,:) + &
-                           FnuLINE0(:,:,:)) * Pabs0(:,:,:)
+    specModel_3D(:,:,:) = (FnuCONT0(:,:,:) + FnuBAND0(:,:,:) &
+                           + FnuSTAR0(:,:,:) + FnuLINE0(:,:,:)) * Pabs0(:,:,:)
+    ! specModel_3D(:,:,:) = zero2NaN(specModel_3D(:,:,:))
 
     IF (printimer) &
       PRINT*, "[specModel] EXECUTED IN "//TRIMLR(TIMINFO(timestr))//"."
@@ -2420,7 +3012,7 @@ CONTAINS
 
   !! 2D version
   !!============
-  FUNCTION specModel_2D( wvl, parval, indpar, Qabs, extinct, verbose, &
+  FUNCTION specModel_2D( wvl, parval, indpar, mask, Qabs, extinct, verbose, &
                          FnuCONT, FnuBAND, FnuSTAR, Pabs, FnuLINE, &
                          FnuCONT_tab, FnuBAND_tab, FnuSTAR_tab, Pabs_tab, FnuLINE_tab )
     USE utilities, ONLY: DP
@@ -2431,30 +3023,48 @@ CONTAINS
     TYPE(indpar_type), INTENT(IN) :: indpar
     TYPE(Qabs_type), DIMENSION(:), INTENT(IN) :: Qabs
     LOGICAL, INTENT(IN), OPTIONAL :: verbose
-    LOGICAL, DIMENSION(:,:,:), ALLOCATABLE :: mask
+    LOGICAL, DIMENSION(:,:), INTENT(IN), OPTIONAL :: mask ! 2D (Nx,Nw)
     REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: &
       FnuCONT0, FnuBAND0, FnuSTAR0, Pabs0, FnuLINE0
     REAL(DP), DIMENSION(:,:,:,:), ALLOCATABLE :: &
       FnuCONT_tab0, FnuBAND_tab0, FnuSTAR_tab0, Pabs_tab0, FnuLINE_tab0
+    LOGICAL :: verbose0
+    LOGICAL, DIMENSION(:,:,:), ALLOCATABLE :: mask3D
     REAL(DP), DIMENSION(:,:), ALLOCATABLE, INTENT(OUT), OPTIONAL :: &
       FnuCONT, FnuBAND, FnuSTAR, Pabs, FnuLINE
     REAL(DP), DIMENSION(:,:,:), ALLOCATABLE, INTENT(OUT), OPTIONAL :: &
       FnuCONT_tab, FnuBAND_tab, FnuSTAR_tab, Pabs_tab, FnuLINE_tab
     REAL(DP), DIMENSION(SIZE(parval,1),SIZE(wvl)) :: specModel_2D
-    INTEGER :: Nx, Npar
+    INTEGER :: x, Nw, Nx, Npar
+    Nw = SIZE(wvl(:))
     Nx = SIZE(parval(:,:),1)
     Npar = SIZE(parval(:,:),2)
-    ALLOCATE(mask(Nx,1,1))
-    mask(:,:,:) = .TRUE.
-    specModel_2D(:,:) = RESHAPE( specModel_3D(wvl(:), INDPAR=indpar, &
-                                   PARVAL=RESHAPE(parval(:,:),[Nx,1,Npar]), MASK=mask(:,:,:), &
-                                   QABS=Qabs, EXTINCT=extinct, VERBOSE=verbose, &
-                                   FNUCONT=FnuCONT0, FNUBAND=FnuBAND0, FNUSTAR=FnuSTAR0, &
-                                   PABS=Pabs0, FNULINE=FnuLINE0, &
-                                   FNUCONT_TAB=FnuCONT_tab0, FNUBAND_TAB=FnuBAND_tab0, &
-                                   FNUSTAR_TAB=FnuSTAR_tab0, PABS_TAB=Pabs_tab0, &
-                                   FNULINE_TAB=FnuLINE_tab0), &
-                                 [Nx,SIZE(wvl(:))] )
+    verbose0 = .FALSE.
+    IF (PRESENT(verbose)) verbose0 = verbose
+    IF (PRESENT(mask)) THEN
+      ALLOCATE(mask3D(Nx,1,Nw))
+      FORALL (x=1:Nx) mask3D(x,1,:) = mask(x,:)
+      specModel_2D(:,:) = RESHAPE( specModel_3D(wvl(:), INDPAR=indpar, &
+                                     PARVAL=RESHAPE(parval(:,:),[Nx,1,Npar]), &
+                                     MASK=mask3D(:,:,:), &
+                                     QABS=Qabs, EXTINCT=extinct, VERBOSE=verbose0, &
+                                     FNUCONT=FnuCONT0, FNUBAND=FnuBAND0, FNUSTAR=FnuSTAR0, &
+                                     PABS=Pabs0, FNULINE=FnuLINE0, &
+                                     FNUCONT_TAB=FnuCONT_tab0, FNUBAND_TAB=FnuBAND_tab0, &
+                                     FNUSTAR_TAB=FnuSTAR_tab0, PABS_TAB=Pabs_tab0, &
+                                     FNULINE_TAB=FnuLINE_tab0), &
+                                   [Nx,SIZE(wvl(:))] )
+    ELSE
+      specModel_2D(:,:) = RESHAPE( specModel_3D(wvl(:), INDPAR=indpar, &
+                                     PARVAL=RESHAPE(parval(:,:),[Nx,1,Npar]), &
+                                     QABS=Qabs, EXTINCT=extinct, VERBOSE=verbose0, &
+                                     FNUCONT=FnuCONT0, FNUBAND=FnuBAND0, FNUSTAR=FnuSTAR0, &
+                                     PABS=Pabs0, FNULINE=FnuLINE0, &
+                                     FNUCONT_TAB=FnuCONT_tab0, FNUBAND_TAB=FnuBAND_tab0, &
+                                     FNUSTAR_TAB=FnuSTAR_tab0, PABS_TAB=Pabs_tab0, &
+                                     FNULINE_TAB=FnuLINE_tab0), &
+                                   [Nx,SIZE(wvl(:))] )
+    END IF
     IF (PRESENT(FnuCONT)) FnuCONT = FnuCONT0(:,1,:)
     IF (PRESENT(FnuBAND)) FnuBAND = FnuBAND0(:,1,:)
     IF (PRESENT(FnuSTAR)) FnuSTAR = FnuSTAR0(:,1,:)
@@ -2469,7 +3079,7 @@ CONTAINS
   
   !! 1D version
   !!============
-  FUNCTION specModel_1D( wvl, parval, indpar, Qabs, extinct, verbose, &
+  FUNCTION specModel_1D( wvl, parval, indpar, mask, Qabs, extinct, verbose, &
                          FnuCONT, FnuBAND, FnuSTAR, Pabs, FnuLINE, &
                          FnuCONT_tab, FnuBAND_tab, FnuSTAR_tab, Pabs_tab, FnuLINE_tab )
     USE utilities, ONLY: DP
@@ -2480,29 +3090,47 @@ CONTAINS
     TYPE(indpar_type), INTENT(IN) :: indpar
     TYPE(Qabs_type), DIMENSION(:), INTENT(IN) :: Qabs
     LOGICAL, INTENT(IN), OPTIONAL :: verbose
-    LOGICAL, DIMENSION(:,:,:), ALLOCATABLE :: mask
+    LOGICAL, DIMENSION(:), INTENT(IN), OPTIONAL :: mask ! 1D (Nw)
     REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: &
       FnuCONT0, FnuBAND0, FnuSTAR0, Pabs0, FnuLINE0
     REAL(DP), DIMENSION(:,:,:,:), ALLOCATABLE :: &
       FnuCONT_tab0, FnuBAND_tab0, FnuSTAR_tab0, Pabs_tab0, FnuLINE_tab0
+    LOGICAL :: verbose0
+    LOGICAL, DIMENSION(:,:,:), ALLOCATABLE :: mask3D
     REAL(DP), DIMENSION(:), ALLOCATABLE, INTENT(OUT), OPTIONAL :: &
       FnuCONT, FnuBAND, FnuSTAR, Pabs, FnuLINE
     REAL(DP), DIMENSION(:,:), ALLOCATABLE, INTENT(OUT), OPTIONAL :: &
       FnuCONT_tab, FnuBAND_tab, FnuSTAR_tab, Pabs_tab, FnuLINE_tab
     REAL(DP), DIMENSION(SIZE(wvl)) :: specModel_1D
-    INTEGER :: Npar
+    INTEGER :: Nw, Npar
+    Nw = SIZE(wvl(:))
     Npar = SIZE(parval(:))
-    ALLOCATE(mask(1,1,1))
-    mask(:,:,:) = .TRUE.
-    specModel_1D(:) = RESHAPE( specModel_3D(wvl(:), INDPAR=indpar, &
-                                 PARVAL=RESHAPE(parval(:),[1,1,Npar]), MASK=mask, &
-                                 QABS=Qabs, EXTINCT=extinct, VERBOSE=verbose, &
-                                 FNUCONT=FnuCONT0, FNUBAND=FnuBAND0, FNUSTAR=FnuSTAR0, &
-                                 PABS=Pabs0, FNULINE=FnuLINE0, &
-                                 FNUCONT_TAB=FnuCONT_tab0, FNUBAND_TAB=FnuBAND_tab0, &
-                                 FNUSTAR_TAB=FnuSTAR_tab0, PABS_TAB=Pabs_tab0, &
-                                 FNULINE_TAB=FnuLINE_tab0), &
-                               [SIZE(wvl(:))] )
+    verbose0 = .FALSE.
+    IF (PRESENT(verbose)) verbose0 = verbose
+    IF (PRESENT(mask)) THEN
+      ALLOCATE(mask3D(1,1,Nw))
+      mask3D(1,1,:) = mask(:)
+      specModel_1D(:) = RESHAPE( specModel_3D(wvl(:), INDPAR=indpar, &
+                                   PARVAL=RESHAPE(parval(:),[1,1,Npar]), &
+                                   MASK=mask3D(:,:,:), &
+                                   QABS=Qabs, EXTINCT=extinct, VERBOSE=verbose0, &
+                                   FNUCONT=FnuCONT0, FNUBAND=FnuBAND0, FNUSTAR=FnuSTAR0, &
+                                   PABS=Pabs0, FNULINE=FnuLINE0, &
+                                   FNUCONT_TAB=FnuCONT_tab0, FNUBAND_TAB=FnuBAND_tab0, &
+                                   FNUSTAR_TAB=FnuSTAR_tab0, PABS_TAB=Pabs_tab0, &
+                                   FNULINE_TAB=FnuLINE_tab0), &
+                                 [SIZE(wvl(:))] )
+    ELSE
+      specModel_1D(:) = RESHAPE( specModel_3D(wvl(:), INDPAR=indpar, &
+                                   PARVAL=RESHAPE(parval(:),[1,1,Npar]), &
+                                   QABS=Qabs, EXTINCT=extinct, VERBOSE=verbose0, &
+                                   FNUCONT=FnuCONT0, FNUBAND=FnuBAND0, FNUSTAR=FnuSTAR0, &
+                                   PABS=Pabs0, FNULINE=FnuLINE0, &
+                                   FNUCONT_TAB=FnuCONT_tab0, FNUBAND_TAB=FnuBAND_tab0, &
+                                   FNUSTAR_TAB=FnuSTAR_tab0, PABS_TAB=Pabs_tab0, &
+                                   FNULINE_TAB=FnuLINE_tab0), &
+                                 [SIZE(wvl(:))] )
+    END IF
     IF (PRESENT(FnuCONT)) FnuCONT = FnuCONT0(1,1,:)
     IF (PRESENT(FnuBAND)) FnuBAND = FnuBAND0(1,1,:)
     IF (PRESENT(FnuSTAR)) FnuSTAR = FnuSTAR0(1,1,:)

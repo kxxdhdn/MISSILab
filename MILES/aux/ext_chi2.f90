@@ -20,7 +20,7 @@ MODULE ext_chi2
   REAL(DP), DIMENSION(:,:,:), ALLOCATABLE, SAVE, PUBLIC :: FnuOBS, dFnuOBS
   REAL(DP), DIMENSION(:,:,:,:), ALLOCATABLE, SAVE, PUBLIC :: invLcovarOBS
   LOGICAL, SAVE, PUBLIC :: iid ! indpdt identically dist. (wvl)
-  LOGICAL, DIMENSION(:,:,:), ALLOCATABLE, SAVE, PUBLIC :: mask
+  LOGICAL, DIMENSION(:,:,:), ALLOCATABLE, SAVE, PUBLIC :: mask, maskpar
 
   !! Init param
   !!------------
@@ -47,6 +47,7 @@ CONTAINS
     REAL(DP), DIMENSION(NwOBS0) :: residuals
 
     Fnu_mod(:) = specModel(wOBS(:), INDPAR=ind, PARVAL=par(:), &
+                           MASK=mask(xOBS,yOBS,:), &
                            QABS=Qabs(:), EXTINCT=extinct(:,:))
 
     !! Unweighted residuals    
@@ -54,7 +55,6 @@ CONTAINS
       resid(:) = FnuOBS(xOBS,yOBS,:) - Fnu_mod(:)
     ELSEWHERE
       resid(:) = 0._DP
-
     END WHERE
     
     !! Weighted residuals
@@ -66,7 +66,6 @@ CONTAINS
         residuals(i) = invLcovarOBS(xOBS,yOBS,i,i) * resid(i)
     ELSE
       residuals(:) = MATMUL(invLcovarOBS(xOBS,yOBS,:,:), resid(:))
-
     END IF
 
   END FUNCTION residuals
