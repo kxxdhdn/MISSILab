@@ -17,12 +17,12 @@ import os
 import math
 import numpy as np
 
-## astylo
-from astylo.arrlib import closest
-from astylo.iolib import read_fits, write_hdf5, read_hdf5
+## laputan
+from laputan.arrays import closest
+from laputan.inout import read_fits, write_hdf5, read_hdf5
 
 ## local
-from utilities import (croot, mroot,
+from librarian import (croot, mroot,
                        res, TABLine, TABand, partuning)
          
 ## Path

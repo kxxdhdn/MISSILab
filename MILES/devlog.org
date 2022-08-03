@@ -6,6 +6,9 @@
 #+STARTUP: logdone
 
 Version: v0.3.4 (20210526)
+* Archive notes
+- Stop updates at v0.3.4
+- Later changelog see ~README.org~
 * DONE tests (tests/) [12/12]
 ** DONE invert
 CLOSED: [2021-04-14 Wed 10:42]

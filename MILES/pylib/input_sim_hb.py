@@ -13,16 +13,16 @@ This is the interface of MILES generating following input files:
 
 """
 
-import os, pathlib
+import os
 import math
 import numpy as np
 
-## astylo
-from astylo.arrlib import closest
-from astylo.iolib import read_fits, write_hdf5, read_hdf5
+## laputan
+from laputan.arrays import closest
+from laputan.inout import read_fits, write_hdf5, read_hdf5
 
 ## local
-from utilities import (croot, mroot,
+from librarian import (croot, mroot,
                        res, TABLine, TABand, partuning)
 
 ## Path
@@ -51,7 +51,7 @@ chi2init = True # True if using chi2 results as BB init param
 ##-----------------------------
 z = 0. # rest frame
 wvl_inf = 5. # min wvl
-wvl_sup = 21. # max wvl
+wvl_sup = 20.5 # max wvl
 x_inf = None # all
 x_sup = None
 y_inf = None
@@ -80,6 +80,15 @@ if spec_unit=='MKS':
 ## Mask NaNs
 mask = np.isnan(data) * 1
 
+## Spectroscopic modules for calibration errors
+calibmod = [
+            # 'IRC_NG',
+            'IRS_SL2',
+            'IRS_SL1',
+            'IRS_LL2',
+            # 'IRS_LL1',
+]
+
 ## Write HDF5
 ##------------
 write_hdf5(h5_obs, 'spectral unit', [spec_unit], verbose=True)
@@ -87,7 +96,8 @@ write_hdf5(h5_obs, 'wavelength (microns)', wave, append=True, verbose=noisy)
 write_hdf5(h5_obs, 'FnuOBS ('+spec_unit+')', data, append=True, verbose=noisy)
 write_hdf5(h5_obs, 'dFnuOBS ('+spec_unit+')', unc, append=True, verbose=noisy)
 write_hdf5(h5_obs, 'NaN mask', mask, append=True, verbose=noisy)
-    
+write_hdf5(h5_obs, 'spectroscopic module labels', calibmod, append=True, verbose=noisy)
+
 ##--------------------------------
 ##
 ## Write input_master.h5
@@ -99,13 +109,13 @@ if not os.path.exists(dirout):
 verbose = 'T'
 Nmcmc = 10000
 NiniMC = 0 # no need for BB
-calib = 'F'
+calib = 'T'
 robust_RMS = 'F'
 robust_cal = 'F'
 skew_RMS = 'F'
 newseed = 'F'
 dostop = 'F'
-resume = 'T'
+resume = 'F'
 indresume = -1 # set a negative value if auto-resume
 newinit = 'F'
 nohi = 'F'

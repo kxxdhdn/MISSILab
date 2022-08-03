@@ -16,6 +16,7 @@ PROGRAM simulation
   USE inout, ONLY: read_hdf5, write_hdf5, h5ext, lenpar
   USE grain_optics, ONLY: lendustQ
   USE core, ONLY: parinfo_type, indpar_type, Qabs_type, read_master, specModel
+  USE ext_chi2, ONLY: mask
   IMPLICIT NONE
 
   INTEGER, PARAMETER :: textwid = 60
@@ -232,16 +233,17 @@ PROGRAM simulation
   
   !!---------------------------------
   !! Generate spectra with the model
-  !!--------------------------------
+  !!---------------------------------
   FORALL (p=1:Np,q=1:Nq) &
     par(p,q,ind%lnFcont(:Ncont)) = par(p,q,ind%lnFcont(:Ncont)) + LOG(multiCONT(q))
 
   par(:,:,ind%lnAv(:)) = 0.5_DP
   
-  ALLOCATE(FnuSIM(Np,Nq,Nw), dFnuSIM(Np,Nq,Nw))
+  ALLOCATE(FnuSIM(Np,Nq,Nw), dFnuSIM(Np,Nq,Nw), mask(Np,Nq,Nw))
+  mask(:,:,:) = .TRUE.
 
   FnuSIM(:,:,:) = specModel(wvl(:), INDPAR=ind, PARVAL=par(:,:,:), &
-                            FNUBAND_TAB=fnuband_tab, &
+                            MASK=mask(:,:,:), FNUBAND_TAB=fnuband_tab, &
                             QABS=Qabs(:), EXTINCT=extinct(:,:))
 
   !! Statistical noises

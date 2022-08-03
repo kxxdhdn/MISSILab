@@ -11,13 +11,13 @@ import os, pathlib
 import numpy as np
 import matplotlib.pyplot as plt
 
-## astylo
-from astylo.mlib import closest
-from astylo.iolib import read_hdf5
-from astylo.plib import plot2d_m
+## laputan
+from laputan.arrays import closest
+from laputan.inout import read_hdf5
+from laputan.plots import pplot
 
 ## local
-from utilities import croot, TABand
+from librarian import croot, TABand
 
 ## Path
 ##------
@@ -67,7 +67,7 @@ for m in mode:
         Nstar = FnuSTAR.shape[0]
         Fnu_tab = []
         lab_tab = []
-        col_tab = []
+        col_tab = ['k']
         Fnu_tab.append(FnuOBS)
         lab_tab.append('Obs')
         col_tab.append('y')
@@ -120,11 +120,13 @@ for m in mode:
                     # title = 'fit_'+'_('+str(x+1)+','+str(y+1)+')'+m
                     
                     filename1 = path_fig+title+'.png'
-                                    
-                    p = plot2d_m(wvl, n_Fnu_tab[:,:,y,x], 
-                                 xall=wvl, xlog=0, ylog=0, xlim=(4., 22.), #ylim=(0.,1.e3), 
-                                 title=title+' -['+labelist[y]+']', xlab=xlab, ylab=ylab, 
-                                 cl=['k','y','r','y'])
+
+                    p = pplot(wvl, n_Fnu_tab[0,:,y,x],
+                              xlog=0, ylog=0, xlim=(4., 22.), #ylim=(0.,1.e3),
+                              title=title+' -['+labelist[y]+']', xlab=xlab, ylab=ylab,
+                              clib=['k','y','r','y'])
+                    for i in range(3):
+                        p.add_plot(wvl, n_Fnu_tab[i,:,y,x])
     
                     p.ax.fill_between(wvl, n_FnuMOD[0,:,y,x], n_FnuMOD[2,:,y,x], facecolor='y')
                     p.save(filename1)
@@ -137,11 +139,12 @@ for m in mode:
                 # title = 'fit_'+'_('+str(x+1)+','+str(y+1)+')'+m
                 
                 filename2 = path_fig+title+'.png'
-                                
-                p = plot2d_m(wvl, Fnu_tab[:,:,y,x], 
-                             xall=wvl, xlog=0, ylog=0, xlim=(4., 22.), #ylim=(0.,1.e3), 
-                             title=title+' -['+labelist[y]+']', xlab=xlab, ylab=ylab, 
-                             lablist=lab_tab, legend='upper left', cl=col_tab)
+
+                p = pplot(xlog=0, ylog=0, xlim=(4., 22.), #ylim=(0.,1.e3), 
+                          title=title+' -['+labelist[y]+']', xlab=xlab, ylab=ylab, 
+                          legend='upper left', clib=col_tab)
+                for i in range(Fnu_tab.shape[0]):
+                    p.add_plot(wvl, Fnu_tab[i,:,y,x], label=lab_tab[i])
                 
                 p.save(filename2)
                 

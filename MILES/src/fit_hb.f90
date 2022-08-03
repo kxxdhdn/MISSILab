@@ -17,39 +17,48 @@ PROGRAM fit_hb
   USE inout, ONLY: read_hdf5, write_hdf5, check_hdf5, h5ext, ascext, lenpar, lenpath
   USE grain_optics, ONLY: lendustQ
   USE random, ONLY: generate_newseed, rand_general
-  USE core, ONLY: read_master, initparam, lencorr
-  USE hb, ONLY: Nx, Ny, NwOBS, wOBS, nuOBS, xOBS, yOBS, &
-                FnuOBS, dFnuOBS, cenlnS0, siglnS0, &
-                i2ih, ipar, ihpar, icorr, icorr2ij, &
-                parcurr, parhypcurr, allparhypcurr, &
-                cov_prev, invcov_prev, invcorr_prev, &
-                mucurr, sigcurr, corrcurr, Nparhyp, Ncorrhyp, &
-                lnpost_par, lnlhobs_par, &
-                detcov_prev, detcorr, noposdef_prev, &
-                lnpost_mu, lnpost_sig, lnpost_corr, covariance, &
-                mask, maskpar, maskhyp, maskhypcurr, maskS, &!maskextra, &
-                ind, parinfo, parhypinfo, Qabs, extinct
+  USE core, ONLY: read_master, initparam, lencorr, specModel, set_indcal
+  USE ext_hb, ONLY: Nx, Ny, NwOBS, wOBS, nuOBS, xOBS, yOBS, &
+                    NwFIT, wFIT, iwFIT, maskspec, & ! Spectral mask
+                    FnuOBS, dFnuOBS, cenlnS0, siglnS0, &
+                    i2ih, ipar, ihpar, icorr, icorr2ij, &
+                    parcurr, parhypcurr, allparhypcurr, &
+                    cov_prev, invcov_prev, invcorr_prev, &
+                    mucurr, sigcurr, corrcurr, Nparhyp, Ncorrhyp, &
+                    lnpost_par, lnlhobs_par, Fnu_model, &
+                    detcov_prev, detcorr, noposdef_prev, &
+                    lnpost_mu, lnpost_sig, lnpost_corr, covariance, &
+                    mask, maskpar, maskhyp, maskhypcurr, maskS, &!maskextra, &
+                    ind, parinfo, parhypinfo, Qabs, extinct, &
+                    robust_RMS, skew_RMS, robust_cal, calib, &
+                    jcal, iw2ical, Ncalib, sigcal, calibool, &
+                    ln1pd, delp1, lnpost_del, specOBS ! Calibration errors
   IMPLICIT NONE
 
   !! Parameters
   INTEGER, PARAMETER :: ulog = 2
   INTEGER, PARAMETER :: textwid = 60
   INTEGER, PARAMETER :: Ngibbsmax = 3000
+  REAL(DP), PARAMETER :: Nsigcalran = 3._DP
   REAL(DP), PARAMETER :: accrand = 1.E-3_DP
   CHARACTER(*), PARAMETER :: nampar = "Parameter values"
+  CHARACTER(*), PARAMETER :: namln1pd = "ln(1+delta)"
   CHARACTER(*), PARAMETER :: nammu = "Mean of hyperdistribution"
   CHARACTER(*), PARAMETER :: namsig = "Sigma of hyperdistribution"
   CHARACTER(*), PARAMETER :: namcorr = "Correlation of hyperdistribution"
+  CHARACTER(*), PARAMETER :: namind = "Last index"
+  LOGICAL, DIMENSION(2), PARAMETER :: limT = [ .TRUE., .TRUE. ]
+  ! LOGICAL, DIMENSION(2), PARAMETER :: limF = [ .FALSE., .FALSE. ]
   LOGICAL, PARAMETER :: compress = .TRUE.
   LOGICAL, PARAMETER :: debug = .FALSE.
   
   !! Input variables
-  INTEGER :: x, y, i, ih, indhyp, indres0
+  INTEGER :: x, y, i, ih, ical, indhyp, indres0
   INTEGER :: Npar, Nmcmc, NiniMC, Nsou, Nparfree
   INTEGER :: Ncont, Nband, Nline, Nextc, Nstar, Nextra
   INTEGER, DIMENSION(:), ALLOCATABLE :: indresume, itied
   INTEGER, DIMENSION(:,:,:), ALLOCATABLE :: maskint ! convert mask=0 to mask=T
-  LOGICAL :: verbose, calib, newseed, newinit, dostop, resume, nohi
+  LOGICAL :: verbose, newseed, newinit, dostop, resume, nohi
   CHARACTER(lenpath) :: dirIN, dirOUT, filOBS, filOUT, filMCMC, fiLOG
   CHARACTER(lenpar) :: spec_unit
   CHARACTER(lencorr), DIMENSION(:), ALLOCATABLE :: corrhypname
@@ -59,8 +68,9 @@ PROGRAM fit_hb
   !! MCMC parameters
   INTEGER :: icurr, iprev, counter
   REAL(DP), DIMENSION(2) :: lim, limlnS0, limR
-  REAL(DP), DIMENSION(:), ALLOCATABLE :: mu0, sig0, corr0
-  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: mumcmc, sigmcmc, corrmcmc
+  REAL(DP), DIMENSION(:), ALLOCATABLE :: mu0, sig0, corr0, ln1pd0
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: ln1pdmcmc, mumcmc, sigmcmc, corrmcmc
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: limln1pd
   REAL(DP), DIMENSION(:,:,:,:), ALLOCATABLE :: parini, parmcmc
   LOGICAL :: fileOK
 
@@ -101,7 +111,9 @@ PROGRAM fit_hb
   CALL READ_HDF5(wOBS, FILE=filOBS, NAME='wavelength (microns)', N1=NwOBS)
   CALL READ_MASTER(WAVALL=wOBS(:), DIRIN=dirIN, DIROUT=dirOUT, &
                    VERBOSE=verbose, NMCMC=Nmcmc, NINIMC=NiniMC, &
-                   CALIB=calib, NEWSEED=newseed, NEWINIT=newinit, &
+                   ROBUST_RMS=robust_RMS, SKEW_RMS=skew_RMS, &
+                   CALIB=calib, ROBUST_CAL=robust_cal, &
+                   NEWSEED=newseed, NEWINIT=newinit, &
                    LABL=labL, LABB=labB, QABS=Qabs, EXTINCT=extinct, &
                    NCONT=Ncont, NBAND=Nband, NLINE=Nline, &
                    NEXTC=Nextc, NSTAR=Nstar, NEXTRA=Nextra, NCORR=Ncorr, &
@@ -129,7 +141,8 @@ PROGRAM fit_hb
   IF (newseed) CALL GENERATE_NEWSEED()
   IF (verbose) PRINT*
   DO i=1,MERGE(2,1,verbose)
-    CALL BANNER_PROGRAM("HISTOIRE: HIerarchical bayeSian fitting Tool Of mid-IR Emission", &
+    CALL BANNER_PROGRAM("HISTOIRE (HIerarchical bayeSian fitting Tool Of mid-IR Emission)" &
+                        // "written by D. Hu", &
                         UNIT=unitlog(i), SWING=.TRUE.)
     IF (resume) THEN
       WRITE(unitlog(i),*) 
@@ -142,8 +155,10 @@ PROGRAM fit_hb
     END IF
   END DO
   
-  !! 2) Observation sample
-  !!-----------------------
+  !! 2) Observational sample
+  !!-------------------------
+  CALL READ_HDF5(STRARR1D=specOBS, FILE=filOBS, &
+                 NAME='spectroscopic module labels')
   CALL READ_HDF5(DBLARR3D=FnuOBS, FILE=filOBS, &
                  NAME='FnuOBS ('//TRIMLR(spec_unit)//')', N1=Nx, N2=Ny)
   !! On input, the convention is mask=1 => blocks; mask=0 => passes.
@@ -158,21 +173,42 @@ PROGRAM fit_hb
   !! - MASKHYP(Nx,Ny,Nparhyp) selects the parameters of pixels which having to
   !!   be treated hierarchically. For extra parameters, it is MASKEXTRA.
   !! - MASKPAR(Nx,Ny,Npar) is the same as MASKHYP but for the parameter list.
+  !! - MASKSPEC(NwOBS) is the wavelength mask selected to fit
   ALLOCATE(mask(Nx,Ny,NwOBS))
   mask(:,:,:) = ( maskint(:,:,:) == 0 )
-  ! WHERE (isNaN(FnuOBS(:,:,:)) .OR. .NOT. mask(:,:,:)) FnuOBS(:,:,:) = 0._DP
+  WHERE (isNaN(FnuOBS(:,:,:)) .OR. .NOT. mask(:,:,:)) FnuOBS(:,:,:) = 0._DP
 
   !! Noise
   CALL READ_HDF5(DBLARR3D=dFnuOBS, FILE=filOBS, &
                  NAME='dFnuOBS ('//TRIMLR(spec_unit)//')')
-  ! WHERE (isNaN(dFnuOBS(:,:,:)))
-  !   dFnuOBS(:,:,:) = 0._DP
-  !   mask(:,:,:) = .FALSE.
-  ! END WHERE
-  
+  WHERE ( isNaN(dFnuOBS(:,:,:)) .OR. dFnuOBS<0._DP )
+    dFnuOBS(:,:,:) = 0._DP
+    mask(:,:,:) = .FALSE.
+  END WHERE
+  ALLOCATE(maskspec(NwOBS))
+  maskspec(:) = ANY(ANY(mask(:,:,:),DIM=1),DIM=1)
+  NwFIT = COUNT(maskspec(:))
+  CALL IWHERE(maskspec(:),iwFIT) ! i=1,NwFIT => iwFIT(i)=1,NwOBS
+  ALLOCATE(wFIT(NwFIT))
+  wFIT(:) = wOBS(iwFIT(:))
   ALLOCATE(nuOBS(NwOBS))
   nuOBS(:) = MKS%clight/MKS%micron / wOBS(:)
 
+  !! Read the instrumental covariance matrix
+  calibread: IF (calib) THEN
+    Ncalib = SIZE(specOBS)
+    ALLOCATE (iw2ical(Ncalib)) ! iw=1,NwOBS => iw2ical(ical)%indw=1,Nwcal
+    ALLOCATE(calibool(Ncalib,NwOBS),sigcal(Ncalib))
+    DO ical=1,Ncalib
+      CALL set_indcal(iw2ical(ical)%indw, wOBS(:), INSTR=specOBS(ical), &
+                      CALIBOOL=calibool(ical,:), CALIBERR=sigcal(ical))
+    END DO
+  ELSE
+    Ncalib = 1
+    ALLOCATE(iw2ical(1))
+    iw2ical(1)%indw = [(i,i=1,NwOBS)]
+  END IF calibread
+  
   !! Indices of tied parameters
   ALLOCATE(itied(Npar))
   itied(:) = 0
@@ -196,6 +232,13 @@ PROGRAM fit_hb
                           //TRIMLR(PRING(Nsou))
       WRITE(unitlog(i),*) " - Size of spectral sampling = " &
                           //TRIMLR(PRING(NwOBS))
+      IF (calib) THEN
+        WRITE(unitlog(i),*) " - Calibration errors are taken into " &
+                            //"account"
+      ELSE
+        WRITE(unitlog(i),*) " - Calibration errors are not taken " &
+                            //"into account"
+      END IF
       WRITE(unitlog(i),*) " - Nparhyp = "//TRIMLR(PRING(Nparhyp))
       WRITE(unitlog(i),*) " - Ncorrhyp = "//TRIMLR(PRING(Ncorrhyp))
       WRITE(unitlog(i),*)
@@ -254,20 +297,25 @@ PROGRAM fit_hb
   !! c. Range of parameters for Gibbs sampling
   !!-------------------------------------------
   !! Calibration errors
+  ALLOCATE (limln1pd(Ncalib,2))
+  IF (calib) THEN
+    limln1pd(:,1) = - Nsigcalran * sigcal(:)
+    limln1pd(:,2) = + Nsigcalran * sigcal(:)
+  END IF
   
   !! Parameters
   dolimit: DO i=1,Npar
     IF (.NOT. parinfo(i)%limited(1)) THEN
         parinfo(i)%limits(1) &
           = MERGE( MINVAL(PACK(parini(:,:,i,1),maskpar(:,:,i))) &
-                - 3._DP*SIGMA(PACK(parini(:,:,i,1),maskpar(:,:,i))), &
-                parini(1,1,i,1) - 5._DP, (Nsou > 1) )
+                     - 3._DP*SIGMA(PACK(parini(:,:,i,1),maskpar(:,:,i))), &
+                   parini(1,1,i,1) - 5._DP, (Nsou > 1) )
     END IF
     IF (.NOT. parinfo(i)%limited(2)) THEN
         parinfo(i)%limits(2) &
           = MERGE( MAXVAL(PACK(parini(:,:,i,1),maskpar(:,:,i))) &
-               + 3._DP*SIGMA(PACK(parini(:,:,i,1),maskpar(:,:,i))), &
-                 parini(1,1,i,1) + 5._DP, (Nsou > 1) )
+                     + 3._DP*SIGMA(PACK(parini(:,:,i,1),maskpar(:,:,i))), &
+                   parini(1,1,i,1) + 5._DP, (Nsou > 1) )
     END IF
   END DO dolimit
 
@@ -300,18 +348,22 @@ PROGRAM fit_hb
       sig0(:) = 0.5_DP * ( parinfo(:)%limits(2) - parinfo(:)%limits(1) )
     corr0(:) = 0._DP
   END IF
-
+  ALLOCATE (ln1pd0(Ncalib))
+  ln1pd0(:) = 0._DP
+  
   !! Print the initial values
   DO i=1,MERGE(2,1,debug)
     WRITE(unitlog(i),*) "mu0 = ", mu0
     WRITE(unitlog(i),*) "sig0 = ", sig0
     WRITE(unitlog(i),*) "corr0 = ", corr0
+    WRITE(unitlog(i),*) "ln1pd = ", ln1pd0
   END DO
   
   !! Initialize the parameters of the chain
-  ALLOCATE (parmcmc(Nx,Ny,Npar,2))!,ln1pdmcmc(Ncalib,2))
+  ALLOCATE (parmcmc(Nx,Ny,Npar,2),ln1pdmcmc(Ncalib,2))
   DO i=1,2 
     FORALL (x=1:Nx,y=1:Ny,ANY(maskpar(x,y,:))) parmcmc(x,y,:,i) = parini(x,y,:,1)
+    ln1pdmcmc(:,i) = ln1pd0(:)
   END DO
 
   !! Initialize the hyperparameters. If the run is non hierarchical, we
@@ -352,8 +404,9 @@ PROGRAM fit_hb
   iprev = 1
   
   !! Allocate arrays
-  ! ALLOCATE (ln1pd(Ncalib)) ! LN(1+delta) for the current iteration
-  ! ALLOCATE (delp1(NwOBS))  ! delta+1 for the current iteration
+  ALLOCATE (Fnu_model(Nx,Ny,NwOBS)) ! spectral model
+  ALLOCATE (ln1pd(Ncalib)) ! LN(1+delta) for the current iteration
+  ALLOCATE (delp1(NwOBS)) ! delta+1 for the current iteration
   ALLOCATE (parcurr(Npar)) ! current parameters
   IF (ANY(parinfo(:)%hyper)) THEN
     ALLOCATE (allparhypcurr(Nx,Ny,Nparhyp))  ! parameter grid
@@ -379,15 +432,21 @@ PROGRAM fit_hb
                     FILE=filMCMC, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
     CALL WRITE_HDF5(INTARR1D=[Nmcmc], NAME="Length of MCMC", &
                     FILE=filMCMC, COMPRESS=compress, verbose=debug, APPEND=.TRUE.)
+    !! - parameters
     CALL WRITE_HDF5(INITDBLARR=[Nx,Ny,Npar,Nmcmc], NAME=nampar, &
                     FILE=filMCMC, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
+    !! - calibration errors
+    CALL WRITE_HDF5(INITDBLARR=[Ncalib,Nmcmc], NAME=namln1pd, &
+                    FILE=filMCMC, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
+    !! - hyperparameters or moments of the parameters (/NOHYPER)
     CALL WRITE_HDF5(INITDBLARR=[Nparhyp,Nmcmc], NAME=nammu, &
                     FILE=filMCMC, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
     CALL WRITE_HDF5(INITDBLARR=[Nparhyp,Nmcmc], NAME=namsig, &
                     FILE=filMCMC, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
     CALL WRITE_HDF5(INITDBLARR=[Ncorrhyp,Nmcmc], NAME=namcorr, &
                     FILE=filMCMC, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
-    CALL WRITE_HDF5(INITINTARR=[1], NAME="Last index", &
+    !! - Current index
+    CALL WRITE_HDF5(INITINTARR=[1], NAME=namind, &
                     FILE=filMCMC, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
   ELSE
 
@@ -395,7 +454,7 @@ PROGRAM fit_hb
     fileOK = CHECK_HDF5(FILE=filMCMC)
     IF (fileOK) THEN
       !! Auto-resume
-      CALL READ_HDF5(INTARR1D=indresume,FILE=filMCMC,NAME="Last index")
+      CALL READ_HDF5(INTARR1D=indresume,FILE=filMCMC,NAME=namind)
       
       IF (indres0 > 0) THEN
         IF (indres0 > indresume(1)) THEN
@@ -417,6 +476,9 @@ PROGRAM fit_hb
         !! - Parameters
         CALL READ_HDF5(DBLARR4D=parmcmc,FILE=filMCMC,NAME=nampar, &
                        IND4=[counter-1,counter])
+        !! - calibration errors
+        CALL READ_HDF5(DBLARR2D=ln1pdmcmc,FILE=filMCMC,NAME=namln1pd, &
+                       IND2=[counter-1,counter])
         !! - Hyperparameters or moments of parameters (BB)
         CALL READ_HDF5(DBLARR2D=mumcmc,FILE=filMCMC,NAME=nammu, &
                        IND2=[counter-1,counter])
@@ -458,6 +520,64 @@ PROGRAM fit_hb
 
     !! 1) Calibration errors
     !!-----------------------
+    delp1(:) = 1._DP
+    calibration: IF (calib) THEN
+      ln1pdmcmc(:,icurr) = ln1pdmcmc(:,iprev)
+
+      !! a. Compute the model for the current parameters
+      Fnu_model(:,:,:) &
+        = specModel( wOBS(:), INDPAR=ind, PARVAL=parmcmc(:,:,:,iprev), &
+                     MASK=mask(:,:,:), QABS=Qabs(:), EXTINCT=extinct(:,:) )
+
+      !! b. Draw the calibration errors
+      DO jcal=1,Ncalib
+        IF (debug) PRINT*, " - ln(1+d("//TRIMLR(specOBS(jcal))//"))"
+        ln1pd(jcal) = ln1pdmcmc(jcal,icurr)
+        ln1pdmcmc(jcal,icurr) = RAND_GENERAL(lnpost_del, limln1pd(jcal,:), &
+                                             YLOG=.TRUE., VERBOSE=debug, &
+                                             LNFUNC=.TRUE., ACCURACY=accrand, &
+                                             LIMITED=limT(:), NMAX=Ngibbsmax)
+        IF (debug) PRINT*, "ln1pd(", jcal, ") = ", ln1pdmcmc(jcal,icurr)
+
+        WHERE (calibool(jcal,:)) &
+          delp1(:) = EXP(ln1pdmcmc(jcal,icurr))
+      END DO
+! print*, delp1
+
+    !! 1) Calibration errors (per pixel)
+    !!-----------------------
+    ! delp1(:) = 1._DP
+    ! calibration: IF (calib) THEN
+    !   ln1pdmcmc(:,icurr) = ln1pdmcmc(:,iprev)
+
+    !   !! a. Compute the model for the current parameters
+    !   Fnu_model(:,:,:) &
+    !     = specModel( wOBS(:), INDPAR=ind, PARVAL=parmcmc(:,:,:,iprev), &
+    !                  MASK=mask(:,:,:), QABS=Qabs(:), EXTINCT=extinct(:,:) )
+
+    !   !! b. Draw the calibration errors
+    !   DO jcal=1,Ncalib
+    !     DO xOBS=1,Nx
+    !       DO yOBS=1,Ny
+    !         IF (debug) PRINT*, " - ln(1+d("//TRIMLR(specOBS(jcal))//"))"
+    !         ln1pd(xOBS,yOBS,jcal) = ln1pdmcmc(xOBS,yOBS,jcal,icurr)
+    !         ln1pdmcmc(xOBS,yOBS,jcal,icurr) &
+    !           = RAND_GENERAL(lnpost_del, limln1pd(jcal,:), &
+    !                          YLOG=.TRUE., VERBOSE=debug, &
+    !                          LNFUNC=.TRUE., ACCURACY=accrand, &
+    !                          LIMITED=limT(:), NMAX=Ngibbsmax)
+    !         IF (debug) PRINT*, "ln1pd(",xOBS,yOBS,jcal,") = ", &
+    !                            ln1pdmcmc(xOBS,yOBS,jcal,icurr)
+            
+    !         WHERE (calibool(jcal,:)) &
+    !           delp1(:) = EXP(ln1pdmcmc(jcal,icurr))
+
+    !       END DO
+    !     END DO
+    !   END DO
+! print*, delp1
+      
+    END IF calibration
     
     !! 2) Physical parameters
     !!------------------------
@@ -511,13 +631,13 @@ PROGRAM fit_hb
     !   WRITE(unitlog(i),*) 'Parameter sampling [done] - '// &
     !                         TRIMLR(TIMINFO(timestr))
     ! END DO
-    
+
     !! 3) Hyperparameters
     !!--------------------
     hierarchy: IF (ANY(parinfo(:)%hyper)) THEN
       FORALL (i=1:Nparhyp) allparhypcurr(:,:,i) = mucurr(i)
-      FORALL (xobs=1:Nx,yobs=1:Ny,i=1:Nparhyp,maskhyp(xobs,yobs,i)) &
-        allparhypcurr(xobs,yobs,i) = parmcmc(xobs,yobs,i2ih(i),icurr)
+      FORALL (xOBS=1:Nx,yOBS=1:Ny,i=1:Nparhyp,maskhyp(xOBS,yOBS,i)) &
+        allparhypcurr(xOBS,yOBS,i) = parmcmc(xOBS,yOBS,i2ih(i),icurr)
 
       !! a. Average
       mumcmc(:,icurr) = mumcmc(:,iprev)      
@@ -525,9 +645,9 @@ PROGRAM fit_hb
         IF (debug) PRINT*, " - mu("//TRIMLR(parinfo(i2ih(ihpar))%name)//")"
         lim(:) = parinfo(i2ih(ihpar))%limits(:)
         mucurr(:) = mumcmc(:,icurr)
-        mumcmc(ihpar,icurr) = RAND_GENERAL(lnpost_mu,lim(:),YLOG=.True., &
-                                           VERBOSE=debug,LNFUNC=.True., &
-                                           ACCURACY=accrand,NMAX=Ngibbsmax)
+        mumcmc(ihpar,icurr) = RAND_GENERAL(lnpost_mu, lim(:), YLOG=.TRUE., &
+                                           VERBOSE=debug, LNFUNC=.TRUE., &
+                                           ACCURACY=accrand, NMAX=Ngibbsmax)
         ! IF (ihpar==1) PRINT*, 'mumcmc(1,icurr)', mumcmc(ihpar,icurr) ! with fixed seed
 
       END DO average
@@ -535,7 +655,7 @@ PROGRAM fit_hb
       !   WRITE(unitlog(i),*) 'Average sampling [done] - '// &
       !                         TRIMLR(TIMINFO(timestr))
       ! END DO
-      
+
       !! b. Variance
       mucurr(:) = mumcmc(:,icurr)
       sigmcmc(:,icurr) = sigmcmc(:,iprev)
@@ -545,9 +665,9 @@ PROGRAM fit_hb
         lim(:) = cenlnS0(ihpar) + limlnS0(:)
         sigcurr(:) = sigmcmc(:,icurr)
 
-        sigmcmc(ihpar,icurr) = EXP(RAND_GENERAL(lnpost_sig,lim(:),YLOG=.True., &
-                                                VERBOSE=debug,LNFUNC=.True., &
-                                                ACCURACY=accrand,NMAX=Ngibbsmax))
+        sigmcmc(ihpar,icurr) = EXP(RAND_GENERAL(lnpost_sig, lim(:), YLOG=.TRUE., &
+                                                VERBOSE=debug, LNFUNC=.TRUE., &
+                                                ACCURACY=accrand, NMAX=Ngibbsmax))
         ! IF (ihpar==1) PRINT*, 'sigmcmc(1,icurr)', sigmcmc(ihpar,icurr) ! with fixed seed
 
       END DO variance
@@ -555,7 +675,7 @@ PROGRAM fit_hb
       !   WRITE(unitlog(i),*) 'Variance sampling [done] - '// &
       !                         TRIMLR(TIMINFO(timestr))
       ! END DO
-      
+
       !! c. Correlation
       !! Correlation coefficients are the tricky part. Indeed, the covariance
       !! matrix has to be positive definite. The Wishart prior is here to ensure
@@ -577,10 +697,10 @@ PROGRAM fit_hb
           invcov_prev(:,:) = INVERT_CHOLESKY( cov_prev(:,:), &
                                               DETERMINANT=detcov_prev, &
                                               NOPOSDEF=noposdef_prev )
-          corrmcmc(icorr,icurr) = RAND_GENERAL(lnpost_corr,limR(:),YLOG=.True., &
-                                               VERBOSE=debug,LNFUNC=.True.,  &
-                                               ! ACCURACY=accrand,NMAX=Ngibbsmax)
-                                               ACCURACY=1.E-2_DP,NMAX=Ngibbsmax)
+          corrmcmc(icorr,icurr) = RAND_GENERAL(lnpost_corr, limR(:), YLOG=.TRUE., &
+                                               VERBOSE=debug, LNFUNC=.TRUE.,  &
+                                               ! ACCURACY=accrand, NMAX=Ngibbsmax)
+                                               ACCURACY=1.E-2_DP, NMAX=Ngibbsmax)
           ! IF (icorr==1) PRINT*, 'corrmcmc(1,icurr)', corrmcmc(icorr,icurr) ! with fixed seed
         
           IF (isNaN(corrmcmc(icorr,icurr))) THEN
@@ -598,7 +718,7 @@ PROGRAM fit_hb
                                 TRIMLR(TIMINFO(timestr))
         END DO
       END IF
-      
+
     ELSE
       PRINT*, "  HISTOIRE: Non-hierarchical run."
       !! If the run is non hierarchical, we save in place of the hyperparameters
@@ -623,6 +743,9 @@ PROGRAM fit_hb
     CALL WRITE_HDF5(DBLARR4D=parmcmc(:,:,:,icurr:icurr), FILE=filMCMC, &
                     NAME=nampar, COMPRESS=compress, VERBOSE=debug, &
                     IND4=[counter,counter])
+    CALL WRITE_HDF5(DBLARR2D=ln1pdmcmc(:,icurr:icurr), FILE=filMCMC, &
+                    NAME=namln1pd, COMPRESS=compress, VERBOSE=debug, &
+                    IND2=[counter,counter])
     CALL WRITE_HDF5(DBLARR2D=mumcmc(:,icurr:icurr), FILE=filMCMC, &
                     NAME=nammu, COMPRESS=compress, VERBOSE=debug, &
                     IND2=[counter,counter])
@@ -633,7 +756,7 @@ PROGRAM fit_hb
                     NAME=namcorr,COMPRESS=compress,VERBOSE=debug, &
                     IND2=[counter,counter])
     CALL WRITE_HDF5(INTARR1D=[counter],FILE=filMCMC, &
-                    NAME="Last index",COMPRESS=compress,VERBOSE=debug, &
+                    NAME=namind,COMPRESS=compress,VERBOSE=debug, &
                     IND1=[1,1])
     
     !! Check output for debugging
@@ -644,7 +767,7 @@ PROGRAM fit_hb
         PRINT*, "  sigma = ", sigmcmc(:,icurr)
         PRINT*, "  corr = ", corrmcmc(:,icurr)
       END IF
-      ! IF (calib) PRINT*, "  ln1pd = ",ln1pdmcmc(:,icurr)
+      IF (calib) PRINT*, "  ln1pd = ",ln1pdmcmc(:,icurr)
       WRITE(unitlog(i),*)
     END IF
     

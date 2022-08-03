@@ -21,8 +21,8 @@ include $(MKSW)
 ##---------------
 MILMODS = auxil.f90 \
           core.f90 \
-          chi2.f90 \
-          hb.f90 \
+          ext_chi2.f90 \
+          ext_hb.f90 \
 
 ## Name of the library and its paths
 ##-----------------------------------

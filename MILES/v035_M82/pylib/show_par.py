@@ -11,11 +11,11 @@ import os, pathlib
 import numpy as np
 import matplotlib.pyplot as plt
 
-## astylo
-from astylo.iolib import read_hdf5
+## laputan
+from laputan.inout import read_hdf5
 
 ## local
-from utilities import croot, TABand
+from librarian import croot, TABand
 
 ## Path
 ##------
@@ -151,7 +151,7 @@ for m in mode:
         
         ## Parameter track (par)
         ##-----------------------
-        x,y = 1,0
+        x,y = 1,6
         for j in range(int(Npar/9)+1):
             filename = path_fig+'partrack_'+m+'_ipar='+str(j*9+1)+'-'+str(j*9+9)+'.png'
             

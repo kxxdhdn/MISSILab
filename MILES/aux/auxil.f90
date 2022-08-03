@@ -18,20 +18,51 @@ MODULE auxil
   !!-------------------------
   !! Instrumental resolution
   !!-------------------------
-  TYPE instr_res
+  TYPE spect_res
     !! dlam/lam = dnu/nu
     REAL(DP) :: dw_w_CAM = 0.010373835_DP
+    REAL(DP) :: dw_w_SWS = 0.0011044189_DP
+    REAL(DP) :: dw_w_SWSfine = 0.00036671469_DP
     REAL(DP) :: dw_w_SL = 0.0055722841_DP
     REAL(DP) :: dw_w_SH = 0.00075127093_DP
     REAL(DP) :: dw_w_LL = 0.0057517091_DP
     REAL(DP) :: dw_w_LH = 0.00070906159_DP
-    REAL(DP) :: dw_w_SWS = 0.0011044189_DP
-    REAL(DP) :: dw_w_SWSfine = 0.00036671469_DP
-    REAL(DP) :: dw_w_AKARI_Ns = 0.00356688_DP
-  END TYPE instr_res
-  PUBLIC :: instr_res
+    REAL(DP) :: dw_w_AKARI_NG = 0.00356688_DP
+  END TYPE spect_res
+  PUBLIC :: spect_res
   
-  TYPE(instr_res), SAVE, PUBLIC :: res
+  TYPE(spect_res), SAVE, PUBLIC :: res
+
+  !!-----------------
+  !! Spectral ranges
+  !!-----------------
+  TYPE spect_ran
+    !! [w_start, w_end]
+    REAL(DP), DIMENSION(2) :: wlim_AKARI_NG = (/ 2.50, 5.00 /)
+    REAL(DP), DIMENSION(2) :: wlim_SL2 = (/ 5.21, 7.56 /)
+    REAL(DP), DIMENSION(2) :: wlim_SL1 = (/ 7.57, 14.28 /)
+    REAL(DP), DIMENSION(2) :: wlim_LL2 = (/ 14.29, 20.66 /)
+    REAL(DP), DIMENSION(2) :: wlim_LL1 = (/ 20.67, 38.00 /)
+    REAL(DP), DIMENSION(2) :: wlim_SH = (/ 10.00, 19.19 /)
+    REAL(DP), DIMENSION(2) :: wlim_LH = (/ 19.20, 37.10 /)
+  END TYPE spect_ran
+  PUBLIC :: spect_ran
+
+  TYPE(spect_ran), SAVE, PUBLIC :: ran
+
+  !!--------------------
+  !! Calibration errors
+  !!--------------------
+  TYPE spect_err
+    REAL(DP) :: caliberr_AKARI_NG = 0.2_DP ! Ohyama+2007
+    REAL(DP) :: caliberr_SL = 0.15_DP
+    REAL(DP) :: caliberr_LL = 0.15_DP
+    REAL(DP) :: caliberr_SH = 0.2_DP
+    REAL(DP) :: caliberr_LH = 0.2_DP
+  END TYPE spect_err
+  PUBLIC :: spect_err
+
+  TYPE(spect_err), SAVE, PUBLIC :: err
 
   !!----------
   !! Continua

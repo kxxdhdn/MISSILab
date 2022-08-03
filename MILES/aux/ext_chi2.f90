@@ -5,7 +5,7 @@
 !******************************************************************************
 
 
-MODULE chi2
+MODULE ext_chi2
 
   USE utilities, ONLY: DP
   USE core, ONLY: parinfo_type, indpar_type, Qabs_type
@@ -71,4 +71,4 @@ CONTAINS
 
   END FUNCTION residuals
 
-END MODULE chi2
+END MODULE ext_chi2

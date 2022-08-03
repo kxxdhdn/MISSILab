@@ -17,7 +17,8 @@ MODULE core
   INTEGER, PARAMETER, PUBLIC :: NparCONT=2, NparLINE=3, NparBAND=4, NparEXTC=1, NparSTAR=1
   INTEGER, PARAMETER, PUBLIC :: lencorr = 41
   
-  PUBLIC :: set_indpar, set_indref, make_Qabs, read_master, initparam, read_analysis
+  PUBLIC :: set_indpar, set_indref, set_indcal
+  PUBLIC :: make_Qabs, read_master, initparam, read_analysis
   PUBLIC :: check_SM, invert_SM, invert_mSM
   PUBLIC :: degradeRes, modifBB, gaussLine, lorentzBand, extCurve, specModel
 
@@ -78,6 +79,11 @@ MODULE core
     INTEGER, DIMENSION(:), ALLOCATABLE :: extra
   END TYPE indpar_type
 
+  TYPE, PUBLIC :: indcal_type
+    !! Used to create irregular integer arrays
+    INTEGER, DIMENSION(:), ALLOCATABLE :: indw
+  END TYPE indcal_type
+
   TYPE, PUBLIC :: Qabs_type
     !! rho(kg/m3); wave(micron); nu(Hz); kappa(m2/kg)
     REAL(DP) :: rho
@@ -103,13 +109,13 @@ CONTAINS
 
     CHARACTER(*), DIMENSION(:), INTENT(IN) :: label
     REAL(DP), DIMENSION(:), INTENT(IN), OPTIONAL :: wavALL
-    INTEGER :: i, Nspec, Nr, Nw
+    INTEGER :: i, Ngrain, Nr, Nw
     INTEGER, DIMENSION(SIZE(label)) :: indrad ! radius index
     REAL(DP), PARAMETER :: a0 = 1.E-2_DP ! grain radius
     REAL(DP), DIMENSION(:), ALLOCATABLE :: wave0 ! READ_OPTICS default grid
     REAL(DP), DIMENSION(:), ALLOCATABLE :: wave
     REAL(DP), DIMENSION(:,:), ALLOCATABLE :: radius
-    REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: Qabsall ! (Nspec, Nr, Nw)
+    REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: Qabsall ! (Ngrain, Nr, Nw)
     TYPE(Qabs_type), DIMENSION(SIZE(label)), INTENT(OUT) :: Qabs
 
     CALL READ_OPTICS(label, WAVE=wave0, RADIUSALL=radius, QABSALL=Qabsall)    
@@ -118,8 +124,8 @@ CONTAINS
     IF (PRESENT(wavAll)) wave = wavAll(:)
     Nw = SIZE(wave(:))
 
-    Nspec = SIZE(label)
-    DO i=1,Nspec
+    Ngrain = SIZE(label)
+    DO i=1,Ngrain
       ALLOCATE(Qabs(i)%wave(Nw),Qabs(i)%nu(Nw),Qabs(i)%kappa(Nw))
       
       Nr = SIZE(radius(i,:))
@@ -270,12 +276,70 @@ CONTAINS
 
   !!-------------------------------------------------------
   !!
+  !!             Divide wavelengths by modules
+  !!
+  !!-------------------------------------------------------
+  SUBROUTINE set_indcal ( indcal, x, instr, calibool, caliberr )
+    !! 
+    USE auxil, ONLY: ran, err
+    USE utilities, ONLY: DP
+    USE arrays, ONLY: iwhere
+
+    INTEGER, DIMENSION(:), ALLOCATABLE, INTENT(OUT) :: indcal
+    REAL(DP), DIMENSION(:), INTENT(IN) :: x
+    CHARACTER(*), INTENT(IN) :: instr
+    REAL(DP), DIMENSION(2) :: lim
+    REAL(DP), INTENT(OUT), OPTIONAL :: caliberr
+    LOGICAL, DIMENSION(SIZE(x)), INTENT(OUT), OPTIONAL :: calibool
+
+    caliberr = 0._DP
+    SELECT CASE(instr)
+      CASE('IRC_NG')
+        lim(:) = ran%wlim_AKARI_NG
+        caliberr = err%caliberr_AKARI_NG
+      CASE('IRS_SL2')
+        lim(:) = ran%wlim_SL2
+        caliberr = err%caliberr_SL
+      CASE('IRS_SL1')
+        lim(:) = ran%wlim_SL2
+        caliberr = err%caliberr_SL
+      CASE('IRS_LL2')
+        lim(:) = ran%wlim_LL2
+        caliberr = err%caliberr_LL
+      CASE('IRS_LL1')
+        lim(:) = ran%wlim_LL1
+        caliberr = err%caliberr_LL
+      CASE('IRS_SH')
+        lim(:) = ran%wlim_SH
+        caliberr = err%caliberr_SH
+      CASE('IRS_LH')
+        lim(:) = ran%wlim_LH
+        caliberr = err%caliberr_LH
+      CASE DEFAULT
+        lim(:) = [2.50, 40.00]
+        caliberr = 0._DP
+        
+    END SELECT
+
+    calibool(:) = .FALSE.
+    IF (ANY(x(:)>lim(1) .AND. x(:)<lim(2))) THEN
+      CALL IWHERE( x(:)>lim(1) .AND. x(:)<lim(2), indcal )
+      calibool(indcal(:)) = .TRUE.
+    ELSE
+      ALLOCATE(indcal(0))
+    END IF
+
+  END SUBROUTINE set_indcal
+  
+  !!-------------------------------------------------------
+  !!
   !! Read the input master files for the Chi2/Bayesian run
   !!
   !!-------------------------------------------------------
   SUBROUTINE read_master( wavAll, dirIN, dirOUT, spec_unit, &
-                          Nmcmc, verbose, NiniMC, &!robust_RMS, robust_cal, skew_RMS, &
-                          resume, indresume, calib, newseed, newinit, dostop, nohi, &
+                          Nmcmc, NiniMC, verbose, &
+                          calib, robust_cal, robust_RMS, skew_RMS, &
+                          resume, indresume, newseed, newinit, dostop, nohi, &
                           labL, labB, refB, labQ, Qabs, refw, labE, extinct, &
                           Ncont, Nband, Nline, Nextc, Nstar, Nextra, &
                           corrhypname, corrname, &
@@ -341,7 +405,7 @@ CONTAINS
     TYPE(parinfo_type), DIMENSION(:), ALLOCATABLE, INTENT(OUT), OPTIONAL :: &
       parinfo, parmodinfo, parhypinfo, parextinfo
     TYPE(indpar_type), INTENT(OUT), OPTIONAL :: indpar
-    LOGICAL, INTENT(OUT), OPTIONAL :: verbose!, robust_RMS, robust_cal, skew_RMS
+    LOGICAL, INTENT(OUT), OPTIONAL :: verbose, robust_RMS, robust_cal, skew_RMS
     LOGICAL, INTENT(OUT), OPTIONAL :: calib, newseed, newinit, dostop, resume, nohi
 
     !! Read the input master file
@@ -405,18 +469,18 @@ CONTAINS
       CALL READ_HDF5(STRARR1D=strarr1d, FILE=filmas, NAME='calib')
       calib = TRIMEQ(strarr1d(1),'T')
     END IF
-    ! IF (PRESENT(robust_RMS)) THEN
-    !   CALL READ_HDF5(STRARR1D=strarr1d, FILE=filmas, NAME='robust_RMS')
-    !   robust_RMS = TRIMEQ(strarr1d(1),'T')
-    ! END IF
-    ! IF (PRESENT(robust_cal)) THEN
-    !   CALL READ_HDF5(STRARR1D=strarr1d, FILE=filmas, NAME='robust_cal')
-    !   robust_cal = TRIMEQ(strarr1d(1),'T')
-    ! END IF
-    ! IF (PRESENT(skew_RMS)) THEN
-    !   CALL READ_HDF5(STRARR1D=strarr1d, FILE=filmas, NAME='skew_RMS')
-    !   skew_RMS = TRIMEQ(strarr1d(1),'T')
-    ! END IF
+    IF (PRESENT(robust_RMS)) THEN
+      CALL READ_HDF5(STRARR1D=strarr1d, FILE=filmas, NAME='robust_RMS')
+      robust_RMS = TRIMEQ(strarr1d(1),'T')
+    END IF
+    IF (PRESENT(robust_cal)) THEN
+      CALL READ_HDF5(STRARR1D=strarr1d, FILE=filmas, NAME='robust_cal')
+      robust_cal = TRIMEQ(strarr1d(1),'T')
+    END IF
+    IF (PRESENT(skew_RMS)) THEN
+      CALL READ_HDF5(STRARR1D=strarr1d, FILE=filmas, NAME='skew_RMS')
+      skew_RMS = TRIMEQ(strarr1d(1),'T')
+    END IF
     IF (PRESENT(newseed)) THEN
       CALL READ_HDF5(STRARR1D=strarr1d, FILE=filmas, NAME='newseed')
       newseed = TRIMEQ(strarr1d(1),'T')
@@ -615,7 +679,7 @@ CONTAINS
     !! No correlation for tied parameters
     boolpar(1:Nparmod0) = ( boolpar(1:Nparmod0) &
                             .AND. TRIMEQ(parinfall(1:Nparmod0)%tied, "") )
-    WHERE (.NOT. TRIMEQ(parinfall(:)%tied, ""))
+    WHERE ( .NOT. TRIMEQ(parinfall(:)%tied, "") )
       parinfall(:)%hyper = .FALSE.
     END WHERE
 
@@ -860,7 +924,7 @@ CONTAINS
             !! FWHM = 2*sqrt(2*log(2))*sigma ~ 2.355 (suppose PSF is gaussian)
             !! R = lambda / FWHM
             !! => sigma = lambda / R / 2.355
-            sig = degradeRes(val, 0.01_DP, 'SL-LL') / 2.355_DP
+            sig = degradeRes(val, 0.01_DP, 'NG-SL-LL') / 2.355_DP
             IF (.NOT. parinfo(ind%Cline(i))%limited(1)) &
               parinfo(ind%Cline(i))%limits(1) = val-sig
             IF (.NOT. parinfo(ind%Cline(i))%limited(2)) &
@@ -872,7 +936,7 @@ CONTAINS
           IF (parinfo(ind%Wline(i))%fixed) THEN
             par(:,:,ind%Wline(i),:) = parinfo(ind%Wline(i))%value
           ELSE
-            val = degradeRes(TABLine(itab)%wave, .01_DP, 'SL-LL')
+            val = degradeRes(TABLine(itab)%wave, .01_DP, 'NG-SL-LL')
             par(:,:,ind%Wline(i),:) = val
             IF (.NOT. parinfo(ind%Wline(i))%limited(1)) &
               parinfo(ind%Wline(i))%limits(1) = val*0.5_DP
@@ -1028,7 +1092,7 @@ CONTAINS
             par(:,:,ind%Cband(i),:) = parinfo(ind%Cband(i))%value
           ELSE
             val = TABand(itab)%wave
-            ! sig = degradeRes(val, 0.01_DP, 'SL-LL') / 2.355_DP
+            ! sig = degradeRes(val, 0.01_DP, 'NG-SL-LL') / 2.355_DP
             sig = Cband_sig
             limi = MERGE( parinfo(ind%Cband(i))%limits(1), &
                           val-sig, &
@@ -1175,7 +1239,7 @@ CONTAINS
             !! R = lambda / FWHM
             !! => sigma = lambda / R / 2.355
             val = TABLine(itab)%wave
-            sig = degradeRes(val, 0.01_DP, 'SL-LL') / 2.355_DP
+            sig = degradeRes(val, 0.01_DP, 'NG-SL-LL') / 2.355_DP
             limi = MERGE( parinfo(ind%Cline(i))%limits(1), &
                           val-sig, &
                           parinfo(ind%Cline(i))%limited(1)) ! lim inf
@@ -1202,7 +1266,7 @@ CONTAINS
           IF (parinfo(ind%Wline(i))%fixed) THEN
             par(:,:,ind%Wline(i),:) = parinfo(ind%Wline(i))%value
           ELSE
-            val = degradeRes(TABLine(itab)%wave, .01_DP, 'SL-LL')
+            val = degradeRes(TABLine(itab)%wave, .01_DP, 'NG-SL-LL')
             limi = MERGE( parinfo(ind%Wline(i))%limits(1), &
                           val*0.5_DP, &
                           parinfo(ind%Wline(i))%limited(1)) ! lim inf
@@ -1515,7 +1579,7 @@ CONTAINS
         !! R = lambda / FWHM
         !! => sigma = lambda / R / 2.355
         wcen = TABLine(itab)%wave
-        dw = degradeRes(TABLine(itab)%wave, .01_DP, 'SL-LL')
+        dw = degradeRes(TABLine(itab)%wave, .01_DP, 'NG-SL-LL')
         sig = dw / 2.355_DP
 
         !! Cline
@@ -1578,7 +1642,7 @@ CONTAINS
       DO i=1,Npar
         IF ( ANY(TRIMEQ(iniparname(:),parinfo(i)%name)) ) THEN
           CALL IWHERE(TRIMEQ(iniparname(:),parinfo(i)%name), ipar)
-          WHERE (maskxy(:,:)) par(:,:,i,1) = iniparval(:,:,ipar)
+          WHERE ( maskxy(:,:) ) par(:,:,i,1) = iniparval(:,:,ipar)
           
         END IF
       END DO
@@ -1591,8 +1655,8 @@ CONTAINS
     !! Check that the initial guesses satisfy the parameter constraints
     FORALL (i=1:Npar,j=1:SIZE(par,4))
       par(:,:,i,j) = MERGE(parinfo(i)%value,par(:,:,i,j),parinfo(i)%fixed)
-      WHERE (parinfo(i)%limited(1) .AND. (par(:,:,i,j) < parinfo(i)%limits(1)) &
-             .AND. maskxy(:,:))
+      WHERE ( parinfo(i)%limited(1) .AND. (par(:,:,i,j) < parinfo(i)%limits(1)) &
+             .AND. maskxy(:,:) )
         par(:,:,i,j) = parinfo(i)%limits(1)
       ELSEWHERE (parinfo(i)%limited(2) &
                  .AND. (par(:,:,i,j) > parinfo(i)%limits(2)) &
@@ -1609,7 +1673,7 @@ CONTAINS
         mu(i,j) = MEAN(par(:,:,i,j),MASK=(maskxy(:,:) &
                                           .AND. .NOT. isNaN(par(:,:,i,j))))
       FORALL (i=1:Npar,j=1:SIZE(par,4))
-        WHERE (isNaN(par(:,:,i,j)) .AND. maskxy(:,:)) par(:,:,i,j) = mu(i,j)
+        WHERE ( isNaN(par(:,:,i,j)) .AND. maskxy(:,:) ) par(:,:,i,j) = mu(i,j)
       END FORALL
     END IF
     
@@ -1836,9 +1900,9 @@ CONTAINS
     USE utilities, ONLY: DP
     IMPLICIT NONE
 
-    CHARACTER(*), INTENT(IN)         :: instr
-    REAL(DP), INTENT(IN)             :: wc, dw
-    REAL(DP)                         :: degradeRes
+    CHARACTER(*), INTENT(IN) :: instr
+    REAL(DP), INTENT(IN) :: wc, dw
+    REAL(DP) :: degradeRes
     
     !! Line width fixed by the instrumental resolution
     SELECT CASE(instr)
@@ -1857,16 +1921,18 @@ CONTAINS
           degradeRes = res%dw_w_SH * wc
         END IF
       CASE('SL-LL')
-        IF (wc.LT.12._DP) THEN
+        IF (wc.LT.14.29_DP) THEN
           degradeRes = res%dw_w_SL * wc
         ELSE
           degradeRes = res%dw_w_LL * wc
         END IF
-      CASE('Ns-SL')
-        IF (wc.LT.5._DP) THEN
-          degradeRes = res%dw_w_AKARI_Ns * wc
-        ELSE
+      CASE('NG-SL-LL')
+        IF (wc.LT.5.15_DP) THEN
+          degradeRes = res%dw_w_AKARI_NG * wc
+        ELSE IF (wc.LT.14.29_DP) THEN
           degradeRes = res%dw_w_SL * wc
+        ELSE
+          degradeRes = res%dw_w_LL * wc
         END IF
       CASE('CAM')
         degradeRes = res%dw_w_CAM * wc
@@ -2202,7 +2268,7 @@ CONTAINS
 
   !! 3D version
   !!============
-  FUNCTION specModel_3D( wvl, parval, indpar, Qabs, extinct, verbose, &
+  FUNCTION specModel_3D( wvl, parval, indpar, mask, Qabs, extinct, verbose, &
                          FnuCONT, FnuBAND, FnuSTAR, Pabs, FnuLINE, &
                          FnuCONT_tab, FnuBAND_tab, FnuSTAR_tab, Pabs_tab, FnuLINE_tab )
 
@@ -2219,6 +2285,7 @@ CONTAINS
     TYPE(indpar_type), INTENT(IN) :: indpar
     TYPE(Qabs_type), DIMENSION(:), INTENT(IN) :: Qabs
     LOGICAL, INTENT(IN), OPTIONAL :: verbose
+    LOGICAL, DIMENSION(:,:,:), INTENT(IN) :: mask ! 3D (Nx,Ny,Nw)
 
     INTEGER :: Nw, Nx, Ny, Ncont, Nline, Nband, Nextc, Nstar
     INTEGER :: x, y, i, k, indref
@@ -2276,7 +2343,7 @@ CONTAINS
       IF (k>0) &
         lnT(:,:) = LOG( EXP(lnT(:,:)) &
                         +SUM(EXP(parval(:,:,indpar%lnT(i-k+1:i))),DIM=3) )
-      FORALL (x=1:Nx,y=1:Ny) &
+      FORALL (x=1:Nx,y=1:Ny,ANY(mask(x,y,:))) &
         dblarr4d(x,y,:,i) = EXP(parval(x,y,indpar%lnFcont(i))) * &
                             MODIFBB(wvl(:),EXP(lnT(x,y)),Qabs(i),.TRUE.,indpar%refw)
     END DO
@@ -2290,13 +2357,13 @@ CONTAINS
     !! FnuBAND [W/m2/sr/Hz] = Iband [W/m2/sr] * lorentzBand [Hz-1]
     DO i=1,Nband
       IF (i == indref) THEN
-        FORALL (x=1:Nx,y=1:Ny) &
+        FORALL (x=1:Nx,y=1:Ny,ANY(mask(x,y,:))) &
           dblarr4d(x,y,:,i) = EXP( parval(x,y,indpar%lnRband(i)) ) * &
                               lorentzBand( wvl(:), parval(x,y,indpar%Cband(i)), &
                                 parval(x,y,indpar%WSband(i)), &
                                 parval(x,y,indpar%WLband(i)),.TRUE. )
       ELSE
-        FORALL (x=1:Nx,y=1:Ny) &
+        FORALL (x=1:Nx,y=1:Ny,ANY(mask(x,y,:))) &
           dblarr4d(x,y,:,i) = EXP( parval(x,y,indpar%lnRband(i))+lnIref(x,y) ) * &
                               lorentzBand( wvl(:), parval(x,y,indpar%Cband(i)), &
                                 parval(x,y,indpar%WSband(i)), &
@@ -2312,7 +2379,7 @@ CONTAINS
     CALL REALLOCATE(dblarr4d,Nx,Ny,Nw,Nstar)
     !! FnuSTAR [W/m2/sr/Hz] = Fstar [W/m2] * BLACKBODY [W/m2/sr/Hz] /
     !!                        stefan [W/m2/K4] / Tstar4 [K4]
-    FORALL (x=1:Nx,y=1:Ny,i=1:Nstar) &
+    FORALL (x=1:Nx,y=1:Ny,i=1:Nstar,ANY(mask(x,y,:))) &
       dblarr4d(x,y,:,i) = EXP(parval(x,y,indpar%lnFstar(i))) * &
                           pi * BLACKBODY(nu(:), Tstar) /MKS%stefan/Tstar**4
     FnuSTAR0(:,:,:) = SUM(dblarr4d(:,:,:,:),DIM=4)
@@ -2323,7 +2390,7 @@ CONTAINS
     !!----------------------
     CALL REALLOCATE(dblarr4d,Nx,Ny,Nw,Nextc)
     !! Pabs [/] = EXP( Av [mag] * extinction [/] )
-    FORALL (x=1:Nx,y=1:Ny,i=1:Nextc) &
+    FORALL (x=1:Nx,y=1:Ny,i=1:Nextc,ANY(mask(x,y,:))) &
       dblarr4d(x,y,:,i) = -EXP(parval(x,y,indpar%lnAv(i)))/1.086_DP * extinct(i,:)
     Pabs0(:,:,:) = EXP( SUM(dblarr4d(:,:,:,:),DIM=4) )
     IF (PRESENT(Pabs)) Pabs = Pabs0(:,:,:)
@@ -2333,7 +2400,7 @@ CONTAINS
     !!----------
     CALL REALLOCATE(dblarr4d,Nx,Ny,Nw,Nline)
     !! FnuLINE [W/m2/sr/Hz] = Iline [W/m2/sr] * gaussLine [Hz-1]
-    FORALL (x=1:Nx,y=1:Ny,i=1:Nline) &
+    FORALL (x=1:Nx,y=1:Ny,i=1:Nline,ANY(mask(x,y,:))) &
       dblarr4d(x,y,:,i) = EXP( parval(x,y,indpar%lnRline(i))+lnIref(x,y) ) * &
                           gaussLine(wvl(:), parval(x,y,indpar%Cline(i)), &
                             parval(x,y,indpar%Wline(i)),.TRUE.)
@@ -2364,6 +2431,7 @@ CONTAINS
     TYPE(indpar_type), INTENT(IN) :: indpar
     TYPE(Qabs_type), DIMENSION(:), INTENT(IN) :: Qabs
     LOGICAL, INTENT(IN), OPTIONAL :: verbose
+    LOGICAL, DIMENSION(:,:,:), ALLOCATABLE :: mask
     REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: &
       FnuCONT0, FnuBAND0, FnuSTAR0, Pabs0, FnuLINE0
     REAL(DP), DIMENSION(:,:,:,:), ALLOCATABLE :: &
@@ -2376,8 +2444,10 @@ CONTAINS
     INTEGER :: Nx, Npar
     Nx = SIZE(parval(:,:),1)
     Npar = SIZE(parval(:,:),2)
+    ALLOCATE(mask(Nx,1,1))
+    mask(:,:,:) = .TRUE.
     specModel_2D(:,:) = RESHAPE( specModel_3D(wvl(:), INDPAR=indpar, &
-                                   PARVAL=RESHAPE(parval(:,:),[Nx,1,Npar]), &
+                                   PARVAL=RESHAPE(parval(:,:),[Nx,1,Npar]), MASK=mask(:,:,:), &
                                    QABS=Qabs, EXTINCT=extinct, VERBOSE=verbose, &
                                    FNUCONT=FnuCONT0, FNUBAND=FnuBAND0, FNUSTAR=FnuSTAR0, &
                                    PABS=Pabs0, FNULINE=FnuLINE0, &
@@ -2410,6 +2480,7 @@ CONTAINS
     TYPE(indpar_type), INTENT(IN) :: indpar
     TYPE(Qabs_type), DIMENSION(:), INTENT(IN) :: Qabs
     LOGICAL, INTENT(IN), OPTIONAL :: verbose
+    LOGICAL, DIMENSION(:,:,:), ALLOCATABLE :: mask
     REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: &
       FnuCONT0, FnuBAND0, FnuSTAR0, Pabs0, FnuLINE0
     REAL(DP), DIMENSION(:,:,:,:), ALLOCATABLE :: &
@@ -2421,8 +2492,10 @@ CONTAINS
     REAL(DP), DIMENSION(SIZE(wvl)) :: specModel_1D
     INTEGER :: Npar
     Npar = SIZE(parval(:))
+    ALLOCATE(mask(1,1,1))
+    mask(:,:,:) = .TRUE.
     specModel_1D(:) = RESHAPE( specModel_3D(wvl(:), INDPAR=indpar, &
-                                 PARVAL=RESHAPE(parval(:),[1,1,Npar]), &
+                                 PARVAL=RESHAPE(parval(:),[1,1,Npar]), MASK=mask, &
                                  QABS=Qabs, EXTINCT=extinct, VERBOSE=verbose, &
                                  FNUCONT=FnuCONT0, FNUBAND=FnuBAND0, FNUSTAR=FnuSTAR0, &
                                  PABS=Pabs0, FNULINE=FnuLINE0, &

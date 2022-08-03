@@ -17,9 +17,9 @@ PROGRAM fit_chi2
   USE random, ONLY: generate_newseed
   USE chi2_minimization, ONLY: chi2min_LM
   USE core, ONLY: read_master, specModel, initparam
-  USE chi2, ONLY: Nx, Ny, NwOBS, wOBS, nuOBS, FnuOBS, dFnuOBS, &
-                  residuals, Fnu_mod, resid, invLcovarOBS, &
-                  ind, parinfo, Qabs, extinct, xOBS, yOBS, mask, iwfree
+  USE ext_chi2, ONLY: Nx, Ny, NwOBS, wOBS, nuOBS, FnuOBS, dFnuOBS, &
+                      residuals, Fnu_mod, resid, invLcovarOBS, &
+                      ind, parinfo, Qabs, extinct, xOBS, yOBS, mask, iwfree
   IMPLICIT NONE
 
   !! Parameters
@@ -349,7 +349,7 @@ PROGRAM fit_chi2
   ALLOCATE(FnuMOD(Nx,Ny,NwOBS))
 
   FnuMOD(:,:,:) = specModel( wOBS(:), INDPAR=ind, PARVAL=par(:,:,:), &
-                             QABS=Qabs(:), EXTINCT=extinct(:,:), &
+                             MASK=mask(:,:,:), QABS=Qabs(:), EXTINCT=extinct(:,:), &
                              FNUCONT=FnuCONT, FNUBAND=FnuBAND, FNUSTAR=FnuSTAR, &
                              PABS=Pabs, FNULINE=FnuLINE, &
                              FNUCONT_TAB=FnuCONT_tab, FNUBAND_TAB=FnuBAND_tab, &

@@ -10,12 +10,12 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-## astylo
-from astylo.iolib import read_hdf5
-from astylo.plib import plot2d_m
+## laputan
+from laputan.inout import read_hdf5
+from laputan.plots import pplot
 
 ## local
-from utilities import croot
+from librarian import croot
 
 col_tab = ['darkred','r','pink',
            # 'orange','gold','y',
@@ -70,14 +70,14 @@ dFnu_tab = np.array(dFnu_tab).reshape((Nx,Ny,Nw))
 for y in range(Ny):
     for x in range(Nx):
         filename1 = path_fig+'simulation_('+str(x+1)+','+str(y+1)+').png'
-        
-        p = plot2d_m(wvl, [Fnu_tab[x,y,:]/dFnu_tab[x,y,:], Fnu_tab[x,y,:], dFnu_tab[x,y,:]],
-                     yerr=[0.,dFnu_tab[x,y,:],0.],
-                     xall=wvl, xlog=0, ylog=0, xlim=(4.5, 22.), ylim=(0,1.e3), 
-                     # xall=wvl, 
-                     title=titlist[x,y], xlab=xlab, ylab=ylab+'/SN ratio', 
-                     lablist=['S/N', 'Data', 'Unc'], cl=['y', 'k', 'r'], 
-                     legend='best', figsize=(10,6))
+
+        p = pplot(wvl, Fnu_tab[x,y,:]/dFnu_tab[x,y,:], yerr=0.,
+                  xlog=0, ylog=0, xlim=(4.5, 22.), ylim=(0,1.e3), 
+                  title=titlist[x,y], xlab=xlab, ylab=ylab+'/SN ratio', 
+                  clib=['y', 'k', 'r'], label='S/N',
+                  legend='best', figsize=(10,6))
+        p.add_plot(wvl, Fnu_tab[x,y,:], yerr=dFnu_tab[x,y,:], label='Data')
+        p.add_plot(wvl, dFnu_tab[x,y,:], yerr=0., label='Unc')
         
         p.save(filename1)
 
@@ -85,11 +85,12 @@ for y in range(Ny):
 ##----------------------
 for x in range(Nx):
     filename2 = path_fig+'simulation_stack_x='+str(x+1)+'.png'
-    
-    p = plot2d_m(wvl, Fnu_tab[x,:,:], #yerr=dFnu_tab[x,:,:], 
-                 xall=wvl, xlog=0, ylog=0, xlim=(4.5, 22.), ylim=(0.,1.e3), 
-                 title=titlist[x,y], xlab=xlab, ylab=ylab, cl=col_tab,
-                 lablist=lab_tab[x,:], legend='best', figsize=(10,6))
+
+    p = pplot(xlog=0, ylog=0, xlim=(4.5, 22.), ylim=(0.,1.e3), 
+              title=titlist[x,0], xlab=xlab, ylab=ylab, clib=col_tab,
+              legend='best', figsize=(10,6))
+    for y in range(Ny):
+        p.add_plot(wvl, Fnu_tab[x,y,:], label=lab_tab[x,y])
     
     p.save(filename2)
 

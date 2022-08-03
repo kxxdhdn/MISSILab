@@ -54,23 +54,32 @@ python ../pylib/show_corr.py # optional
 * Notices
 The Python package [[https://github.com/kxxdhdn/LAPUTAN][laputan]] is required by the MILES UI (pylib). You can install it in commandline: ~pip install laputan~
 * Version log
-** v1.0 (202107xx, HB release)
-** v0.3.7 (202107xx, clean)
-- Simplified version of input UI available in pylib
-  + Add ~fast_input.py~
-- Update tests/
-- Final clean before the first complete release
-- Add manueldocumentation files
-** v0.3.6 (202107xx, attenu)
+** v1.0 (202108xx, HB release)
+** v0.3.6 (202108xx, clean)
+- Support error ellipses
 - Add attenuation (extinction with different geometries) in ~specModel~
 - Fractional data saving during program run
+- Simplified version of input UI ~pylib/fast_input.py~
+- Update tests/
+- Final clean before the first complete release
+- Add manuel documentation files
 ** ---------- WE ARE HERE ----------
-** v0.3.5 (202107xx, calib)
+** v0.3.5 (202108xx, calib)
 - Support full MIR (2.5-20 microns) fit
-  + Add wavelength masks
-  + Add calibration error of stitched spectra (from different modules) as a nuisance parameter in ~specModel~ (exclusively for HB)
-- Calculate derived parameter errors with gradient function (chi2 only)
-- Replace the prerequisite Python package ~astylo~ (v0.3) by ~laputan~ (v1.1.6 or later)
+  + Add Ns-SL-LL case in ~degradeRes~ for the use of ~initparam~
+- Add wavelength masks (taking into account features at masked wavelengths)
+  + Add mask for ~specModel_nD~
+- Add a nuisance parameter for calibration errors from spectral stitching
+  + IRC-SL2-SL1-LL2-LL1 with SL2 as the benchmark
+  + exclusively for HB, various changes in ~aux/auxil.f90~, ~aux/core.f90~, ~aux/ext_hb.f90~ and ~src/fit_hb.f90~
+- Calculate derived parameter errors with gradient function
+  + exclusively for chi2, changes in ~aux/ext_chi2.f90~ and ~src/fit_chi2.f90~
+- Fix ~analysis.f90~ memory problem when writing data table (once a pixel using loop)
+- Replace the prerequisite Python package ~astylo~ (v0.3) by ~laputan~ (v1.2.4 or later)
+- Rename layout
+  + ~aux/chi2.f90~ \rarr ~aux/ext_chi2~
+  + ~aux/hb.f90~ \rarr ~aux/ext_hb~
+  + ~pylib/utilities~ \rarr ~pylib/librarian~ (conflict with ~laputan.utilities~)
 ** v0.3.4 (20210526, postpro)
 - Enhence post-processing (~analysis.f90~)
   + Allow to analyse unfinished fits (number of iterations less than the defined Nmcmc)
@@ -120,7 +129,7 @@ The Python package [[https://github.com/kxxdhdn/LAPUTAN][laputan]] is required b
   + HISTOIRE: HIerarchical bayeSian fitting Tool Of mid-IR Emission
 - Sample hypercorr once per 10 MCMC steps
   + save \sim90% calculation time)
-** v0.3.2 (20210412, SMinverse)
+** v0.3.2 (20210412, matinv)
 - Adopte Sherman-Morrison formula for (covariance) matrix inversion
 ** v0.3.1 (20210407, reparam)
 - Reparametrise ~specModel~ with band ratios instead of band intensities

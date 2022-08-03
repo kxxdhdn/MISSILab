@@ -10,13 +10,13 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-## astylo
-from astylo.mlib import closest
-from astylo.iolib import read_hdf5
-from astylo.plib import plot2d_m
+## laputan
+from laputan.arrays import closest
+from laputan.inout import read_hdf5
+from laputan.plots import pplot
 
 ## local
-from utilities import croot
+from librarian import croot
                        
 ## Path
 ##------
@@ -48,7 +48,7 @@ Nband = FnuBAND.shape[0]
 Nstar = FnuSTAR.shape[0]
 Fnu_tab = []
 lab_tab = []
-col_tab = []
+col_tab = ['k'] # pplot() none data iter
 Fnu_tab.append(FnuOBS)
 lab_tab.append('Obs')
 col_tab.append('y')
@@ -84,7 +84,6 @@ for i in range(Nstar):
     	lab_tab.append('')
     col_tab.append('orange')
 
-
 ## Plot individual fit
 ##---------------------
 filename = path_fig+'presimulation'
@@ -96,16 +95,17 @@ elif spec_unit=='MJyovsr':
     ylab=r'Surface brightness $\,(MJy/sr)$'
 Fnu_tab = np.array(Fnu_tab)
 
-p = plot2d_m(wvl, Fnu_tab[:,:,0,0], 
-             xall=wvl, xlog=0, ylog=0, xlim=(4., 22.), #ylim=(0.,1.e3), 
-             xlab=xlab, ylab=ylab, 
-             lablist=lab_tab, 
-             legend='upper left', cl=col_tab)
-# p = plot2d_m(wvl, [FnuOBS/dFnuOBS, FnuOBS], 
-#              xall=wvl, xlog=0, ylog=0, xlim=(4.5, 22.), #ylim=(0,2.), 
-#              xlab=xlab, ylab=ylab+'/SN ratio', 
-#              lablist=['S/N', 'Data'], 
-#              legend='best', cl=['r', 'k'])
+p = pplot(xlog=0, ylog=0, xlim=(4., 22.), #ylim=(0.,1.e3), 
+          xlab=xlab, ylab=ylab, 
+          legend='upper left', clib=col_tab)
+for i in range(Fnu_tab.shape[0]):
+    p.add_plot(wvl, Fnu_tab[i,:,0,0], label=lab_tab[i])
+    
+# p = pplot(wvl, FnuOBS/dFnuOBS, 
+#           xlog=0, ylog=0, xlim=(4.5, 22.), #ylim=(0,2.), 
+#           xlab=xlab, ylab=ylab+'/SN ratio', 
+#           legend='best', label='S/N', c='r')
+# p.add_plot(wvl, FnuOBS, label='Data', c='k')
 
 p.save(filename)
 

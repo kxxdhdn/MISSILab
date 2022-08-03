@@ -19,12 +19,12 @@ import os
 import math
 import numpy as np
 
-## astylo
-from astylo.arrlib import closest
-from astylo.iolib import read_fits, write_hdf5, read_hdf5
+## laputan
+from laputan.arrays import closest
+from laputan.inout import read_fits, write_hdf5, read_hdf5
 
 ## local
-from utilities import (croot, mroot,
+from librarian import (croot, mroot,
                        res, TABLine, TABand, partuning)
 
 ## Path
@@ -41,9 +41,9 @@ h5_model = dirin+'input_model'
 h5_extra = dirin+'input_extra'
 h5_chi2 = dirin+'fit_chi2'
 
-program = 'fit_M82_bb'
+program = 'fit_M82_hb'
 noisy = False # verbose/debug for this routine
-chi2init = True # True if using chi2 results as BB init param
+chi2init = True # True if using chi2 results as HB init param
 
 ##-----------------------------
 ##
@@ -53,8 +53,8 @@ chi2init = True # True if using chi2 results as BB init param
 z = 0.00068
 fits_obs = croot+'../data/M82' # obs
 fits_unc = fits_obs+'_unc' # unc
-wvl_inf = 2. # min wvl
-wvl_sup = 21. # max wvl
+wvl_inf = 2.5 # min wvl
+wvl_sup = 20.5 # max wvl
 x_inf = None # 4*2 pix: (23,22) - (26,23)
 y_inf = None
 x_sup = None
@@ -81,6 +81,15 @@ if spec_unit=='MKS':
 ## Mask NaNs
 mask = np.isnan(data) * 1
 
+## Spectroscopic modules for calibration errors
+calibmod = [
+            'IRC_NG',
+            'IRS_SL2',
+            'IRS_SL1',
+            'IRS_LL2',
+            # 'IRS_LL1',
+]
+
 ## Write HDF5
 ##------------
 write_hdf5(h5_obs, 'spectral unit', [spec_unit], verbose=True)
@@ -88,6 +97,7 @@ write_hdf5(h5_obs, 'wavelength (microns)', wave, append=True, verbose=noisy)
 write_hdf5(h5_obs, 'FnuOBS ('+spec_unit+')', data, append=True, verbose=noisy)
 write_hdf5(h5_obs, 'dFnuOBS ('+spec_unit+')', unc, append=True, verbose=noisy)
 write_hdf5(h5_obs, 'NaN mask', mask, append=True, verbose=noisy)
+write_hdf5(h5_obs, 'spectroscopic module labels', calibmod, append=True, verbose=noisy)
 
 ##--------------------------------
 ##
@@ -99,19 +109,19 @@ if not os.path.exists(dirout):
     os.makedirs(dirout)
 verbose = 'T'
 Nmcmc = 10000
-NiniMC = 0 # no need for BB
-calib = 'F'
+NiniMC = 0 # no need for HB
+calib = 'T'
 robust_RMS = 'F'
 robust_cal = 'F'
 skew_RMS = 'F'
 newseed = 'F'
 dostop = 'F'
-resume = 'T'
+resume = 'F'
 indresume = -1 # set a negative value if auto-resume
 newinit = 'F'
-nohi = 'T'
+nohi = 'F'
 
-## Chi2 results are used as BB init param
+## Chi2 results are used as HB init param
 if (chi2init):
     newinit = 'T'
     
@@ -228,48 +238,48 @@ dictune = [ dict([ ('name','default'),
             
             # dict([ ('namall','Cline'),('fixed','F'),('hyper','T'),]),
 
-            ## Main 3.3
-            dict([ ('name','Cband'+str(labB.index('Main 3.3')+1)),
-                   ('fixed','F'),('hyper','T') ]),
-            dict([ ('name','WSband'+str(labB.index('Main 3.3')+1)),
-                   ('fixed','F'),('hyper','T'), ]),
-            dict([ ('name','WLband'+str(labB.index('Main 3.3')+1)),
-                   ('fixed','F'),('hyper','T') ]),
-            ## Main 3.4
-            dict([ ('name','Cband'+str(labB.index('Main 3.4')+1)),
-                   ('fixed','F'),('hyper','T') ]),
-            dict([ ('name','WSband'+str(labB.index('Main 3.4')+1)),
-                   ('fixed','F'),('hyper','T'), ]),
-            dict([ ('name','WLband'+str(labB.index('Main 3.4')+1)),
-                   ('fixed','F'),('hyper','T') ]),
-            ## Main 6.2 (1)
-            dict([ ('name','Cband'+str(labB.index('Main 6.2 (1)')+1)),
-                   ('fixed','F'),('hyper','T') ]),
-            dict([ ('name','WSband'+str(labB.index('Main 6.2 (1)')+1)),
-                   ('fixed','F'),('hyper','T'), ]),
-            dict([ ('name','WLband'+str(labB.index('Main 6.2 (1)')+1)),
-                   ('fixed','F'),('hyper','T') ]),
-            ## Main 7.7 (1)
-            dict([ ('name','Cband'+str(labB.index('Main 7.7 (1)')+1)),
-                   ('fixed','F'),('hyper','T') ]),
-            dict([ ('name','WSband'+str(labB.index('Main 7.7 (1)')+1)),
-                   ('fixed','F'),('hyper','T') ]),
-            dict([ ('name','WLband'+str(labB.index('Main 7.7 (1)')+1)),
-                   ('fixed','F'),('hyper','T') ]),
-            ## Main 8.6
-            dict([ ('name','Cband'+str(labB.index('Main 8.6')+1)),
-                   ('fixed','F'),('hyper','T') ]),
-            dict([ ('name','WSband'+str(labB.index('Main 8.6')+1)),
-                   ('fixed','F'),('hyper','T') ]),
-            dict([ ('name','WLband'+str(labB.index('Main 8.6')+1)),
-                   ('fixed','F'),('hyper','T') ]),
-            ## Main 11.2
-            dict([ ('name','Cband'+str(labB.index('Main 11.2')+1)),
-                   ('fixed','F'),('hyper','T') ]),
-            dict([ ('name','WSband'+str(labB.index('Main 11.2')+1)),
-                   ('fixed','F'),('hyper','T') ]),
-            dict([ ('name','WLband'+str(labB.index('Main 11.2')+1)),
-                   ('fixed','F'),('hyper','T') ]),
+            # ## Main 3.3
+            # dict([ ('name','Cband'+str(labB.index('Main 3.3')+1)),
+            #        ('fixed','F'),('hyper','T') ]),
+            # dict([ ('name','WSband'+str(labB.index('Main 3.3')+1)),
+            #        ('fixed','F'),('hyper','T'), ]),
+            # dict([ ('name','WLband'+str(labB.index('Main 3.3')+1)),
+            #        ('fixed','F'),('hyper','T') ]),
+            # ## Main 3.4
+            # dict([ ('name','Cband'+str(labB.index('Main 3.4')+1)),
+            #        ('fixed','F'),('hyper','T') ]),
+            # dict([ ('name','WSband'+str(labB.index('Main 3.4')+1)),
+            #        ('fixed','F'),('hyper','T'), ]),
+            # dict([ ('name','WLband'+str(labB.index('Main 3.4')+1)),
+            #        ('fixed','F'),('hyper','T') ]),
+            # ## Main 6.2 (1)
+            # dict([ ('name','Cband'+str(labB.index('Main 6.2 (1)')+1)),
+            #        ('fixed','F'),('hyper','T') ]),
+            # dict([ ('name','WSband'+str(labB.index('Main 6.2 (1)')+1)),
+            #        ('fixed','F'),('hyper','T'), ]),
+            # dict([ ('name','WLband'+str(labB.index('Main 6.2 (1)')+1)),
+            #        ('fixed','F'),('hyper','T') ]),
+            # ## Main 7.7 (1)
+            # dict([ ('name','Cband'+str(labB.index('Main 7.7 (1)')+1)),
+            #        ('fixed','F'),('hyper','T') ]),
+            # dict([ ('name','WSband'+str(labB.index('Main 7.7 (1)')+1)),
+            #        ('fixed','F'),('hyper','T') ]),
+            # dict([ ('name','WLband'+str(labB.index('Main 7.7 (1)')+1)),
+            #        ('fixed','F'),('hyper','T') ]),
+            # ## Main 8.6
+            # dict([ ('name','Cband'+str(labB.index('Main 8.6')+1)),
+            #        ('fixed','F'),('hyper','T') ]),
+            # dict([ ('name','WSband'+str(labB.index('Main 8.6')+1)),
+            #        ('fixed','F'),('hyper','T') ]),
+            # dict([ ('name','WLband'+str(labB.index('Main 8.6')+1)),
+            #        ('fixed','F'),('hyper','T') ]),
+            # ## Main 11.2
+            # dict([ ('name','Cband'+str(labB.index('Main 11.2')+1)),
+            #        ('fixed','F'),('hyper','T') ]),
+            # dict([ ('name','WSband'+str(labB.index('Main 11.2')+1)),
+            #        ('fixed','F'),('hyper','T') ]),
+            # dict([ ('name','WLband'+str(labB.index('Main 11.2')+1)),
+            #        ('fixed','F'),('hyper','T') ]),
             
             dict([ ('namall','lnAv'),('fixed','F'),('hyper','T'), ]), # LOG( 1 mag )
             # dict([ ('namall','lnAv'),('fixed','T'),('value','0.5'), ]), # LOG( 1 mag )

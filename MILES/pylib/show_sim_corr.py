@@ -12,11 +12,11 @@ import numpy as np
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 
-## astylo
-from astylo.iolib import read_hdf5
+## laputan
+from laputan.inout import read_hdf5
 
 ## local
-from utilities import croot
+from librarian import croot
 
 def func(x, a):
     '''

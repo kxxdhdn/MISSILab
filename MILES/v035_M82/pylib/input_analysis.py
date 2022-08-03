@@ -24,7 +24,7 @@ from astylo.arrlib import closest
 from astylo.iolib import read_fits, write_hdf5, read_hdf5
 
 ## local
-from utilities import (croot, mroot,
+from librarian import (croot, mroot,
                        res, TABLine, TABand, partuning)
          
 ## Path
