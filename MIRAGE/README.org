@@ -2,8 +2,16 @@
 #+AUTHOR: Dangning HU
 
 * Helpdesk
-The Python package [[https://github.com/kxxdhdn/LAPUTAN][laputan]] is required by MIRAGE. You can install it in commandline: ~pip install laputan~
+The Python package [[https://github.com/kxxdhdn/LAPUTAN][laputan]] is required by MIRAGE. You can install it in commandline: ~pip install laputan --upgrade~
 * Version log
+** v0.4.1 (20210823)
+- ~build_irs.py~ supports SH and LH channels
+- Included ~laputan~ v1.2.4 new features
+  + Removed fragmentary spectra (which may cause intercalib tails)
+  + Corrected intercalib offset correction
+- Layout: one folder corresponds to one source
+  + Created ~src/~
+  + Available src: M82, NGC1140, NGC1569, NGC5253
 ** v0.4 (20210726)
 - Inter-calibration before and after coadding (M82 customized)
 - Layout
@@ -29,4 +37,4 @@ The Python package [[https://github.com/kxxdhdn/LAPUTAN][laputan]] is required b
   + ~irs_spec.py~
   + ~irc_spec.py~
   + ~all_spec.py~
-** v0
+** v0 (20180627)
