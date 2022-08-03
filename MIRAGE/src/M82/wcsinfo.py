@@ -21,7 +21,7 @@ from buildinfo import ( src, Nmc, verbose,
 )
 
 ## IRC atlas
-coadd_footprint = fixwcs(path_tmp+src+'_IRC'+fitsext).header
+coadd_footprint = fixwcs(path_out+src+'_footprint'+fitsext).header
 
 ## IRS
 # refheader = fixwcs(path_irs+src+'_IRC'+fitsext).header

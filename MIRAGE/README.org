@@ -4,6 +4,11 @@
 * Helpdesk
 The Python package [[https://github.com/kxxdhdn/LAPUTAN][laputan]] is required by MIRAGE. You can install it in commandline: ~pip install laputan --upgrade~
 * Version log
+** v0.5.1 (20211015)
+- Interpolated wavelength grids of different IRC slits (~rapyuta~ v2.0.4 needed)
+- Fixed photometry processing not adding MC error bug
+- Reduced coadd footprint to 2D (coadded from IRC slits)
+- Improved plots for publication use
 ** v0.5 (20211011)
 - New workflow presented in Hu's thesis as well as Hu et al. 2021
 - Applied super pixels
