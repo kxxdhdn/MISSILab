@@ -318,43 +318,45 @@ CONTAINS
     INTEGER, DIMENSION(:), ALLOCATABLE, INTENT(OUT) :: indcal
     REAL(DP), DIMENSION(:), INTENT(IN) :: x
     CHARACTER(*), INTENT(IN) :: instr
+    REAL(DP) :: caliberr0
     REAL(DP), DIMENSION(2) :: lim
     REAL(DP), INTENT(OUT), OPTIONAL :: caliberr
     LOGICAL, DIMENSION(SIZE(x)), INTENT(OUT), OPTIONAL :: calibool
 
-    caliberr = 0._DP
+    caliberr0 = 0._DP
     SELECT CASE(instr)
       CASE('IRC_NG')
         lim(:) = ran%wlim_AKARI_NG
-        caliberr = err%caliberr_AKARI_NG
+        caliberr0 = err%caliberr_AKARI_NG
       CASE('IRS_SL2')
         lim(:) = ran%wlim_SL2
-        caliberr = err%caliberr_SL
+        caliberr0 = err%caliberr_SL
       CASE('IRS_SL1')
         lim(:) = ran%wlim_SL1
-        caliberr = err%caliberr_SL
+        caliberr0 = err%caliberr_SL
       CASE('IRS_LL2')
         lim(:) = ran%wlim_LL2
-        caliberr = err%caliberr_LL
+        caliberr0 = err%caliberr_LL
       CASE('IRS_LL1')
         lim(:) = ran%wlim_LL1
-        caliberr = err%caliberr_LL
+        caliberr0 = err%caliberr_LL
       CASE('IRS_SH')
         lim(:) = ran%wlim_SH
-        caliberr = err%caliberr_SH
+        caliberr0 = err%caliberr_SH
       CASE('IRS_LH')
         lim(:) = ran%wlim_LH
-        caliberr = err%caliberr_LH
+        caliberr0 = err%caliberr_LH
       CASE DEFAULT
         lim(:) = [2.50, 40.00]
-        caliberr = 0._DP
-        
-    END SELECT
+        caliberr0 = 0._DP
+      END SELECT
 
-    calibool(:) = .FALSE.
+    IF (PRESENT(caliberr)) caliberr = caliberr0
+
+    IF (PRESENT(calibool)) calibool(:) = .FALSE.
     IF (ANY(x(:)>lim(1) .AND. x(:)<lim(2))) THEN
       CALL IWHERE( x(:)>lim(1) .AND. x(:)<lim(2), indcal )
-      calibool(indcal(:)) = .TRUE.
+      IF (PRESENT(calibool)) calibool(indcal(:)) = .TRUE.
     ELSE
       ALLOCATE(indcal(0))
     END IF
@@ -1160,7 +1162,7 @@ CONTAINS
             IF (.NOT. parinfo(ind%lnAv(i))%limited(1)) &
               parinfo(ind%lnAv(i))%limits(1) = 0._DP
             IF (.NOT. parinfo(ind%lnAv(i))%limited(2)) &
-              parinfo(ind%lnAv(i))%limits(2) = 1._DP
+              parinfo(ind%lnAv(i))%limits(2) = 5._DP
             parinfo(ind%lnAv(i))%limited = .TRUE.
           END IF
 
@@ -1621,7 +1623,7 @@ CONTAINS
             IF (.NOT. parinfo(ind%lnAv(i))%limited(1)) &
               parinfo(ind%lnAv(i))%limits(1) = val
             IF (.NOT. parinfo(ind%lnAv(i))%limited(2)) &
-              parinfo(ind%lnAv(i))%limits(2) = 1._DP
+              parinfo(ind%lnAv(i))%limits(2) = 5._DP
             parinfo(ind%lnAv(i))%limited = .TRUE.
           END IF
 
@@ -1797,7 +1799,7 @@ CONTAINS
         IF (.NOT. parinfo(ind%lnAv(i))%limited(1)) &
           parinfo(ind%lnAv(i))%limits(1) = 0._DP
         IF (.NOT. parinfo(ind%lnAv(i))%limited(2)) &
-          parinfo(ind%lnAv(i))%limits(2) = 1._DP
+          parinfo(ind%lnAv(i))%limits(2) = 5._DP
         parinfo(ind%lnAv(i))%limited = .TRUE.
       END DO
       

@@ -160,8 +160,8 @@ for m in mode:
         
         
         
-        x,y = 0,2
-        print(spec_name[x,y])
+        x,y = 0,35
+        print(spec_name[y,x])
         ## Parameter track (par)
         ##-----------------------
         for j in range(int(Npar/9)+1):

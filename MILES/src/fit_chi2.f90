@@ -102,8 +102,9 @@ PROGRAM fit_chi2
   IF (newseed) CALL GENERATE_NEWSEED()
   IF (verbose) PRINT*
   DO i=1,MERGE(2,1,verbose)
-    CALL BANNER_PROGRAM("LE MIROIR: LEast-squares fitting of Mid-IR emission " &
-                        //"OptImized Routine", UNIT=unitlog(i), SWING=.TRUE.)
+    CALL BANNER_PROGRAM("LE MIROIR (LEast-squares fitting of Mid-IR emission " &
+                        //"OptImized Routine)"//NEW_LINE('')// "written by D. Hu"//NEW_LINE(''), &
+                        UNIT=unitlog(i), SWING=.TRUE.)
   END DO
 
   !! 2) Observation sample

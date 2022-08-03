@@ -7,7 +7,7 @@ Available variables and functions:
 
   PATH: croot, mroot
   DATA: res, TABLine, TABand
-  FUNC: partuning, calexpansion
+  FUNC: partuning, calexpansion, calextraction
 
 """
 
@@ -290,7 +290,7 @@ def calexpansion(calib, wvl, instr):
     ------ OUTPUT ------
     carray              calib factor array (same size of x)
     '''
-    carray = np.ones(wvl.shape)
+    carray = np.zeros(wvl.shape)
     for i, ins in enumerate(instr):
         if ins=='IRC_NG':
             lim = [2.5, 5.0]

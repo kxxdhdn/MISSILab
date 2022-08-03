@@ -120,6 +120,16 @@ calibmod = [
             # 'IRS_LL1',
 ]
 
+Nw, Ny, Nx = data.shape
+for x in range(Nx):
+    for y in range(Ny):
+        for k in range (Nw):
+            if data[k,y,x]<0:
+                data[k,y,x] = -data[k,y,x]
+        i1 = closest(wave, 14.29, 'left') + 1
+        gain = data[i1-1,y,x]/data[i1,y,x]
+        data[i1:,y,x] = data[i1:,y,x] * gain
+
 ## Write HDF5
 ##------------
 write_hdf5(h5_obs, 'spectral unit', [spec_unit], verbose=True)

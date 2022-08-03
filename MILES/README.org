@@ -1,6 +1,7 @@
-#+TITLE: MILES: Mid-Infrared Line Extraction Software
+#+TITLE: MILES
 #+AUTHOR: Dangning HU
 
+Mid-Infrared Line Extraction Software
 * Mode d'emploi
 ** Path
 Modify the following paths
@@ -12,7 +13,7 @@ Modify the following paths
 - ~swing/Tools/utilities.f90~
   + ~LibF~
   + ~temproot~
-- ~pylib/utilities.py~
+- ~pylib/auxil.py~
   + ~mroot~
 ** Database
 Download ~Model_templates/Cross_sections/Data/~ (542.1 MB) and put it in ~swing/~
@@ -87,165 +88,34 @@ python pylib/show_corr.py # feature correlations
 The Python package [[https://github.com/kxxdhdn/RAPYUTA][rapyuta]] is required by the MILES UI (pylib). You can install it in commandline: ~pip install rapyuta --upgrade~
 * Version log
 ** v1.x (2021xxxx)
-- Add robust/skewed RMS (student/split gaussian distribution) for likelihood
-- Add attenuation (extinction with different geometries) in ~specModel~
-- Calculate derived parameter errors with gradient function
+- Added robust/skewed RMS (student/split gaussian distribution) for likelihood
+- Attenuation (extinction with different geometries) in ~specModel~
+- Calculated derived parameter errors with gradient function
   + exclusively for chi2, changes in ~aux/core.f90~ and ~src/fit_chi2.f90~
 - Fractional data saving during program run
 - Parallelization
 - Simplified version of input UI ~pylib/fast_input.py~
 ** v1 (2021xxxx, HB release)
-** v0.3.7 (2021xxxx, prelease)
+** v0.3.9 (2021xxxx, prelease)
 - Update tests/
 - Add manuel documentation files
 - Final clean before the first complete release
-** ---------- WE ARE HERE ----------
-** v0.3.6 (20211018, thesis)
-- Update calibrated band properties (3.3, 3.4 and 3.5 \mu{}m)
-- Update AKARI NG spectral resolution (changes in ~aux/auxil.f90~ and ~pylib/auxil.py~)
-- Add spectral resolution degradation term for bands (changes in ~initparam~ and ~pylib/input_chi2/bb/hb.py~)
-- ~src/fit_hb.f90~: Initialize ~sig0~ as 1 to avoid non positive definite covariance matrix during HB run
-- Update Python dependency ~laputan~ (v1.2.4) to ~rapyuta~ (v2.0.4 or later)
-  + New FITS to HDF5 inputs (M82 input data from global map to slits with super pixels)
-  + Pixels can be identified on correlation diagrams
-  + Support error ellipses
+** v0.3.8 (202111xx, paper)
 - Update simulation
-** v0.3.5 (20210908, maskalib)
-- Support full MIR (2.5-20 microns) fit
-  + Add NG-SL-LL case in ~degradeRes~ for the use of ~initparam~
-- Add wavelength masks (taking into account features/parameters at masked wavelengths)
-  + ~aux/core.f90~
-    * Change ~initparam~ mask (param mask instead of wvl mask) I/O as ~INOUT~
-    * Add mask for ~specModel_3D~ as well as an optional output maskpar
-    * Add ~NaN2zero~ and ~zero2NaN~
-  + ~src/fit_hb.f90~ & ~aux/ext_hb.f90~
-    * Update ~maskhyp~ following changes of maskpar in ~initparam~
-    * Add ~maskhypall~ and ~maskparall~
-    * Add ~maskwall~ as well as NaN excluded wvl grid ~wFIT~
-- Add a nuisance parameter for calibration errors from spectral stitching
-  + Support IRC-SL2-SL1-LL2-LL1
-  + ~pylib/auxil.py~
-    * Add ~calibexpansion~ and ~calibextraction~
-  + ~pylib/input_bb/hb.py~
-    * within the input ~calibmod~, the first in list is fixed as benchmark
-  + ~src/fit_hb.f90~
-    * Add ~specOBS~ as ~calibmod~ in input
-    * Calculate calibration errors for each pixel
-  + ~aux/ext_hb.f90~
-    * Add ~lnLHobs_del~, ~lnprior_del~ and ~lnpost_del~
-    * Add ~delp1~ in ~lnLHobs_par~
-  + ~aux/core.f90~
-    + Add ~set_indcal~
-    + Add ~irrintarr_type~, ~irrdblarr_type~, ~irrcmparr_type~, ~irrlogarr_type~ and ~irrchararr_type~
-  + ~aux/auxil.f90~
-    * ~instr_res~ \rarr ~spect_res~: ~dw_w_AKARI_Ns~ \rarr ~dw_w_AKARI_NG~
-    * Add ~spect_ran~
-    * Add ~spect_err~
-  + exclusively for BB/HB
-- Fix ~analysis.f90~ memory problem when writing data table (once a pixel using loops)
-- Replace the prerequisite Python package ~astylo~ (v0.3) by ~laputan~ (v1.2.4 or later)
-- Rename layout
-  + ~aux/chi2.f90~ \rarr ~aux/ext_chi2~
-  + ~aux/hb.f90~ \rarr ~aux/ext_hb~
-  + ~pylib/utilities.py~ \rarr ~pylib/auxil.py~ (conflict with ~laputan.utilities~)
-** v0.3.4 (20210526, postpro)
-- Enhence post-processing (~analysis.f90~)
-  + Allow to analyse unfinished fits (number of iterations less than the defined Nmcmc)
-  + Add autocorrelation timers
-  + Add median + quartile as an alternative to mean + sigma
-  + Add density of total model distribution
-  + Add ~input_analysis.py~
-  + Add ~read_analysis~ in ~aux/core.f90~
-- Add corrname & corrhypname in ~read_master~
-- In ~initparam~, add hard limits for lnRline and lnRband (except ref lnRband) which are also intensive parameters
-- Test full MIR (2.5-20 microns) fit
-- Rename layout
-  + archives/ \rarr arx/
-  + data/ \rarr lib/
-  + auxil/ \rarr aux/
-    * ~auxil.f90~ \rarr ~core.f90~
-    * ~datable.f90~ \rarr ~auxil.f90~
-    * ~chi2_kit.f90~ \rarr ~chi2.f90~
-    * ~HB_kit.f90~ \rarr ~hb.f90~
-    * Corret error in ~lnhyper_sig~ covar matrix inversion opt.2 (non-Cholesky)
-  + programs/ \rarr src/
-    * ~genpar.f90~ \rarr ~presimulation.f90~
-    * ~simulate_MIR.f90~ \rarr ~simulation.f90~
-    * ~fitpar_xx.f90~ \rarr ~fit_xx.f90~
-    * ~fitMIR_xx.f90~ \rarr ~fit_xx.f90~
-    * ~anapar.f90~ \rarr ~analysis.f90~
-    * ~anaMIR.f90~ \rarr ~analysis.f90~
-  + pynout/ \rarr pylib/
-    * ~input_genpar.py~ \rarr ~input_presimulation.py~
-    * ~show_genpar.py~ \rarr ~show_presimulation.py~
-    * ~show_galspec.py~ \rarr ~show_simulation.py~
-    * ~input_fitpar_xx.py~ \rarr ~input_sim_xx.py~
-    * ~input_fitMIR_xx.py~ \rarr ~input_xx.py~
-    * ~show_fitpar.py~ \rarr ~show_fit.py~
-    * ~partrack.py~ \rarr ~show_par.py~
-    * ~show_corr.py~ \rarr ~show_corr.py~
-  + out1/ \rarr out/
-** v0.3.3 (20210421, reparam2)
-- Reparametrise ~specModel~ with contimuum param
-  + lnMovd2 \rarr lnFcont (Flux normalised at indpar%refw)
-  + lnT \rarr lnT represents lndT if indpar%ordQ > 0
-- Correct the error of implementing S-M in ~lnhyper_corr~ in ~HB_kit~
-  + Add ~tests/test_invert.f90~ (S-M \sim20 times faster than Cholesky)
-  + Save \sim25% calculation time
-- Correct the error of initializing hyperparameter sampling
-- Change HB routine name from HIBARI to HISTOIRE
-  + HISTOIRE: HIerarchical bayeSian fitting Tool Of mid-IR Emission
-- Sample hypercorr once per 10 MCMC steps
-  + Save \sim90% calculation time)
-** v0.3.2 (20210412, matinv)
-- Adopte Sherman-Morrison formula for (covariance) matrix inversion
-** v0.3.1 (20210407, reparam)
-- Reparametrise ~specModel~ with band ratios instead of band intensities
-  + lnIband \rarr lnRband (represents lnIband for indpar%refB)
-  + lnIline \rarr lnRline
-** v0.3 (20210331, HB beta)
-- Add simulated galaxy spectral fitting
-- Add uncertainty propagation for band ratios
-  + Use covar mat and param gradient for chi2
-  + Non-correlated analytic calculation for chi2 (alternative post-analysis, see ~pynout/corr_fitpar~)
-  + Calculate ratios in MCMC for HB
-- INOUT file organization
-  + Create out1/ and programs/ repertories
-  + PyUI/ \rarr pynout/ (move all test interface scripts into tests/)
-- ~initparam~/iniMC test revisit
-  + Modify parameter ranges
-  + Involve profile functions (~modifBB~, ~gaussLine~ & ~lorentzBand~) into the auto limits
-  + Force limited=.TRUE. for intensive param
-- Add ~auxil/chi2_kit.f90~ and ~auxil/HB_kit.f90~
-- Modify ~SpecModel~ inputs by adding extinct(:,:) and moving extCurve to ~read_master~ <speed problem solved>
-- Add resume option in ~read_master~ (used by HB only)
-- Update Python interface pynout/
-  + chi2, BB (non-hierarchical Bayesian) and HB (hierarchical Bayesian)
-  + Add ~partrack~ to visualise MCMC sampling
-- Update tests/dat/
-** v0.2 (20210114, Bayes beta)
-- HIBARI: HIerarchical BAyesian fitting Routine of mid-IR emission
-  + BB: Non-hierarchical run
-** v0.1 (20201221, Chi2 release)
-- HDF5 file fractional writing
-- Add generic interface
-  + Add parvec for Gibbs sampling
-  + parr \rarr parval
-  + Add indpar
-- ~par_type~ \rarr ~set_indpar~
-- ~make_par~ \rarr ~read_master~ (update inspired by HerBIE)
-- Add ~initparam~
-- INOUT file organization
-- parname changes
-  + massBB \rarr lnMovd2
-  + tempBB \rarr lnT
-  + Iline \rarr lnIline
-  + Iband \rarr lnIband
-  + Av \rarr lnAv
-  + Fstar \rarr lnFstar
-- Unit revisit (unit consistent with inputs; all conversions within interface; MKS presented in comments as dimensional analysis)
-- Correct vital error in ~test_fitChi2syn.f90~ external residual function
-- Add iniMC test for chi2 convergence
-- Create Python UI
-** v0 (20200619, Chi2 beta)
-- LE MIROIR: LEast-squares fitting of Mid-IR emission OptImized Routine
+  + (A bit) more realistic dust continuum by varying Tdust instead of M/d^2
+  + Ratios of summed bands
+- Add extinction curves of ices
+- Improve plots
+** ---------- WE ARE HERE ----------
+** v0.3.7 (20211119, thesis2)
+- Modify parameter limits
+  + ~lnAv~ ((0,1) \rarr (0,5)) 
+  + IRS calibration errors (15% \rarr 5%)
+- Update simulation
+- presimulation
+  + Shorten file name
+  + Support bb/hb fitted param inputs (thus calib error included)
+- Correct ~auxil.py/calexpansion~ initialization (1 \rarr 0)
+- Improve plots
+  + Add ~pylib/lib_corr.py~
+** [[./arx/version_log_arx.org][Archived (v<0.3.7)]]

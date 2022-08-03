@@ -1,9 +1,14 @@
-#+TITLE: MIRAGE: Mid-InfraRed spectrocube Assembly enGinE
+#+TITLE: MIRAGE
 #+AUTHOR: Dangning HU
 
+Mid-InfraRed spectrocube Assembly enGinE
 * Helpdesk
-The Python package [[https://github.com/kxxdhdn/RAPYUTA][rapyuta]] is required by MIRAGE. You can install it in commandline: ~pip install rapyuta --upgrade~
+The Python package [[https://github.com/kxxdhdn/RAPYUTA][rapyuta]] is required by /MIRAGE/. You can install it in commandline: ~pip install rapyuta --upgrade~
 * Version log
+** v0.5.3 (20211119)
+- ~src/M82/~
+  + Excluded IRS sub-maps not covering IRC slits
+  + Extra stitching of SL1-LL2 considering the intercalib failure (saturation in MIPS1 map)
 ** v0.5.2 (20211017)
 - Tested ~coadd_tool='reproject'~
 ** v0.5.1 (20211015)
@@ -16,40 +21,4 @@ The Python package [[https://github.com/kxxdhdn/RAPYUTA][rapyuta]] is required b
 - Applied super pixels
 - Supported Monte Carlo resume
 - Included ~rapyuta~ v2.0.3 new features
-** v0.4.2 (20210919)
-- Updated Python dependency ~laputan~ to ~rapyuta~
-- Changes in M82 ~build_mir.py~ (added final cut)
-** v0.4.1 (20210823)
-- ~build_irs.py~ supported SH and LH channels
-- Included ~laputan~ v1.2.4 new features
-  + Removed fragmentary spectra (which may cause intercalib tails)
-  + Corrected intercalib offset correction
-- Layout: one folder corresponds to one source
-  + Created ~src/~
-  + Available src: M82, NGC1140, NGC1569, NGC5253
-** v0.4 (20210726)
-- Inter-calibration before and after coadding (M82 customized)
-- Layout
-  + Merged build and calib scripts
-- Included ~laputan~ v1.2 new features
-** v0.3 (20210630)
-- Reprojected all to IRC grids with updated ~laputan.imaging.iswarp~
-- Renamed ~cubiana~ as ~MIRAGE~
-- Replaced ~astylo~ package by ~laputan~
-- New layout
-  + ~buildinfo.py~
-  + ~build_irc.py~ + ~calib_irc.py~
-  + ~build_irs.py~ + ~calib_irs.py~
-  + ~build_mir.py~
-- New BSD 3-Clause License
-** v0.2 (20200619)
-- Added ~Y12spec.py~ for reproducing Yamagishi12 results
-** v0.1.1 (20200422)
-- Extracted ~irs_snippet_v0.zip~ for Andre
-** v0.1 (20191017)
-- New layout
-  + ~param.py~
-  + ~irs_spec.py~
-  + ~irc_spec.py~
-  + ~all_spec.py~
-** v0 (20180627)
+** [[./arx/version_log_arx.org][Archived (v<0.5)]]

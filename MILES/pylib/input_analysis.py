@@ -14,7 +14,7 @@ This is the interface of MILES generating following input files:
 
 """
 
-import os
+import os, pathlib
 import math
 import numpy as np
 import subprocess as SP
@@ -80,7 +80,7 @@ if hb_log.exists():
     Nmcmc = read_hdf5(dirout+'parlog_fit_hb', 'Last index')[0]
 else:
     Nmcmc = read_hdf5(dirin+'input_master', 'Nmcmc')[0]
-t_burnin.append(int( Nmcmc * 0.3 ))
+t_burnin.append(int( Nmcmc * 0.6 ))
 t_end.append( Nmcmc )
 
 ## Write HDF5

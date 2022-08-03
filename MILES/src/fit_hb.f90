@@ -145,7 +145,7 @@ PROGRAM fit_hb
   IF (verbose) PRINT*
   DO i=1,MERGE(2,1,verbose)
     CALL BANNER_PROGRAM("HISTOIRE (HIerarchical bayeSian fitting Tool Of mid-IR Emission)" &
-                        // "written by D. Hu", &
+                        //NEW_LINE('')// "written by D. Hu"//NEW_LINE(''), &
                         UNIT=unitlog(i), SWING=.TRUE.)
     IF (resume) THEN
       WRITE(unitlog(i),*) 
@@ -828,7 +828,7 @@ PROGRAM fit_hb
 
   DO i=1,MERGE(2,1,verbose)
     WRITE(unitlog(i),*)
-    WRITE(unitlog(i),*) 'HB fit galspec (simulated spectra) [done]'
+    WRITE(unitlog(i),*) 'HISTOIRE: HB fit [done]'
     WRITE(unitlog(i),*) REPEAT('=',textwid)//NEW_LINE('')
   END DO
   

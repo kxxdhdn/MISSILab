@@ -47,7 +47,7 @@ from rapyuta.plots import pplot
 from buildinfo import ( src, Nmc, verbose, coadd_tool, colors, markers,
                         chnl, path_irs, sub_SL, sub_LL, sub_SH, sub_LH,
                         path_idl, path_ker, path_conv, path_phot, path_cal,
-                        fits_ker, csv_ker, path_tmp, path_fig, path_out,
+                        fits_ker, fwhm, csv_ker, path_tmp, path_fig, path_out,
                         filog, fits_irc, out_irc, out_irs, path_build, parobs, # build
 )
 from wcsinfo import coadd_footprint
@@ -85,7 +85,7 @@ Nphot = len(phot)
 
 Nobs = len(out_irc)
 
-Nmc = 2
+# Nmc = 2
 
 resume = False
 
@@ -215,8 +215,8 @@ for iph in range(Nphot):
     
                     ## PSF Convolution with both sources of errors (MC)
                     ##--------------------------------------------------
-                    conv = iconvolve(f0nam_out,
-                                     kfile=fits_ker, klist=csv_ker, convdir=path_conv,
+                    conv = iconvolve(f0nam_out, kfile=fits_ker, psf=fwhm,
+                                     klist=csv_ker, convdir=path_conv,
                                      filOUT=f0nam_out)
                     conv.do_conv(idldir=path_idl)
     
@@ -303,12 +303,12 @@ for j in trange(Nmc+1,#-iresume,# leave=False,
             ## PSF Convolution with both sources of errors (MC)
             ##--------------------------------------------------
             if j==0:
-                conv = iconvolve(path_irs+f0nam,
-                                 kfile=fits_ker, klist=csv_ker, convdir=path_conv,
+                conv = iconvolve(path_irs+f0nam, kfile=fits_ker, psf=fwhm,
+                                 klist=csv_ker, convdir=path_conv,
                                  filOUT=path_tmp+'SH/'+f0nam+'_'+str(j))
             else:
-                conv = iconvolve(path_irs+f0nam,
-                                 kfile=fits_ker, klist=csv_ker, convdir=path_conv,
+                conv = iconvolve(path_irs+f0nam, kfile=fits_ker, psf=fwhm,
+                                 klist=csv_ker, convdir=path_conv,
                                  dist='norm', sig_pt=.2,
                                  filOUT=path_tmp+'SH/'+f0nam+'_'+str(j))
             conv.do_conv(idldir=path_idl)
@@ -324,12 +324,12 @@ for j in trange(Nmc+1,#-iresume,# leave=False,
             ## PSF Convolution with both sources of errors (MC)
             ##--------------------------------------------------
             if j==0:
-                conv = iconvolve(path_irs+f0nam,
-                                 kfile=fits_ker, klist=csv_ker, convdir=path_conv,
+                conv = iconvolve(path_irs+f0nam, kfile=fits_ker, psf=fwhm,
+                                 klist=csv_ker, convdir=path_conv,
                                  filOUT=path_tmp+'LH/'+f0nam+'_'+str(j))
             else:
-                conv = iconvolve(path_irs+f0nam,
-                                 kfile=fits_ker, klist=csv_ker, convdir=path_conv,
+                conv = iconvolve(path_irs+f0nam, kfile=fits_ker, psf=fwhm,
+                                 klist=csv_ker, convdir=path_conv,
                                  dist='norm', sig_pt=.2,
                                  filOUT=path_tmp+'LH/'+f0nam+'_'+str(j))
             conv.do_conv(idldir=path_idl)
@@ -1781,9 +1781,20 @@ if concat_mir=='y':
 plot_mir = input("Plot MIR spectra (y/n)? ")
 if plot_mir=='y':
 
-    for iobs in range(Nobs):
+    for iobs in range(Nobs):        
         ds = read_fits(path_out+src+'_'+parobs[iobs][0], path_out+src+'_'+parobs[iobs][0]+'_unc')
         Nw, Ny, Nx = ds.data.shape
+
+        ## Extra stitching of SL1-LL2
+        for x in range(Nx):
+            for y in range(Ny):
+                for k in range (Nw):
+                    if ds.data[k,y,x]<0:
+                        ds.data[k,y,x] = -ds.data[k,y,x]
+                i1 = closest(ds.wave, 14.29, 'left') + 1
+                gain = ds.data[i1-1,y,x]/ds.data[i1,y,x]
+                ds.data[i1:,y,x] = ds.data[i1:,y,x] * gain
+
 
         xscale, yscale = read_hdf5(filog+parobs[iobs][0], 'Super pixel size')
         for y in range(Ny):
@@ -1821,17 +1832,18 @@ if plot_mir=='y':
 
                 ## Overlapped in one figure
                 if y==0:
-                    if iobs==3:
-                        ylim=((1e-1,None))
-                    elif iobs==6:
-                        ds.data[:,y,0] *= .1
-                        ds.unc[:,y,0] *= .1
-                        subname += '*0.1'
-                        ylim=((1e-3,1e2))
-                    elif iobs==7:
-                        ylim=((1e-2,None))
-                    else:
-                        ylim=((None,None))
+                    ds.data[:,y,0] *= .1
+                    ds.unc[:,y,0] *= .1
+                    subname += '*0.1'
+
+                    # if iobs==3:
+                    #     ylim=((1e-1,None))
+                    # elif iobs==6:
+                    #     ylim=((1e-3,1e2))
+                    # elif iobs==7:
+                    #     ylim=((1e-2,None))
+                    # else:
+                    ylim=((None,None))
                     pp = pplot(ds.wave, ds.data[:,y,0], yerr=ds.unc[:,y,0],
                                xlog=1, ylog=1, 
                                lw=1, ec='grey', label=subname,
@@ -1839,16 +1851,15 @@ if plot_mir=='y':
                                ylim=ylim,
                                xlabel=r'${\rm Wavelengths}\ \lambda\ (\mu m)$',
                                ylabel=r'$F_{\nu}\ (MJy/sr)$',
-                               figsize=(16,8), top=.9, right=.8,
-                               legend='upper left', anchor=(1,1),
+                               figsize=(16,8), top=.99, right=.85, left=.1,
                                title=None,# capsize=2,
                                # title=src+' '+parobs[iobs][0]+' spectra',
-                               titlesize=20, labelsize=20, ticksize=20, legendsize=20)
+                               titlesize=20, labelsize=20, ticksize=20)
                     
-                    if iobs==0:
-                        pp.ax.text(.95,.05,'(a)',size=20,c='grey',transform=pp.ax.transAxes)
-                    elif iobs==6:
-                        pp.ax.text(.95,.05,'(b)',size=20,c='grey',transform=pp.ax.transAxes)
+                    # if iobs==0:
+                    #     pp.ax.text(.95,.05,'(a)',size=20,c='grey',transform=pp.ax.transAxes)
+                    # elif iobs==6:
+                    #     pp.ax.text(.95,.05,'(b)',size=20,c='grey',transform=pp.ax.transAxes)
 
                 else:
                     pp.add_plot(ds.wave, ds.data[:,y,0], yerr=ds.unc[:,y,0],
@@ -1861,5 +1872,7 @@ if plot_mir=='y':
                 pp.ax.set_xticks(xtic_min, minor=True) # minor
                 pp.ax.xaxis.set_major_formatter(ScalarFormatter()) # major
                 pp.ax.xaxis.set_minor_formatter(NullFormatter()) # minor
+                pp.ax.legend(loc='upper left', bbox_to_anchor=(1,1),
+                            fontsize=20, framealpha=0)
                 
                 pp.save(path_fig+src+'_'+subname[0], transparent=True)

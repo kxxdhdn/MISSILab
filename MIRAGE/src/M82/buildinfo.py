@@ -136,17 +136,17 @@ sub_LH = []
 ##                   Data homogenisation
 
 ##----------------------------------------------------------
-# coadd_tool = 'swarp'
-coadd_tool = 'reproject'
+coadd_tool = 'swarp'
+# coadd_tool = 'reproject'
 
 ## Convolution
 ##-------------
 fits_ker = []
 fwhm = [1., 1.5, 2., 2.5, 3., 3.5, 4., 4.5, 5., 5.5, 6.]
-# psf_ref = 'IRAC_5.8' # 2.11 (< LL1)
-# psf_ref = 'IRAC_8.0'# 2.82 (< LL1)
+# psf_ref = 'IRAC_5.8' # 2.11" (< LL1)
+# psf_ref = 'IRAC_8.0'# 2.82" (< LL1)
 psf_ref = 'Gauss_06.0'
-# psf_ref = 'MIPS_24' # 6.43
+# psf_ref = 'MIPS_24' # 6.43"
 # psf_ref = 'WISE_ATLAS_11.6' # 6.60"
 # psf_ref = 'WISE_ATLAS_22.1' # 11.89"
 for w in fwhm:

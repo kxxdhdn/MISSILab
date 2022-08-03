@@ -1,17 +1,23 @@
-#+TITLE: MISSILE: Mid-Infrared Sky Spectral Insight LibrariEs
+#+TITLE: MISSILE
 #+AUTHOR: Dangning HU
 
+Mid-Infrared Sky Spectral Insight LibrariEs
 * Introduction
-MISSILE (Mid-Infrared Sky Spectral Insight LibrariEs) is a collection of several data processing/analyzing tools, which allow to explore galaxies through the mid-IR spectroscopy.
-** [[https://github.com/kxxdhdn/MISSILE/tree/main/MIRAGE][MIRAGE (Mid-InfraRed spectrocube Assembly enGinE)]] [Python + IDL + Fortran]
-** [[https://github.com/kxxdhdn/MISSILE/tree/main/MILES][MILES (Mid-Infrared Line Extraction Software)]] [Fortran + Python]
+/MISSILE/ is a collection of several data processing/analyzing tools, which allow to explore galaxies through the mid-IR spectroscopy.
+** [[https://github.com/kxxdhdn/MISSILE/tree/main/MIRAGE][MIRAGE]]
+Mid-InfraRed spectrocube Assembly enGinE
+[Python + IDL + Fortran]
+** [[https://github.com/kxxdhdn/MISSILE/tree/main/MILES][MILES]]
+Mid-Infrared Line Extraction Software
+[Fortran + Python]
 ** Supported observations: 
 - AKARI/IRC (2.5 - 5 microns)
 - Spitzer/IRS (5 - 40 microns)
-- JWST/MIRI (upcoming)
+- JWST (upcoming)
 * Helpdesk
 ** Prerequisite
-*** [[https://github.com/kxxdhdn/RAPYUTA][RAPYUTA (libraRy of Astronomical PYthon UTilities for Astrophysics nerds)]]
+*** [[https://github.com/kxxdhdn/RAPYUTA][RAPYUTA]]
+libraRy of Astronomical PYthon UTilities for Astrophysics nerds
 #+begin_src bash
 pip install rapyuta --upgrade
 #+end_src

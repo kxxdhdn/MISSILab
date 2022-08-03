@@ -54,9 +54,9 @@ MODULE auxil
   !! Calibration errors
   !!--------------------
   TYPE spect_err
-    REAL(DP) :: caliberr_AKARI_NG = 0.2_DP ! Ohyama+2007
-    REAL(DP) :: caliberr_SL = 0.15_DP
-    REAL(DP) :: caliberr_LL = 0.15_DP
+    REAL(DP) :: caliberr_AKARI_NG = 0.1_DP ! Ohyama+2007
+    REAL(DP) :: caliberr_SL = 0.05_DP
+    REAL(DP) :: caliberr_LL = 0.05_DP
     REAL(DP) :: caliberr_SH = 0.2_DP
     REAL(DP) :: caliberr_LH = 0.2_DP
   END TYPE spect_err

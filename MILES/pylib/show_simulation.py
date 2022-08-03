@@ -6,11 +6,13 @@
 This is the visualization of simulation_MIR.h5 (simulated spectra)
 
 """
+
 import os
 import numpy as np
-import matplotlib.pyplot as plt
+from matplotlib.ticker import ScalarFormatter, NullFormatter
 
 ## rapyuta
+from rapyuta.arrays import closest
 from rapyuta.inout import read_hdf5
 from rapyuta.plots import pplot
 
@@ -41,16 +43,24 @@ spec_unit = read_hdf5(filout, 'spectral unit')[0]
 wvl = read_hdf5(filout, 'wavelength (microns)')
 FnuOBS = read_hdf5(filout, 'FnuOBS ('+spec_unit+')')
 dFnuOBS = read_hdf5(filout, 'dFnuOBS ('+spec_unit+')')
-FnuBAND = read_hdf5(filout, 'FnuBAND ('+spec_unit+')')
+
+## Added a NaN at 5 micron
+i5 = closest(wvl, 5., 'left') + 1
+wvl = np.insert(wvl, i5, 5.)
+FnuOBS = np.insert(FnuOBS, i5, np.nan, axis=0)
+dFnuOBS = np.insert(dFnuOBS, i5, np.nan, axis=0)
+
 Nw, Ny, Nx = FnuOBS.shape
-Nband = FnuBAND.shape[0]
+
+## Negative to NaN
+FnuOBS[FnuOBS<0] = np.nan
 
 ## Make plots
 xlab = r'$\lambda\,(\mu m)$'
 if spec_unit=='MKS':
-    ylab = r'Surface brightness $\,(W/m2/Hz/sr)$'
+    ylab = r'$F_{\nu}\ \,(W/m2/Hz/sr)$'
 elif spec_unit=='MJyovsr':
-    ylab=r'Surface brightness $\,(MJy/sr)$'
+    ylab = r'$F_{\nu}\ \,(MJy/sr)$'
 
 ## Create data tables
 lab_tab = np.empty((Ny,Nx), dtype=('<U30'))
@@ -73,21 +83,26 @@ for y in range(Ny):
     for x in range(Nx):
         filename1 = path_fig+'simu_'+str(x+1)+'_'+str(y+1)+'.png'
 
-        p = pplot(xlog=1, ylog=1, nonposx='clip', nonposy='clip',
+        p = pplot(xlog=1, ylog=1,# nonposx='clip', nonposy='clip',
                   xlim=(2.4,21), ylim=(1e-1,1e4),
-                  xlabel=r'${\rm Wavelengths}\ \lambda\ (\mu m)$',
-                  ylabel=r'${\rm Surface\ brightness}\ F_{\nu}\ (MJy/sr)$',
+                  xlabel=xlab, ylabel=ylab,
                   title=titlist[y,x],
-                  figsize=(10,8), right=.95, left=.1, bottom=.15,
-                  # legend='upper left', anchor=(1,1),
-                  titlesize=20, labelsize=20, ticksize=20, legendsize=20)
+                  figsize=(10,8), left=.15, right=.95, top=.9, bottom=.1,
+                  titlesize=20, labelsize=20, ticksize=20)
         p.add_plot(wvl, Fnu_tab[x,y,:], yerr=dFnu_tab[x,y,:],
                    ec='grey', elw=1, c='k', label='Data')
         p.add_plot(wvl, dFnu_tab[x,y,:], c='r', label='Errors')
 
         # p.ax.text(.9,.05,'(a)',size=20,c='grey',transform=p.ax.transAxes)
+        xtic = [2.5, 3, 3.5, 4, 5, 6, 7, 8, 10, 12, 15, 20,]# 30, 40]
+        xtic_min = np.arange(2.5, 20., .1)
+        p.ax.set_xticks(xtic, minor=False) # major
+        p.ax.set_xticks(xtic_min, minor=True) # minor
+        p.ax.xaxis.set_major_formatter(ScalarFormatter()) # major
+        p.ax.xaxis.set_minor_formatter(NullFormatter()) # minor
         p.ax.legend(loc='upper left',# bbox_to_anchor=(1,1),
-                    fontsize=20, framealpha=0,)
+                    fontsize=20, framealpha=0)
+                    
         p.save(filename1, transparent=True)
 
 ## Plot stacked spectra
@@ -97,43 +112,23 @@ for x in range(Nx):
 
     p = pplot(xlog=1, ylog=1, nonposx='clip', nonposy='clip',
               xlim=(2.4,21), ylim=(1e0,2e4),
-              xlabel=r'${\rm Wavelengths}\ \lambda\ (\mu m)$',
-              ylabel=r'${\rm Surface\ brightness}\ F_{\nu}\ (MJy/sr)$',
-              title=None, clib=clist,
-              figsize=(10,8), right=.95, left=.15, bottom=.15, top=.95,
-              # legend='upper left', anchor=(1,1),
-              titlesize=20, labelsize=20, ticksize=20, legendsize=20)
+              xlabel=xlab, ylabel=ylab,
+              figsize=(10,8), left=.15, right=.95, top=.95, bottom=.1,
+              titlesize=20, labelsize=20, ticksize=20, title=None, clib=clist)
     for y in range(Ny):
         p.add_plot(wvl, Fnu_tab[x,y,:], label=lab_tab[y,x])
 
     # p.ax.text(.9,.05,'(a)',size=20,c='grey',transform=p.ax.transAxes)
+    xtic = [2.5, 3, 3.5, 4, 5, 6, 7, 8, 10, 12, 15, 20,]# 30, 40]
+    xtic_min = np.arange(2.5, 20., .1)
+    p.ax.set_xticks(xtic, minor=False) # major
+    p.ax.set_xticks(xtic_min, minor=True) # minor
+    p.ax.xaxis.set_major_formatter(ScalarFormatter()) # major
+    p.ax.xaxis.set_minor_formatter(NullFormatter()) # minor
     p.ax.legend(loc='upper left',# bbox_to_anchor=(1,1),
-                fontsize=20, framealpha=0,)
+                fontsize=20, framealpha=0)
+
     p.save(filename2, transparent=True)
-
-## Plot individual band in table
-##-------------------------------
-# for x in range(Nx):
-#     filename3 = path_fig+'simulation_table_x='+str(x+1)+'.png'
-
-#     fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(9,9))
-#     plt.subplots_adjust(left=.1, bottom=.05, \
-#                         right=.99, top=.95, wspace=.3, hspace=.4)
-#     for y in range(Ny):
-#         px, py = int(y/3), y%3
-#         axes[px,py].plot(wvl, Fnu_tab[x,y,:],c='k')
-#         for i in range(2):
-#             i += 4
-#             axes[px,py].plot(wvl, FnuBAND[i,:,y,x],c='b')
-#         axes[px,py].set_xlim((6., 6.4))
-#         axes[px,py].set_ylim((0, 2.e2))
-#         axes[px,py].set_xlabel(xlab)
-#         axes[px,py].set_ylabel(ylab)
-#         axes[px,py].set_title(
-#             fr'$Spectra ({x+1},{y+1})$')
-
-#     plt.savefig(filename3)
     
-# plt.show()
-
+                
 print('>>> Coucou show_simulation [Done] <<<')

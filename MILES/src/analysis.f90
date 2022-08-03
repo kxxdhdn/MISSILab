@@ -202,7 +202,7 @@ PROGRAM analysis
       meanpar(:,:,:) = MEAN(parmcmc(:,:,:,t_burnin(j):t_end(j)), DIM=4)
       stdevpar(:,:,:) = SIGMA(parmcmc(:,:,:,t_burnin(j):t_end(j)), DIM=4)
 
-      !! Calculate 1st and 5th 6-quantiles (sextiles)
+      !! Calculate 2nd and 4th 6-quantiles (sextiles)
       ALLOCATE(xs(Nmcmc_eff), mask4D(Nx,Ny,Npar,Nmcmc_eff))
       mask4D(:,:,:,:) = .NOT. ISNAN(parmcmc(:,:,:,t_burnin(j):t_end(j)))
       ! qpar(:,:,:,2) = MEDIAN(parmcmc(:,:,:,t_burnin(j):t_end(j)), DIM=4, &
@@ -212,9 +212,9 @@ PROGRAM analysis
           DO ipar=1,Npar
             xs(:) = SORT(PACK(parmcmc(x,y,ipar,t_burnin(j):t_end(j)), &
                               MASK=mask4D(x,y,ipar,:)))
-            qpar(x,y,ipar,1) = xs(NINT(1._DP/6*Nmcmc_eff)) ! round
+            qpar(x,y,ipar,1) = xs(NINT(2._DP/6*Nmcmc_eff)) ! round
             qpar(x,y,ipar,2) = xs(NINT(3._DP/6*Nmcmc_eff))
-            qpar(x,y,ipar,3) = xs(NINT(5._DP/6*Nmcmc_eff))
+            qpar(x,y,ipar,3) = xs(NINT(4._DP/6*Nmcmc_eff))
           END DO
         END DO
       END DO
@@ -240,7 +240,7 @@ PROGRAM analysis
         meanln1pd(:,:,:) = MEAN(ln1pdmcmc(:,:,:,t_burnin(j):t_end(j)), DIM=4)
         stdevln1pd(:,:,:) = SIGMA(ln1pdmcmc(:,:,:,t_burnin(j):t_end(j)), DIM=4)
 
-        !! Calculate 1st and 5th 6-quantiles (sextiles)
+        !! Calculate 2nd and 4th 6-quantiles (sextiles)
         ALLOCATE(xs(Nmcmc_eff), mask4D(Nx,Ny,Npar,Nmcmc_eff))
         mask4D(:,:,:,:) = .NOT. ISNAN(ln1pdmcmc(:,:,:,t_burnin(j):t_end(j)))
         ! qcal(:,:,:,2) = MEDIAN(ln1pdmcmc(:,:,:,t_burnin(j):t_end(j)), DIM=4, &
@@ -250,9 +250,9 @@ PROGRAM analysis
             DO ical=1,Ncalib
               xs(:) = SORT(PACK(ln1pdmcmc(x,y,ical,t_burnin(j):t_end(j)), &
                                 MASK=mask4D(x,y,ical,:)))
-              qcal(x,y,ical,1) = xs(NINT(1._DP/6*Nmcmc_eff)) ! round
+              qcal(x,y,ical,1) = xs(NINT(2._DP/6*Nmcmc_eff)) ! round
               qcal(x,y,ical,2) = xs(NINT(3._DP/6*Nmcmc_eff))
-              qcal(x,y,ical,3) = xs(NINT(5._DP/6*Nmcmc_eff))
+              qcal(x,y,ical,3) = xs(NINT(4._DP/6*Nmcmc_eff))
             END DO
           END DO
         END DO
@@ -528,14 +528,14 @@ PROGRAM analysis
                                              QABS=Qabs(:), EXTINCT=extinct(:,:) )
             END DO
             
-            !! Calculate 1st, 3rd (median) and 5th 6-quantiles (sextiles)
+            !! Calculate 2nd, 3rd (median) and 4th 6-quantiles (sextiles)
             ALLOCATE(mask2D(NwOBS,Nmcmc_eff), xs(Nmcmc_eff))      
             mask2D(:,:) = .NOT. ISNAN(FnuMOD_mcmc(:,:))
             DO iw=1,NwOBS
               xs(:) = SORT(PACK(FnuMOD_mcmc(iw,:),MASK=mask2D(iw,:)))
-              n_FnuMOD(iw,1) = xs(NINT(1._DP/6*Nmcmc_eff)) ! round
+              n_FnuMOD(iw,1) = xs(NINT(2._DP/6*Nmcmc_eff)) ! round
               n_FnuMOD(iw,2) = xs(NINT(3._DP/6*Nmcmc_eff))
-              n_FnuMOD(iw,3) = xs(NINT(5._DP/6*Nmcmc_eff))
+              n_FnuMOD(iw,3) = xs(NINT(4._DP/6*Nmcmc_eff))
             END DO
             DEALLOCATE(xs, mask2D)
           END IF
