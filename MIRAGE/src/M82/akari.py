@@ -58,7 +58,7 @@ Nobs = len(parobs)
 # Nmc = 2
 
 # exit()
-
+    
 ##----------------------------------------------------------
 
 ##                      Build slits
@@ -77,14 +77,14 @@ if do_build=='y':
                 cup.spec_build(fits_irc[i]+'_'+str(j), tmpdir=path_build,
                                filRAW=fits_irc[i], fiLOG=filog+parobs[i][0],
                                Nx=parobs[i][7], Ny=parobs[i][5], Nsub=parobs[i][6],
-                               pixscale=1, wmin=2.55, wmax=4.25, supix=True)
+                               pixscale=1, wmin=2.55, wmax=5.5, supix=True)
                 if i==0:
                     wave0 = cup.wave()
             else:
                 cup.spec_build(fits_irc[i]+'_'+str(j), tmpdir=path_build,
                                dist='splitnorm', sig_pt=3, fill_pt='med',
                                Nx=parobs[i][7], Ny=parobs[i][5], Nsub=parobs[i][6],
-                               pixscale=1, wmin=2.55, wmax=4.25, supix=True)
+                               pixscale=1, wmin=2.55, wmax=5.5, supix=True)
             ## Interpolate wavelength grid of IRC slits
             ##------------------------------------------
             ## (A,B,C,D,G,H,I,J,L,N) (E,F,K) (M) have slightly different wgrid...
@@ -184,12 +184,14 @@ header_atlas = fixwcs(path_out+src+'_footprint'+fitsext).header
 ##                   Inter-calibration
 
 ##----------------------------------------------------------
-pre_calib1 = input("Run inter-calibration prepipeline (DustPedia IRAC1) (y/n)? ")
-pre_calib2 = input("Run inter-calibration prepipeline (SINGS IRAC1) (y/n)? ")
-synt_phot = input("Run inter-calibration prepipeline (IRC synthetic photometry) (y/n)? ")
+pre_calib1 = input("Prepare photometry: DustPedia IRAC1 (y/n)? ")
+pre_calib2 = input("Prepare photometry: SINGS IRAC1 (y/n)? ")
+synt_phot = input("Prepare IRC synthetic photometry (y/n)? ")
+do_intcal = input("Do inter-calibration (y/n)? ")
+if (synt_phot!='y' or pre_calib2!='y') and do_intcal=='y':
+    warnings.warn('You need to prepare (synthetic) photometry if you have not done it yet.')
 
-if not os.path.exists(path_tmp+'calib/'):
-    os.makedirs(path_tmp+'calib/')
+os.makedirs(path_tmp+'calib/', exist_ok=True)
     
 ## Prepare photometry
 ##--------------------
@@ -378,7 +380,7 @@ if pre_calib2=='y':
 
 ## Synthetic photometry (spec)
 ##=============================
-if (synt_phot=='y' and do_build=='y'):
+if (synt_phot=='y'):# and do_build=='y'):
     ## fits_irc[i] can be changed by inter-calib,
     ## One need to rebuild before synthetic photometry
     for i in trange(Nobs, #leave=False,
@@ -474,9 +476,9 @@ for i in range(Nobs):
     mask = np.logical_and( mask_nan, mask_neg )
 
     ## Add calibration error
-    pix_phot1_unc[i] += pix_phot1[i] * .03
-    pix_phot2_unc[i] += pix_phot2[i] * .03
-    pix_spec_unc[i] += pix_spec[i] * .05
+    pix_phot1_unc[i] = np.sqrt( pix_phot1_unc[i]**2 + (pix_phot1[i]*.03)**2 ) # IRAC 3% (Carey2010)
+    pix_phot2_unc[i] = np.sqrt( pix_phot2_unc[i]**2 + (pix_phot2[i]*.03)**2 )
+    pix_spec_unc[i] = np.sqrt( pix_spec_unc[i]**2 + (pix_spec[i]*.2)**2 ) # IRC 10-20% (Ohyama+2007)
     
     ## S/N ratio
     # print(parobs[i][0]+' S/N (IRC) = \n', pix_spec[i][mask]/pix_spec_unc[i][mask])
@@ -486,48 +488,48 @@ for i in range(Nobs):
         ## DP - SINGS plot
         if i==0:
             p0 = pplot(fmt='s', ec='grey', elw=1,# clib=colors,
-                       xlog=1, ylog=1, nonposx='clip', nonposy='clip',
+                       xlog=1, ylog=1, nonposx='clip', nonposy='clip', tkform='mylog',
                        # xlim=(1e-2,1e3), ylim=(1e-2,1e3),
                        xlabel='DustPedia (MJy/sr)', ylabel='SINGS (MJy/sr)',
-                       title=src+' '+phot+' calibration',
-                       figsize=(10,8), right=.8, left=.15, bottom=.15,
-                       legend='upper left', anchor=(1,1),
-                       titlesize=20, labelsize=20, ticksize=20, legendsize=20)
+                       # title=src+' '+phot+' calibration',
+                       figsize=(8,8),# right=.8, left=.15, bottom=.15,
+                       loc='upper left', anchor=(0,1), legendalpha=0,
+                       titlesize=20, xysize=20, tksize=20, legendsize=15)
         p0.add_plot(pix_phot1[i][mask], pix_phot2[i][mask],
                     yerr=pix_phot2_unc[i][mask], xerr=pix_phot1_unc[i][mask],
                     fmt='s', ec='grey', c=colors[i+1],
-                    marker=markers[i], markersize=10, capsize=2,
+                    marker=markers[i], markersize=20, capsize=2,
                     label=parobs[i][0])
         p0.add_plot(pix_phot1[i][mask], pix_phot2[i][mask],
                     yerr=pix_phot2_unc[i][mask], xerr=pix_phot1_unc[i][mask],
                     fmt='o', ec='grey', c=colors[i+1], zorder=100,
-                    marker=markers[i], markersize=.1, capsize=2)
-        p0.save(path_cal+'DP-SINGS_'+phot)
+                    marker=markers[i], markersize=.1, capsize=2) # put errorbar on the front layer
+        p0.save(path_cal+'DP-SINGS_'+phot, transparent=True, figtight=True)
     
-        if (synt_phot=='y' or pre_calib2=='y'):
+        if do_intcal=='y':
+            
             ## IRC - SINGS plot
             if i==0:
                 p = pplot(fmt='s', ec='grey', elw=1,# clib=colors,
-                          xlog=1, ylog=1, nonposx='clip', nonposy='clip',
+                          xlog=1, ylog=1, nonposx='clip', nonposy='clip', tkform='mylog',
                           # xlim=(1e-2,1e3), ylim=(1e-2,1e3),
-                          # xlabel='IRC (MJy/sr)', ylabel='SINGS (MJy/sr)',
                           # title=src+' IRC-'+phot+' inter-calibration',
-                          xlabel='IRC (MJy/sr)', ylabel=r'$\rm IRAC_{3.6\mu m}\ (MJy/sr)$',
-                          title=None,
-                          figsize=(11,8), right=.78, left=.12, bottom=.1, top=.95,
-                          legend='upper left', anchor=(1,1),
-                          titlesize=20, labelsize=20, ticksize=20, legendsize=20)
+                          xlabel=r'$\rm IRC-sIRAC_{3.6\mu m}\ (MJy/sr)$',
+                          ylabel=r'$\rm IRAC_{3.6\mu m}\ (MJy/sr)$',
+                          figsize=(8,8),# right=.78, left=.12, bottom=.1, top=.95,
+                          loc='upper left', anchor=(0,1), legendalpha=0,
+                          titlesize=20, xysize=20, tksize=20, legendsize=15)
                                 
             p.add_plot(pix_spec[i][mask], pix_phot2[i][mask],
                        yerr=pix_phot2_unc[i][mask], xerr=pix_spec_unc[i][mask],
                        fmt='s', ec='grey', c=colors[i+1],
-                       marker=markers[i], markersize=10, capsize=2,
+                       marker=markers[i], markersize=20, capsize=2,
                        label=parobs[i][0])
             p.add_plot(pix_spec[i][mask], pix_phot2[i][mask],
                        yerr=pix_phot2_unc[i][mask], xerr=pix_spec_unc[i][mask],
                        fmt='s', ec='grey', c=colors[i+1], zorder=100,
-                       marker=markers[i], markersize=.1, capsize=2)
-            p.save(path_cal+'IC_'+phot+'.png')
+                       marker=markers[i], markersize=.1, capsize=2) # put errorbar on the front layer
+            p.save(path_cal+'IC_'+phot+'.png', transparent=True, figtight=True)
     
         ## Linear fit (IRC - SINGS, SLITS)
         ##=================================
@@ -539,14 +541,14 @@ for i in range(Nobs):
         slit_off = 0.
         # slit_off = popt[0]
         
-        if (synt_phot=='y' or pre_calib2=='y'):
+        if do_intcal=='y':
             print(parobs[i][0]+' inter-calibration ('+phot+') gain = {:.4}'.format(slit_gain))
             # print(parobs[i][0]+' inter-Calibration ('+phot+') offset = {:.4}'.format(slit_off))
             # label = parobs[i][0]+': y={0:.4}x'.format(slit_gain)
             # label = parobs[i][0]+': y={0:.4}x+{1:.4}'.format(slit_gain, slit_off)
             # p.add_plot(xgrid, f_lin0(xgrid, *popt),
             #            c='k', ls='-', label=label)
-            # p.save(path_cal+'IC_'+phot+'.png')
+            # p.save(path_cal+'IC_'+phot+'.png', transparent=True, figtight=True)
 
 ## Linear fit (DP - SINGS)
 ##=========================
@@ -570,6 +572,8 @@ label = 'y={0:.4}x'.format(atlas_gain)
 # label = 'y={0:.4}x+{1:.4}'.format(atlas_gain, atlas_off)
 p0.add_plot(xgrid, f_lin0(xgrid, *popt),
             c='k', ls='-', label=label)
+p0.ax.legend(loc='upper left', bbox_to_anchor=(1,1),
+             fontsize=20, framealpha=0,)
 p0.save(path_cal+'DP-SINGS_'+phot+'.png')
 
 ## Linear fit (IRC - SINGS, ATLAS)
@@ -588,17 +592,17 @@ atlas_gain = popt[0]
 atlas_off = 0.
 # atlas_off = popt[0]
 
-if (synt_phot=='y' or pre_calib2=='y'):
+if do_intcal=='y':
     print('Atlas inter-calibration ('+phot+') gain = {:.4}'.format(atlas_gain))
     # print('Atlas inter-Calibration ('+phot+') offset = {:.4}'.format(atlas_off))
     label = 'y={0:.4}x'.format(atlas_gain)
     # label = 'y={0:.4}x+{1:.4}'.format(atlas_gain, atlas_off)
     p.add_plot(xgrid, f_lin0(xgrid, *popt),
                c='k', ls='-', label=label)
-    p.ax.text(.9,.05,'(a)',size=20,c='grey',transform=p.ax.transAxes)
+    p.ax.text(.9,.05,'(b)',size=30,c='grey',transform=p.ax.transAxes) # for the use of Hu_thesis
     p.ax.legend(loc='upper left', bbox_to_anchor=(1,1),
                 fontsize=20, framealpha=0,)
-    p.save(path_cal+'IC_'+phot+'.png', transparent=True)
+    p.save(path_cal+'IC_'+phot+'.png', transparent=True, figtight=True)
 
 ## Spectral correction
 ##---------------------
@@ -640,12 +644,16 @@ for i in range(Nobs):
             calib_gain = atlas_gain
         else:
             calib_gain = 1.0
+            print('No correction!')
         sc.correct_spec(calib_gain, filOUT=out_irc[i])
 
 
 ##----------------------
 ## Fit correlation (MC)
 ##----------------------
+if do_intcal!='y':
+    print('No correction!')
+    
 for j in trange(Nmc, #leave=False,
                 desc='IRC spectral correction [MC]'):
     ## Data dictionary
@@ -763,25 +771,57 @@ if plot_spec=='y':
         for y in range(Ny):
             ys = pix2sup(y, yscale, origin=0)
             subname = parobs[i][0][0]+str(ys+1)
-            maskspec = ~np.isnan(ds.data[:,y,0]).any()
+            maskspec = 1
+            # maskspec = ~np.isnan(ds.data[:,y,0]).any()
             if (maskspec and y%yscale==0):
-                p = pplot(ds.wave, ds.data[:,y,0], yerr=ds.unc[:,y,0],
-                          # xlog=1, ylog=1, 
-                          c='k', lw=.7, ec='r', label=subname,
-                          xlabel=r'${\rm Wavelengths}\ \lambda\ (\mu m)$',
-                          ylabel=r'${\rm Surface\ brightness}\ F_{\nu}\ (MJy/sr)$',
-                          figsize=(8,8), legend='upper left',
-                          title='IRC_'+subname,
-                          titlesize=20, labelsize=10, ticksize=10, legendsize=10)
-                ## Non-intercalib
-                p.add_plot(ds.wave, ds0.data[:,y,0],
-                           c='y', lw=.7, ls='--', zorder=-1)
-                ## Photometry
-                p.add_plot(wcen[0], dict_phot2[i][subname], yerr=dict_phot2_unc[i][subname],
-                           c='m', marker='o', ms=10, zorder=100, label=phot)
-                ## Synthetic photometry
-                p.add_plot(wcen[0], dict_spec[i][subname], yerr=dict_spec_unc[i][subname],
-                           c='g', marker='^', ms=10, zorder=101, label='IRC-'+phot)
-                
-                p.save(path_fig+'IRC_'+subname)
+                xtic = [2.5, 3, 3.5, 4, 4.5, 5]
+                xtic_min = np.arange(2.4, 5.2, .1)
 
+                ## Add calibration error
+                ds.unc[:,y,0] = np.sqrt( ds.unc[:,y,0]**2 + (ds.data[:,y,0]*.2)**2 ) # IRC 10-20% (Ohyama+2007)
+
+                ## Individual spectra
+                ##--------------------
+                p0 = pplot(ds.wave, ds.data[:,y,0], yerr=ds.unc[:,y,0],
+                           # xlog=1, ylog=1, tkform='mylog',
+                           c='k', lw=2, ec='r', elw=1, label=subname,
+                           xlabel=r'$\rm Wavelengths\ \lambda\ (\mu m)$',
+                           ylabel=r'$\rm F_{\nu}\ (MJy/sr)$',
+                           figsize=(12,8), loc='upper left', legendalpha=0,
+                           # title='IRC_'+subname,
+                           titlesize=20, xysize=20, tksize=20, legendsize=20)
+                ## Non-intercalib
+                p0.add_plot(ds.wave, ds0.data[:,y,0],
+                            c='y', lw=2, ls='--', zorder=99)
+                ## Photometry
+                p0.add_plot(wcen[0], dict_phot2[i][subname], yerr=dict_phot2_unc[i][subname],
+                            c='m', marker='o', ms=10, zorder=100, label=phot)
+                ## Synthetic photometry
+                p0.add_plot(wcen[0], dict_spec[i][subname], yerr=dict_spec_unc[i][subname],
+                            c='g', marker='^', ms=10, zorder=101, label='IRC-'+phot)
+                
+                p0.save(path_fig+'IRC_'+subname, transparent=True, figtight=True)
+
+                ## Overlapped in one figure
+                ##--------------------------
+                legendloc = 'upper left'
+                if parobs[i][0]=='E1_4':
+                    legendloc = 'upper right'
+                if y==0:
+                    p = pplot(ds.wave, ds.data[:,y,0], yerr=ds.unc[:,y,0],
+                              # xlog=1, ylog=1, tkform='mylog',
+                              lw=2, ec='grey', elw=1, label=subname,
+                              clib=['c','m','y','r','orange','b','g'],
+                              xlabel=r'$\rm Wavelengths\ \lambda\ (\mu m)$',
+                              ylabel=r'$\rm F_{\nu}\ (MJy/sr)$',
+                              xtk=xtic, xtkmi=xtic_min,# tkform='mylog',
+                              figsize=(14,8), loc=legendloc, legendalpha=0,
+                              titlesize=20, xysize=20, tksize=20, legendsize=20)
+                else:
+                    p.add_plot(ds.wave, ds.data[:,y,0], yerr=ds.unc[:,y,0],
+                               lw=2, ec='grey', elw=1, label=subname)
+
+                # p.ax.legend(loc='upper left',# bbox_to_anchor=(0,1),
+                #             fontsize=20, framealpha=0)
+                
+                p.save(path_fig+src+'_IRC_'+subname[0], transparent=True, figtight=True)

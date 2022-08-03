@@ -3,8 +3,15 @@
 
 Mid-InfraRed spectrocube Assembly enGinE
 * Helpdesk
-The Python package [[https://github.com/kxxdhdn/RAPYUTA][rapyuta]] is required by /MIRAGE/. You can install it in commandline: ~pip install rapyuta --upgrade~
+The Python package [[https://github.com/kxxdhdn/RAPYUTA][rapyuta]] is required by ~MIRAGE/~. You can install it in commandline: ~pip install rapyuta --upgrade~
 * Version log
+** v0.5.4 (20220616)
+- ~src/M82/~
+  + Renamed ~build_irc.py~ as ~akari.py~
+  + Renamed ~build_irs.py~ as ~spitzer.py~
+  + Extended to 38 \mu{}m
+  + Added ~intercalib.py~ and ~unitconvert.py~
+- Updated ~LICENSE~
 ** v0.5.3 (20211119)
 - ~src/M82/~
   + Excluded IRS sub-maps not covering IRC slits

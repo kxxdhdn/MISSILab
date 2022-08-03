@@ -23,7 +23,6 @@ import math
 import numpy as np
 from scipy.optimize import curve_fit
 from scipy.integrate import trapz
-from matplotlib.ticker import ScalarFormatter, NullFormatter
 
 ## rapyuta
 from rapyuta.inout import fclean, fitsext, read_fits, write_fits, read_hdf5
@@ -114,8 +113,7 @@ if proc_SL=='y':
     hdr_SL = []
     for i in trange(Nsub_SL,# leave=False,
                     desc='Loading SL refheader'):
-        if not os.path.exists(path_tmp+'SL/'):
-            os.makedirs(path_tmp+'SL/')
+        os.makedirs(path_tmp+'SL/', exist_ok=True)
         ref0 = []
         for c in chnl_SL:
             ds = read_fits(path_irs+src+'_'+sub_SL[i]+'_'+c)
@@ -136,8 +134,7 @@ if proc_LL=='y':
     hdr_LL = []
     for i in trange(Nsub_LL,# leave=False,
                     desc='Loading LL refheader'):
-        if not os.path.exists(path_tmp+'LL/'):
-            os.makedirs(path_tmp+'LL/')
+        os.makedirs(path_tmp+'LL/', exist_ok=True)
         ref0 = []
         for c in chnl_LL:
             ds = read_fits(path_irs+src+'_'+sub_LL[i]+'_'+c)
@@ -155,6 +152,8 @@ if proc_LL=='y':
         hdr_LL.append(fixwcs(header=hdr).header)
     fclean(path_tmp+'LL/tmpref_*')
 
+## Coadd SL/LL modules (using the bonus channel)
+##-----------------------------------------------
 for iph in range(Nphot):
     if phot[iph]=='IRAC4':
         sub_XX = sub_SL
@@ -164,8 +163,7 @@ for iph in range(Nphot):
         sub_XX = sub_LL
         path_tmp_XX = path_tmp+'LL/'
         mod = 'LL'
-    if not os.path.exists(path_tmp_XX):
-        os.makedirs(path_tmp_XX)
+    os.makedirs(path_tmp_XX, exist_ok=True)
 
     if resume:
         iresume = int(input("Resume "+mod+" sub-map processing from the iteration: "))
@@ -228,8 +226,8 @@ for iph in range(Nphot):
             elif phot[iph]=='MIPS1':
                 f1nam = path_tmp+'LL/'+src+'_'+sub_LL[i]+'_LL'
             
-            if np.logical_or(match_SL=='y' and phot[iph]=='IRAC4',
-                             match_LL=='y' and phot[iph]=='MIPS1'):
+            if np.logical_or(match_SL=='y',# and phot[iph]=='IRAC4',
+                             match_LL=='y'):# and phot[iph]=='MIPS1'):
                 ## Read spectra
                 data3 = read_fits(f1nam+'3_'+str(j)).data
                 data2 = read_fits(f1nam+'2_'+str(j)).data
@@ -284,6 +282,8 @@ for iph in range(Nphot):
                         f1nam+'_'+str(j), wsort=False,
                         keepfrag=False, cropedge=False)
 
+## Coadd hires modules (using one-point/integral scaling factor)
+##---------------------------------------------------------------
 # if resume:
 #     iresume = int(input("Resume sub-map processing from the iteration: "))
 # else:
@@ -377,7 +377,7 @@ for j in trange(Nmc+1,#-iresume,# leave=False,
             mtg.coadd(fsub_LH, refheader=refheader,
                       filOUT=path_tmp+src+'_LH_'+str(j))
         
-        ## Stitch SH & LH maps
+        ## Coadd SH & LH maps
         ##---------------------
         refheader = iswarp((path_tmp+src+'_SH',path_tmp+src+'_LH'),
                            tmpdir=path_tmp+'LH/').refheader
@@ -412,10 +412,10 @@ for j in trange(Nmc+1,#-iresume,# leave=False,
         left_LH = trapz(data_LH[:iwmax_SH], wvl_LH[:iwmax_SH],
                         dx=wvl_LH[1]-wvl_LH[0], axis=0)
     
-        ## Integrated scaling factor
+        ## Integral scaling factor
         gain_hires = right_SH / left_LH
         
-        ## One point scaling factor
+        ## One-point scaling factor
         # i_SH = closest(wvl_SH, 19.10)
         # i_LH = closest(wvl_LH, 19.30)
         # gain_hires = data_SH[i_SH] / data_LH[i_LH]
@@ -434,14 +434,20 @@ for j in trange(Nmc+1,#-iresume,# leave=False,
                     path_tmp+src+'_hires'+str(j), wsort=False, wrange=wran_hi,
                     keepfrag=False, cropedge=False)
 
+if (proc_SH=='y' or proc_SH=='y' or match_hires=='y'):
+    print('Plot spectra...')
+    exit()
+
 ##----------------------------------------------------------
 
-##              Inter-Calibration & Coadding
+##          Inter-Calibration (sub-maps) & Coadding
 
 ##----------------------------------------------------------
 ## DustPedia has no MIPS1 available for M82
-pre_calib = input("Run inter-calibration prepipeline (SINGS) (y/n)? ")
-synt_phot = input("Run inter-calibration prepipeline (IRS synthetic photometry) (y/n)? ")
+## SINGS MIPS1 map of M82 has a saturation hole in the central disk
+photcal = input("Photometry choice: SINGS/DustPedia (s/d)? ")
+pre_calib = input("Prepare photometry (y/n)? ")
+synt_phot = input("Prepare IRS synthetic photometry (y/n)? ")
 write_SL = input("Write IRS-SL spectral sub-maps (y/n)? ")
 coadd_SL = input("Coadd IRS-SL spectral sub-maps (y/n)? ")
 build_SL = input("Build IRS-SL slits (y/n)? ")
@@ -449,61 +455,73 @@ write_LL = input("Write IRS-LL spectral sub-maps (y/n)? ")
 coadd_LL = input("Coadd IRS-LL spectral sub-maps (y/n)? ")
 build_LL = input("Build IRS-LL slits (y/n)? ")
 
-if not os.path.exists(path_tmp+'calib/'):
-    os.makedirs(path_tmp+'calib/')
+os.makedirs(path_tmp+'calib/', exist_ok=True)
 
+## Sub-map homogenize photometry and synthetic photometry
+##--------------------------------------------------------
 for iph in range(Nphot):
 
     ## Prepare photometry
-    ##--------------------
     if phot[iph]=='IRAC4':
         phot_ker = path_ker+'Kernel_HiRes_IRAC_8.0_to_Gauss_06.0'
     elif phot[iph]=='MIPS1':
         phot_ker = path_ker+'Kernel_HiRes_MIPS_24_to_Gauss_06.0'
-    
-    cal_phot = path_cal+src+'_'+phot[iph]+'_SINGS'
-    tmp_phot = path_tmp+'calib/'+src+'_'+phot[iph]+'_SINGS'
+
+    if photcal=='d' and phot[iph]=='IRAC4':
+        cal_phot = path_cal+src+'_'+phot[iph]+'_DP'
+        tmp_phot = path_tmp+'calib/'+src+'_'+phot[iph]+'_DP'
+    else:
+        cal_phot = path_cal+src+'_'+phot[iph]+'_SINGS'
+        tmp_phot = path_tmp+'calib/'+src+'_'+phot[iph]+'_SINGS'
     cal_spec = path_cal+src+'_'+phot[iph]+'_IRS'
     tmp_spec = path_tmp+'calib/'+src+'_'+phot[iph]+'_IRS'
     
-    ##--------------
-    ## SINGS (phot)
-    ##--------------
+    ##------------------------
+    ## SINGS/DustPedia (phot)
+    ##------------------------
     if pre_calib=='y':
         if resume:
-            iresume = int(input("Resume inter-calib prepipeline (SINGS-"+phot[iph]+
+            iresume = int(input("Resume inter-calib prepipeline ("+phot[iph]+
                                 ") from the iteration: "))
         else:
             iresume = 0
             
-        raw_phot = path_phot+src+'_'+phot[iph]+'_SINGS'
-        wgt_phot = path_phot+src+'_'+phot[iph]+'_SINGS_wt'
+        if photcal=='d' and phot[iph]=='IRAC4':
+            raw_phot = path_phot+src+'_'+phot[iph]+'_DP'
 
-        ## Create uncertainty via weight map (suppose uniform contribution)
-        
-        ## (Sect. 3.2) The weight maps contain the information on the number of frames 
-        ## that were used to create the science mosaics at each pixel (value= # frames x10); 
-        ## the pixel size of the weight maps is the same as the science mosaics.
-        ## -- SINGS v5 release doc
-        ## https://irsa.ipac.caltech.edu/data/SPITZER/SINGS/doc/sings_fifth_delivery_v2.pdf
-        
-        ## Only need to run ONCE for each photometry (comment after using)
-        # gen_unc = input("Create SINGS IRAC1 uncertainty map (y/n)? ")
-        # if gen_unc=='y':
-        #     ds_wgt = read_fits(wgt_phot)
-        #     bg = read_fits(raw_phot).data[694:734,56:96]
-        #     bg_wgt = ds_wgt.data[694:734,56:96]
-        #     wfac = .1
-        #     iuncert(raw_phot, filOUT=raw_phot+'_unc',
-        #             filWGT=wgt_phot, wfac=wfac,
-        #             BG_image=bg, BG_weight=bg_wgt)
+            ## Convert phot unit (Jy/pix -> MJy/sr)
+            ## This step should be before reprojection (pixscale may change)
+            Jy_per_pix_to_MJy_per_sr(raw_phot, filOUT=tmp_phot)
+
+        else:
+            raw_phot = path_phot+src+'_'+phot[iph]+'_SINGS'
+
+            ## Create uncertainty via weight map (suppose uniform contribution)
+            
+            ## (Sect. 3.2) The weight maps contain the information on the number of frames 
+            ## that were used to create the science mosaics at each pixel (value= # frames x10); 
+            ## the pixel size of the weight maps is the same as the science mosaics.
+            ## -- SINGS v5 release doc
+            ## https://irsa.ipac.caltech.edu/data/SPITZER/SINGS/doc/sings_fifth_delivery_v2.pdf
+            
+            ## Only need to run ONCE for each photometry (comment after using)
+            # gen_unc = input("Create SINGS IRAC1 uncertainty map (y/n)? ")
+            # wgt_phot = path_phot+src+'_'+phot[iph]+'_SINGS_wt'
+            # if gen_unc=='y':
+            #     ds_wgt = read_fits(wgt_phot)
+            #     bg = read_fits(raw_phot).data[694:734,56:96]
+            #     bg_wgt = ds_wgt.data[694:734,56:96]
+            #     wfac = .1
+            #     iuncert(raw_phot, filOUT=raw_phot+'_unc',
+            #             filWGT=wgt_phot, wfac=wfac,
+            #             BG_image=bg, BG_weight=bg_wgt)
 
         if phot[iph]=='IRAC4':
             ##====
             ## SL
             ##====
             for i in trange(Nsub_SL,# leave=False,
-                            desc=phot[iph]+' (SINGS) processing'):
+                            desc=phot[iph]+' processing'):
                 f1nam = path_tmp+'SL/'+src+'_'+sub_SL[i]+'_SL'
                 p1nam0 = cal_phot+'_'+sub_SL[i]+'_SL'
                 refheader = fixwcs(f1nam+'_0'+fitsext).header
@@ -515,7 +533,6 @@ for iph in range(Nphot):
                     p1namj = tmp_phot+'_'+sub_SL[i]+'_SL_'+str(j)
                     
                     ## Reproject phot
-                    ##----------------
                     if coadd_tool=='swarp':
                         swp = iswarp(refheader=refheader, tmpdir=path_tmp)
                         if j==0:
@@ -534,7 +551,6 @@ for iph in range(Nphot):
                                           filOUT=p1namj)
                             
                     ## Convolve phot
-                    ##---------------
                     if j==0:
                         conv = iconvolve(p1nam0,
                                          kfile=phot_ker, klist=csv_ker,
@@ -572,7 +588,6 @@ for iph in range(Nphot):
                     p1namj = tmp_phot+'_'+sub_LL[i]+'_LL_'+str(j)
                     
                     ## Reproject phot
-                    ##----------------
                     if coadd_tool=='swarp':
                         swp = iswarp(refheader=refheader, tmpdir=path_tmp)
                         if j==0:
@@ -591,7 +606,6 @@ for iph in range(Nphot):
                                           filOUT=p1namj)
                             
                     ## Convolve phot
-                    ##---------------
                     if j==0:
                         conv = iconvolve(p1nam0,
                                          kfile=phot_ker, klist=csv_ker,
@@ -685,10 +699,15 @@ for iph in range(Nphot):
                     unc = np.nanstd(mcimage, axis=0)
                     write_fits(s1nam0+'_unc', ds.header, unc)
 
+## Sub-map intercalib correction (pixel/global scale)
+##----------------------------------------------------
 for iph in range(Nphot):
     print('\n Photometry: '+phot[iph])
-    cal_phot = path_cal+src+'_'+phot[iph]+'_SINGS'
-    # tmp_phot = path_tmp+'calib/'+src+'_'+phot[iph]+'_SINGS'
+    
+    if photcal=='d' and phot[iph]=='IRAC4':
+        cal_phot = path_cal+src+'_'+phot[iph]+'_DP'
+    else:
+        cal_phot = path_cal+src+'_'+phot[iph]+'_SINGS'
     cal_spec = path_cal+src+'_'+phot[iph]+'_IRS'
     tmp_spec = path_tmp+'calib/'+src+'_'+phot[iph]+'_IRS'
     
@@ -745,19 +764,17 @@ for iph in range(Nphot):
                 ## Mask NaNs and negtive values
                 mask_nan = ~np.logical_or( np.isnan(pix_spec), np.isnan(pix_phot) )
                 mask_neg = np.logical_and( pix_spec>0, pix_phot>0 )
-                mask = np.logical_and( mask_nan, mask_neg )
+                mask_lim = np.logical_and( pix_spec>1e-2, pix_phot>1e-2 )
+                mask = np.logical_and( mask_nan, mask_neg)#, mask_lim )
 
                 ## Add calibration error
-                if phot[iph]=='IRAC4':
-                    pix_phot_unc[i] += pix_phot[i] * .03
-                elif phot[iph]=='MIPS1':
-                    pix_phot_unc[i] += pix_phot[i] * .04
-                pix_spec_unc[i] += pix_spec[i] * .05
+                pix_phot_unc[i] = np.sqrt( pix_phot_unc[i]**2 + (pix_phot[i]*.03)**2 ) # IRAC 3% (Carey2010)
+                pix_spec_unc[i]  = np.sqrt( pix_spec_unc[i]**2 + (pix_spec[i]*.05)**2 ) # IRS 5% (Carey2010)
                 
                 if mask.any():
                     
-                    ## Linear fits (IRS - SINGS, SUB-MAPS)
-                    ##-------------------------------------
+                    ## Linear fits (IRS phot - phot, SUB-MAPS)
+                    ##=========================================
                     ## y = ax
                     popt0, pcov0 = curve_fit(f_lin0, pix_spec[mask], pix_phot[mask],
                                              sigma=pix_phot_unc[mask])
@@ -788,62 +805,70 @@ for iph in range(Nphot):
                         ## S/N ratio
                         # print(src+'_'+sub_SL[i]+'_SL S/N (IRS) = \n',
                         #       pix_spec[mask]/pix_spec_unc[mask])
-                        # print(src+'_'+sub_SL[i]+'_SL S/N (SINGS) = \n',
+                        # print(src+'_'+sub_SL[i]+'_SL S/N (phot) = \n',
                         #       pix_phot[mask]/pix_phot_unc[mask])
 
-                        if i==0:
+                        if sub_SL[i]=='04':
                             axlim = (1e1,1e4)
-                        elif i==1:
-                            axlim = (1e-2,1e4) # S
-                        elif i==2:
-                            axlim = (4e-1,2e3) # N
-                        elif i==3:
+                            lab = '1'
+                        elif sub_SL[i]=='06S':
+                            axlim = (2e-3,1e4) # S
+                            lab = '2'
+                        elif sub_SL[i]=='06N':
+                            axlim = (1e-2,2e3) # N
+                            lab = '3'
+                        elif sub_SL[i]=='08':
                             axlim = (5e-2,2e1)
-                        elif i==4:
+                            lab = '4'
+                        elif sub_SL[i]=='08c':
                             axlim = (None,None) # SL cap
-                        elif i==5:
+                            lab = '-'
+                        elif sub_SL[i]=='09N3':
                             axlim = (1e-1,2e1) # N3
-                        elif i==6:
+                            lab = '5'
+                        elif sub_SL[i]=='09N2':
                             axlim = (2e-1,5e1) # N2
-                    
-                        ## IRS - SINGS plot
-                        ##------------------
+                            lab = '6'
+
+                        ## IRS phot - phot plot
                         p = pplot(pix_spec[mask], pix_phot[mask],
                                   yerr=pix_phot_unc[mask], xerr=pix_spec_unc[mask],
                                   fmt='s', ec='grey', elw=1, c='c',
-                                  marker='.', markersize=8, capsize=2,
+                                  marker='.', markersize=20, capsize=2,
                                   xlog=1, ylog=1, nonposx='clip', nonposy='clip',
+                                  xtkform='mylog', ytkform='log_sci',
                                   xlim=axlim, ylim=axlim,
-                                  # xlabel='IRS (MJy/sr)', ylabel='SINGS (MJy/sr)', 
                                   # title=phot[iph]+'_'+src+'_'+sub_SL[i]+'_SL',
-                                  xlabel='IRS (MJy/sr)', ylabel=r'$\rm IRAC_{8\mu m}\ (MJy/sr)$',
-                                  title=None,
-                                  figsize=(9,8), right=.95, left=.15, bottom=.1, top=.95,
-                                  legend='upper left',# anchor=(1,1),
+                                  xlabel=r'$\rm IRS-sIRAC_{8\mu m}\ (MJy/sr)$',
+                                  ylabel=r'$\rm IRAC_{8\mu m}\ (MJy/sr)$',
+                                  figsize=(9,8),# right=.95, left=.15, bottom=.1, top=.95,
+                                  loc='upper left',# anchor=(1,1),
                                   label=sub_SL[i]+'-SL',
-                                  titlesize=20, labelsize=20, ticksize=20, legendsize=20)
-                        # p.add_plot(pix_spec[mask], pix_phot[mask],
-                        #            yerr=pix_phot_unc[mask], xerr=pix_spec_unc[mask],
-                        #            fmt='s', ec='grey', c='c', zorder=100,
-                        #            marker=markers[i], markersize=.1, capsize=2)
+                                  titlesize=20, xysize=20, tksize=20, legendsize=20)
+                        p.add_plot(pix_spec[mask], pix_phot[mask],
+                                   yerr=pix_phot_unc[mask], xerr=pix_spec_unc[mask],
+                                   fmt='s', ec='grey', elw=.5, c='c', zorder=100,
+                                   marker='.', markersize=.1, capsize=2,) # put errorbar on the front layer
 
                         label = 'y={0:.4}x'.format(sub_gain0)
                         p.add_plot(xgrid, f_lin0(xgrid, *popt0),
-                                   c='k', ls='-', label=label)
-                
-                        label = 'y={0:.4}x+{1:.4}'.format(sub_gain, sub_off)
+                                   c='k', ls='-', label=label, zorder=100,)
+
+                        if sub_off<0:
+                            label = 'y={0:.4}x{1:.4}'.format(sub_gain, sub_off)
+                        else:
+                            label = 'y={0:.4}x+{1:.4}'.format(sub_gain, sub_off)
                         p.add_plot(xgrid, f_lin(xgrid, *popt),
-                                   c='k', ls='--', label=label)
+                                   c='k', ls='--', label=label, zorder=100,)
                         
-                        lab = ['1','2','3','4','-','5','6']
-                        p.ax.text(.9,.05,'('+lab[i]+')',size=20,c='grey',transform=p.ax.transAxes)
+                        p.ax.text(.85,.05,'('+lab+')',size=30,c='grey',transform=p.ax.transAxes) # for the use of Hu_thesis
                         p.ax.legend(loc='upper left', fontsize=20, framealpha=0,)
                         
                         p.save(path_cal+'IC_'+phot[iph]+'_'+src+'_'+sub_SL[i]+'_SL.png',
-                               transparent=True)
-                    
+                               transparent=True, figtight=True)
+                
                 ## Spectral correction
-                ##---------------------
+                ##=====================
                 if j==0:
                     if write_SL=='y':
                     #     correct_sub.append(input(" - (SUB)MAP level correction (y/n)? "))
@@ -1038,19 +1063,18 @@ for iph in range(Nphot):
                 ## Mask NaNs and negtive values
                 mask_nan = ~np.logical_or( np.isnan(pix_spec), np.isnan(pix_phot) )
                 mask_neg = np.logical_and( pix_spec>0, pix_phot>0 )
-                mask = np.logical_and( mask_nan, mask_neg )
+                mask_lim = np.logical_and( pix_spec>1e-2, pix_phot>1e-2 )
+                mask = np.logical_and( mask_nan, mask_neg,)# mask_lim )
 
                 ## Add calibration error
-                if phot[iph]=='IRAC4':
-                    pix_phot_unc[i] += pix_phot[i] * .03
-                elif phot[iph]=='MIPS1':
-                    pix_phot_unc[i] += pix_phot[i] * .04
-                pix_spec_unc[i] += pix_spec[i] * .05
+                pix_phot_unc[i] = np.sqrt( pix_phot_unc[i]**2 + (pix_phot[i]*.04)**2 ) # MIPS 4% (Carey2010)
+                pix_spec_unc[i]  = np.sqrt( pix_spec_unc[i]**2 + (pix_spec[i]*.05)**2 ) # IRS 5% (Carey2010)
                 
                 if mask.any():
                     
-                    ## Linear fits (IRS - SINGS, SUB-MAPS)
-                    ##-------------------------------------
+                    ## Linear fits (IRS phot - phot, SUB-MAPS)
+                    ## For M82, only SINGS has MIPS1
+                    ##=========================================
                     ## y = ax
                     popt0, pcov0 = curve_fit(f_lin0, pix_spec[mask], pix_phot[mask],
                                              sigma=pix_phot_unc[mask])
@@ -1084,60 +1108,68 @@ for iph in range(Nphot):
                         # print(src+'_'+sub_LL[i]+'_LL S/N (SINGS) = \n',
                         #       pix_phot[mask]/pix_phot_unc[mask])
 
-                        if i==0:
+                        if sub_LL[i]=='04':
                             axlim = (1e0,1e4)
-                        elif i==1:
+                            lab = 'a'
+                        elif sub_LL[i]=='05':
                             axlim = (8e-1,5e2)
-                        elif i==2:
+                            lab = '7'
+                        elif sub_LL[i]=='06':
                             axlim = (2e-4,2e4)
-                        elif i==3:
-                            axlim = (5e-5,5e1)
-                        elif i==4:
-                            axlim = (5e-3,1e2) # N3
-                        elif i==5:
+                            lab = '8'
+                        elif sub_LL[i]=='08':
+                            axlim = (2e-5,5e1)
+                            lab = '9'
+                        elif sub_LL[i]=='09N3':
+                            axlim = (5e-5,1e3) # N3
+                            lab = '10'
+                        elif sub_LL[i]=='09N5':
                             axlim = (8e-2,1e1) # N5
-                        elif i==6:
+                            lab = '11'
+                        elif sub_LL[i]=='09N2':
                             axlim = (1e-1,2e1) # N2
+                            lab = '12'
                     
-                        ## IRS - SINGS plot
-                        ##------------------
+                        ## IRS - phot plot (For M82, only SINGS has MIPS1)
                         p = pplot(pix_spec[mask], pix_phot[mask],
                                   yerr=pix_phot_unc[mask], xerr=pix_spec_unc[mask],
                                   fmt='s', ec='grey', elw=1, c='c',
-                                  marker='.', markersize=8, capsize=2,
+                                  marker='.', markersize=20, capsize=2,
                                   xlog=1, ylog=1, nonposx='clip', nonposy='clip',
+                                  xtkform='mylog', ytkform='log_sci',
                                   xlim=axlim, ylim=axlim,
-                                  # xlabel='IRS (MJy/sr)', ylabel='SINGS (MJy/sr)', 
                                   # title=phot[iph]+'_'+src+'_'+sub_LL[i]+'_LL',
-                                  xlabel='IRS (MJy/sr)', ylabel=r'$\rm MIPS_{24\mu m}\ (MJy/sr)$',
-                                  title=None,
+                                  xlabel=r'$\rm IRS-sMIPS_{24\mu m}\ (MJy/sr)$',
+                                  ylabel=r'$\rm MIPS_{24\mu m}\ (MJy/sr)$',
                                   # figsize=(11,8), right=.78, left=.12, bottom=.1, top=.95,
-                                  figsize=(9,8), right=.95, left=.15, bottom=.1, top=.95,
-                                  legend='upper left',# anchor=(1,1),
+                                  figsize=(9,8),# right=.95, left=.15, bottom=.1, top=.95,
+                                  loc='upper left',# anchor=(1,1),
                                   label=sub_LL[i]+'-LL',
-                                  titlesize=20, labelsize=20, ticksize=20, legendsize=20)
-                        # p.add_plot(pix_spec[mask], pix_phot[mask],
-                        #            yerr=pix_phot_unc[mask], xerr=pix_spec_unc[mask],
-                        #            fmt='s', ec='grey', c='c', zorder=100,
-                        #            marker=markers[i], markersize=.1, capsize=2)
+                                  titlesize=20, xysize=20, tksize=20, legendsize=20)
+                        p.add_plot(pix_spec[mask], pix_phot[mask],
+                                   yerr=pix_phot_unc[mask], xerr=pix_spec_unc[mask],
+                                   fmt='s', ec='grey', elw=.5, c='c', zorder=100,
+                                   marker='.', markersize=.1, capsize=2,) # put errorbar on the front layer
 
                         label = 'y={0:.4}x'.format(sub_gain0)
                         p.add_plot(xgrid, f_lin0(xgrid, *popt0),
-                                   c='k', ls='-', label=label)
-                
-                        label = 'y={0:.4}x+{1:.4}'.format(sub_gain, sub_off)
+                                   c='k', ls='-', label=label, zorder=100,)
+
+                        if sub_off<0:
+                            label = 'y={0:.4}x{1:.4}'.format(sub_gain, sub_off)
+                        else:
+                            label = 'y={0:.4}x+{1:.4}'.format(sub_gain, sub_off)
                         p.add_plot(xgrid, f_lin(xgrid, *popt),
-                                   c='k', ls='--', label=label)
+                                   c='k', ls='--', label=label, zorder=100,)
                         
-                        lab = ['b','7','8','9','10','11','12']
-                        p.ax.text(.9,.05,'('+lab[i]+')',size=20,c='grey',transform=p.ax.transAxes)
+                        p.ax.text(.85,.05,'('+lab+')',size=30,c='grey',transform=p.ax.transAxes) # for the use of Hu_thesis
                         p.ax.legend(loc='upper left', fontsize=20, framealpha=0,)
                         
                         p.save(path_cal+'IC_'+phot[iph]+'_'+src+'_'+sub_LL[i]+'_LL.png',
-                               transparent=True)
+                               transparent=True, figtight=True)
                     
                 ## Spectral correction
-                ##---------------------
+                ##=====================
                 if j==0:
                     if write_LL=='y':
                     #     correct_sub.append(input(" - (SUB)MAP level correction (y/n)? "))
@@ -1291,23 +1323,30 @@ print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n')
 ##              Inter-calibration (global)
 
 ##----------------------------------------------------------
-pre_calib0 = input("Run inter-calibration prepipeline (SINGS IRAC4) (y/n)? ")
-synt_phot0 = input("Run inter-calibration prepipeline (IRS SL synthetic photometry) (y/n)? ")
+pre_calib0 = input("Prepare photometry (y/n)? ")
+synt_phot0 = input("Prepare IRS synthetic photometry (y/n)? ")
+do_intcal0 = input("Do inter-calibration (y/n)? ")
+if (synt_phot0!='y' or pre_calib0!='y'):
+    warnings.warn('You need to prepare (synthetic) photometry if you have not done it yet.')
 
-if not os.path.exists(path_tmp+'calib/'):
-    os.makedirs(path_tmp+'calib/')
-    
+os.makedirs(path_tmp+'calib/', exist_ok=True)
+
+## Homogenize photometry and synthetic photometry
+##------------------------------------------------
 for iph in range(Nphot):
     
     ## Prepare photometry
-    ##--------------------
     if phot[iph]=='IRAC4':
         phot_ker = path_ker+'Kernel_HiRes_IRAC_8.0_to_Gauss_06.0'
     elif phot[iph]=='MIPS1':
         phot_ker = path_ker+'Kernel_HiRes_MIPS_24_to_Gauss_06.0'
 
-    cal_phot = path_cal+src+'_'+phot[iph]+'_SINGS'
-    tmp_phot = path_tmp+'calib/'+src+'_'+phot[iph]+'_SINGS'
+    if photcal=='d' and phot[iph]=='IRAC4':
+        cal_phot = path_cal+src+'_'+phot[iph]+'_DP'
+        tmp_phot = path_tmp+'calib/'+src+'_'+phot[iph]+'_DP'
+    else:
+        cal_phot = path_cal+src+'_'+phot[iph]+'_SINGS'
+        tmp_phot = path_tmp+'calib/'+src+'_'+phot[iph]+'_SINGS'
     cal_spec = path_cal+src+'_'+phot[iph]+'_IRS'
     tmp_spec = path_tmp+'calib/'+src+'_'+phot[iph]+'_IRS'
     
@@ -1315,7 +1354,10 @@ for iph in range(Nphot):
     ## SINGS (phot)
     ##--------------
     if pre_calib0=='y':
-        raw_phot = path_phot+src+'_'+phot[iph]+'_SINGS'
+        if photcal=='d' and phot[iph]=='IRAC4':
+            raw_phot = path_phot+src+'_'+phot[iph]+'_DP'
+        else:
+            raw_phot = path_phot+src+'_'+phot[iph]+'_SINGS'
 
         ## Reproject phot (atlas)
         if coadd_tool=='swarp':
@@ -1415,6 +1457,8 @@ for iph in range(Nphot):
                 unc = np.nanstd(mcimage, axis=0)
                 write_fits(cal_spec+'_'+parobs[iobs][0]+'_unc', ds.header, unc)
 
+## Intercalib correction (pixel/global scale)
+##--------------------------------------------
 for iph in range(Nphot):
     if phot[iph]=='IRAC4':
         mod = 'SL'
@@ -1422,8 +1466,11 @@ for iph in range(Nphot):
         mod = 'LL'
         
     print('\n Photometry: '+phot[iph])
-    cal_phot = path_cal+src+'_'+phot[iph]+'_SINGS'
-    # tmp_phot = path_tmp+'calib/'+src+'_'+phot[iph]+'_SINGS'
+
+    if photcal=='d' and phot[iph]=='IRAC4':
+        cal_phot = path_cal+src+'_'+phot[iph]+'_DP'
+    else:
+        cal_phot = path_cal+src+'_'+phot[iph]+'_SINGS'
     cal_spec = path_cal+src+'_'+phot[iph]+'_IRS'
     tmp_spec = path_tmp+'calib/'+src+'_'+phot[iph]+'_IRS'
 
@@ -1442,6 +1489,7 @@ for iph in range(Nphot):
             dict_phot_unc = []
             pix_phot = []
             pix_phot_unc = []
+            pix_mask_fit = []
             # xgrid = np.logspace(-2,4,10000)
 
             xmin = []
@@ -1465,6 +1513,7 @@ for iph in range(Nphot):
 
             data_spec = {}
             unc_spec = {}
+            mask0 = []
             if j==0:
                 data_phot = {}
                 unc_phot = {}
@@ -1483,6 +1532,14 @@ for iph in range(Nphot):
                     ## Phot
                     data_phot[subname] = ds_phot.data[yarr[0],0]
                     unc_phot[subname] = ds_phot.unc[yarr[0],0]
+                    
+                ## Do not fit pixels affected by the MIPS1 map hole
+                if phot[iph]=='MIPS1' and \
+                    (subname=='A3' or subname=='A4' or subname=='A5' or subname=='A6' \
+                     or subname=='A7' or subname=='B4' or subname=='B5'):
+                    mask0.append(False)
+                else:
+                    mask0.append(True)
             dict_spec.append(data_spec)
             dict_spec_unc.append(unc_spec)
             ## Dictionary to 1D array
@@ -1493,30 +1550,33 @@ for iph in range(Nphot):
                 dict_phot_unc.append(unc_phot)
                 pix_phot.append(np.array(list(dict_phot[iobs].values())))
                 pix_phot_unc.append(np.array(list(dict_phot_unc[iobs].values())))
+                pix_mask_fit.append(mask0)
         
             ## Mask NaNs and negtive values
             mask_nan = ~np.logical_or( np.isnan(pix_spec[iobs]), np.isnan(pix_phot[iobs]) )
             mask_neg = np.logical_and( pix_spec[iobs]>0, pix_phot[iobs]>0 )
-            mask = np.logical_and( mask_nan, mask_neg )
+            mask_lim = np.logical_and( pix_spec[iobs]>1e-2, pix_phot[iobs]>1e-2 )
+            mask = np.logical_and( mask_nan, mask_neg)#, mask_lim )
+            maskfit = np.logical_and( mask, mask0)#, mask_lim )
 
             ## Add calibration error
             if phot[iph]=='IRAC4':
                 ylabel = r'$\rm IRAC_{8\mu m}\ (MJy/sr)$'
-                lab = '(c)'
-                pix_phot_unc[iobs] += pix_phot[iobs] * .03
+                lab = '(c)' # for the use of Hu_thesis
+                pix_phot_unc[iobs]  = np.sqrt( pix_phot_unc[iobs]**2 + (pix_phot[iobs]*.03)**2 ) # IRAC 3% (Carey2010)
             elif phot[iph]=='MIPS1':
                 ylabel = r'$\rm MIPS_{24\mu m}\ (MJy/sr)$'
-                lab = '(d)'
-                pix_phot_unc[iobs] += pix_phot[iobs] * .04
-            pix_spec_unc[iobs] += pix_spec[iobs] * .05
+                lab = '(d)' # for the use of Hu_thesis
+                pix_phot_unc[iobs] = np.sqrt( pix_phot_unc[iobs]**2 + (pix_phot[iobs]*.04)**2 ) # MIPS 4% (Carey2010)
+            pix_spec_unc[iobs] = np.sqrt( pix_spec_unc[iobs]**2 + (pix_spec[iobs]*.05)**2 ) # IRS 5% (Carey2010)
 
             if mask.any():
                 
                 if j==0:
-                    ## Linear fit (IRS - SINGS, SLITS)
-                    ##=================================
-                    popt, pcov = curve_fit(f_lin0, pix_spec[iobs][mask], pix_phot[iobs][mask],)
-                                           # sigma=pix_phot_unc[iobs][mask])
+                    ## Linear fit (IRS phot - phot, SLITS)
+                    ##=====================================
+                    popt, pcov = curve_fit(f_lin0, pix_spec[iobs][maskfit], pix_phot[iobs][maskfit],
+                                           sigma=pix_phot_unc[iobs][maskfit])
                     slit_gain = popt[0]
                     # slit_gain = 1.
                     # slit_off = popt[1]
@@ -1528,39 +1588,34 @@ for iph in range(Nphot):
                     ## S/N ratio
                     # print(parobs[iobs][0]+' S/N (IRS) = \n',
                     #       pix_spec[iobs][mask]/pix_spec_unc[iobs][mask])
-                    # print(parobs[iobs][0]+' S/N (SINGS) = \n',
+                    # print(parobs[iobs][0]+' S/N (phot) = \n',
                     #       pix_phot[iobs][mask]/pix_phot_unc[iobs][mask])
                         
-                    if (synt_phot0=='y' or pre_calib0=='y'):
-                        ## IRS - SINGS plot
+                    if do_intcal0=='y':
+                        
+                        ## IRS - phot plot
                         if iobs==0:
                             p = pplot(fmt='s', ec='grey', elw=1,
                                       xlog=1, ylog=1, nonposx='clip', nonposy='clip',
+                                      xtkform='mylog', ytkform='log_sci',
                                       # xlim=(1e-2,1e4), ylim=(1e-2,1e4),
-                                      # xlabel='IRS (MJy/sr)', ylabel='SINGS (MJy/sr)', 
                                       # title=src+'_'+phot[iph],
                                       xlabel='IRS (MJy/sr)', ylabel=ylabel,
-                                      title=None,
                                       figsize=(11,8), right=.78, left=.12, bottom=.1, top=.95,
-                                      legend='upper left', anchor=(1,1),
-                                      titlesize=20, labelsize=20, ticksize=20, legendsize=20)
+                                      loc='upper left', anchor=(1,1),
+                                      titlesize=20, xysize=20, tksize=20, legendsize=20)
                             
                         p.add_plot(pix_spec[iobs][mask], pix_phot[iobs][mask],
                                    yerr=pix_phot_unc[iobs][mask], xerr=pix_spec_unc[iobs][mask],
                                    fmt='s', ec='grey', c=colors[iobs+1],
-                                   marker=markers[iobs], markersize=10, capsize=2,
+                                   marker=markers[iobs], markersize=20, capsize=2,
                                    label=parobs[iobs][0])
                         p.add_plot(pix_spec[iobs][mask], pix_phot[iobs][mask],
                                    yerr=pix_phot_unc[iobs][mask], xerr=pix_spec_unc[iobs][mask],
                                    fmt='s', ec='grey', c=colors[iobs+1], zorder=100,
-                                   marker=markers[iobs], markersize=.1, capsize=2)
-                        p.save(path_cal+'IC_'+phot[iph]+'.png', transparent=True)
+                                   marker=markers[iobs], markersize=.1, capsize=2) # put errorbar on the front layer
                         
-                        # label = parobs[iobs][0]+': y={0:.4}x'.format(slit_gain)
-                        # label = parobs[iobs][0]+': y={0:.4}x+{1:.4}'.format(slit_gain, slit_off)
-                        # p.add_plot(xgrid, f_lin0(xgrid, *popt),
-                        #            c='k', ls='-', label=label)
-                        # p.save(path_cal+'IC_'+phot[iph]+'.png')
+                        p.save(path_cal+'IC_'+phot[iph]+'.png', transparent=True, figtight=True)
 
                         xmin.append(min(pix_spec[iobs][mask]))
                         xmax.append(max(pix_spec[iobs][mask]))
@@ -1569,20 +1624,24 @@ for iph in range(Nphot):
                         lnxinf = np.log(min(xmin))
                         lnxsup = np.log(max(xmax))
                         # xgrid = np.logspace(lnxinf, lnxsup, 10000)
-                        xgrid = np.linspace(xmin, ymax, 10000)
+                        xgrid = np.linspace(xmin, xmax, 100000)
                         
-        ## Linear fit (IRS - SINGS, ATLAS)
-        ##=================================
+        ## Linear fit (IRS phot - phot, ATLAS)
+        ##=====================================
         fitx = np.concatenate(pix_spec, axis=0)
         uncx = np.concatenate(pix_spec_unc, axis=0)
         fity = np.concatenate(pix_phot, axis=0)
         uncy = np.concatenate(pix_phot_unc, axis=0)
+        mask0 = np.concatenate(pix_mask_fit, axis=0)
+        
         mask_nan = ~np.logical_or( np.isnan(fitx), np.isnan(fity) )
         mask_neg = np.logical_and( fitx>0, fity>0 )
-        maskfit = np.logical_and( mask_nan, mask_neg )
+        mask_lim = np.logical_and( fitx>1e-2, fity>1e-2 )
+        mask = np.logical_and( mask_nan, mask_neg )
+        maskfit = np.logical_and( mask, mask0)#, mask_lim )
         
-        popt, pcov = curve_fit(f_lin0, fitx[maskfit], fity[maskfit],)
-                               # sigma=uncy[maskfit])
+        popt, pcov = curve_fit(f_lin0, fitx[maskfit], fity[maskfit],
+                               sigma=uncy[maskfit])
         atlas_gain = popt[0]
         # atlas_gain = 1.
         # atlas_off = popt[1]
@@ -1590,7 +1649,7 @@ for iph in range(Nphot):
         # atlas_off = popt[0]
         
         if j==0:
-            if (synt_phot0=='y' or pre_calib0=='y'):
+            if do_intcal0=='y':
                 print('Atlas inter-calibration ('+phot[iph]+') gain = {:.4}'.format(atlas_gain))
                 # print('Atlas inter-Calibration ('+phot[iph]+') offset = {:.4}'.format(atlas_off))
                 
@@ -1600,14 +1659,15 @@ for iph in range(Nphot):
                 # label = 'y={0:.4}x+{1:.4}'.format(atlas_gain, atlas_off)
                 p.add_plot(xgrid, f_lin0(xgrid, *popt),
                            c='k', ls='-', label=label)
-                p.ax.text(.9,.05,lab,size=20,c='grey',transform=p.ax.transAxes)
+                p.ax.text(.9,.05,lab,size=30,c='grey',transform=p.ax.transAxes) # for the use of Hu_thesis
                 p.ax.legend(loc='upper left', bbox_to_anchor=(1,1),
                             fontsize=20, framealpha=0,)
+                
                 p.save(path_cal+'IC_'+phot[iph]+'.png',
-                       transparent=True)
+                       transparent=True, figtight=True)
 
         ## Spectral correction
-        ##---------------------
+        ##=====================
         if j==0:
             write_irs = input("Write IRS "+mod+" spectra (y/n)? ")
             if write_irs=='y':
@@ -1671,11 +1731,11 @@ for iph in range(Nphot):
 ##                   Stitch IRC-IRS spectra
 
 ##----------------------------------------------------------
-# concat_irs = input("Stitch IRS frame SL-LL spectra (y/n)? ")
-concat_irc = input("Stitch IRC slit SL-LL spectra (y/n)? ")
+# concat_irs = input("Stitch SL-LL spectra of IRS sub-maps (y/n)? ")
+concat_irs = None
+concat_irc = input("Stitch SL-LL spectra that are reprojected to IRC slits (y/n)? ")
 concat_mir = input("Stitch IRC-IRS spectra (y/n)? ")
 
-concat_irs = None
 if concat_irs=='y':
     for j in trange(Nmc+1,# leave=False
                     desc='Stitching SL-LL (IRS frame) [MC]'):
@@ -1687,6 +1747,7 @@ if concat_irs=='y':
             concatenate((path_tmp+src+'_SL_'+str(j),path_tmp+src+'_LL_'+str(j)),
                         path_tmp+src+'_IRS'+str(j), wsort=False,# wrange=wrange,
                         keepfrag=False, cropedge=False)
+    
     ## Uncertainty cube
     if Nmc>1:
         mcimage = []
@@ -1696,6 +1757,18 @@ if concat_irs=='y':
         mcimage = np.array(mcimage)
         unc = np.nanstd(mcimage, axis=0)
         write_fits(path_out+src+'_IRS_unc', ds.header, unc, ds.wave)
+
+    ## Extra stitching of SL1-LL2 (due to MIPS1 map deficit/saturation)
+    ds = read_fits(path_out+src+'_IRS', path_out+src+'_IRS_unc')
+    Nw, Ny, Nx = ds.data.shape
+    for x in range(Nx):
+        for y in range(Ny):
+            i1 = closest(ds.wave, 14.29, 'left') + 1
+            gain = ds.data[i1-1,y,x]/ds.data[i1,y,x]
+            ds.data[i1:,y,x] = ds.data[i1:,y,x] * gain
+            ds.unc[i1:,y,x] = ds.unc[i1:,y,x] * gain
+    write_fits(path_out+src+'_IRS', ds.header, ds.data, ds.wave)
+    write_fits(path_out+src+'_IRS_unc', ds.header, ds.unc, ds.wave)
 
 if concat_irc=='y':
     for iobs in trange(Nobs,# leave=False,
@@ -1721,6 +1794,7 @@ if concat_irc=='y':
                 igroupixel(path_tmp+src+'_'+parobs[iobs][0]+'_IRS_'+str(j),
                            xscale=xscale, yscale=yscale,
                            filOUT=path_tmp+src+'_'+parobs[iobs][0]+'_IRS_'+str(j))
+        
         ## Uncertainty cube
         if Nmc>1:
             mcimage = []
@@ -1730,6 +1804,18 @@ if concat_irc=='y':
             mcimage = np.array(mcimage)
             unc = np.nanstd(mcimage, axis=0)
             write_fits(out_irs[iobs]+'_unc', ds.header, unc, ds.wave)
+
+        ## Extra stitching of SL1-LL2 (due to MIPS1 map deficit/saturation)
+        ds = read_fits(out_irs[iobs], out_irs[iobs]+'_unc')
+        Nw, Ny, Nx = ds.data.shape
+        for x in range(Nx):
+            for y in range(Ny):
+                i1 = closest(ds.wave, 14.29, 'left') + 1
+                gain = ds.data[i1-1,y,x]/ds.data[i1,y,x]
+                ds.data[i1:,y,x] = ds.data[i1:,y,x] * gain
+                ds.unc[i1:,y,x] = ds.unc[i1:,y,x] * gain
+        write_fits(out_irs[iobs], ds.header, ds.data, ds.wave)
+        write_fits(out_irs[iobs]+'_unc', ds.header, ds.unc, ds.wave)
 
 
 if concat_mir=='y':
@@ -1741,11 +1827,12 @@ if concat_mir=='y':
                 concatenate((out_irc[iobs],out_irs[iobs]),
                             path_out+src+'_'+parobs[iobs][0],
                             wsort=False,# wrange=wrange,
-                            keepfrag=False, cropedge=False)
+                            keepfrag=True, cropedge=False) # keepfrag=True to show IRC only spectra
                 ## Added a NaN at 5 micron
                 ds = read_fits(path_out+src+'_'+parobs[iobs][0])
                 i1 = closest(ds.wave, 5., 'left') + 1
-                i2 = closest(ds.wave, 20.5, 'left') + 1
+                # i2 = closest(ds.wave, 20.5, 'left') + 1
+                i2 = closest(ds.wave, 40, 'left') + 1
                 data = np.insert(ds.data, i1, np.nan, axis=0)
                 wave = np.insert(ds.wave, i1, 5.)
                 write_fits(path_out+src+'_'+parobs[iobs][0],
@@ -1755,7 +1842,7 @@ if concat_mir=='y':
                              path_tmp+src+'_'+parobs[iobs][0]+'_IRS_'+str(j)),
                             path_tmp+src+'_'+parobs[iobs][0]+'_'+str(j),
                             wsort=False,# wrange=wrange,
-                            keepfrag=False, cropedge=False)
+                            keepfrag=True, cropedge=False)
                 ## Added a NaN at 5 micron
                 ds = read_fits(path_tmp+src+'_'+parobs[iobs][0]+'_'+str(j))
                 data = np.insert(ds.data, i1, np.nan, axis=0)
@@ -1781,98 +1868,155 @@ if concat_mir=='y':
 plot_mir = input("Plot MIR spectra (y/n)? ")
 if plot_mir=='y':
 
-    for iobs in range(Nobs):        
+    for iobs in range(Nobs):
         ds = read_fits(path_out+src+'_'+parobs[iobs][0], path_out+src+'_'+parobs[iobs][0]+'_unc')
         Nw, Ny, Nx = ds.data.shape
+        iw5 = closest(ds.wave, 5, 'left') + 1
+        iw14 = closest(ds.wave, 14.29, 'left') + 1
+        iw20 = closest(ds.wave, 20.67, 'left') + 1
+        # lolims = np.zeros((Nw,Ny,Nx))
+        clib = ['c','m','y','r','orange','b','g']
+        xtic = [2, 3, 4, 5, 6, 7, 8, 10, 12, 15, 20, 30, 40]
+        xtic_min = [np.arange(2.5, 20, .1), np.arange(20, 40, 1)]
+        xtic_min = np.concatenate(xtic_min)
 
-        ## Extra stitching of SL1-LL2
         for x in range(Nx):
             for y in range(Ny):
-                for k in range (Nw):
-                    if ds.data[k,y,x]<0:
-                        ds.data[k,y,x] = -ds.data[k,y,x]
-                i1 = closest(ds.wave, 14.29, 'left') + 1
-                gain = ds.data[i1-1,y,x]/ds.data[i1,y,x]
-                ds.data[i1:,y,x] = ds.data[i1:,y,x] * gain
+                ## Add calibration error
+                ds.unc[:,y,x] = np.sqrt( ds.unc[:,y,x]**2 + (ds.data[:,y,x]*.05)**2 ) # IRS 5% (Carey2010)
 
+                for k in range (Nw):
+                    ## Exclude negtive flux
+                    if ds.data[k,y,x]<0:
+        #                 if iobs==10:
+                        ds.data[k,y,x] = -ds.data[k,y,x]
+        #                 else:
+        #                     ds.data[k,y,x] = np.nan
+        #                     ds.unc[k,y,x] = np.nan
+        #             ## Set lower limits of unc that are larger than data
+        #             if ds.data[k,y,x]<=ds.unc[k,y,x]:
+        #                 lolims[k,y,x] = True
+
+                ## Lower limit
+                # ds.data[:,y,x][ds.data[:,y,x]<1e-2] = np.nan
+                # ds.unc[:,y,x][ds.data[:,y,x]<1e-2] = 0
 
         xscale, yscale = read_hdf5(filog+parobs[iobs][0], 'Super pixel size')
         for y in range(Ny):
             ys = pix2sup(y, yscale, origin=0)
             subname = parobs[iobs][0][0]+str(ys+1)
-            # maskspec = ~np.isnan(ds.data[:,y,0]).any()
-            maskspec = 1
-            if (maskspec and y%yscale==0):
+            
+            ## Remove artifacts (mainly in LL1)
+            maskspec = np.full(Nw, True)
+            if (subname[0]=='A' and int(subname[1])>2) \
+               or (subname[0]=='B' and int(subname[1])>0) \
+               or subname=='C2' or subname=='C3' or subname=='C4' \
+               or subname=='D3' or subname=='D4' \
+               or subname=='F1' \
+               or subname[0]=='G' \
+               or subname[0]=='H' \
+               or subname=='I1':
+                maskspec[iw20:] = False
+            elif subname[0]=='E' or subname[0]=='N':
+                maskspec[:] = False
 
-                ## Add calibration error
-                ds.unc[:,y,0] += ds.data[:,y,0] * .05
-                
-                ## Lower limit
-                ds.data[:,y,0][ds.data[:,y,0]<1e-2] = np.nan
-                ds.unc[:,y,0][ds.data[:,y,0]<1e-2] = 0
+            if (maskspec.any() and y%yscale==0):
 
-                # p = pplot(ds.wave, ds.data[:,y,0], yerr=ds.unc[:,y,0],
-                #           xlog=1, ylog=1, 
-                #           c='k', lw=.7, ec='r', label=subname,
-                #           # xlim=(2.5,20.),
-                #           xlabel=r'${\rm Wavelengths}\ \lambda\ (\mu m)$',
-                #           ylabel=r'${\rm Surface\ brightness}\ F_{\nu}\ (MJy/sr)$',
-                #           figsize=(16,8), legend='upper left',
-                #           title=src+'_'+subname,
-                #           titlesize=20, labelsize=20, ticksize=20, legendsize=20)
+                ## Individual spectra (IRS)
+                ##--------------------------
+                p0 = pplot(ds.wave[iw5:], ds.data[iw5:,y,0], yerr=ds.unc[iw5:,y,0],
+                           xlog=1, ylog=1, nonposx='clip', nonposy='clip',
+                           c='k', lw=2, ec='r', label=subname,
+                           # xlim=(2.5,20.),
+                           xlabel=r'$\rm Wavelengths\ \lambda\ (\mu m)$',
+                           ylabel=r'$\rm F_{\nu}\ (MJy/sr)$',
+                           xtk=xtic, xtkmi=xtic_min, xtkform='mylog', ytkform='log_sci',
+                           figsize=(12,9), loc='upper left', legendalpha=0,
+                           # title=src+'_'+subname,
+                           titlesize=20, xysize=20, tksize=20, legendsize=20)
+
+                p0.ax.text(21, ds.data[iw5,y,0]*1.2, 'LL1 fringe pattern',
+                           size=20, c='k',transform=p0.ax.transData)
+                p0.ax.annotate(xy=(20.67,ds.data[iw5,y,0]*.9), transform=p0.ax.transData,
+                               xytext=(38,ds.data[iw5,y,0]*.9),
+                               text='', c='k', arrowprops=dict(arrowstyle='<->'))
                 
-                # xtic = [2.5, 3, 3.5, 4, 5, 6, 7, 8, 10, 12, 15, 20,]# 30, 40]
-                # xtic_min = np.arange(2.5, 20., .1)
-                # p.ax.set_xticks(xtic, minor=False) # major
-                # p.ax.set_xticks(xtic_min, minor=True) # minor
-                # p.ax.xaxis.set_major_formatter(ScalarFormatter()) # major
-                # p.ax.xaxis.set_minor_formatter(NullFormatter()) # minor
-                
-                # p.save(path_fig+src+'_'+subname)
+                p0.save(path_fig+'IRS_'+subname, transparent=True, figtight=True)
 
                 ## Overlapped in one figure
-                if y==0:
+                ##--------------------------
+                xlim = (2,40)
+                if subname[0]=='A':
+                    ylim = (1e-1,5e6)
+                elif subname[0]=='B':
+                    ylim = (1e-1,3e5)
+                elif subname[0]=='C':
+                    ylim = (1e-1,1e6)
+                elif subname[0]=='D':
+                    ylim = (1e-2,1e4)
+                else:
+                    ylim = (None,None)
+                
+                if ys==0:
+                    p = pplot(xlog=1, ylog=1, nonposx='clip', nonposy='clip',
+                              lw=2, ec='grey', elw=1,
+                              xlim=xlim, ylim=ylim,# capsize=2,
+                              xlabel=r'$\rm Wavelengths\ \lambda\ (\mu m)$',
+                              ylabel=r'$\rm F_{\nu}\ (MJy/sr)$',
+                              xtk=xtic, xtkmi=xtic_min, xtkform='mylog', ytkform='log_sci',
+                              figsize=(15,8), loc='upper left', legendalpha=0,
+                              # title=src+' '+parobs[iobs][0]+' spectra',
+                              titlesize=20, xysize=20, tksize=20, legendsize=20)
+
+                    # if iobs==0:
+                    #     p.ax.text(.85,.05,'(a)',size=30,c='grey',transform=p.ax.transAxes) # for the use of Hu_thesis
+                    # elif iobs==6:
+                    #     p.ax.text(.85,.05,'(b)',size=30,c='grey',transform=p.ax.transAxes) # for the use of Hu_thesis
+                    
+                if subname[1]=='1' or subname[1]=='7' \
+                   or subname=='B5' or subname=='C5' or subname=='C6' \
+                   or subname=='D3':
                     ds.data[:,y,0] *= .1
                     ds.unc[:,y,0] *= .1
                     subname += '*0.1'
+                elif subname=='A6':
+                    ds.data[:,y,0] *= .01
+                    ds.unc[:,y,0] *= .01
+                    subname += '*0.01'
+                elif subname=='B6':
+                    ds.data[:,y,0] *= .08
+                    ds.unc[:,y,0] *= .08
+                    subname += '*0.08'
+                # else:
+                #     ds.data[:,y,0] *= 1
+                #     ds.unc[:,y,0] *= 1
+                #     subname += ''
 
-                    # if iobs==3:
-                    #     ylim=((1e-1,None))
-                    # elif iobs==6:
-                    #     ylim=((1e-3,1e2))
-                    # elif iobs==7:
-                    #     ylim=((1e-2,None))
-                    # else:
-                    ylim=((None,None))
-                    pp = pplot(ds.wave, ds.data[:,y,0], yerr=ds.unc[:,y,0],
-                               xlog=1, ylog=1, 
-                               lw=1, ec='grey', label=subname,
-                               clib=['c','m','y','r','orange','b','g'],
-                               ylim=ylim,
-                               xlabel=r'${\rm Wavelengths}\ \lambda\ (\mu m)$',
-                               ylabel=r'$F_{\nu}\ (MJy/sr)$',
-                               figsize=(16,8), top=.99, right=.85, left=.1,
-                               title=None,# capsize=2,
-                               # title=src+' '+parobs[iobs][0]+' spectra',
-                               titlesize=20, labelsize=20, ticksize=20)
-                    
-                    # if iobs==0:
-                    #     pp.ax.text(.95,.05,'(a)',size=20,c='grey',transform=pp.ax.transAxes)
-                    # elif iobs==6:
-                    #     pp.ax.text(.95,.05,'(b)',size=20,c='grey',transform=pp.ax.transAxes)
+                p.add_plot(ds.wave[maskspec], ds.data[:,y,0][maskspec],
+                           yerr=ds.unc[:,y,0][maskspec],# lolims=lolims[:,y,0],
+                           c=clib[ys], lw=2, ec='grey', elw=1, label=subname)
 
-                else:
-                    pp.add_plot(ds.wave, ds.data[:,y,0], yerr=ds.unc[:,y,0],
-                                lw=1, ec='grey', label=subname,
-                                )
-                
-                xtic = [2.5, 3, 3.5, 4, 5, 6, 7, 8, 10, 12, 15, 20,]# 30, 40]
-                xtic_min = np.arange(2.5, 20., .1)
-                pp.ax.set_xticks(xtic, minor=False) # major
-                pp.ax.set_xticks(xtic_min, minor=True) # minor
-                pp.ax.xaxis.set_major_formatter(ScalarFormatter()) # major
-                pp.ax.xaxis.set_minor_formatter(NullFormatter()) # minor
-                pp.ax.legend(loc='upper left', bbox_to_anchor=(1,1),
-                            fontsize=20, framealpha=0)
-                
-                pp.save(path_fig+src+'_'+subname[0], transparent=True)
+        if (subname[0]!='E' and subname[0]!='N'):
+            p.ax.text(p.transData2Axes((3,1))[0], 0.07, 'IRC', size=20, c='k', transform=p.ax.transAxes)
+            p.ax.text(p.transData2Axes((6,1))[0], 0.07, 'SL2', size=20, c='k', transform=p.ax.transAxes)
+            p.ax.text(p.transData2Axes((9,1))[0], 0.07, 'SL1', size=20, c='k', transform=p.ax.transAxes)
+            p.ax.text(p.transData2Axes((16,1))[0], 0.07, 'LL2', size=20, c='k', transform=p.ax.transAxes)
+            p.ax.text(p.transData2Axes((25,1))[0], 0.07, 'LL1', size=20, c='k', transform=p.ax.transAxes)
+            p.ax.annotate(xy=(p.transData2Axes((2.5,1))[0],0.05), xycoords=p.ax.transAxes,
+                          xytext=(p.transData2Axes((5,1))[0],0.05),
+                          text='', c='k', arrowprops=dict(arrowstyle='<->'))
+            p.ax.annotate(xy=(p.transData2Axes((5.21,1))[0],0.05), xycoords=p.ax.transAxes,
+                          xytext=(p.transData2Axes((7.56,1))[0],0.05),
+                          text='', c='k', arrowprops=dict(arrowstyle='<->'))
+            p.ax.annotate(xy=(p.transData2Axes((7.57,1))[0],0.05), xycoords=p.ax.transAxes,
+                          xytext=(p.transData2Axes((14.28,1))[0],0.05),
+                          text='', c='k', arrowprops=dict(arrowstyle='<->'))
+            p.ax.annotate(xy=(p.transData2Axes((14.29,1))[0],0.05), xycoords=p.ax.transAxes,
+                          xytext=(p.transData2Axes((20.66,1))[0],0.05),
+                          text='', c='k', arrowprops=dict(arrowstyle='<->'))
+            p.ax.annotate(xy=(p.transData2Axes((20.67,1))[0],0.05), xycoords=p.ax.transAxes,
+                          xytext=(p.transData2Axes((38.0,1))[0],0.05),
+                          text='', c='k', arrowprops=dict(arrowstyle='<->'))
+        
+            p.save(path_fig+src+'_'+subname[0], transparent=True, figtight=True)
+
