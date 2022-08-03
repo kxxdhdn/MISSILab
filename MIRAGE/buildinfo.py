@@ -35,6 +35,11 @@ path_irs = path_work+'Spitzer/'+src+'/'
 path_phot = path_work+'Photometry/'+src+'/'
 path_ker = path_work+'Kernels/' # idl/convolve_image.pro
 
+## Reprojection
+##--------------
+# coadd_tool = 'swarp'
+coadd_tool = 'reproject'
+
 ## Convolution
 ##-------------
 fits_ker = []
@@ -99,8 +104,9 @@ for obs in obsid:
 ##-----------------------
 out_irs = path_out+src+'_IRS'
 
-chnl = ['SL2','SL1','LL2','LL1']
-# chnl = ['SL2', 'SL3', 'SL1', 'LL2', 'LL3', 'LL1']
+# chnl = ['SL2','SL1','LL2','LL1']
+# chnl = ['SL3', 'LL3']
+chnl = ['SL2', 'SL1', 'LL2', 'LL1', 'SL3', 'LL3']
 lab_sl = ['04','06S','06N','08','08c','09N3','09N2']
 lab_ll = ['03','04','05','06','08','09N3','09N5','09N2']
 

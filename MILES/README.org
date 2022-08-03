@@ -1,4 +1,4 @@
-#+TITLE: Mid-Infrared Line Extraction Software (MILES)
+#+TITLE: MILES: Mid-Infrared Line Extraction Software
 #+AUTHOR: Dangning HU
 
 * Mode d'emploi
@@ -12,17 +12,17 @@
 Go to ~src/~ and make
 ** Generating simulated spectra
 #+BEGIN_SRC bash
-pip install astylo # optional
-python pylib/input_genpar.py
+pip install laputan # optional
+python pylib/input_presimulation.py
 cd ./src
 make
-./genpar
-python pylib/show_genpar.py # optional
-./simulate_MIR
+./presimulation
+python pylib/show_presimulation.py # optional
+./simulation
 ## Line 40-42 & 65 may can be modified according to simulate_MIR.90
-python pylib/show_galspec.py # optional
+python pylib/show_simulation.py # optional
 #+END_SRC
-** How to modify ~simulate_MIR.f90~
+** How to modify ~simulation.f90~
 *** Line 80 & 81
 - Np: sample size for each configuration
 - Nq: number of configurations (varying S/N and continuum)
@@ -39,38 +39,38 @@ python pylib/show_galspec.py # optional
 cd ./src
 make
 ## Chi2 fit
-python ../pylib/input_fitpar_chi2.py
-./fitpar_chi2
+python ../pylib/input_sim_chi2.py
+./fit_chi2
 ## HB fit
-python ../pylib/input_fitpar_HB.py
-./fitpar_HB
+python ../pylib/input_sim_HB.py
+./fit_HB
 ## Post-processing
-./anapar
-## Line 36-38 should be coherent with simulate_MIR.f90
-python ../pylib/show_fitpar.py # optional
+./analysis
+## Line 36-38 should be coherent with simulation.f90
+python ../pylib/show_fit.py # optional
 python ../pylib/show_corr.py # optional
 ## Plots can be found in ../out/Figures/
 #+END_SRC
 * Notices
-The Python package [[https://github.com/kxxdhdn/astylo][astylo]] is required by the MILES UI (pylib). You can install it with a single command: ~pip install playtime~
+The Python package [[https://github.com/kxxdhdn/LAPUTAN][laputan]] is required by the MILES UI (pylib). You can install it in commandline: ~pip install laputan~
 * Version log
-** v1 (202106xx, HB release)
-** v0.3.7 (202106xx, clean)
+** v1.0 (202107xx, HB release)
+** v0.3.7 (202107xx, clean)
 - Simplified version of input UI available in pylib
   + Add ~fast_input.py~
 - Update tests/
 - Final clean before the first complete release
 - Add manueldocumentation files
-** v0.3.6 (202106xx, attenu)
+** v0.3.6 (202107xx, attenu)
 - Add attenuation (extinction with different geometries) in ~specModel~
 - Fractional data saving during program run
-** v0.3.5 (202106xx, calib)
+** ---------- WE ARE HERE ----------
+** v0.3.5 (202107xx, calib)
 - Support full MIR (2.5-20 microns) fit
   + Add wavelength masks
-  + Add calibration error of stitched spectra (from different modules) as a nuisance parameter in ~specModel~ (HB only)
+  + Add calibration error of stitched spectra (from different modules) as a nuisance parameter in ~specModel~ (exclusively for HB)
 - Calculate derived parameter errors with gradient function (chi2 only)
-- Replace the prerequisite Python package ~astylo~ (v0.3) by ~playtime~ (v1.0)
-** ---------- WE ARE HERE ----------
+- Replace the prerequisite Python package ~astylo~ (v0.3) by ~laputan~ (v1.1.6 or later)
 ** v0.3.4 (20210526, postpro)
 - Enhence post-processing (~analysis.f90~)
   + Allow to analyse unfinished fits (number of iterations less than the defined Nmcmc)

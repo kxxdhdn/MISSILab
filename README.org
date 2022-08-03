@@ -3,14 +3,15 @@
 
 * Introduction
 MISSILE (Mid-Infrared Sky Spectral Insight LibrariEs) is a collection of several data processing/analyzing tools, which allow to explore galaxies through the mid-IR spectroscopy.
-** [[https://github.com/kxxdhdn/MISSILE/tree/master/MIRAGE][MIRAGE (Mid-InfraRed spectrocube Assembly enGinE)]] [Python + IDL + Fortran]
-** [[https://github.com/kxxdhdn/MISSILE/tree/master/MILES][MILES (Mid-Infrared Line Extraction Software)]] [Fortran + Python]
+** [[https://github.com/kxxdhdn/MISSILE/tree/main/MIRAGE][MIRAGE (Mid-InfraRed spectrocube Assembly enGinE)]] [Python + IDL + Fortran]
+** [[https://github.com/kxxdhdn/MISSILE/tree/main/MILES][MILES (Mid-Infrared Line Extraction Software)]] [Fortran + Python]
 ** Supported observations: 
-- _AKARI_/IRC (2.5 - 5 microns)
-- _Spitzer_/IRS (5 - 40 microns)
+- AKARI/IRC (2.5 - 5 microns)
+- Spitzer/IRS (5 - 40 microns)
 - JWST/MIRI (upcoming)
 * Helpdesk
-** Prerequisite: [[https://github.com/kxxdhdn/laputan][LAPUTAN (Library of Astronomical Python Utility Tool for Astrophysics Nerds)]]
+** Prerequisite
+*** [[https://github.com/kxxdhdn/laputan][LAPUTAN (Library of Astronomical Python Utility Tool for Astrophysics Nerds)]]
 #+begin_src bash
 pip install laputan
 #+end_src
