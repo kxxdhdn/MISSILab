@@ -11,8 +11,8 @@ MISSILE (Mid-Infrared Sky Spectral Insight LibrariEs) is a collection of several
 - JWST/MIRI (upcoming)
 * Helpdesk
 ** Prerequisite
-*** [[https://github.com/kxxdhdn/laputan][LAPUTAN (Library of Astronomical Python Utility Tool for Astrophysics Nerds)]]
+*** [[https://github.com/kxxdhdn/RAPYUTA][RAPYUTA (libraRy of Astronomical PYthon UTilities for Astrophysics nerds)]]
 #+begin_src bash
-pip install laputan
+pip install rapyuta --upgrade
 #+end_src
-** Contact: dangning.hu@cea.fr
+** Contact: dangning.hu@outlook.com

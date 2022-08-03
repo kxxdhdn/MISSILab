@@ -17,13 +17,13 @@ import os
 import math
 import numpy as np
 
-## laputan
-from laputan.arrays import closest
-from laputan.inout import read_fits, write_hdf5, read_hdf5
+## rapyuta
+from rapyuta.arrays import closest, pix2sup
+from rapyuta.inout import read_fits, write_hdf5, read_hdf5
 
 ## local
 from auxil import (croot, mroot,
-                       res, TABLine, TABand, partuning)
+                   res, TABLine, TABand, partuning)
          
 ## Path
 ##------
@@ -33,7 +33,7 @@ if not os.path.exists(dirin):
     os.makedirs(dirin)
 write_hdf5(h5_path, 'input dir', [dirin], verbose=True)
 
-h5_obs = dirin+'observation_MIR' # M83 via Spitzer/IRS
+h5_obs = dirin+'observation_MIR'
 h5_master = dirin+'input_master'
 h5_model = dirin+'input_model'
 h5_extra = dirin+'input_extra'
@@ -48,27 +48,40 @@ noisy = False # verbose/debug for this routine
 ##-----------------------------
 z = 0.0017
 fits_obs = mroot+'lib/galgen' # obs
+
+##-----------------------------
+##
+## Write observation_MIR.h5
+##
+##-----------------------------
+
+## Read FITS
+##-----------
+spec_name='A1'
+xscale, yscale = 3,6
+fits_obs = mroot+'lib/M82_A1_7'
 fits_unc = fits_obs+'_unc' # unc
-wvl_inf = 5. # min wvl
-wvl_sup = 21. # max wvl
-x_inf = 7 # one pixel (7,11)
-x_sup = 8
-y_inf = 11
-y_sup = 12
+ds = read_fits(fits_obs, fits_unc)
+data0 = ds.data[:,0,0][:,np.newaxis,np.newaxis]
+unc0 = ds.unc[:,0,0][:,np.newaxis,np.newaxis]
+wave0 = ds.wave
+
+## Data
+##------
+z = 0.00068
+winf = 2.50 # min wvl
+wsup = 20.00 # max wvl
 # spec_unit = 'MKS' # W.m-2.Hz-1.sr-1
 spec_unit = 'MJyovsr' # MJy.sr-1
 
-## Read FITS
-dset = read_fits(fits_obs, fits_unc)
-
 ## Truncate wavelength range
-ind_inf = closest(dset.wave, wvl_inf)
-ind_sup = closest(dset.wave, wvl_sup)
-wave = dset.wave[ind_inf:ind_sup]
+ind_inf = closest(wave0, winf)
+ind_sup = closest(wave0, wsup)
+data = data0[ind_inf:ind_sup]
+unc = unc0[ind_inf:ind_sup]
+wave = wave0[ind_inf:ind_sup]
 wave = wave / (1+z)
 
-data = dset.data[ind_inf:ind_sup,y_inf:y_sup,x_inf:x_sup]
-unc = dset.unc[ind_inf:ind_sup,y_inf:y_sup,x_inf:x_sup]
 ## convert MJy/sr to W/m2/Hz/sr (MKS)
 if spec_unit=='MKS':
     data = data * 1.e-20
@@ -80,6 +93,7 @@ mask = np.isnan(data) * 1
 ## Write HDF5
 ##------------
 write_hdf5(h5_obs, 'spectral unit', [spec_unit], verbose=True)
+write_hdf5(h5_obs, 'spectrum labels', spec_name, append=True, verbose=noisy)
 write_hdf5(h5_obs, 'wavelength (microns)', wave, append=True, verbose=noisy)
 write_hdf5(h5_obs, 'FnuOBS ('+spec_unit+')', data, append=True, verbose=noisy)
 write_hdf5(h5_obs, 'dFnuOBS ('+spec_unit+')', unc, append=True, verbose=noisy)
@@ -90,7 +104,7 @@ write_hdf5(h5_obs, 'NaN mask', mask, append=True, verbose=noisy)
 ## Write input_master.h5
 ##
 ##--------------------------------
-dirout = dirin
+dirout = dirin # define output dir
 if not os.path.exists(dirout):
     os.makedirs(dirout)
 verbose = 'T'
@@ -129,7 +143,9 @@ labQ = ['BE_Z96               ', # 10
         'BE_Z96               ', # 10
         'BE_Z96               ', # 10
         'Sil_D03              '] # 23
-labL = ['H2S7  ', # 3
+labL = ['Bra   ', # 1
+        'H2S7  ', # 3
+        'Huc   ', # 5
         'H2S5  ', # 9
         'ArII  ', # 11
         'ArIII1', # 20
@@ -138,23 +154,30 @@ labL = ['H2S7  ', # 3
         'SIV   ', # 26
         'H2S2  ', # 27
         'NeII  ', # 29
+        'NeV1  ', # 32
         'NeIII1', # 33
         'H2S1  ', # 34
         'SIII1 '] # 36
+        # 'ArIII2', # 38
+        # 'FeII1 ', # 41
+        # 'H2S0. ', # 42
+        # 'SIII2 ', # 43
+        # 'NeIII2'] # 46
 labB = ['Main 3.3     ', # 1
         'Main 3.4     ', # 2
-        'Main 6.2 (1) ', # 7*
-        'Main 6.2 (2) ', # 8
-        'Plateau 7.7  ', # 12
-        'Main 7.7 (1) ', # 13*
-        'Main 7.7 (2) ', # 14
-        'Main 8.6     ', # 16*
-        'Small 11.0   ', # 19
-        'Main 11.2    ', # 20*
-        'Plateau 11.3 ', # 21
-        'Main 12.7 (1)', # 24
-        'Main 12.7 (2)', # 25
-        'Plateau 17.0 '] # 30
+        'Small 3.5    ', # 3
+        'Main 6.2 (1) ', # 8*
+        'Main 6.2 (2) ', # 9
+        'Plateau 7.7  ', # 13
+        'Main 7.7 (1) ', # 14*
+        'Main 7.7 (2) ', # 15
+        'Main 8.6     ', # 17*
+        'Small 11.0   ', # 20
+        'Main 11.2    ', # 21*
+        'Plateau 11.3 ', # 22
+        'Main 12.7 (1)', # 25
+        'Main 12.7 (2)', # 26
+        'Plateau 17.0 '] # 31
 labE = ['D03']
 
 refB = ['Main 11.2    ']
@@ -190,12 +213,9 @@ dictune = [ dict([ ('name','default'),
             ##=======================
 
             ## Extensive param:
-            ## lnFcont, lnRline, lnRband, lnFstar,
-            ##-------------------------------------
-            dict([ ('namall','lnFcont'),('fixed','F'),
-                   ('limited',('T','T')),
-                   ('limits',(1.,4.)),
-            ]),
+            ## lnFcont, lnRband(ref), lnFstar,
+            ##----------------------------------------------
+            dict([ ('namall','lnFcont'),('fixed','F'),]),
             
             dict([ ('namall','lnRline'),('fixed','F'),]),
             
@@ -204,39 +224,43 @@ dictune = [ dict([ ('name','default'),
             dict([ ('namall','lnFstar'),('fixed','F'),]),
             
             ## Intensive param:
-            ## lnT, Cline, Cband,
-            ## (fixed) Wline, WSband, WLband, lnAv,
-            ##--------------------------------------
+            ## lnT, lnRline, lnRband, lnAv,
+            ## (fixed) Cline, Cband, Wline, WSband, WLband,
+            ##----------------------------------------------
             dict([ ('namall','lnT'),
                    ('fixed','F'),
                    ('limited',('T','T')),
                    ('limits',(np.log(50.),np.log(500.))),
             ]), # LOG( (50,500) K )
-            # dict([ ('name','lnT2'), ('limits',(2.,6.)),
-            # ]),
-            # dict([ ('name','lnT3'), ('limits',(2.,6.)),
-            # ]),
             
             # dict([ ('namall','Cline'),('fixed','F'),]),
+
+            # ## Main 3.3
+            # dict([ ('name','Cband'+str(labB.index('Main 3.3')+1)),('fixed','F') ]),
+            # dict([ ('name','WSband'+str(labB.index('Main 3.3')+1)),('fixed','F') ]),
+            # dict([ ('name','WLband'+str(labB.index('Main 3.3')+1)),('fixed','F') ]),
+            # ## Main 3.4
+            # dict([ ('name','Cband'+str(labB.index('Main 3.4')+1)),('fixed','F') ]),
+            # dict([ ('name','WSband'+str(labB.index('Main 3.4')+1)),('fixed','F') ]),
+            # dict([ ('name','WLband'+str(labB.index('Main 3.4')+1)),('fixed','F') ]),
+            # ## Main 6.2 (1)
+            # dict([ ('name','Cband'+str(labB.index('Main 6.2 (1)')+1)),('fixed','F') ]),
+            # dict([ ('name','WSband'+str(labB.index('Main 6.2 (1)')+1)),('fixed','F') ]),
+            # dict([ ('name','WLband'+str(labB.index('Main 6.2 (1)')+1)),('fixed','F') ]),
+            # ## Main 7.7 (1)
+            # dict([ ('name','Cband'+str(labB.index('Main 7.7 (1)')+1)),('fixed','F') ]),
+            # dict([ ('name','WSband'+str(labB.index('Main 7.7 (1)')+1)),('fixed','F') ]),
+            # dict([ ('name','WLband'+str(labB.index('Main 7.7 (1)')+1)),('fixed','F') ]),
+            # ## Main 8.6
+            # dict([ ('name','Cband'+str(labB.index('Main 8.6')+1)),('fixed','F') ]),
+            # dict([ ('name','WSband'+str(labB.index('Main 8.6')+1)),('fixed','F') ]),
+            # dict([ ('name','WLband'+str(labB.index('Main 8.6')+1)),('fixed','F') ]),
+            # ## Main 11.2
+            # dict([ ('name','Cband'+str(labB.index('Main 11.2')+1)),('fixed','F') ]),
+            # dict([ ('name','WSband'+str(labB.index('Main 11.2')+1)),('fixed','F') ]),
+            # dict([ ('name','WLband'+str(labB.index('Main 11.2')+1)),('fixed','F') ]),
             
-            ## Main 6.2 (1)
-            dict([ ('name','Cband'+str(labB.index('Main 6.2 (1)')+1)),('fixed','F') ]),
-            dict([ ('name','WSband'+str(labB.index('Main 6.2 (1)')+1)),('fixed','F') ]),
-            dict([ ('name','WLband'+str(labB.index('Main 6.2 (1)')+1)),('fixed','F') ]),
-            ## Main 7.7 (1)
-            dict([ ('name','Cband'+str(labB.index('Main 7.7 (1)')+1)),('fixed','F') ]),
-            dict([ ('name','WSband'+str(labB.index('Main 7.7 (1)')+1)),('fixed','F') ]),
-            dict([ ('name','WLband'+str(labB.index('Main 7.7 (1)')+1)),('fixed','F') ]),
-            ## Main 8.6
-            dict([ ('name','Cband'+str(labB.index('Main 8.6')+1)),('fixed','F') ]),
-            dict([ ('name','WSband'+str(labB.index('Main 8.6')+1)),('fixed','F') ]),
-            dict([ ('name','WLband'+str(labB.index('Main 8.6')+1)),('fixed','F') ]),
-            ## Main 11.2
-            dict([ ('name','Cband'+str(labB.index('Main 11.2')+1)),('fixed','F') ]),
-            dict([ ('name','WSband'+str(labB.index('Main 11.2')+1)),('fixed','F') ]),
-            dict([ ('name','WLband'+str(labB.index('Main 11.2')+1)),('fixed','F') ]),
-            
-            dict([ ('namall','lnAv'),('fixed','T'),('value',0.5)]), # LOG( exp(.5) mag )
+            dict([ ('namall','lnAv'),('fixed','F'),]),
             
             dict() ]
 
@@ -279,7 +303,7 @@ i0 = 0
 for i in range(Ncont):
     name[i0+2*i] = 'lnFcont'+str(i+1)
     namall[i0+2*i] = 'lnFcont'
-    value[i0+2*i] = 0. # 1 [W/m2/sr]
+    value[i0+2*i] = 0.
     name[i0+2*i+1] = 'lnT'+str(i+1)
     namall[i0+2*i+1] = 'lnT'
     value[i0+2*i+1] = 4. # 54.60 [K]
@@ -297,7 +321,7 @@ for i in range(Nline):
     namall[i0+3*i+2] = 'Wline'
     for r in res:
         if value[i0+3*i+1]<5.:
-            if r['name']=='AKARI_Ns':
+            if r['name']=='AKARI_NG':
                 value[i0+3*i+2] = r['dwovw'] * value[i0+3*i+1]
         elif value[i0+3*i+1]<12.:
             if r['name']=='SL':
@@ -321,6 +345,19 @@ for i in range(Nband):
     name[i0+4*i+3] = 'WLband'+str(i+1)
     namall[i0+4*i+3] = 'WLband'
     value[i0+4*i+3] = TABand[indB[i]]['sigmaL']
+    for r in res:
+        if value[i0+3*i+1]<5.:
+            if r['name']=='AKARI_NG':
+                value[i0+4*i+2] += r['dwovw'] * value[i0+4*i+1]
+                value[i0+4*i+3] += r['dwovw'] * value[i0+4*i+1]
+        elif value[i0+3*i+1]<12.:
+            if r['name']=='SL':
+                value[i0+4*i+2] += r['dwovw'] * value[i0+4*i+1]
+                value[i0+4*i+3] += r['dwovw'] * value[i0+4*i+1]
+        else:
+            if r['name']=='LL':
+                value[i0+4*i+2] += r['dwovw'] * value[i0+4*i+1]
+                value[i0+4*i+3] += r['dwovw'] * value[i0+4*i+1]
 for i in range(4*Nband):
     comp[i0+i] = 'BAND'
 i0 += 4*Nband
@@ -373,3 +410,19 @@ Nextra = 0
 ##------------
 write_hdf5(h5_extra, 'program', [program], verbose=True)
 write_hdf5(h5_extra, 'Nextra', [Nextra], append=True, verbose=noisy)
+
+
+##-----------------------------
+##
+## Append observation_MIR.h5
+##
+##-----------------------------
+
+## These init param are supposed to be the default param in the fitting model,
+## with the possibility of reasonable modifications by this script.
+write_hdf5(h5_obs, 'Initial parameter label', name, append=True, verbose=True)
+val2 = np.repeat(value[:,np.newaxis], data.shape[1], axis=1) # expand Ny
+val3 = np.repeat(val2[:,:,np.newaxis], data.shape[2], axis=2) # expand Nx
+write_hdf5(h5_obs, 'Initial parameter value', val3, append=True, verbose=True)
+write_hdf5(h5_obs, 'Chi2init', ['F'], append=True, verbose=True)
+

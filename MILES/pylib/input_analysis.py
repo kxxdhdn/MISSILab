@@ -19,13 +19,12 @@ import math
 import numpy as np
 import subprocess as SP
 
-## laputan
-from laputan.arrays import closest
-from laputan.inout import read_fits, write_hdf5, read_hdf5
+## rapyuta
+from rapyuta.inout import read_fits, write_hdf5, read_hdf5, h5ext
 
 ## local
 from auxil import (croot, mroot,
-                       res, TABLine, TABand, partuning)
+                   res, TABLine, TABand, partuning)
          
 ## Path
 ##------
@@ -49,7 +48,7 @@ else:
 ## Write fit inputs
 ##
 ##-----------------------------
-input_fit = croot+'input_sim_hb.py'
+input_fit = croot+'input_hb.py'
 SP.call('python '+input_fit,
         shell=True, cwd=dirin, stdout=devnull, stderr=SP.STDOUT)
 
@@ -63,17 +62,32 @@ dirout = dirin
 if not os.path.exists(dirout):
     os.makedirs(dirout)
 verbose = 'T'
-ACF = 'T'
+ACF = ['F','F']
 
-Nmcmc = read_hdf5(dirin+'input_master', 'Nmcmc')[0]
-t_burnin = int(Nmcmc*.1)
-t_end = Nmcmc
+t_burnin = []
+t_end = []
+## BB
+bb_log = pathlib.Path(dirout+'parlog_fit_bb'+h5ext)
+if bb_log.exists():
+    Nmcmc = read_hdf5(dirout+'parlog_fit_bb', 'Last index')[0]
+else:
+    Nmcmc = read_hdf5(dirin+'input_master', 'Nmcmc')[0]
+t_burnin.append(int( Nmcmc * 0.3 ))
+t_end.append( Nmcmc )
+## HB
+hb_log = pathlib.Path(dirout+'parlog_fit_hb'+h5ext)
+if hb_log.exists():
+    Nmcmc = read_hdf5(dirout+'parlog_fit_hb', 'Last index')[0]
+else:
+    Nmcmc = read_hdf5(dirin+'input_master', 'Nmcmc')[0]
+t_burnin.append(int( Nmcmc * 0.3 ))
+t_end.append( Nmcmc )
 
 ## Write HDF5
 ##------------
 write_hdf5(h5_analysis, 'program', [program], verbose=True)
 write_hdf5(h5_analysis, 'output dir', [dirout], append=True, verbose=noisy)
 write_hdf5(h5_analysis, 'verbose', [verbose], append=True, verbose=noisy)
-write_hdf5(h5_analysis, 'ACF', [ACF], append=True, verbose=noisy)
-write_hdf5(h5_analysis, 't_burnin', [t_burnin], append=True, verbose=noisy)
-write_hdf5(h5_analysis, 't_end', [t_end], append=True, verbose=noisy)
+write_hdf5(h5_analysis, 'ACF', ACF, append=True, verbose=noisy)
+write_hdf5(h5_analysis, 't_burnin', t_burnin, append=True, verbose=noisy)
+write_hdf5(h5_analysis, 't_end', t_end, append=True, verbose=noisy)

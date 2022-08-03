@@ -9,8 +9,10 @@
 ##----------------
 HOST = $(shell hostname)
 ifeq ($(HOST),dapmcw18)
+# 	MKSW = /Users/dhu/ownCloud/MILES/swing/make_swing.mk
 	MKSW = /Users/dhu/SwING/Fortran/make_common.mk
 else
+# 	MKSW = /dsm/herschel1/nuages/dhu/MILES/swing/make_swing.mk
 	MKSW = /dsm/herschel1/nuages/Codes/SwING/Fortran/make_common.mk
 endif
 $(info The current machine is $(HOST))
@@ -31,10 +33,10 @@ MILIBAR = lib$(MILIB).a
 ifeq ($(HOST),dapmcw18)
 	MILIBDIR = /Users/dhu/ownCloud/MILES/
 else
-	MILIBDIR = /dsm/herschel1/nuages/dhu/MISSILE/MILES/
+	MILIBDIR = /dsm/herschel1/nuages/dhu/MILES/
 endif
 
-## MILES Banner
+## MILES banner
 ##--------------
 define MILBAN
 

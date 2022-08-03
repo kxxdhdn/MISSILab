@@ -3,72 +3,116 @@
 
 * Mode d'emploi
 ** Path
+Modify the following paths
 - ~make_miles.mk~
-  + MKSW
-  + MILIBDIR
+  + ~MKSW~
+  + ~MILIBDIR~
+- ~swing/make_swing.mk~
+  + ~LIBDIR~
+- ~swing/Tools/utilities.f90~
+  + ~LibF~
+  + ~temproot~
 - ~pylib/utilities.py~
-  + mroot
+  + ~mroot~
+** Database
+Download ~Model_templates/Cross_sections/Data/~ (542.1 MB) and put it in ~swing/~
 ** Make
-Go to ~src/~ and make
-** Generating simulated spectra
-#+BEGIN_SRC bash
-pip install laputan # optional
-python pylib/input_presimulation.py
-cd ./src
+#+begin_src bash
+## In swing/Programs/
 make
-./presimulation
+
+## In src/
+make
+
+## In tests/
+make
+
+## If clean
+make mrproper
+#+end_src
+** Generating synthetic spectra
+#+BEGIN_SRC bash
+pip install rapyuta --upgrade
+
+## Fitting original parameters
+python pylib/input_presimulation.py
+./src/presimulation
 python pylib/show_presimulation.py # optional
-./simulation
-## Line 40-42 & 65 may can be modified according to simulate_MIR.90
+
+## Generating models with new parameters
+./src/simulation
+## Line 40-42 & 65 may can be modified according to simulation.90
 python pylib/show_simulation.py # optional
 #+END_SRC
-** How to modify ~simulation.f90~
-*** Line 80 & 81
-- Np: sample size for each configuration
-- Nq: number of configurations (varying S/N and continuum)
-*** Line 171-179
-- mean and stdev of 4 independent band ratios (fixing I11.3)
-*** Line 198-203
-- corr(Ncorr): correlation coefficients for different band ratios (R)
-*** Line 92-100
-- multiCONT(Nq): factor of multiplication for continua
-*** Line 104-112
-- SovN(Nq): parameter defining S/N (normalized at optional wavelengths, see Line 260-276)
+** Facts (modifiable) in ~simulation.f90~
+*** Sample size
+- ~Np~: sub-sample size for each configuration
+- ~Nq~: number of configurations (varying ~SovN~ and ~multiCONT~)
+*** ~wvl0~: reference wavelength of ~SovN~ and ~multiCONT~ (Default: 15 \mu{}m)
+*** ~ratname~, ~mulnR~ and ~siglnR~ (diag of ~Smat~)
+- mean and stdev of ~Nrat~ band ratios to vary (fixing 11.2)
+*** ~corr~: ~Ncorr~ correlation coefficients for different band ratios (triangles of ~Rmat~)
 ** Fitting
+Put ~pylib/~ and ~data/~ in your work directory. 
+The outputs can be found in ~out/~.
 #+BEGIN_SRC bash
-cd ./src
-make
+pip install rapyuta --upgrade
+
 ## Chi2 fit
-python ../pylib/input_sim_chi2.py
-./fit_chi2
+python pylib/input_sim_chi2.py # simulation
+python pylib/input_chi2.py
+./src/fit_chi2
+
+## BB fit
+python pylib/input_sim_bb.py # simulation
+python pylib/input_bb.py
+./src/fit_hb
+
 ## HB fit
-python ../pylib/input_sim_HB.py
-./fit_HB
+python pylib/input_sim_hb.py # simulation
+python pylib/input_hb.py
+./src/fit_hb
+
 ## Post-processing
-./analysis
+python pylib/input_analysis.py
+./src/analysis
+
+## Plot (results in out/Figures/)
 ## Line 36-38 should be coherent with simulation.f90
-python ../pylib/show_fit.py # optional
-python ../pylib/show_corr.py # optional
-## Plots can be found in ../out/Figures/
+python pylib/show_fit.py # fitted spectra
+python pylib/show_par.py # parameter distribution
+python pylib/show_corr.py # feature correlations
 #+END_SRC
 * Notices
-The Python package [[https://github.com/kxxdhdn/LAPUTAN][laputan]] is required by the MILES UI (pylib). You can install it in commandline: ~pip install laputan~
+The Python package [[https://github.com/kxxdhdn/RAPYUTA][rapyuta]] is required by the MILES UI (pylib). You can install it in commandline: ~pip install rapyuta --upgrade~
 * Version log
-** v1.0 (2021xxxx, HB release)
-** v0.3.6 (2021xxxx, clean)
-- Support error ellipses
+** v1.x (2021xxxx)
+- Add robust/skewed RMS (student/split gaussian distribution) for likelihood
 - Add attenuation (extinction with different geometries) in ~specModel~
-- Fractional data saving during program run
 - Calculate derived parameter errors with gradient function
-  + exclusively for chi2, changes in ~aux/ext_chi2.f90~ and ~src/fit_chi2.f90~
+  + exclusively for chi2, changes in ~aux/core.f90~ and ~src/fit_chi2.f90~
+- Fractional data saving during program run
+- Parallelization
 - Simplified version of input UI ~pylib/fast_input.py~
+** v1 (2021xxxx, HB release)
+** v0.3.7 (2021xxxx, prelease)
 - Update tests/
-- Final clean before the first complete release
 - Add manuel documentation files
+- Final clean before the first complete release
 ** ---------- WE ARE HERE ----------
+** v0.3.6 (20211018, thesis)
+- Update calibrated band properties (3.3, 3.4 and 3.5 \mu{}m)
+- Update AKARI NG spectral resolution (changes in ~aux/auxil.f90~ and ~pylib/auxil.py~)
+- Add spectral resolution degradation term for bands (changes in ~initparam~ and ~pylib/input_chi2/bb/hb.py~)
+- ~src/fit_hb.f90~: Initialize ~sig0~ as 1 to avoid non positive definite covariance matrix during HB run
+- Update Python dependency ~laputan~ (v1.2.4) to ~rapyuta~ (v2.0.4 or later)
+  + New FITS to HDF5 inputs (M82 input data from global map to slits with super pixels)
+  + Pixels can be identified on correlation diagrams
+  + Support error ellipses
+- Update simulation
 ** v0.3.5 (20210908, maskalib)
 - Support full MIR (2.5-20 microns) fit
-  + Add Ns-SL-LL case in ~degradeRes~ for the use of ~initparam~
+  + Add NG-SL-LL case in ~degradeRes~ for the use of ~initparam~
 - Add wavelength masks (taking into account features/parameters at masked wavelengths)
   + ~aux/core.f90~
     * Change ~initparam~ mask (param mask instead of wvl mask) I/O as ~INOUT~

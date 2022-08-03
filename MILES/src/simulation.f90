@@ -25,12 +25,12 @@ PROGRAM simulation
   CHARACTER(*), PARAMETER :: filGEN = dirIN//'presimulation'//h5ext
   CHARACTER(*), PARAMETER :: filOUT = dirIN//'simulation_MIR'//h5ext
   LOGICAL, PARAMETER :: compress = .FALSE.
-  LOGICAL, PARAMETER :: debug = .TRUE.
+  LOGICAL, PARAMETER :: debug = .FALSE.
   
   INTEGER :: i, p, q, iw!, icorr, ipar
   INTEGER :: Np, Nq, Nw, NwOBS, Npar, Ncorr, Nrat, Nbandr, Ncont
   INTEGER :: counter
-  INTEGER, DIMENSION(:), ALLOCATABLE :: indB ! 1D (Nbandr)
+  INTEGER, DIMENSION(:), ALLOCATABLE :: indB, indBp ! 1D (Nbandr)
   REAL(DP) :: wvl0!, lnIref, rescaling
   REAL(DP), DIMENSION(:), ALLOCATABLE :: dblarr1d
   REAL(DP), DIMENSION(:), ALLOCATABLE :: mulnR, siglnR ! 1D (Nrat)
@@ -51,7 +51,6 @@ PROGRAM simulation
   CHARACTER(lenpar) :: spec_unit
   CHARACTER(lenpar), DIMENSION(:), ALLOCATABLE :: labB
   CHARACTER(lenpar), DIMENSION(:), ALLOCATABLE :: ratname ! 1D (Nrat)
-  CHARACTER(lenpar), DIMENSION(:), ALLOCATABLE :: corrname ! 1D (Ncorr)
   LOGICAL :: varCONT, varSovN, flatSovN, flatUNC
   TYPE(indpar_type) :: ind
   TYPE(parinfo_type), DIMENSION(:), ALLOCATABLE :: parinfo
@@ -63,13 +62,13 @@ PROGRAM simulation
 
   !! Banner
   PRINT*,REPEAT("=",textwid)
-  PRINT*, REPEAT(" ",textwid/3)//'Simulated Galaxy Spectrum Gallery'
+  PRINT*, REPEAT(" ",textwid/3)//'Synthetic Spectra of Galaxies'
   PRINT*,REPEAT("=",textwid)
   PRINT*
 
   !! Sample size
-  Np = 6 ! sampling along correlation axis
-  Nq = 9 ! sampling along option (FnuCONT or SovN) axis
+  Np = 10 ! sampling along correlation axis
+  Nq = 4 ! sampling along option (FnuCONT or SovN) axis
 
   !! Options
   varCONT = .TRUE.
@@ -83,9 +82,8 @@ PROGRAM simulation
   ALLOCATE(multiCONT(Nq))
   
   IF (varCONT) THEN
-    multiCONT(:) = [ 1._DP, 3._DP, 9._DP, &
-                     1._DP, 3._DP, 9._DP, &
-                     1._DP, 3._DP, 9._DP ]
+    multiCONT(:) = [ .4_DP, 20._DP, &
+                     .4_DP, 20._DP ]
   ELSE
     multiCONT(:) = 1._DP
   END IF
@@ -95,9 +93,8 @@ PROGRAM simulation
   ALLOCATE(SovN(Nq))
 
   IF (varSovN) THEN
-    SovN(:) = [ 5._DP, 5._DP, 5._DP, &
-                20._DP, 20._DP, 20._DP, &
-                80._DP, 80._DP, 80._DP ]
+    SovN(:) = [ 2._DP, 2._DP, &
+                100._DP, 100._DP ]
   ELSE
     SovN(:) = 20._DP
   END IF
@@ -135,17 +132,22 @@ PROGRAM simulation
   !!----------------------
 
   !! Number of bands used to calculate intensity ratios
-  Nbandr = 5
+  Nbandr = 6
 
-  ALLOCATE(indB(Nbandr))
+  ALLOCATE(indB(Nbandr),indBp(Nbandr))
 
   !! Find band index
   !!-----------------
-  CALL IWHERE( TRIMEQ(labB(:),'Main 6.2 (1)'), indB(1) )
-  CALL IWHERE( TRIMEQ(labB(:),'Main 7.7 (1)'), indB(2) )
-  CALL IWHERE( TRIMEQ(labB(:),'Main 8.6'), indB(3) )
-  CALL IWHERE( TRIMEQ(labB(:),'Main 11.2'), indB(4) )
+  CALL IWHERE( TRIMEQ(labB(:),'Main 3.3     '), indB(1) )
+  CALL IWHERE( TRIMEQ(labB(:),'Main 6.2 (1) '), indB(2) )
+  CALL IWHERE( TRIMEQ(labB(:),'Main 7.7 (1) '), indB(3) )
+  CALL IWHERE( TRIMEQ(labB(:),'Main 8.6     '), indB(4) )
   CALL IWHERE( TRIMEQ(labB(:),'Main 12.7 (1)'), indB(5) )
+  CALL IWHERE( TRIMEQ(labB(:),'Main 11.2    '), indB(6) )
+
+  DO i=1,Nbandr
+    CALL IWHERE( TRIMEQ(parinfo(:)%name,'lnRband'//TRIMLR(PRING(indB(i)))), indBp(i) )
+  END DO
   
   !! Number of indpdt intensity ratios should be no larger
   Nrat = Nbandr - 1 ! fix I11.2
@@ -154,44 +156,42 @@ PROGRAM simulation
   
   !! Denote ratio name
   !!-------------------
-  ratname(1) = 'I6.2/I11.2'
-  ratname(2) = 'I7.7/I11.2'
-  ratname(3) = 'I8.6/I11.2'
-  ratname(4) = 'I12.7/I11.2'
+  ratname(1) = '3.3/11.2'
+  ratname(2) = '6.2/11.2'
+  ratname(3) = '7.7/11.2'
+  ratname(4) = '8.6/11.2'
+  ratname(5) = '12.7/11.2'
 
-  mulnR(1) = LOG(.9_DP)
-  mulnR(2) = LOG(1.8_DP)
-  mulnR(3) = LOG(1.2_DP)
-  mulnR(4) = LOG(.8_DP)
+  mulnR(1) = pargen(1,1,indBp(1))
+  mulnR(2) = pargen(1,1,indBp(2))
+  mulnR(3) = pargen(1,1,indBp(3))
+  mulnR(4) = pargen(1,1,indBp(4))
+  mulnR(5) = pargen(1,1,indBp(5))
+  IF (debug) THEN
+    PRINT*
+    PRINT*, 'mulnR (1-5) = ', mulnR
+  END IF
 
-  siglnR(1) = LOG(1.8_DP) - mulnR(1)
-  siglnR(2) = LOG(2.6_DP) - mulnR(2)
-  siglnR(3) = LOG(2.5_DP) - mulnR(3)
-  siglnR(4) = LOG(1.6_DP) - mulnR(4)
+  siglnR(:) = LOG(3._DP)
 
   !! Number of correlations (incl. non-correlated ones)
   Ncorr = N_CORR(Nrat)
 
-  ALLOCATE(corrname(Ncorr), corr(Ncorr), lnR(Nrat,Np,Nq), &
+  ALLOCATE(corr(Ncorr), lnR(Nrat,Np,Nq), &
            covar(Nrat,Nrat), Smat(Nrat,Nrat), Rmat(Nrat,Nrat))
-
-  !! Denote correlation name (X - Y)
-  !!---------------------------------
-  corrname(1) = 'I6.2/I11.2 - I7.7/I11.2' ! r12
-  corrname(2) = 'I6.2/I11.2 - I8.6/I11.2' ! r13
-  corrname(3) = 'I6.2/I11.2 - I12.7/I11.2' ! r14
-  corrname(4) = 'I7.7/I11.2 - I8.6/I11.2' ! r23
-  corrname(5) = 'I7.7/I11.2 - I12.7/I11.2' ! r24
-  corrname(6) = 'I8.6/I11.2 - I12.7/I11.2' ! r34
 
   !! Define correlation coefficients
   !!---------------------------------
-  corr(1) = 0.95_DP ! r12
-  corr(2) = 0.9_DP ! r13
-  corr(3) = 0._DP ! r14
-  corr(4) = 0.9_DP ! r23
-  corr(5) = 0._DP ! r24
-  corr(6) = 0._DP ! r34
+  corr(1) = -.95_DP ! r12
+  corr(2) = -.6_DP ! r13
+  corr(3) = -.6_DP ! r14
+  corr(4) = 0._DP ! r15
+  corr(5) = .6_DP ! r23
+  corr(6) = .6_DP ! r24
+  corr(7) = 0._DP ! r25
+  corr(8) = .95_DP ! r34
+  corr(9) = 0._DP ! r35
+  corr(10) = 0._DP ! r45
 
   !! MC sampling of ratios
   !!-----------------------
@@ -199,12 +199,17 @@ PROGRAM simulation
   FORALL (i=1:Nrat) Smat(i,i) = siglnR(i)
   Rmat(:,:) = CORR2RMAT(corr(:), Nrat) ! Correlation matrix
   covar(:,:) = MATMUL( Smat(:,:),MATMUL(Rmat(:,:),Smat(:,:)) )
+  do i=1,nrat
+    print*, smat(i,i), 'coucou', rmat(i,i)
+    end do
 
   !! Generate lnR(Nrat,Np,Nq)
   ! lnR(:,:,1) = RAND_MULTINORM(Np,COVAR=covar(:,:),MU=mulnR(:))
   DO q=1,Nq
     ! lnR(:,:,q) = lnR(:,:,1)
     lnR(:,:,q) = RAND_MULTINORM(Np,COVAR=covar(:,:),MU=mulnR(:))
+    ! print*, 'lnR', q, lnR(:,:,q)
+    print*,
 
   END DO
 
@@ -214,12 +219,16 @@ PROGRAM simulation
   !! Set ref band intensity (see also cont level)
   ! lnIref = pargen(1,1,ind%lnRband(ind%refB)) ! lnI11.2
 
-  par(:,:,ind%lnRband(indB(1))) = lnR(1,:,:) ! lnI6.2 (1)
+  par(:,:,ind%lnRband(indB(1))) = lnR(1,:,:) ! lnI3.3
+  par(:,:,ind%lnRband(indB(2))) = lnR(2,:,:) ! lnI6.2 (1)
   ! par(:,:,ind%lnRband(indB(1)+1)) = LOG(.2_DP) ! lnI6.2 (2)
-  par(:,:,ind%lnRband(indB(2))) = lnR(2,:,:) ! lnI7.7
-  par(:,:,ind%lnRband(indB(3))) = lnR(3,:,:) ! lnI8.6
-  par(:,:,ind%lnRband(indB(5))) = lnR(4,:,:) ! lnI12.7
-  
+  par(:,:,ind%lnRband(indB(3))) = lnR(3,:,:) ! lnI7.7
+  par(:,:,ind%lnRband(indB(4))) = lnR(4,:,:) ! lnI8.6
+  par(:,:,ind%lnRband(indB(5))) = lnR(5,:,:) ! lnI12.7
+  print*, "1>>>>>", pargen(:,:,ind%lnRband(indB(1))) - par(:,:,ind%lnRband(indB(1)))
+  print*, "2>>>>>", pargen(:,:,ind%lnRband(indB(2))) - par(:,:,ind%lnRband(indB(2)))
+  print*, "3>>>>>", pargen(:,:,ind%lnRband(indB(3))) - par(:,:,ind%lnRband(indB(3)))
+  print*, "4>>>>>", pargen(:,:,ind%lnRband(indB(4))) - par(:,:,ind%lnRband(indB(4)))
   CALL WRITE_HDF5(STRARR1D=[spec_unit], NAME='spectral unit', &
                   FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.FALSE.)
   CALL WRITE_HDF5(STRARR1D=labB(indB(:)), NAME='Correlated band name', &
@@ -227,8 +236,6 @@ PROGRAM simulation
   CALL WRITE_HDF5(INTARR1D=ind%lnRband(indB(:)), NAME='Correlated band indpar', &
                   FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
   CALL WRITE_HDF5(STRARR1D=ratname(:), NAME='Band ratio name', &
-                  FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
-  CALL WRITE_HDF5(STRARR1D=corrname(:), NAME='Correlation name', &
                   FILE=filOUT, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
   
   !!---------------------------------
@@ -245,14 +252,14 @@ PROGRAM simulation
   FnuSIM(:,:,:) = specModel(wvl(:), INDPAR=ind, PARVAL=par(:,:,:), &
                             MASK=mask(:,:,:), FNUBAND_TAB=fnuband_tab, &
                             QABS=Qabs(:), EXTINCT=extinct(:,:))
-
+print*, maxval(fnusim(:,:,:),dim=3)
   !! Statistical noises
   !!--------------------
   
   ! iw = MINLOC(dblarr1d(:),DIM=1) ! 1. min Fnu wvl index
   ! CALL IWHERE( dblarr1d(:)==MEDIAN_DATA(dblarr1d(:)), iw ) ! 2. median Fnu wvl index
   iw = CLOSEST(wOBS(:), wvl0) ! 3. ref wvl index
-  print*, 'wvl (S/N) = ', wOBS(iw)
+  ! print*, 'wvl (S/N) = ', wOBS(iw)
   
   !! Normalized S/N profile
   flatSovN = .FALSE.

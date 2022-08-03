@@ -355,6 +355,8 @@ PROGRAM fit_hb
   !! Initial hyper parameters
   IF (ANY(parinfo(:)%hyper)) THEN
     ALLOCATE (mu0(Nparhyp),sig0(Nparhyp),corr0(Ncorrhyp))
+    mu0(:) = 0._DP
+    sig0(:) = 1._DP
     FORALL (i=1:Nparhyp,maskhypall(i))
       mu0(i) = MEAN(parini(:,:,i2ih(i),1),MASK=maskhyp(:,:,i))
       sig0(i) = SIGMA(parini(:,:,i2ih(i),1),MASK=maskhyp(:,:,i))
@@ -363,10 +365,12 @@ PROGRAM fit_hb
       sig0(:) = MERGE( ABS(mu0(:)), 1._DP, (mu0(:) > 0._DP) )
     WHERE (sig0(:) <= 0._DP) &
       sig0(:) = 0.5_DP * ( parinfo(i2ih(:))%limits(2) &
-                         - parinfo(i2ih(:))%limits(1) )
+                           - parinfo(i2ih(:))%limits(1) )
     corr0(:) = 0._DP
   ELSE
     ALLOCATE (mu0(Npar),sig0(Npar),corr0(Ncorr))
+    mu0(:) = 0._DP
+    sig0(:) = 1._DP
     FORALL (i=1:Nparhyp,maskhypall(i))
       mu0(i) = MEAN(parini(:,:,i2ih(i),1),MASK=maskpar(:,:,i))
       sig0(i) = SIGMA(parini(:,:,i2ih(i),1),MASK=maskpar(:,:,i))

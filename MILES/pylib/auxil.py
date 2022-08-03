@@ -7,7 +7,7 @@ Available variables and functions:
 
   PATH: croot, mroot
   DATA: res, TABLine, TABand
-  FUNC: partuning, 
+  FUNC: partuning, calexpansion
 
 """
 
@@ -28,12 +28,12 @@ res = [ dict([ ('name','CAM'),('dwovw',0.010373835) ]),
         dict([ ('name','LH'),('dwovw',0.00070906159) ]),
         dict([ ('name','SWS'), ('dwovw',0.0011044189) ]),
         dict([ ('name','SWSfine'),('dwovw',0.00036671469) ]),
-        dict([ ('name','AKARI_Ns'),('dwovw',0.00356688) ]) ]
+        dict([ ('name','AKARI_NG'),('dwovw',0.00881818) ]) ]
 
 TABLine = [ dict([ ('name','Bracket alpha'),
                    ('label','Bra'),('wave',4.052) ]),
             dict([ ('name','H!E !NI 6-10'),
-                   ('label','HI6-10'),('wave',5.128657) ]), # AKARI_Ns (2)
+                   ('label','HI6-10'),('wave',5.128657) ]), # AKARI_NG (2)
             dict([ ('name','H!D2!N 0-0 S(7)'),
                    ('label','H2S7'),('wave',5.51116) ]),
             dict([ ('name','[Mg!E !NV] 3P!U2!N-3P!U1!N'),
@@ -123,10 +123,12 @@ TABLine = [ dict([ ('name','Bracket alpha'),
             dict([ ('name','[Ne!E !NIII] 3P!D1!N-3P!D0!N'),
                    ('label','NeIII2'),('wave',36.0135) ]) ] # LL1 (9)
 
-TABand = [ dict([ ('label','Main 3.3'),('wave',3.3),
-                  ('sigmaS',0.04),('sigmaL',0.04) ]),
-           dict([ ('label','Main 3.4'),('wave',3.45),
-                  ('sigmaS',0.04),('sigmaL',0.04) ]), # AKARI_Ns (2)
+TABand = [ dict([ ('label','Main 3.3'),('wave',3.291),
+                  ('sigmaS',0.020),('sigmaL',0.019) ]),
+           dict([ ('label','Main 3.4'),('wave',3.399),
+                  ('sigmaS',0.011),('sigmaL',0.024) ]),
+           dict([ ('label','Small 3.5'),('wave',3.499),
+                  ('sigmaS',0.077),('sigmaL',0.071) ]), # AKARI_NG (3)
            dict([ ('label','Small 5.2'),('wave',5.2394667),
                   ('sigmaS',0.025218240),('sigmaL',0.058333420) ]),
            dict([ ('label','Small 5.7 (1)'),('wave',5.6437461),
@@ -276,4 +278,70 @@ def partuning(dictune, Ncont, Nline, Nband, Nextc,
                 tied[i] = tune['tied']
             if 'value' in tune:
                 value[i] = tune['value']
-   
+
+def calexpansion(calib, wvl, instr):
+    '''
+    Attribute calibration/scale factors to
+    wavelength grid according to given instruments
+    ------ INPUT ------
+    calib               list of calibration factors
+    x                   wavelength grid
+    instr               list of instruments
+    ------ OUTPUT ------
+    carray              calib factor array (same size of x)
+    '''
+    carray = np.ones(wvl.shape)
+    for i, ins in enumerate(instr):
+        if ins=='IRC_NG':
+            lim = [2.5, 5.0]
+        elif ins=='IRS_SL2':
+            lim = [5.21, 7.56]
+        elif ins=='IRS_SL1':
+            lim = [7.57, 14.28]
+        elif ins=='IRS_LL2':
+            lim = [14.29, 20.66]
+        elif ins=='IRS_LL1':
+            lim = [20.67, 38.00]
+        elif ins=='IRS_SH':
+            lim = [10.00, 19.19]
+        elif ins=='IRS_LH':
+            lim = [19.20, 37.10]
+
+        for iw, w in enumerate(wvl):
+            if w>lim[0] and w<lim[1]:
+                carray[iw] = calib[i]
+
+    return carray
+
+def calextraction(carray, wvl, instr):
+    '''
+    Extract calibration/scale factors of the instruments
+    ------ INPUT ------
+    carray              enbedded calibration factors
+    x                   wavelength grid
+    instr               list of instruments
+    ------ OUTPUT ------
+    calib               calib factors (same size of instr)
+    '''
+    for i, ins in enumerate(instr):
+        if ins=='IRC_NG':
+            lim = [2.5, 5.0]
+        elif ins=='IRS_SL2':
+            lim = [5.21, 7.56]
+        elif ins=='IRS_SL1':
+            lim = [7.57, 14.28]
+        elif ins=='IRS_LL2':
+            lim = [14.29, 20.66]
+        elif ins=='IRS_LL1':
+            lim = [20.67, 38.00]
+        elif ins=='IRS_SH':
+            lim = [10.00, 19.19]
+        elif ins=='IRS_LH':
+            lim = [19.20, 37.10]
+
+        for iw, w in enumerate(wvl):
+            if w>lim[0] and w<lim[1]:
+                calib[i] = carray[iw]
+                break
+
+    return calib

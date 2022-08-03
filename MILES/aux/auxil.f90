@@ -11,7 +11,7 @@ MODULE auxil
   IMPLICIT NONE
   PRIVATE
 
-  INTEGER, PARAMETER, PUBLIC :: Ncont_max = 31, Nline_max = 46, Nband_max = 33
+  INTEGER, PARAMETER, PUBLIC :: Ncont_max = 31, Nline_max = 46, Nband_max = 34
   INTEGER, PARAMETER, PUBLIC :: Nextc_max = 10,  Nstar_max = 1
   REAL(DP), PARAMETER, PUBLIC :: Cband_sig = 0.1_DP ! band center var range [micron]
   
@@ -27,7 +27,7 @@ MODULE auxil
     REAL(DP) :: dw_w_SH = 0.00075127093_DP
     REAL(DP) :: dw_w_LL = 0.0057517091_DP
     REAL(DP) :: dw_w_LH = 0.00070906159_DP
-    REAL(DP) :: dw_w_AKARI_NG = 0.00356688_DP
+    REAL(DP) :: dw_w_AKARI_NG = 0.00881818_DP
   END TYPE spect_res
   PUBLIC :: spect_res
   
@@ -114,7 +114,7 @@ MODULE auxil
     (/ line_type(name='Bracket alpha', &
                 label='Bra', wave=4.052_DP), &
        line_type(name='H!E !NI 6-10', &
-                label='HI6-10', wave=5.128657_DP), & ! AKARI_Ns (2)
+                label='HI6-10', wave=5.128657_DP), & ! AKARI_NG (2)
        line_type(name='H!D2!N 0-0 S(7)', &
                 label='H2S7', wave=5.51116_DP), &
        line_type(name='[Mg!E !NV] 3P!U2!N-3P!U1!N', &
@@ -214,10 +214,12 @@ MODULE auxil
   PUBLIC :: band_type
   
   TYPE(band_type), DIMENSION(Nband_max), SAVE, PUBLIC :: TABand = &
-    (/ band_type(label='Main 3.3', wave=3.3_DP, &
-                sigmaS=0.04_DP, sigmaL=0.04_DP), &
-       band_type(label='Main 3.4', wave=3.45_DP, &
-                sigmaS=0.04_DP, sigmaL=0.04_DP), & ! AKARI_Ns (2)
+    (/ band_type(label='Main 3.3', wave=3.291_DP, &
+                sigmaS=0.020_DP, sigmaL=0.019_DP), &
+       band_type(label='Main 3.4', wave=3.399_DP, &
+                sigmaS=0.011_DP, sigmaL=0.024_DP), &
+       band_type(label='Small 3.5', wave=3.499_DP, &
+                sigmaS=0.077_DP, sigmaL=0.071_DP), & ! AKARI_NG (3)
        band_type(label='Small 5.2', wave=5.2394667_DP, &
                 sigmaS=0.025218240_DP, sigmaL=0.058333420_DP), &
        band_type(label='Small 5.7 (1)', wave=5.6437461_DP, &
@@ -226,7 +228,7 @@ MODULE auxil
                 sigmaS=0.040000000_DP, sigmaL=0.080000000_DP), &
        band_type(label='Small 6.0', wave=6.0106598_DP, &
                 sigmaS=0.040000000_DP, sigmaL=0.066646401_DP), &
-       band_type(label='Main 6.2 (1)', wave=6.2034273_DP, & ! 7
+       band_type(label='Main 6.2 (1)', wave=6.2034273_DP, & ! 8
                 sigmaS=0.031300317_DP, sigmaL=0.060000000_DP), &
        band_type(label='Main 6.2 (2)', wave=6.2672596_DP, &
                 sigmaS=0.036922155_DP, sigmaL=0.11633640_DP), &
@@ -238,13 +240,13 @@ MODULE auxil
                 sigmaS=0.080000000_DP, sigmaL=0.080000000_DP), & ! SL2 (9)
        band_type(label='Plateau 7.7', wave=7.6000000_DP, &
                 sigmaS=0.48000000_DP, sigmaL=0.50247515_DP), &
-       band_type(label='Main 7.7 (1)', wave=7.6171123_DP, & ! 13
+       band_type(label='Main 7.7 (1)', wave=7.6171123_DP, & ! 14
                 sigmaS=0.11856752_DP, sigmaL=0.14531480_DP), &
        band_type(label='Main 7.7 (2)', wave=7.8704769_DP, &
                 sigmaS=0.16998357_DP, sigmaL=0.24523967_DP), &
        band_type(label='Small 8.3', wave=8.3623706_DP, &
                 sigmaS=0.016256724_DP, sigmaL=0.016256724_DP), &
-       band_type(label='Main 8.6', wave=8.6204540_DP, & ! 16
+       band_type(label='Main 8.6', wave=8.6204540_DP, & ! 17
                 sigmaS=0.18340577_DP, sigmaL=0.13337054_DP), &
        band_type(label='Small 9.5', wave=9.5244838_DP, &
                 sigmaS=0.10766965_DP, sigmaL=0.60000000_DP), &
@@ -252,7 +254,7 @@ MODULE auxil
                 sigmaS=0.10000000_DP, sigmaL=0.10000000_DP), &
        band_type(label='Small 11.0', wave=11.038349_DP, &
                 sigmaS=0.026989462_DP, sigmaL=0.073146141_DP), &
-       band_type(label='Main 11.2', wave=11.237893_DP, & ! 20
+       band_type(label='Main 11.2', wave=11.237893_DP, & ! 21
                 sigmaS=0.053507232_DP, sigmaL=0.15254629_DP), &
        band_type(label='Plateau 11.3', wave=11.400432_DP, &
                 sigmaS=0.72000000_DP, sigmaL=0.63657944_DP), &

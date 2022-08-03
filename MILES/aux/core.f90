@@ -890,8 +890,8 @@ CONTAINS
         DO i=1,Nband
           CALL IWHERE( TRIMEQ(TABand(:)%label, labB(i)), itab ) ! itab = ind of TABand
           Cband = TABand(itab)%wave
-          WSband = TABand(itab)%sigmaS
-          WLband = TABand(itab)%sigmaL
+          WSband = TABand(itab)%sigmaS + degradeRes(Cband, .01_DP, 'NG-SL-LL')
+          WLband = TABand(itab)%sigmaL + degradeRes(Cband, .01_DP, 'NG-SL-LL')
           
           !! Cband
           IF (parinfo(ind%Cband(i))%fixed) THEN
@@ -986,7 +986,7 @@ CONTAINS
         DO i=1,Nline
           CALL IWHERE( TRIMEQ(TABLine(:)%label, labL(i)), itab ) ! itab = ind of TABLine
           Cline = TABLine(itab)%wave
-          Wline = degradeRes(TABLine(itab)%wave, .01_DP, 'NG-SL-LL')
+          Wline = degradeRes(Cline, .01_DP, 'NG-SL-LL')
 
           !! Cline
           IF (parinfo(ind%Cline(i))%fixed) THEN
@@ -997,7 +997,7 @@ CONTAINS
             !! FWHM = 2*sqrt(2*log(2))*sigma ~ 2.355 (suppose PSF is gaussian)
             !! R = lambda / FWHM
             !! => sigma = lambda / R / 2.355
-            sig = degradeRes(Cline, 0.01_DP, 'NG-SL-LL') / 2.355_DP
+            sig = Wline / 2.355_DP
             IF (.NOT. parinfo(ind%Cline(i))%limited(1)) &
               parinfo(ind%Cline(i))%limits(1) = Cline-sig
             IF (.NOT. parinfo(ind%Cline(i))%limited(2)) &
@@ -1174,8 +1174,8 @@ CONTAINS
         DO i=1,Nband
           CALL IWHERE( TRIMEQ(TABand(:)%label, labB(i)), itab ) ! itab = ind of TABand
           Cband = TABand(itab)%wave
-          WSband = TABand(itab)%sigmaS
-          WLband = TABand(itab)%sigmaL
+          WSband = TABand(itab)%sigmaS + degradeRes(Cband, .01_DP, 'NG-SL-LL')
+          WLband = TABand(itab)%sigmaL + degradeRes(Cband, .01_DP, 'NG-SL-LL')
           
           !! Cband
           IF (parinfo(ind%Cband(i))%fixed) THEN
@@ -1337,7 +1337,7 @@ CONTAINS
         DO i=1,Nline
           CALL IWHERE( TRIMEQ(TABLine(:)%label, labL(i)), itab ) ! itab = ind of TABLine
           Cline = TABLine(itab)%wave
-          Wline = degradeRes(TABLine(itab)%wave, .01_DP, 'NG-SL-LL')
+          Wline = degradeRes(Cline, .01_DP, 'NG-SL-LL')
           
           !! Cline
           IF (parinfo(ind%Cline(i))%fixed) THEN
@@ -1346,7 +1346,7 @@ CONTAINS
             !! FWHM = 2*sqrt(2*log(2))*sigma ~ 2.355 (suppose PSF is gaussian)
             !! R = lambda / FWHM
             !! => sigma = lambda / R / 2.355
-            sig = degradeRes(Cline, 0.01_DP, 'NG-SL-LL') / 2.355_DP
+            sig = Wline / 2.355_DP
             limi = MERGE( parinfo(ind%Cline(i))%limits(1), &
                           Cline-sig, &
                           parinfo(ind%Cline(i))%limited(1)) ! lim inf
@@ -1655,8 +1655,8 @@ CONTAINS
       DO i=1,Nband
         CALL IWHERE( TRIMEQ(TABand(:)%label, labB(i)), itab ) ! itab = ind of TABand
         Cband = TABand(itab)%wave
-        WSband = TABand(itab)%sigmaS
-        WLband = TABand(itab)%sigmaL
+        WSband = TABand(itab)%sigmaS + degradeRes(Cband, .01_DP, 'NG-SL-LL')
+        WLband = TABand(itab)%sigmaL + degradeRes(Cband, .01_DP, 'NG-SL-LL')
         
         !! Cband
         sig = Cband_sig
@@ -1720,7 +1720,7 @@ CONTAINS
         !! R = lambda / FWHM
         !! => sigma = lambda / R / 2.355
         Cline = TABLine(itab)%wave
-        Wline = degradeRes(TABLine(itab)%wave, .01_DP, 'NG-SL-LL')
+        Wline = degradeRes(Cline, .01_DP, 'NG-SL-LL')
         
         !! Cline
         sig = Wline / 2.355_DP
@@ -1866,8 +1866,9 @@ CONTAINS
     CHARACTER(lenpar), DIMENSION(:), ALLOCATABLE :: strarr1d
     
     CHARACTER(lenpath), INTENT(OUT), OPTIONAL :: dirOUT
-    INTEGER, INTENT(OUT), OPTIONAL :: t_burnin, t_end
-    LOGICAL, INTENT(OUT), OPTIONAL :: verbose, ACF
+    INTEGER, DIMENSION(2), INTENT(OUT), OPTIONAL :: t_burnin, t_end
+    LOGICAL, INTENT(OUT), OPTIONAL :: verbose
+    LOGICAL, DIMENSION(2), INTENT(OUT), OPTIONAL :: ACF
 
     !! Read the input master file
     !!----------------------------
@@ -1887,7 +1888,7 @@ CONTAINS
     !! input_analysis
     IF (PRESENT(ACF)) THEN
       CALL READ_HDF5(STRARR1D=strarr1d, FILE=filanal, NAME='ACF')
-      ACF = TRIMEQ(strarr1d(1),'T')
+      ACF = [ TRIMEQ(strarr1d(1),'T'), TRIMEQ(strarr1d(2),'T') ]
     END IF
     IF (PRESENT(verbose)) THEN
       CALL READ_HDF5(STRARR1D=strarr1d, FILE=filanal, NAME='verbose')
@@ -1895,11 +1896,11 @@ CONTAINS
     END IF
     IF (PRESENT(t_burnin)) THEN
       CALL READ_HDF5(INTARR1D=intarr1d, FILE=filanal, NAME='t_burnin')
-      t_burnin = intarr1d(1)
+      t_burnin = intarr1d
     END IF
     IF (PRESENT(t_end)) THEN
       CALL READ_HDF5(INTARR1D=intarr1d, FILE=filanal, NAME='t_end')
-      t_end = intarr1d(1)
+      t_end = intarr1d
     END IF
 
   END SUBROUTINE read_analysis

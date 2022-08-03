@@ -10,21 +10,23 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-## laputan
-from laputan.inout import read_hdf5
-from laputan.plots import pplot
+## rapyuta
+from rapyuta.inout import read_hdf5
+from rapyuta.plots import pplot
 
 ## local
 from auxil import croot
 
-col_tab = ['darkred','r','pink',
-           # 'orange','gold','y',
-           'darkgreen','g','lime',
-           'darkblue','b','cyan']
+clist = ['k',
+         'c',
+         'g',
+         'm',
+         'orange']
 
-labelist = ['c1_SN5','c3_SN5','c9_SN5',
-            'c1_SN20','c3_SN20','c9_SN20',
-            'c1_SN80','c3_SN80','c9_SN80',]
+labelist = ['c04_SN2',
+            'c20_SN2',
+            'c04_SN100',
+            'c20_SN100',]
 
 ## Path
 ##------
@@ -51,14 +53,14 @@ elif spec_unit=='MJyovsr':
     ylab=r'Surface brightness $\,(MJy/sr)$'
 
 ## Create data tables
-lab_tab = np.empty((Nx,Ny), dtype=('<U30'))
-titlist = np.empty((Nx,Ny), dtype=('<U60'))
+lab_tab = np.empty((Ny,Nx), dtype=('<U30'))
+titlist = np.empty((Ny,Nx), dtype=('<U60'))
 Fnu_tab = []
 dFnu_tab = []
 for x in range(Nx):
     for y in range(Ny):
-        lab_tab[x,y] = '('+str(x+1)+','+str(y+1)+') - ['+labelist[y]+']'
-        titlist[x,y] = 'Simulated Spectra '+lab_tab[x,y]+'] (rest frame)'
+        lab_tab[y,x] = labelist[y]+'_'+str(x+1)
+        titlist[y,x] = 'Synthetic Spectra '+lab_tab[y,x]+' (rest frame)'
         Fnu_tab.append(FnuOBS[:,y,x])
         dFnu_tab.append(dFnuOBS[:,y,x])
         
@@ -69,30 +71,45 @@ dFnu_tab = np.array(dFnu_tab).reshape((Nx,Ny,Nw))
 ##------------------------------------
 for y in range(Ny):
     for x in range(Nx):
-        filename1 = path_fig+'simulation_('+str(x+1)+','+str(y+1)+').png'
+        filename1 = path_fig+'simu_'+str(x+1)+'_'+str(y+1)+'.png'
 
-        p = pplot(wvl, Fnu_tab[x,y,:]/dFnu_tab[x,y,:], yerr=0.,
-                  xlog=0, ylog=0, xlim=(4.5, 22.), ylim=(0,1.e3), 
-                  title=titlist[x,y], xlab=xlab, ylab=ylab+'/SN ratio', 
-                  clib=['y', 'k', 'r'], label='S/N',
-                  legend='best', figsize=(10,6))
-        p.add_plot(wvl, Fnu_tab[x,y,:], yerr=dFnu_tab[x,y,:], label='Data')
-        p.add_plot(wvl, dFnu_tab[x,y,:], yerr=0., label='Unc')
-        
-        p.save(filename1)
+        p = pplot(xlog=1, ylog=1, nonposx='clip', nonposy='clip',
+                  xlim=(2.4,21), ylim=(1e-1,1e4),
+                  xlabel=r'${\rm Wavelengths}\ \lambda\ (\mu m)$',
+                  ylabel=r'${\rm Surface\ brightness}\ F_{\nu}\ (MJy/sr)$',
+                  title=titlist[y,x],
+                  figsize=(10,8), right=.95, left=.1, bottom=.15,
+                  # legend='upper left', anchor=(1,1),
+                  titlesize=20, labelsize=20, ticksize=20, legendsize=20)
+        p.add_plot(wvl, Fnu_tab[x,y,:], yerr=dFnu_tab[x,y,:],
+                   ec='grey', elw=1, c='k', label='Data')
+        p.add_plot(wvl, dFnu_tab[x,y,:], c='r', label='Errors')
+
+        # p.ax.text(.9,.05,'(a)',size=20,c='grey',transform=p.ax.transAxes)
+        p.ax.legend(loc='upper left',# bbox_to_anchor=(1,1),
+                    fontsize=20, framealpha=0,)
+        p.save(filename1, transparent=True)
 
 ## Plot stacked spectra
 ##----------------------
 for x in range(Nx):
-    filename2 = path_fig+'simulation_stack_x='+str(x+1)+'.png'
+    filename2 = path_fig+'simu_stack_x='+str(x+1)+'.png'
 
-    p = pplot(xlog=0, ylog=0, xlim=(4.5, 22.), ylim=(0.,1.e3), 
-              title=titlist[x,0], xlab=xlab, ylab=ylab, clib=col_tab,
-              legend='best', figsize=(10,6))
+    p = pplot(xlog=1, ylog=1, nonposx='clip', nonposy='clip',
+              xlim=(2.4,21), ylim=(1e0,2e4),
+              xlabel=r'${\rm Wavelengths}\ \lambda\ (\mu m)$',
+              ylabel=r'${\rm Surface\ brightness}\ F_{\nu}\ (MJy/sr)$',
+              title=None, clib=clist,
+              figsize=(10,8), right=.95, left=.15, bottom=.15, top=.95,
+              # legend='upper left', anchor=(1,1),
+              titlesize=20, labelsize=20, ticksize=20, legendsize=20)
     for y in range(Ny):
-        p.add_plot(wvl, Fnu_tab[x,y,:], label=lab_tab[x,y])
-    
-    p.save(filename2)
+        p.add_plot(wvl, Fnu_tab[x,y,:], label=lab_tab[y,x])
+
+    # p.ax.text(.9,.05,'(a)',size=20,c='grey',transform=p.ax.transAxes)
+    p.ax.legend(loc='upper left',# bbox_to_anchor=(1,1),
+                fontsize=20, framealpha=0,)
+    p.save(filename2, transparent=True)
 
 ## Plot individual band in table
 ##-------------------------------

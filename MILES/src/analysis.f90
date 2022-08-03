@@ -44,8 +44,9 @@ PROGRAM analysis
   CHARACTER(lenpar) :: spec_unit
   CHARACTER(lenpath), DIMENSION(:), ALLOCATABLE :: path1d
   !! Analysis variables
-  INTEGER :: t_burnin, t_end, Nmcmc_eff
+  INTEGER :: Nmcmc_eff
   INTEGER :: Neff_ref1, Neff_ref2, Nsou
+  INTEGER, DIMENSION(2) :: t_burnin, t_end
   INTEGER, DIMENSION(:), ALLOCATABLE :: Neff, Neff2
   REAL(DP) :: t_int_ref1, t_int_ref2
   REAL(DP), DIMENSION(:), ALLOCATABLE :: xs
@@ -61,8 +62,9 @@ PROGRAM analysis
     FnuBAND, FnuSTAR, Pabs, FnuLINE, FnuMOD
   REAL(DP), DIMENSION(:,:,:,:), ALLOCATABLE :: FnuCONT_tab, &
     FnuBAND_tab, FnuSTAR_tab, Pabs_tab, FnuLINE_tab
-  REAL(DP), DIMENSION(:,:,:,:), ALLOCATABLE :: ln1pdmcmc, parmcmc, qpar
-  LOGICAL :: chi2OK, hbOK, ACF, verbose
+  REAL(DP), DIMENSION(:,:,:,:), ALLOCATABLE :: ln1pdmcmc, parmcmc, qpar, qcal
+  LOGICAL :: chi2OK, hbOK, verbose
+  LOGICAL, DIMENSION(2) :: ACF
   LOGICAL, DIMENSION(:,:), ALLOCATABLE :: mask2D
   LOGICAL, DIMENSION(:,:,:,:), ALLOCATABLE :: mask4D
 
@@ -163,7 +165,7 @@ PROGRAM analysis
     IF (j==1) THEN
       fileHB = TRIMLR(dirOUT)//'fit_bb'//h5ext
       filMCMC = TRIMLR(dirOUT)//'parlog_fit_bb'//h5ext
-    ELSE
+    ELSE IF (j==2) THEN
       fileHB = TRIMLR(dirOUT)//'fit_hb'//h5ext
       filMCMC = TRIMLR(dirOUT)//'parlog_fit_hb'//h5ext
     END IF
@@ -171,7 +173,7 @@ PROGRAM analysis
     IF (hbOK) THEN
       IF (j==1) THEN
         PRINT*, 'HISTOIRE: BB fit analysis'
-      ELSE
+      ELSE IF (j==2) THEN
         PRINT*, 'HISTOIRE: HB fit analysis'
       END IF
 
@@ -186,30 +188,29 @@ PROGRAM analysis
       IF (lastind < indresume(1)) lastind = indresume(1)
       IF (lastind < Nmcmc) &
         CALL WARNING("HISTOIRE", "Unfinished fits! Nmcmc shrank to "//TRIMLR(PRING(lastind)))
-      IF (t_end <= 0 .OR. t_end > Nmcmc) t_end = Nmcmc
-      IF (t_end > lastind) t_end = lastind
-      IF (t_burnin <= 0 .OR. t_burnin >= t_end) t_burnin = INT(t_end * 0.1_DP)
+      IF (t_end(j) <= 0 .OR. t_end(j) > Nmcmc) t_end(j) = Nmcmc
+      IF (t_end(j) > lastind) t_end(j) = lastind
+      IF (t_burnin(j) <= 0 .OR. t_burnin(j) >= t_end(j)) &
+        t_burnin(j) = INT(t_end(j) * 0.2_DP) ! By default, burn 20 percents
 
-      Nmcmc_eff = t_end - t_burnin + 1
+      Nmcmc_eff = t_end(j) - t_burnin(j) + 1
       
-      ALLOCATE(meanpar(Nx,Ny,Npar), stdevpar(Nx,Ny,Npar))
-      ALLOCATE(qpar(Nx,Ny,Npar,3), xs(Nmcmc_eff))
-      ALLOCATE(mask4D(Nx,Ny,Npar,Nmcmc_eff))
+      ALLOCATE(meanpar(Nx,Ny,Npar), stdevpar(Nx,Ny,Npar), qpar(Nx,Ny,Npar,3))
       
       CALL READ_HDF5(DBLARR4D=parmcmc, FILE=filMCMC, &
-                     NAME=nampar, IND4=[1,t_end])
-      meanpar(:,:,:) = MEAN(parmcmc(:,:,:,t_burnin:t_end), DIM=4)
-      stdevpar(:,:,:) = SIGMA(parmcmc(:,:,:,t_burnin:t_end), DIM=4)
-
-      mask4D(:,:,:,:) = .NOT. ISNAN(parmcmc(:,:,:,t_burnin:t_end))
-      ! qpar(:,:,:,2) = MEDIAN(parmcmc(:,:,:,t_burnin:t_end), DIM=4, &
-      !                        MASK=mask4D(:,:,:,:))
+                     NAME=nampar, IND4=[1,t_end(j)])
+      meanpar(:,:,:) = MEAN(parmcmc(:,:,:,t_burnin(j):t_end(j)), DIM=4)
+      stdevpar(:,:,:) = SIGMA(parmcmc(:,:,:,t_burnin(j):t_end(j)), DIM=4)
 
       !! Calculate 1st and 5th 6-quantiles (sextiles)
+      ALLOCATE(xs(Nmcmc_eff), mask4D(Nx,Ny,Npar,Nmcmc_eff))
+      mask4D(:,:,:,:) = .NOT. ISNAN(parmcmc(:,:,:,t_burnin(j):t_end(j)))
+      ! qpar(:,:,:,2) = MEDIAN(parmcmc(:,:,:,t_burnin(j):t_end(j)), DIM=4, &
+      !                        MASK=mask4D(:,:,:,:))
       DO x=1,Nx
         DO y=1,Ny
           DO ipar=1,Npar
-            xs(:) = SORT(PACK(parmcmc(x,y,ipar,t_burnin:t_end), &
+            xs(:) = SORT(PACK(parmcmc(x,y,ipar,t_burnin(j):t_end(j)), &
                               MASK=mask4D(x,y,ipar,:)))
             qpar(x,y,ipar,1) = xs(NINT(1._DP/6*Nmcmc_eff)) ! round
             qpar(x,y,ipar,2) = xs(NINT(3._DP/6*Nmcmc_eff))
@@ -217,7 +218,6 @@ PROGRAM analysis
           END DO
         END DO
       END DO
-
       DEALLOCATE(mask4D, xs)
 
       CALL WRITE_HDF5(STRARR1D=parinfo(:)%name, NAME="Parameter label", &
@@ -233,45 +233,64 @@ PROGRAM analysis
       !!--------------------
       IF (calib) THEN
         CALL READ_HDF5(DBLARR4D=ln1pdmcmc, FILE=filMCMC, &
-                       NAME=namln1pd, IND4=[1,t_end])
+                       NAME=namln1pd, IND4=[1,t_end(j)])
 
-        ALLOCATE (meanln1pd(Nx,Ny,Ncalib),stdevln1pd(Nx,Ny,Ncalib))
+        ALLOCATE (meanln1pd(Nx,Ny,Ncalib),stdevln1pd(Nx,Ny,Ncalib),qcal(Nx,Ny,Ncalib,3))
         
-        FORALL(x=1:Nx,y=1:Ny,ical=1:Ncalib)
-          meanln1pd(x,y,ical) = MEAN(ln1pdmcmc(x,y,ical,t_burnin:t_end))
-          stdevln1pd(x,y,ical) = SIGMA(ln1pdmcmc(x,y,ical,t_burnin:t_end))
-        END FORALL
+        meanln1pd(:,:,:) = MEAN(ln1pdmcmc(:,:,:,t_burnin(j):t_end(j)), DIM=4)
+        stdevln1pd(:,:,:) = SIGMA(ln1pdmcmc(:,:,:,t_burnin(j):t_end(j)), DIM=4)
+
+        !! Calculate 1st and 5th 6-quantiles (sextiles)
+        ALLOCATE(xs(Nmcmc_eff), mask4D(Nx,Ny,Npar,Nmcmc_eff))
+        mask4D(:,:,:,:) = .NOT. ISNAN(ln1pdmcmc(:,:,:,t_burnin(j):t_end(j)))
+        ! qcal(:,:,:,2) = MEDIAN(ln1pdmcmc(:,:,:,t_burnin(j):t_end(j)), DIM=4, &
+        !                        MASK=mask4D(:,:,:,:))
+        DO x=1,Nx
+          DO y=1,Ny
+            DO ical=1,Ncalib
+              xs(:) = SORT(PACK(ln1pdmcmc(x,y,ical,t_burnin(j):t_end(j)), &
+                                MASK=mask4D(x,y,ical,:)))
+              qcal(x,y,ical,1) = xs(NINT(1._DP/6*Nmcmc_eff)) ! round
+              qcal(x,y,ical,2) = xs(NINT(3._DP/6*Nmcmc_eff))
+              qcal(x,y,ical,3) = xs(NINT(5._DP/6*Nmcmc_eff))
+            END DO
+          END DO
+        END DO
+        DEALLOCATE(mask4D, xs)
 
         CALL WRITE_HDF5(DBLARR3D=meanln1pd(:,:,:), NAME="Mean of ln(1+delta)", &
                         FILE=fileHB, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
         CALL WRITE_HDF5(DBLARR3D=stdevln1pd(:,:,:),NAME="Sigma of ln(1+delta)", &
                         FILE=fileHB, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
+        CALL WRITE_HDF5(DBLARR4D=qcal(:,:,:,:), NAME="Quantiles of ln(1+delta)", &
+                        FILE=fileHB, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
       ELSE
-        ALLOCATE(meanln1pd(Nx,Ny,NwOBS))
-
+        ALLOCATE(meanln1pd(Nx,Ny,NwOBS),stdevln1pd(Nx,Ny,NwOBS),qcal(Nx,Ny,NwOBS,3))
         meanln1pd(:,:,:) = 0._DP
+        stdevln1pd(:,:,:) = 0._DP
+        qcal(:,:,:,:) = 0._DP
       END IF
       
       !! Compute the average, standard deviations and correlations of each quantity
       !!----------------------------------------------------------------------------
       CALL READ_HDF5(DBLARR2D=mumcmc, FILE=filMCMC, &
-                     NAME=nammu, IND2=[1,t_end])
+                     NAME=nammu, IND2=[1,t_end(j)])
       CALL READ_HDF5(DBLARR2D=sigmcmc, FILE=filMCMC, &
-                     NAME=namsig, IND2=[1,t_end])
+                     NAME=namsig, IND2=[1,t_end(j)])
       CALL READ_HDF5(DBLARR2D=corrmcmc, FILE=filMCMC, &
-                     NAME=namcorr, IND2=[1,t_end])
+                     NAME=namcorr, IND2=[1,t_end(j)])
   
       ALLOCATE (meanmu(Nparhyp),stdevmu(Nparhyp),meansig(Nparhyp),stdevsig(Nparhyp))
       
-      meanmu(:) = MEAN(mumcmc(:,t_burnin:t_end), DIM=2)
-      stdevmu(:) = SIGMA(mumcmc(:,t_burnin:t_end), DIM=2)
-      meansig(:) = MEAN(sigmcmc(:,t_burnin:t_end), DIM=2)
-      stdevsig(:) = SIGMA(sigmcmc(:,t_burnin:t_end), DIM=2)
+      meanmu(:) = MEAN(mumcmc(:,t_burnin(j):t_end(j)), DIM=2)
+      stdevmu(:) = SIGMA(mumcmc(:,t_burnin(j):t_end(j)), DIM=2)
+      meansig(:) = MEAN(sigmcmc(:,t_burnin(j):t_end(j)), DIM=2)
+      stdevsig(:) = SIGMA(sigmcmc(:,t_burnin(j):t_end(j)), DIM=2)
       
       ALLOCATE (meancorr(Ncorrhyp),stdevcorr(Ncorrhyp))
       
-      meancorr(:) = MEAN(corrmcmc(:,t_burnin:t_end), DIM=2)
-      stdevcorr(:) = SIGMA(corrmcmc(:,t_burnin:t_end), DIM=2)
+      meancorr(:) = MEAN(corrmcmc(:,t_burnin(j):t_end(j)), DIM=2)
+      stdevcorr(:) = SIGMA(corrmcmc(:,t_burnin(j):t_end(j)), DIM=2)
 
       CALL WRITE_HDF5(STRARR1D=parhypinfo(:)%name, NAME='Hyperparameter label', &
                       FILE=fileHB, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
@@ -295,7 +314,7 @@ PROGRAM analysis
       
       !! ACFs
       !!------
-      doacf: IF (ACF) THEN
+      doacf: IF (ACF(j)) THEN
 
         DO i=1,MERGE(2,1,verbose)
           WRITE(unitlog(i),*) " - Write the ACFs; also quote the integrated " &
@@ -310,9 +329,9 @@ PROGRAM analysis
         CALL REALLOCATE(Neff,Nparhyp)
         CALL REALLOCATE(Neff2,Nparhyp)
         DO ihyp=1,Nparhyp
-          CALL AUTOCORREL(mumcmc(ihyp,1:t_end),autocorfun)
-          CALL AUTOCORREL(mumcmc(ihyp,t_burnin:t_end),autocorfun2)
-          t_int(ihyp) = INTAUTOCORRTIME(autocorfun(:),t_end,NEFF=Neff(ihyp), &
+          CALL AUTOCORREL(mumcmc(ihyp,1:t_end(j)),autocorfun)
+          CALL AUTOCORREL(mumcmc(ihyp,t_burnin(j):t_end(j)),autocorfun2)
+          t_int(ihyp) = INTAUTOCORRTIME(autocorfun(:),t_end(j),NEFF=Neff(ihyp), &
                                         WARN=.False.,FORCE=forcetint)
           t_int2(ihyp) = INTAUTOCORRTIME(autocorfun2(:),Nmcmc_eff, &
                                          NEFF=Neff2(ihyp),WARN=.False., &
@@ -353,9 +372,9 @@ PROGRAM analysis
         
         !! Standard-deviations
         DO ihyp=1,Nparhyp
-          CALL AUTOCORREL(sigmcmc(ihyp,1:t_end),autocorfun)
-          CALL AUTOCORREL(sigmcmc(ihyp,t_burnin:t_end),autocorfun2)
-          t_int(ihyp) = INTAUTOCORRTIME(autocorfun(:),t_end,NEFF=Neff(ihyp), &
+          CALL AUTOCORREL(sigmcmc(ihyp,1:t_end(j)),autocorfun)
+          CALL AUTOCORREL(sigmcmc(ihyp,t_burnin(j):t_end(j)),autocorfun2)
+          t_int(ihyp) = INTAUTOCORRTIME(autocorfun(:),t_end(j),NEFF=Neff(ihyp), &
                                         WARN=.False.,FORCE=forcetint)
           t_int2(ihyp) = INTAUTOCORRTIME(autocorfun2(:),Nmcmc_eff, &
                                          NEFF=Neff2(ihyp),WARN=.False., &
@@ -403,9 +422,9 @@ PROGRAM analysis
         CALL REALLOCATE(Neff,Ncorrhyp)
         CALL REALLOCATE(Neff2,Ncorrhyp)
         DO icorr=1,Ncorrhyp
-          CALL AUTOCORREL(corrmcmc(icorr,1:t_end),autocorfun)
-          CALL AUTOCORREL(corrmcmc(icorr,t_burnin:t_end),autocorfun2)
-          t_int(icorr) = INTAUTOCORRTIME(autocorfun(:),t_end,NEFF=Neff(icorr), &
+          CALL AUTOCORREL(corrmcmc(icorr,1:t_end(j)),autocorfun)
+          CALL AUTOCORREL(corrmcmc(icorr,t_burnin(j):t_end(j)),autocorfun2)
+          t_int(icorr) = INTAUTOCORRTIME(autocorfun(:),t_end(j),NEFF=Neff(icorr), &
                                          WARN=.False.,FORCE=forcetint)
           t_int2(icorr) = INTAUTOCORRTIME(autocorfun2(:),Nmcmc_eff, &
                                           NEFF=Neff2(icorr),WARN=.False., &
@@ -485,8 +504,7 @@ PROGRAM analysis
 
       !! Spectrum density
       !!------------------
-      ALLOCATE(FnuMOD_mcmc(NwOBS,Nmcmc_eff),n_FnuMOD(NwOBS,3), &
-               mask2D(NwOBS,Nmcmc_eff), xs(Nmcmc_eff))      
+      ALLOCATE(FnuMOD_mcmc(NwOBS,Nmcmc_eff),n_FnuMOD(NwOBS,3))
 
       CALL WRITE_HDF5(INITDBLARR=[Nx,Ny,NwOBS,3], NAME='n_FnuMOD ('//TRIMLR(spec_unit)//')', &
                       FILE=fileHB, COMPRESS=compress, VERBOSE=debug, APPEND=.TRUE.)
@@ -505,20 +523,21 @@ PROGRAM analysis
             !! Calculate MCMC models
             DO it=1,Nmcmc_eff
               FnuMOD_mcmc(:,it) = specModel( wOBS(:), INDPAR=ind, &
-                                             PARVAL=parmcmc(x,y,:,t_burnin+it-1), &
+                                             PARVAL=parmcmc(x,y,:,t_burnin(j)+it-1), &
                                              ! MASK=mask(:,:,:), &
                                              QABS=Qabs(:), EXTINCT=extinct(:,:) )
             END DO
             
-            mask2D(:,:) = .NOT. ISNAN(FnuMOD_mcmc(:,:))
-            
             !! Calculate 1st, 3rd (median) and 5th 6-quantiles (sextiles)
+            ALLOCATE(mask2D(NwOBS,Nmcmc_eff), xs(Nmcmc_eff))      
+            mask2D(:,:) = .NOT. ISNAN(FnuMOD_mcmc(:,:))
             DO iw=1,NwOBS
               xs(:) = SORT(PACK(FnuMOD_mcmc(iw,:),MASK=mask2D(iw,:)))
               n_FnuMOD(iw,1) = xs(NINT(1._DP/6*Nmcmc_eff)) ! round
               n_FnuMOD(iw,2) = xs(NINT(3._DP/6*Nmcmc_eff))
               n_FnuMOD(iw,3) = xs(NINT(5._DP/6*Nmcmc_eff))
             END DO
+            DEALLOCATE(xs, mask2D)
           END IF
           
           CALL WRITE_HDF5(DBLARR4D=RESHAPE(n_FnuMOD(:,:),[1,1,NwOBS,3]), &
@@ -529,7 +548,7 @@ PROGRAM analysis
       END DO
 
       !! Free memory space
-      DEALLOCATE(meanpar, stdevpar, qpar, xs, FnuMOD, FnuMOD_mcmc, n_FnuMOD, mask2D)
+      DEALLOCATE(meanpar, stdevpar, qpar, qcal, FnuMOD, FnuMOD_mcmc, n_FnuMOD)
 
     END IF
   END DO
