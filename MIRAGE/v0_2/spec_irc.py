@@ -37,7 +37,7 @@ Nobs = len(parobs)
 ##---------------------------
 ##        Build slits
 ##---------------------------
-'''
+
 for i in range(Nobs):
     sext = sextract(path_irc, parobs[i])
     Nsub = 1
@@ -54,7 +54,7 @@ for i in range(Nobs):
             sext.spec_build(fits_irc[i], Ny=24, Nsub=Nsub)
         else:
             sext.spec_build(fits_irc[i]+'_'+str(j), Ny=24, Nsub=Nsub)
-'''
+
 ##---------------------------
 ##        Combine slits
 ##---------------------------
@@ -65,7 +65,7 @@ swp = iswarp(fits_irc, \
              pixscale=6, tmpdir=path_build, \
              verbose=verbose)
 
-'''
+
 ## Reprendre MC adding spec unc
 ##------------------------------
 for j in trange(Nmc+1, #leave=False, 
@@ -100,7 +100,7 @@ if Nmc>1:
     mcimage = np.array(mcimage)
     unc = np.nanstd(mcimage, axis=0)
     write_fits(path_out+src+'_IRC_unc', header, unc, wvl)
-'''
+
 ##---------------------------
 ##     Inter-Calibration
 ##---------------------------

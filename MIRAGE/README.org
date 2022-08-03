@@ -2,16 +2,26 @@
 #+AUTHOR: Dangning HU
 
 * Notices
-The Python package [[https://github.com/kxxdhdn/playtime][playtime]] is required by MIRAGE. You can install it with a single command: ~pip install playtime~
+The Python package [[https://github.com/kxxdhdn/laputan][laputan] is required by MIRAGE. You can install it with a single command: ~pip install laputan~
 * Version log
-** v1.0 (20210512)
+** v0.3 (20210630)
 - Rename ~cubiana~ as ~MIRAGE~
-- Replace ~astylo~ package by ~playtime~
+- Replace ~astylo~ package by ~laputan~
 - New layout
+  + ~buildinfo.py~
+  + ~build_irc.py~
+  + ~calib_irc.py~
+  + ~build_irs.py~
+  + ~calib_irs.py~
+  + ~build_mir.py~
 - New BSD 3-Clause License
 ** v0.2 (20200619)
 - Add ~Y12spec.py~ for reproducing Yamagishi12 results
 ** v0.1.1 (20200422)
 - Extract ~irs_snippet_v0.zip~ for Andre
 ** v0.1 (20191017)
-- New layout with ~param.py~ ~irs_spec.py~, ~irc_spec.py~, ~all_spec.py~
+- New layout
+  + ~param.py~
+  + ~irs_spec.py~
+  + ~irc_spec.py~
+  + ~all_spec.py~

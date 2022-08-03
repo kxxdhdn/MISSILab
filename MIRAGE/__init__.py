@@ -7,7 +7,7 @@ print("           -=-=-=-=-=-=-=-=-=-")
 print("          |       MIRAGE      |")
 print("           -=-=-=-=-=-=-=-=-=-")
 # print("\n          Developed by D. HU")
-print("\n          Version 1.0 (20210512)")
+print("\n          Version 0.3 (20210630)")
 print("\n---------------------------------------------")
 
 
