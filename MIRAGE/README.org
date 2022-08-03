@@ -4,6 +4,9 @@
 * Helpdesk
 The Python package [[https://github.com/kxxdhdn/LAPUTAN][laputan]] is required by MIRAGE. You can install it in commandline: ~pip install laputan --upgrade~
 * Version log
+** v0.4.2 (20210919)
+- Updated Python dependency ~laputan~ to ~rapyuta~
+- Changes in M82 ~build_mir.py~ (added final cut)
 ** v0.4.1 (20210823)
 - ~build_irs.py~ supports SH and LH channels
 - Included ~laputan~ v1.2.4 new features

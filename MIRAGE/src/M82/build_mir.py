@@ -21,15 +21,15 @@ import numpy as np
 from scipy.optimize import curve_fit
 from matplotlib.ticker import ScalarFormatter, NullFormatter
 
-## laputan
-from laputan.inout import fclean, fitsext, read_fits, write_fits
-from laputan.imaging import ( iconvolve, iswarp, iuncert, concatenate, icrop,
+## rapyuta
+from rapyuta.inout import fclean, fitsext, read_fits, write_fits
+from rapyuta.imaging import ( iconvolve, iswarp, iuncert, concatenate, icrop,
                               imontage, improve, Jy_per_pix_to_MJy_per_sr )
-from laputan.astrom import fixwcs
-from laputan.arrays import closest
-from laputan.calib import intercalib
-from laputan.maths import f_lin, f_lin0, f_lin1
-from laputan.plots import pplot
+from rapyuta.astrom import fixwcs
+from rapyuta.arrays import closest
+from rapyuta.calib import intercalib
+from rapyuta.maths import f_lin, f_lin0, f_lin1
+from rapyuta.plots import pplot
 
 ##----------------------------------------------------------
 
@@ -313,8 +313,9 @@ for i in range(Nphot):
                    fmt='.', c='k', ec='r',elw=1,
                    xlog=1, ylog=1, nonposx='clip', nonposy='clip',
                    xlim=(1e-3,1e4), ylim=(1e-3,1e4),
-                   xlab='DustPedia (MJy/sr)', ylab='SINGS (MJy/sr)',
-                   figsize=(8,8), title=src+'_'+phot[i])
+                   xlabel='DustPedia (MJy/sr)', ylabel='SINGS (MJy/sr)',
+                   figsize=(8,8), title=src+'_'+phot[i],
+                   titlesize=20, labelsize=10, ticksize=10, legendsize=10)
         p0.save(path_cal+'SINGS-DP_'+phot[i])
             
         ## MIR spec - SINGS
@@ -323,8 +324,9 @@ for i in range(Nphot):
                   fmt='.', c='k', ec='r', legend='upper left',
                   xlog=1, ylog=1, nonposx='clip', nonposy='clip',
                   xlim=(1e-6,1e4), ylim=(1e-6,1e4),
-                  xlab='SINGS (MJy/sr)', ylab='MIR spec (MJy/sr)',
-                  figsize=(8,8), title=src+'_'+phot[i])
+                  xlabel='SINGS (MJy/sr)', ylabel='MIR spec (MJy/sr)',
+                  figsize=(8,8), title=src+'_'+phot[i],
+                  titlesize=20, labelsize=10, ticksize=10, legendsize=10)
 
         ## Linear fit
         if i==0:
@@ -378,8 +380,6 @@ for i in range(Nphot):
             # p.add_plot(xgrid, f_lin0(xgrid, *popt),
             #            c='y', ls='-', label=label)
         
-        p.set_font()
-        
         p.save(path_cal+'intercalib_'+phot[i])
 
 ##----------------------------------------------------------
@@ -401,57 +401,58 @@ if do_plot=='y':
             if ~np.isnan(ds.data[:,y,x]).any():
             # if ~np.isnan(ds1.data[:,y,x]).any():
             #     if ~np.isnan(ds2.data[:,y,x]).any():
-                    p = pplot(ds.wave, ds.data[:,y,x], yerr=ds.unc[:,y,x],
-                              c='k', lw=.7, ec='r', xlog=1, ylog=1,
-                              legend='upper left', figsize=(12,10),
-                              title=src+'_('+str(x)+','+str(y)+')')
-                    p.add_plot(ds1.wave, ds1.data[:,y,x],
-                               c='y', lw=.7, ls='-', zorder=-1, label='IRC raw')
-                    p.add_plot(ds2.wave, ds2.data[:,y,x],
-                               c='y', lw=.7, ls='-', zorder=-1, label='IRS raw')
-                    
-                    p.add_plot(wcen[0], d1_phot2[y,x], yerr=u1_phot2[y,x],
-                               c='m', marker='o', ms=10, zorder=100, label=phot[0])
-                    p.add_plot(wcen[0], d1_spec[y,x], yerr=u1_spec[y,x],
-                               c='g', marker='^', ms=10, zorder=101, label='MIR spec-'+phot[0])
-                    p.add_plot(wcen[1], d2_phot2[y,x], yerr=u2_phot2[y,x],
-                               c='orange', marker='o', ms=10, zorder=100, label=phot[1])
-                    p.add_plot(wcen[1], d2_spec[y,x], yerr=u2_spec[y,x],
-                               c='c', marker='^', ms=10, zorder=101, label='MIR spec-'+phot[1])
-                    
-                    
-                    ph = ['IRAC1','IRAC4','MIPS1']
-                    pp.read_filter(ph)
-                    wc = pp.wcen
-                    c1 = ['pink','tomato','maroon']
-                    c2 = ['lightgreen','lime','olive']
-                    for i,ip in enumerate(ph):
-                        data_phot = read_fits(path_cal+src+'_'+ip+'_SINGS').data
-                        unc_phot = read_fits(path_cal+src+'_'+ip+'_SINGS_unc').data
-                        if i==0:
-                            data_spec = read_fits(path_cal+src+'_'+ip+'_IRC').data
-                            unc_spec = read_fits(path_cal+src+'_'+ip+'_IRC_unc').data
-                        else:
-                            data_spec = read_fits(path_cal+src+'_'+ip+'_IRS').data
-                            unc_spec = read_fits(path_cal+src+'_'+ip+'_IRS_unc').data
-                        p.add_plot(wc[i], data_phot[y,x], yerr=unc_phot[y,x],
-                                   c=c1[i], marker='o', ms=10, zorder=100, label=ph[i])
-                        if i==0:
-                            p.add_plot(wc[i], data_spec[y,x], yerr=unc_spec[y,x],
-                                       c=c2[i], marker='^', ms=10, zorder=101, label='IRC-'+ph[i])
-                        else:
-                            p.add_plot(wc[i], data_spec[y,x], yerr=unc_spec[y,x],
-                                       c=c2[i], marker='^', ms=10, zorder=101, label='IRS-'+ph[i])
-                    
-                    xtic = [2, 3, 4, 5, 6, 7, 8, 10, 12, 15, 20, 30, 40]
-                    # xtic = []
-                    xtic_min = np.arange(2., 41., 1.)
-                    p.ax.set_xticks(xtic, minor=False) # major
-                    p.ax.set_xticks(xtic_min, minor=True) # minor
-                    p.ax.xaxis.set_major_formatter(ScalarFormatter()) # major
-                    p.ax.xaxis.set_minor_formatter(NullFormatter()) # minor
-                    
-                    p.save(path_fig+src+'_('+str(x+1)+','+str(y+1)+')', transparent=1)
+                p = pplot(ds.wave, ds.data[:,y,x], yerr=ds.unc[:,y,x],
+                          c='k', lw=.7, ec='r', xlog=1, ylog=1,
+                          legend='upper left', figsize=(12,10),
+                          title=src+'_('+str(x)+','+str(y)+')',
+                          titlesize=20, labelsize=10, ticksize=10, legendsize=10)
+                p.add_plot(ds1.wave, ds1.data[:,y,x],
+                           c='y', lw=.7, ls='-', zorder=-1, label='IRC raw')
+                p.add_plot(ds2.wave, ds2.data[:,y,x],
+                           c='y', lw=.7, ls='-', zorder=-1, label='IRS raw')
+                
+                p.add_plot(wcen[0], d1_phot2[y,x], yerr=u1_phot2[y,x],
+                           c='m', marker='o', ms=10, zorder=100, label=phot[0])
+                p.add_plot(wcen[0], d1_spec[y,x], yerr=u1_spec[y,x],
+                           c='g', marker='^', ms=10, zorder=101, label='MIR spec-'+phot[0])
+                p.add_plot(wcen[1], d2_phot2[y,x], yerr=u2_phot2[y,x],
+                           c='orange', marker='o', ms=10, zorder=100, label=phot[1])
+                p.add_plot(wcen[1], d2_spec[y,x], yerr=u2_spec[y,x],
+                           c='c', marker='^', ms=10, zorder=101, label='MIR spec-'+phot[1])
+                
+                
+                ph = ['IRAC1','IRAC4','MIPS1']
+                pp.read_filter(ph)
+                wc = pp.wcen
+                c1 = ['pink','tomato','maroon']
+                c2 = ['lightgreen','lime','olive']
+                for i,ip in enumerate(ph):
+                    data_phot = read_fits(path_cal+src+'_'+ip+'_SINGS').data
+                    unc_phot = read_fits(path_cal+src+'_'+ip+'_SINGS_unc').data
+                    if i==0:
+                        data_spec = read_fits(path_cal+src+'_'+ip+'_IRC').data
+                        unc_spec = read_fits(path_cal+src+'_'+ip+'_IRC_unc').data
+                    else:
+                        data_spec = read_fits(path_cal+src+'_'+ip+'_IRS').data
+                        unc_spec = read_fits(path_cal+src+'_'+ip+'_IRS_unc').data
+                    p.add_plot(wc[i], data_phot[y,x], yerr=unc_phot[y,x],
+                               c=c1[i], marker='o', ms=10, zorder=100, label=ph[i])
+                    if i==0:
+                        p.add_plot(wc[i], data_spec[y,x], yerr=unc_spec[y,x],
+                                   c=c2[i], marker='^', ms=10, zorder=101, label='IRC-'+ph[i])
+                    else:
+                        p.add_plot(wc[i], data_spec[y,x], yerr=unc_spec[y,x],
+                                   c=c2[i], marker='^', ms=10, zorder=101, label='IRS-'+ph[i])
+                
+                xtic = [2, 3, 4, 5, 6, 7, 8, 10, 12, 15, 20, 30, 40]
+                # xtic = []
+                xtic_min = np.arange(2., 41., 1.)
+                p.ax.set_xticks(xtic, minor=False) # major
+                p.ax.set_xticks(xtic_min, minor=True) # minor
+                p.ax.xaxis.set_major_formatter(ScalarFormatter()) # major
+                p.ax.xaxis.set_minor_formatter(NullFormatter()) # minor
+                
+                p.save(path_fig+src+'_('+str(x+1)+','+str(y+1)+')', transparent=1)
 
 ##----------------------------------------------------------
 
@@ -498,6 +499,14 @@ if final_cut=='y':
     for x in delcol:
         imp.im[:,:,x] = np.nan
         imp_unc.im[:,:,x] = np.nan
+    imp.im[:3,:,:] = np.nan # AKARI wvl edge
+    imp_unc.im[:3,:,:] = np.nan
+    imp.im[225:265,:,:] = np.nan # AKARI-SL2 wvl edge
+    imp_unc.im[225:265,:,:] = np.nan
+    imp.im[:,:6,2] = np.nan
+    imp_unc.im[:,:6,2] = np.nan
+    imp.im[:,55:,2] = np.nan
+    imp_unc.im[:,55:,2] = np.nan
 
     ## Print spectral map info
     Nw, Ny, Nx = imp.im.shape
@@ -511,3 +520,119 @@ if final_cut=='y':
     
     write_fits(path_out+'final/'+src, imp.hdr, imp.im, imp.wvl, imp.wmod)
     write_fits(path_out+'final/'+src+'_unc', imp.hdr, imp_unc.im, imp.wvl, imp.wmod)
+
+    ds = read_fits(path_out+'final/'+src, path_out+'final/'+src+'_unc')
+
+    Nw, Ny, Nx = ds.data.shape
+    for x in range(Nx):
+        for y in range(Ny):
+            if ~np.isnan(ds.data[:,y,x]).all():
+                p = pplot(ds.wave, ds.data[:,y,x], yerr=ds.unc[:,y,x],
+                          c='k', lw=.7, ec='r', xlog=0, ylog=0,
+                          xlim=(3.,22.), ylim=(-.1,np.nanmax(ds.data[:503,y,x])),
+                          legend='upper left', figsize=(12,10),
+                          title=src+'_('+str(x)+','+str(y)+')',
+                          titlesize=20, labelsize=20, ticksize=20, legendsize=20)
+                # p.add_plot(ds.wave, ds.data[:,y,x]/ds.unc[:,y,x], c='c')
+                
+                # xtic = [2, 3, 4, 5, 6, 7, 8, 10, 12, 15, 20, 30, 40]
+                # xtic_min = np.arange(2., 41., 1.)
+                xtic = np.arange(3., 21., 1)
+                xtic_min = np.arange(3., 21., .1)
+                p.ax.set_xticks(xtic, minor=False) # major
+                p.ax.set_xticks(xtic_min, minor=True) # minor
+                p.ax.xaxis.set_major_formatter(ScalarFormatter()) # major
+                p.ax.xaxis.set_minor_formatter(NullFormatter()) # minor
+
+                ## Line check
+                cline = [
+                         # 4.052,     # Bra
+                         # 5.128657,  # HI6-10
+                         # 5.51116,   # H2S7
+                         # 5.6098,    # MgV1
+                         # 5.908213,  # Huc
+                         # 5.981,     # KIV
+                         # 6.10856,   # H2S6
+                         # 6.709,     # ClV
+                         # 6.90952,   # H2S5
+                         # 6.947984,  # HeII1
+                         # 6.985274,  # ArII
+                         # 7.3178,    # NaIII
+                         # 7.459858,  # Pfa
+                         # 7.502493,  # Hub
+                         # 7.6524,    # NeVI
+                         # 7.8145,    # FeVII
+                         # 7.90158,   # ArV
+                         # 8.02505,   # H2S4
+                         # 8.760064,  # HI7-10
+                         # 8.99103,   # ArIII1
+                         # 9.042,     # NiVI
+                         # 9.5267,    # FeVII
+                         # 9.66491,   # H2S3
+                         # 9.713475,  # HeII2
+                         # 10.3385,   # SiI
+                         # 10.5105,   # SIV
+                         # 12.27861,  # H2S2
+                         # 12.368527, # Hua
+                         # 12.81355,  # NeII
+                         # 13.10219,  # ArV
+                         # 13.521,    # MgV2
+                         # 14.32168,  # NeV1
+                         # 15.555,    # NeIII1
+                         # 17.0398,   # H2S1
+                         # 17.608246, # HI11-18
+                         # 18.7129,   # SIII1
+                         # 19.061898, # HI7-8
+                         # 21.8291,   # ArIII2
+                         # 24.3175,   # NeV2
+                         # 25.8903,   # OIV
+                         # 25.9882,   # FeII1
+                         # 28.21883,  # H2S0
+                         # 33.4810,   # SIII2
+                         # 34.8152,   # SiII
+                         # 35.3491,   # FeII2
+                         # 36.0135    # NeIII2
+                         ]
+                for clin in cline:
+                    p.ax.axvline(clin, color='g')
+                ## Band check
+                cband = [
+                         # 3.291,     # Main 3.3
+                         # 3.399,     # Main 3.4
+                         # 3.499,     # Small 3.5
+                         # 5.2394667, # Small 5.2
+                         5.6437461, # Small 5.7 (1)
+                         5.7490305, # Small 5.7 (2)
+                         6.0106598, # Small 6.0
+                         6.2034273, # Main 6.2 (1)
+                         6.2672596, # Main 6.2 (2)
+                         6.6273788, # Small 6.6
+                         6.8548833, # Small 6.8
+                         7.0791725, # Small 7.1
+                         7.6000000, # Plateau 7.7
+                         7.6171123, # Main 7.7 (1)
+                         7.8704769, # Main 7.7 (2)
+                         8.3623706, # Small 8.3
+                         8.6204540, # Main 8.6
+                         # 9.5244838, # Small 9.5
+                         10.707132, # Small 10.7
+                         11.038349, # Small 11.0
+                         11.237893, # Main 11.2
+                         11.400432, # Plateau 11.3
+                         # 11.796389, # Small 11.8
+                         11.949674, # Small 11.9
+                         12.626842, # Main 12.7 (1)
+                         12.760273, # Main 12.7 (2)
+                         13.559342, # Small 13.6
+                         14.257133, # Small 14.2
+                         # 15.893117, # Small 15.6
+                         16.482868, # Small 16.4
+                         17.082868, # Plateau 17.0
+                         # 17.428485, # Small 17.4
+                         17.771096, # Small 17.8
+                         # 18.925630, # Small 18.9
+                         ]
+                for cban in cband:
+                    p.ax.axvline(cban, color='b')
+                
+                p.save(path_out+'final/'+src+'_('+str(x+1)+','+str(y+1)+')', transparent=1)

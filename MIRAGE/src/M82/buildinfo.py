@@ -9,10 +9,10 @@ SOURCE: M82 (NGC 3034)
 
 import os
 
-## laputan
-from laputan.astrom import fixwcs
-from laputan.inout import fitsext
-from laputan.imaging import iswarp
+## rapyuta
+from rapyuta.astrom import fixwcs
+from rapyuta.inout import fitsext
+from rapyuta.imaging import iswarp
 
 ##----------------------------------------------------------
 
@@ -161,11 +161,11 @@ for ch in chnl:
 ##----------------------------------------------------------
 ## Reprojection
 ##--------------
-# coadd_tool = 'swarp'
-coadd_tool = 'reproject'
+coadd_tool = 'swarp'
+# coadd_tool = 'reproject'
 
 ## IRC grid
-coadd_fp = fixwcs(out_irc+fitsext).header
+# coadd_fp = fixwcs(out_irc+fitsext).header
 ## IRS grid
 # refheader = fixwcs(fits_irs[0][0]+fitsext).header
 # swp = iswarp(sum(fits_irs, []), refheader=refheader,

@@ -19,14 +19,14 @@ from tqdm import tqdm, trange
 import os
 import numpy as np
 from scipy.optimize import curve_fit
-## laputan
-from laputan.inout import fclean, fitsext, read_fits, write_fits
-from laputan.imaging import ( iconvolve, iswarp, sextract, irebin, iuncert,
+## rapyuta
+from rapyuta.inout import fclean, fitsext, read_fits, write_fits
+from rapyuta.imaging import ( iconvolve, iswarp, sextract, irebin, iuncert,
                               imontage, improve, Jy_per_pix_to_MJy_per_sr )
-from laputan.astrom import fixwcs
-from laputan.calib import intercalib
-from laputan.maths import f_lin, f_lin0, f_lin1
-from laputan.plots import pplot
+from rapyuta.astrom import fixwcs
+from rapyuta.calib import intercalib
+from rapyuta.maths import f_lin, f_lin0, f_lin1
+from rapyuta.plots import pplot
 
 
 ##----------------------------------------------------------
@@ -540,23 +540,25 @@ if int_calib_all=='y':
     mask = ~np.logical_or( np.isnan(pix_spec), np.isnan(pix_phot2) )
 
     ## SINGS - DP
-    p0 = pplot(pix_phot1,  pix_phot2,
+    p0 = pplot(pix_phot1, pix_phot2,
                yerr=pix_phot2_unc, xerr=pix_phot1_unc,
                fmt='.', c='k', ec='r', elw=1,
                xlog=1, ylog=1, nonposx='clip', nonposy='clip',
                xlim=(1e-3,1e3), ylim=(1e-3,1e3),
-               xlab='DustPedia (MJy/sr)', ylab='SINGS (MJy/sr)',
-               figsize=(8,8), title=src+'_'+phot)
+               xlabel='DustPedia (MJy/sr)', ylabel='SINGS (MJy/sr)',
+               figsize=(8,8), legend='upper left', title=src+'_'+phot,
+               titlesize=20, labelsize=10, ticksize=10, legendsize=10)
     p0.save(path_cal+'SINGS-DP_'+phot+'.png')
             
     ## IRC - SINGS
     p = pplot(pix_phot2, pix_spec,
               yerr=pix_spec_unc, xerr=pix_phot2_unc,
-              fmt='.', c='k', ec='r', legend='upper left',
+              fmt='.', c='k', ec='r', 
               xlog=1, ylog=1, nonposx='clip', nonposy='clip',
               xlim=(1e-6,1e3), ylim=(1e-6,1e3),
-              xlab='SINGS (MJy/sr)', ylab='IRC (MJy/sr)', 
-              figsize=(8,8), title=src+'_'+phot)
+              xlabel='SINGS (MJy/sr)', ylabel='IRC (MJy/sr)', 
+              figsize=(8,8), legend='upper left', title=src+'_'+phot,
+              titlesize=20, labelsize=10, ticksize=10, legendsize=10)
 
     ## Linear fit
     popt, pcov = curve_fit(f_lin0, pix_spec[mask], pix_phot2[mask],
@@ -582,8 +584,6 @@ if int_calib_all=='y':
     # label = phot+': y={0:.4}x+{1:.4}'.format(calib_gain, calib_off)
     # p.add_plot(xgrid, f_lin0(xgrid, *popt),
     #            c='y', ls='-', label=label)
-    
-    p.set_font()
     
     p.save(path_cal+'intercalib_'+phot+'.png')
             
@@ -636,8 +636,12 @@ if do_plot=='y':
         for y in range(Ny):
             if ~np.isnan(ds.data[:,y,x]).any():
                 p = pplot(ds.wave, ds.data[:,y,x], yerr=ds.unc[:,y,x],
-                          # xlog=1, ylog=1,
-                          c='k', lw=.7, ec='r', legend='upper left')
+                          # xlog=1, ylog=1, 
+                          c='k', lw=.7, ec='r', 
+                          figsize=(8,8), legend='upper left',
+                          title='IRC_('+str(x+1)+','+str(y+1)+')',
+                          titlesize=20, labelsize=10, ticksize=10, legendsize=10)
+
                 p.add_plot(ds0.wave, ds0.data[:,y,x],
                            c='y', lw=.7, ls='--', zorder=-1)
                 

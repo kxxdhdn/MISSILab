@@ -23,15 +23,15 @@ from scipy.optimize import curve_fit
 from scipy.integrate import trapz
 from matplotlib.ticker import ScalarFormatter, NullFormatter
 
-## laputan
-from laputan.inout import fclean, fitsext, read_fits, write_fits
-from laputan.imaging import ( iconvolve, iswarp, iuncert, concatenate,
+## rapyuta
+from rapyuta.inout import fclean, fitsext, read_fits, write_fits
+from rapyuta.imaging import ( iconvolve, iswarp, iuncert, concatenate,
                               imontage, improve, Jy_per_pix_to_MJy_per_sr )
-from laputan.astrom import fixwcs
-from laputan.arrays import closest
-from laputan.calib import intercalib
-from laputan.maths import f_lin, f_lin0, f_lin1
-from laputan.plots import pplot
+from rapyuta.astrom import fixwcs
+from rapyuta.arrays import closest
+from rapyuta.calib import intercalib
+from rapyuta.maths import f_lin, f_lin0, f_lin1
+from rapyuta.plots import pplot
 
 
 ##----------------------------------------------------------
@@ -468,7 +468,8 @@ for i in range(Nphot):
                    xlog=1, ylog=1, nonposx='clip', nonposy='clip',
                    xlim=(1e-1,1e4), ylim=(1e-1,1e4),
                    xlab='DustPedia (MJy/sr)', ylab='IRS (MJy/sr)',
-                   figsize=(8,8), title=src+'_'+phot[i])
+                   figsize=(8,8), title=src+'_'+phot[i],
+                   titlesize=20, labelsize=10, ticksize=10, legendsize=10)
         
         ## Linear fit
         if i==0:
@@ -595,7 +596,9 @@ if do_plot=='y':
             if ~np.isnan(ds.data[:,y,x]).any():
                 # if ~np.isnan(ds_irc.data[0,y,x]).any():
                 p = pplot(ds.wave, ds.data[:,y,x], yerr=ds.unc[:,y,x],
-                          c='k', lw=.7, ec='r', xlog=1, ylog=1, legend='upper left')                
+                          c='k', lw=.7, ec='r', xlog=1, ylog=1, 
+                          legend='upper left', title='IRS_('+str(x+1)+','+str(y+1)+')',
+                          titlesize=20, labelsize=10, ticksize=10, legendsize=10)              
                 p.add_plot(ds0.wave, ds0.data[:,y,x],
                            c='y', ls='--', zorder=-1)
                 

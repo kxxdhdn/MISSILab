@@ -9,10 +9,10 @@ SOURCE: NGC 1140
 
 import os
 
-## laputan
-from laputan.astrom import fixwcs
-from laputan.inout import fitsext
-from laputan.imaging import iswarp
+## rapyuta
+from rapyuta.astrom import fixwcs
+from rapyuta.inout import fitsext
+from rapyuta.imaging import iswarp
 
 
 ##----------------------------------------------------------
