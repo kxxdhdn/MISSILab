@@ -18,7 +18,7 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 from tqdm import tqdm, trange
 
-import os
+import os, pathlib
 import math
 import numpy as np
 from scipy.optimize import curve_fit
@@ -97,9 +97,11 @@ resume = False
 
 ##----------------------------------------------------------
 proc_SL = input("Process SL (y/n)? ")
-match_SL = input("Match SL2-SL1 (y/n)? ")
 proc_LL = input("Process LL (y/n)? ")
-match_LL = input("Match LL2-LL1 (y/n)? ")
+do_stitch = input("Stitch SL/LL (y/n) ")
+if do_stitch=='y':
+    match_SL = input("Match SL2-SL1 (y/n)? ")
+    match_LL = input("Match LL2-LL1 (y/n)? ")
 # proc_SH = input("Process SH (y/n)? ")
 # proc_LH = input("Process LH (y/n)? ")
 # match_hires = input(" - Match SH-LH (y/n)? ")
@@ -154,133 +156,143 @@ if proc_LL=='y':
 
 ## Coadd SL/LL modules (using the bonus channel)
 ##-----------------------------------------------
-for iph in range(Nphot):
-    if phot[iph]=='IRAC4':
-        sub_XX = sub_SL
-        path_tmp_XX = path_tmp+'SL/'
-        mod = 'SL'
-    elif phot[iph]=='MIPS1':
-        sub_XX = sub_LL
-        path_tmp_XX = path_tmp+'LL/'
-        mod = 'LL'
-    os.makedirs(path_tmp_XX, exist_ok=True)
-
-    if resume:
-        iresume = int(input("Resume "+mod+" sub-map processing from the iteration: "))
-    else:
-        iresume = 0
-    for j in trange(Nmc+1-iresume,# leave=False,
-                    desc='IRS '+mod+' sub-map processing [MC]'):
-        j += iresume
-        
-        for i in trange(len(sub_XX), leave=False,
-                        desc=' - Sub-maps'):
-            if np.logical_or(proc_SL=='y' and phot[iph]=='IRAC4',
-                             proc_LL=='y' and phot[iph]=='MIPS1'):
-                if phot[iph]=='IRAC4':
-                    refheader = hdr_SL[i]
-                    chnl_XX = chnl_SL
-                elif phot[iph]=='MIPS1':
-                    refheader = hdr_LL[i]
-                    chnl_XX = chnl_LL
-                    
-                for ich in trange(len(chnl_XX), leave=False,
-                                  desc='   - '+src+'_'+sub_XX[i]+'_'+mod):
-                    f0nam = src+'_'+sub_XX[i]+'_'+chnl_XX[ich]
-                    f0nam_in = path_irs+f0nam
-                    f0nam_out =  path_tmp_XX+f0nam+'_'+str(j)
+if do_stitch=='y':
+    for iph in range(Nphot):
+        if phot[iph]=='IRAC4':
+            sub_XX = sub_SL
+            path_tmp_XX = path_tmp+'SL/'
+            mod = 'SL'
+        elif phot[iph]=='MIPS1':
+            sub_XX = sub_LL
+            path_tmp_XX = path_tmp+'LL/'
+            mod = 'LL'
+        os.makedirs(path_tmp_XX, exist_ok=True)
     
-                    ## Reprojection 
-                    ##--------------
-                    if coadd_tool=='swarp':
-                        swp = iswarp(refheader=refheader, tmpdir=path_tmp_XX)
-                        if j==0:
-                            swp.combine(f0nam_in, keepedge=True,# cropedge=True,
-                                        filOUT=f0nam_out)
-                        else:
-                            swp.combine(f0nam_in, keepedge=True,# cropedge=True,
-                                        dist='norm', sig_pt=.2,
-                                        filOUT=f0nam_out)
-                    elif coadd_tool=='reproject':
-                        mtg = imontage('exact', tmpdir=path_tmp_XX)
-                        if j==0:
-                            mtg.coadd(f0nam_in, refheader=refheader,
-                                      filOUT=f0nam_out)
-                        else:
-                            mtg.coadd(f0nam_in, refheader=refheader,
-                                      dist='norm', sig_pt=.2,
-                                      filOUT=f0nam_out)
-    
-                    ## PSF Convolution with both sources of errors (MC)
-                    ##--------------------------------------------------
-                    conv = iconvolve(f0nam_out, kfile=fits_ker, psf=fwhm,
-                                     klist=csv_ker, convdir=path_conv,
-                                     filOUT=f0nam_out)
-                    conv.do_conv(idldir=path_idl)
-    
-            ##-----------------------------
-            ## SL2-SL1 / LL2-LL1 stitching
-            ##-----------------------------
-            if phot[iph]=='IRAC4':
-                f1nam = path_tmp+'SL/'+src+'_'+sub_SL[i]+'_SL'
-            elif phot[iph]=='MIPS1':
-                f1nam = path_tmp+'LL/'+src+'_'+sub_LL[i]+'_LL'
+        if resume:
+            iresume = int(input("Resume "+mod+" sub-map processing from the iteration: "))
+        else:
+            iresume = 0
+        for j in trange(Nmc+1-iresume,# leave=False,
+                        desc='IRS '+mod+' sub-map processing [MC]'):
+            j += iresume
             
-            if np.logical_or(match_SL=='y',# and phot[iph]=='IRAC4',
-                             match_LL=='y'):# and phot[iph]=='MIPS1'):
-                ## Read spectra
-                data3 = read_fits(f1nam+'3_'+str(j)).data
-                data2 = read_fits(f1nam+'2_'+str(j)).data
-                data1 = read_fits(f1nam+'1_'+str(j)).data
-                wvl3 = read_fits(f1nam+'3_'+str(j)).wave
-                wvl2 = read_fits(f1nam+'2_'+str(j)).wave
-                wvl1 = read_fits(f1nam+'1_'+str(j)).wave
+            for i in trange(len(sub_XX), leave=False,
+                            desc=' - Sub-maps'):
+                if np.logical_or(proc_SL=='y' and phot[iph]=='IRAC4',
+                                 proc_LL=='y' and phot[iph]=='MIPS1'):
+                    if phot[iph]=='IRAC4':
+                        refheader = hdr_SL[i]
+                        chnl_XX = chnl_SL
+                    elif phot[iph]=='MIPS1':
+                        refheader = hdr_LL[i]
+                        chnl_XX = chnl_LL
+                        
+                    for ich in trange(len(chnl_XX), leave=False,
+                                      desc='   - '+src+'_'+sub_XX[i]+'_'+mod):
+                        f0nam = src+'_'+sub_XX[i]+'_'+chnl_XX[ich]
+                        f0nam_in = path_irs+f0nam
+                        f0nam_out =  path_tmp_XX+f0nam+'_'+str(j)
+        
+                        ## Reprojection 
+                        ##--------------
+                        if coadd_tool=='swarp':
+                            swp = iswarp(refheader=refheader, tmpdir=path_tmp_XX)
+                            if j==0:
+                                swp.combine(f0nam_in, keepedge=True,# cropedge=True,
+                                            filOUT=f0nam_out)
+                            else:
+                                swp.combine(f0nam_in, keepedge=True,# cropedge=True,
+                                            dist='norm', sig_pt=.2,
+                                            filOUT=f0nam_out)
+                        elif coadd_tool=='reproject':
+                            mtg = imontage('exact', tmpdir=path_tmp_XX)
+                            if j==0:
+                                mtg.coadd(f0nam_in, refheader=refheader,
+                                          filOUT=f0nam_out)
+                            else:
+                                mtg.coadd(f0nam_in, refheader=refheader,
+                                          dist='norm', sig_pt=.2,
+                                          filOUT=f0nam_out)
+        
+                        ## PSF Convolution with both sources of errors (MC)
+                        ##--------------------------------------------------
+                        conv = iconvolve(f0nam_out, kfile=fits_ker, psf=fwhm,
+                                         klist=csv_ker, convdir=path_conv,
+                                         filOUT=f0nam_out)
+                        conv.do_conv(idldir=path_idl)
+        
+                ##-----------------------------
+                ## SL2-SL1 / LL2-LL1 stitching
+                ##-----------------------------
+                if phot[iph]=='IRAC4':
+                    f1nam = path_tmp+'SL/'+src+'_'+sub_SL[i]+'_SL'
+                elif phot[iph]=='MIPS1':
+                    f1nam = path_tmp+'LL/'+src+'_'+sub_LL[i]+'_LL'
                 
-                ## Match SL2 to SL3 (idem. LL)
-                ## --iwmin_SL3--iwmin_SL1--iwmax_SL2--iwmax_SL3--
-                ##       |          |          |          |
-                ##       |------left_SL3-------|
-                ##       |------right_SL2------|
-                iwmax2 = closest(wvl3, wvl2[-1], side='left') + 1 # SL3 index
-                left3 = trapz(data3[:iwmax2], wvl3[:iwmax2],
-                                 dx=wvl3[1]-wvl3[0], axis=0)
-                iwmin3 = closest(wvl2, wvl3[0], side='right') # SL2 index
-                right2 = trapz(data2[iwmin3:], wvl2[iwmin3:],
-                                  dx=wvl2[1]-wvl2[0], axis=0)
-                
-                ## Match SL1 to SL3 (idem. LL)
-                ## --iwmin_SL3--iwmin_SL1--iwmax_SL2--iwmax_SL3--
-                ##       |          |          |          |
-                ##                  |------right_SL3------|
-                ##                  |------left_SL1-------|
-                iwmin1 = closest(wvl3, wvl1[0], side='right') # SL3 index
-                right3 = trapz(data3[iwmin1:], wvl3[iwmin1:],
-                                  dx=wvl3[1]-wvl3[0], axis=0)
-                iwmax3 = closest(wvl1, wvl3[-1], side='left') + 1 # SL1 index
-                left1 = trapz(data1[:iwmax3], wvl1[:iwmax3],
-                                 dx=wvl1[1]-wvl1[0], axis=0)
+                if np.logical_or(match_SL=='y' and phot[iph]=='IRAC4',
+                                 match_LL=='y' and phot[iph]=='MIPS1'):
+                    ## Read spectra
+                    data3 = read_fits(f1nam+'3_'+str(j)).data
+                    data2 = read_fits(f1nam+'2_'+str(j)).data
+                    data1 = read_fits(f1nam+'1_'+str(j)).data
+                    wvl3 = read_fits(f1nam+'3_'+str(j)).wave
+                    wvl2 = read_fits(f1nam+'2_'+str(j)).wave
+                    wvl1 = read_fits(f1nam+'1_'+str(j)).wave
+                    
+                    ## Match SL2 to SL3 (idem. LL)
+                    ## --iwmin_SL3--iwmin_SL1--iwmax_SL2--iwmax_SL3--
+                    ##       |          |          |          |
+                    ##       |------left_SL3-------|
+                    ##       |------right_SL2------|
+                    iwmax2 = closest(wvl3, wvl2[-1], side='left') + 1 # SL3 index
+                    left3 = trapz(data3[:iwmax2], wvl3[:iwmax2],
+                                     dx=wvl3[1]-wvl3[0], axis=0)
+                    iwmin3 = closest(wvl2, wvl3[0], side='right') # SL2 index
+                    right2 = trapz(data2[iwmin3:], wvl2[iwmin3:],
+                                      dx=wvl2[1]-wvl2[0], axis=0)
+                    
+                    ## Match SL1 to SL3 (idem. LL)
+                    ## --iwmin_SL3--iwmin_SL1--iwmax_SL2--iwmax_SL3--
+                    ##       |          |          |          |
+                    ##                  |------right_SL3------|
+                    ##                  |------left_SL1-------|
+                    iwmin1 = closest(wvl3, wvl1[0], side='right') # SL3 index
+                    right3 = trapz(data3[iwmin1:], wvl3[iwmin1:],
+                                      dx=wvl3[1]-wvl3[0], axis=0)
+                    iwmax3 = closest(wvl1, wvl3[-1], side='left') + 1 # SL1 index
+                    left1 = trapz(data1[:iwmax3], wvl1[:iwmax3],
+                                     dx=wvl1[1]-wvl1[0], axis=0)
+        
+                    ## Calculate scaling factors
+                    gain2 = left3 / right2
+                    gain1 = right3 / left1
+                    ## Display scaling factor map
+                    mask2D = ~np.isnan(gain2)
+                    # print('SL2 to SL3 scaling factor: ', gain2[mask2D])
+                    mask2D = ~np.isnan(gain1)
+                    # print('SL1 to SL3 scaling factor: ', gain1[mask2D])
+                else:
+                    gain2 = 1
+                    gain1 = 1
     
-                ## Calculate scaling factors
-                gain2 = left3 / right2
-                gain1 = right3 / left1
-                ## Display scaling factor map
-                mask2D = ~np.isnan(gain2)
-                # print('SL2 to SL3 scaling factor: ', gain2[mask2D])
-                mask2D = ~np.isnan(gain1)
-                # print('SL1 to SL3 scaling factor: ', gain1[mask2D])
-            else:
-                gain2 = 1
-                gain1 = 1
-                
-            ic = intercalib(f1nam+'2_'+str(j))
-            ic.correct_spec(gain=gain2, filOUT=f1nam+'2_match')
-            ic = intercalib(f1nam+'1_'+str(j))
-            ic.correct_spec(gain=gain1, filOUT=f1nam+'1_match')
-                
-            ## Stitch
-            concatenate((f1nam+'2_match',f1nam+'1_match'),
-                        f1nam+'_'+str(j), wsort=False,
-                        keepfrag=False, cropedge=False)
+                fits_ord2 = pathlib.Path(f1nam+'2_'+str(j)+fitsext)
+                fits_ord1 = pathlib.Path(f1nam+'1_'+str(j)+fitsext)
+                if fits_ord2.exists() and fits_ord1.exists():
+                    ic = intercalib(f1nam+'2_'+str(j))
+                    ic.correct_spec(gain=gain2, filOUT=f1nam+'2_match')
+                    ic = intercalib(f1nam+'1_'+str(j))
+                    ic.correct_spec(gain=gain1, filOUT=f1nam+'1_match')
+                    ## Stitch
+                    concatenate( (f1nam+'2_match',f1nam+'1_match'),
+                                 f1nam+'_'+str(j), wsort=False,
+                                 keepfrag=False, cropedge=False )
+                else:
+                    if fits_ord2.exists():
+                        ic = intercalib(f1nam+'2_'+str(j))
+                        ic.correct_spec(gain=gain2, filOUT=f1nam+'_'+str(j))
+                    if fits_ord1.exists():
+                        ic = intercalib(f1nam+'1_'+str(j))
+                        ic.correct_spec(gain=gain1, filOUT=f1nam+'_'+str(j))
 
 ## Coadd hires modules (using one-point/integral scaling factor)
 ##---------------------------------------------------------------
@@ -485,7 +497,7 @@ for iph in range(Nphot):
                                 ") from the iteration: "))
         else:
             iresume = 0
-            
+
         if photcal=='d' and phot[iph]=='IRAC4':
             raw_phot = path_phot+src+'_'+phot[iph]+'_DP'
 
@@ -498,8 +510,8 @@ for iph in range(Nphot):
 
             ## Create uncertainty via weight map (suppose uniform contribution)
             
-            ## (Sect. 3.2) The weight maps contain the information on the number of frames 
-            ## that were used to create the science mosaics at each pixel (value= # frames x10); 
+            ## (Sect. 3.2) The weight maps contain the information on the number of frames
+            ## that were used to create the science mosaics at each pixel (value= # frames x10);
             ## the pixel size of the weight maps is the same as the science mosaics.
             ## -- SINGS v5 release doc
             ## https://irsa.ipac.caltech.edu/data/SPITZER/SINGS/doc/sings_fifth_delivery_v2.pdf
@@ -515,8 +527,8 @@ for iph in range(Nphot):
             #     iuncert(raw_phot, filOUT=raw_phot+'_unc',
             #             filWGT=wgt_phot, wfac=wfac,
             #             BG_image=bg, BG_weight=bg_wgt)
-
-        if phot[iph]=='IRAC4':
+        
+        if phot[iph]=='IRAC4' and Nch_SL>1:
             ##====
             ## SL
             ##====
@@ -561,17 +573,7 @@ for iph in range(Nphot):
                                          filOUT=p1namj)
                     conv.do_conv(idldir=path_idl)
                     
-                ## Calculate unc
-                if Nmc>1:
-                    mcimage = []
-                    for j in range(Nmc):
-                        ds = read_fits(tmp_phot+'_'+sub_SL[i]+'_SL_'+str(j+1))
-                        mcimage.append(ds.data)
-                    mcimage = np.array(mcimage)
-                    unc = np.nanstd(mcimage, axis=0)
-                    write_fits(p1nam0+'_unc', ds.header, unc)
-                    
-        elif phot[iph]=='MIPS1':
+        elif phot[iph]=='MIPS1' and Nch_LL>1:
             ##====
             ## LL
             ##====
@@ -615,16 +617,32 @@ for iph in range(Nphot):
                                          kfile=phot_ker, klist=csv_ker,
                                          filOUT=p1namj)
                     conv.do_conv(idldir=path_idl)
-                    
-                ## Calculate unc
-                if Nmc>1:
-                    mcimage = []
-                    for j in range(Nmc):
-                        ds = read_fits(tmp_phot+'_'+sub_LL[i]+'_LL_'+str(j+1))
-                        mcimage.append(ds.data)
-                    mcimage = np.array(mcimage)
-                    unc = np.nanstd(mcimage, axis=0)
-                    write_fits(p1nam0+'_unc', ds.header, unc)
+
+    for i in range(Nsub_SL):
+        p1nam0 = cal_phot+'_'+sub_SL[i]+'_SL'
+        ## Calculate unc (SL)
+        fits_Nmc = pathlib.Path(tmp_phot+'_'+sub_SL[i]+'_SL_'+str(Nmc)+fitsext)
+        if Nmc>1 and fits_Nmc.exists():
+            mcimage = []
+            for j in range(Nmc):
+                ds = read_fits(tmp_phot+'_'+sub_SL[i]+'_SL_'+str(j+1))
+                mcimage.append(ds.data)
+            mcimage = np.array(mcimage)
+            unc = np.nanstd(mcimage, axis=0)
+            write_fits(p1nam0+'_unc', ds.header, unc)
+
+    for i in range(Nsub_LL):
+        p1nam0 = cal_phot+'_'+sub_LL[i]+'_LL'
+        ## Calculate unc (LL)
+        fits_Nmc = pathlib.Path(tmp_phot+'_'+sub_LL[i]+'_LL_'+str(Nmc)+fitsext)
+        if Nmc>1 and fits_Nmc.exists():
+            mcimage = []
+            for j in range(Nmc):
+                ds = read_fits(tmp_phot+'_'+sub_LL[i]+'_LL_'+str(j+1))
+                mcimage.append(ds.data)
+            mcimage = np.array(mcimage)
+            unc = np.nanstd(mcimage, axis=0)
+            write_fits(p1nam0+'_unc', ds.header, unc)
 
     ##-----------------------------
     ## Synthetic photometry (spec)
@@ -636,7 +654,7 @@ for iph in range(Nphot):
         else:
             iresume = 0
         
-        if phot[iph]=='IRAC4':
+        if phot[iph]=='IRAC4' and Nch_SL>1:
             ##====
             ## SL
             ##====
@@ -657,18 +675,8 @@ for iph in range(Nphot):
                         write_fits(s1nam0, ic.hdr, sp.Fnu_filt)
                     else:
                         write_fits(s1namj, ic.hdr, sp.Fnu_filt)
-
-                ## Calculate unc
-                if Nmc>1:
-                    mcimage = []
-                    for j in range(Nmc):
-                        ds = read_fits(tmp_spec+'_'+sub_SL[i]+'_SL_'+str(j+1))
-                        mcimage.append(ds.data)
-                    mcimage = np.array(mcimage)
-                    unc = np.nanstd(mcimage, axis=0)
-                    write_fits(s1nam0+'_unc', ds.header, unc)
                     
-        elif phot[iph]=='MIPS1':
+        elif phot[iph]=='MIPS1' and Nch_LL>1:
             ##====
             ## LL
             ##====
@@ -690,14 +698,29 @@ for iph in range(Nphot):
                     else:
                         write_fits(s1namj, ic.hdr, sp.Fnu_filt)
 
-                if Nmc>1:
-                    mcimage = []
-                    for j in range(Nmc):
-                        ds = read_fits(tmp_spec+'_'+sub_LL[i]+'_LL_'+str(j+1))
-                        mcimage.append(ds.data)
-                    mcimage = np.array(mcimage)
-                    unc = np.nanstd(mcimage, axis=0)
-                    write_fits(s1nam0+'_unc', ds.header, unc)
+    for i in range(Nsub_SL):
+        s1nam0 = cal_spec+'_'+sub_SL[i]+'_SL'
+        fits_Nmc = pathlib.Path(tmp_spec+'_'+sub_SL[i]+'_SL_'+str(Nmc)+fitsext)
+        if Nmc>1 and fits_Nmc.exists():
+            mcimage = []
+            for j in range(Nmc):
+                ds = read_fits(tmp_spec+'_'+sub_SL[i]+'_SL_'+str(j+1))
+                mcimage.append(ds.data)
+            mcimage = np.array(mcimage)
+            unc = np.nanstd(mcimage, axis=0)
+            write_fits(s1nam0+'_unc', ds.header, unc)
+
+    for i in range(Nsub_LL):
+        s1nam0 = cal_spec+'_'+sub_LL[i]+'_LL'
+        fits_Nmc = pathlib.Path(tmp_spec+'_'+sub_LL[i]+'_LL_'+str(Nmc)+fitsext)
+        if Nmc>1 and fits_Nmc.exists():
+            mcimage = []
+            for j in range(Nmc):
+                ds = read_fits(tmp_spec+'_'+sub_LL[i]+'_LL_'+str(j+1))
+                mcimage.append(ds.data)
+            mcimage = np.array(mcimage)
+            unc = np.nanstd(mcimage, axis=0)
+            write_fits(s1nam0+'_unc', ds.header, unc)
 
 ## Sub-map intercalib correction (pixel/global scale)
 ##----------------------------------------------------
@@ -711,7 +734,7 @@ for iph in range(Nphot):
     cal_spec = path_cal+src+'_'+phot[iph]+'_IRS'
     tmp_spec = path_tmp+'calib/'+src+'_'+phot[iph]+'_IRS'
     
-    if phot[iph]=='IRAC4':
+    if phot[iph]=='IRAC4' and Nch_SL>1:
         ##====
         ## SL
         ##====
@@ -861,7 +884,7 @@ for iph in range(Nphot):
                         p.add_plot(xgrid, f_lin(xgrid, *popt),
                                    c='k', ls='--', label=label, zorder=100,)
                         
-                        p.ax.text(.85,.05,'('+lab+')',size=30,c='grey',transform=p.ax.transAxes) # for the use of Hu_thesis
+                        # p.ax.text(.85,.05,'('+lab+')',size=30,c='grey',transform=p.ax.transAxes) # for the use of Hu_thesis
                         p.ax.legend(loc='upper left', fontsize=20, framealpha=0,)
                         
                         p.save(path_cal+'IC_'+phot[iph]+'_'+src+'_'+sub_SL[i]+'_SL.png',
@@ -886,15 +909,14 @@ for iph in range(Nphot):
                         correct_off.append(None)
                         correct_pixel.append('y')
                 
-                sc = intercalib(f1nam+'_'+str(j))
-                pixel_gain = np.ones((Ny,Nx))
-                if mask.any():
-                    for x in range(Nx):
-                        for y in range(Ny):
-                            subname = src+'_'+sub_SL[i]+'_SL_'+str(x+1)+'_'+str(y+1)
-                            if ~ (np.isnan(dict_phot[subname]) or np.isnan(dict_spec[subname])):
-                                pixel_gain[y,x] *= dict_phot[subname]/dict_spec[subname]
                 if write_SL=='y':
+                    pixel_gain = np.ones((Ny,Nx))
+                    if mask.any():
+                        for x in range(Nx):
+                            for y in range(Ny):
+                                subname = src+'_'+sub_SL[i]+'_SL_'+str(x+1)+'_'+str(y+1)
+                                if ~ (np.isnan(dict_phot[subname]) or np.isnan(dict_spec[subname])):
+                                    pixel_gain[y,x] *= dict_phot[subname]/dict_spec[subname]
                     if correct_pixel[i]=='y':
                         calib_gain = pixel_gain
                         calib_off = 0.
@@ -908,15 +930,22 @@ for iph in range(Nphot):
                     else:
                         calib_gain = 1.0
                         calib_off = 0.
+                    sc = intercalib(f1nam+'_'+str(j))
                     sc.correct_spec(calib_gain, calib_off, filOUT=f1nam+'_'+str(j))
+
+    if phot[iph]=='IRAC4':
+        for i in range(Nsub_SL):
+            f1nam = path_tmp+'SL/'+src+'_'+sub_SL[i]+'_SL'
             if (write_SL=='y' and Nmc>1):
-                mcimage = []
-                for j in range(Nmc):
-                    ds = read_fits(f1nam+'_'+str(j+1))
-                    mcimage.append(ds.data)
-                mcimage = np.array(mcimage)
-                unc = np.nanstd(mcimage, axis=0)
-                write_fits(f1nam+'_unc', ds.header, unc, ds.wave)
+                fits_Nmc = pathlib.Path(f1nam+'_'+str(Nmc)+fitsext)
+                if fits_Nmc.exists():
+                    mcimage = []
+                    for j in range(Nmc):
+                        ds = read_fits(f1nam+'_'+str(j+1))
+                        mcimage.append(ds.data)
+                    mcimage = np.array(mcimage)
+                    unc = np.nanstd(mcimage, axis=0)
+                    write_fits(f1nam+'_unc', ds.header, unc, ds.wave)
 
         ##-----------------------
         ## Coadd all SL sub-maps
@@ -956,15 +985,16 @@ for iph in range(Nphot):
                         mtg.coadd(fsub_SL, refheader=coadd_footprint,
                                   filOUT=path_tmp+src+'_SL_'+str(j))
 
-            ## Calculate unc
-            if Nmc>1:
-                mcimage = []
-                for j in range(Nmc):
-                    ds = read_fits(path_tmp+src+'_SL_'+str(j+1))
-                    mcimage.append(ds.data)
-                mcimage = np.array(mcimage)
-                unc = np.nanstd(mcimage, axis=0)
-                write_fits(path_out+src+'_SL_unc', ds.header, unc, ds.wave)
+        ## Calculate unc
+        fits_Nmc = pathlib.Path(path_tmp+src+'_SL_'+str(Nmc)+fitsext)
+        if Nmc>1 and fits_Nmc.exists():
+            mcimage = []
+            for j in range(Nmc):
+                ds = read_fits(path_tmp+src+'_SL_'+str(j+1))
+                mcimage.append(ds.data)
+            mcimage = np.array(mcimage)
+            unc = np.nanstd(mcimage, axis=0)
+            write_fits(path_out+src+'_SL_unc', ds.header, unc, ds.wave)
 
         ##------------------------
         ## Build SL slits (AKARI)
@@ -1001,17 +1031,20 @@ for iph in range(Nphot):
                         mtg.coadd(fsub_SL, refheader=refheader,
                                   filOUT=f2nam+'_MC_'+str(j))
 
-                ## Calculate unc
-                if Nmc>1:
-                    mcimage = []
-                    for j in range(Nmc):
-                        ds = read_fits(f2nam+'_MC_'+str(j+1))
-                        mcimage.append(ds.data)
-                    mcimage = np.array(mcimage)
-                    unc = np.nanstd(mcimage, axis=0)
-                    write_fits(f2nam+'_MC_unc', ds.header, unc, ds.wave)
+        for iobs in range(Nobs):
+            f2nam = path_tmp+'SL/'+parobs[iobs][0]
+            ## Calculate unc
+            fits_Nmc = pathlib.Path(f2nam+'_MC_'+str(Nmc)+fitsext)
+            if Nmc>1 and fits_Nmc.exists():
+                mcimage = []
+                for j in range(Nmc):
+                    ds = read_fits(f2nam+'_MC_'+str(j+1))
+                    mcimage.append(ds.data)
+                mcimage = np.array(mcimage)
+                unc = np.nanstd(mcimage, axis=0)
+                write_fits(f2nam+'_MC_unc', ds.header, unc, ds.wave)
 
-    elif phot[iph]=='MIPS1':
+    if phot[iph]=='MIPS1' and Nch_LL>1:
         ##====
         ## LL
         ##====
@@ -1162,7 +1195,7 @@ for iph in range(Nphot):
                         p.add_plot(xgrid, f_lin(xgrid, *popt),
                                    c='k', ls='--', label=label, zorder=100,)
                         
-                        p.ax.text(.85,.05,'('+lab+')',size=30,c='grey',transform=p.ax.transAxes) # for the use of Hu_thesis
+                        # p.ax.text(.85,.05,'('+lab+')',size=30,c='grey',transform=p.ax.transAxes) # for the use of Hu_thesis
                         p.ax.legend(loc='upper left', fontsize=20, framealpha=0,)
                         
                         p.save(path_cal+'IC_'+phot[iph]+'_'+src+'_'+sub_LL[i]+'_LL.png',
@@ -1187,15 +1220,14 @@ for iph in range(Nphot):
                         correct_off.append(None)
                         correct_pixel.append('y')
                 
-                sc = intercalib(f1nam+'_'+str(j))
-                pixel_gain = np.ones((Ny,Nx))
-                if mask.any():
-                    for x in range(Nx):
-                        for y in range(Ny):
-                            subname = src+'_'+sub_LL[i]+'_LL_'+str(x+1)+'_'+str(y+1)
-                            if ~ (np.isnan(dict_phot[subname]) or np.isnan(dict_spec[subname])):
-                                pixel_gain[y,x] *= dict_phot[subname]/dict_spec[subname]
                 if write_LL=='y':
+                    pixel_gain = np.ones((Ny,Nx))
+                    if mask.any():
+                        for x in range(Nx):
+                            for y in range(Ny):
+                                subname = src+'_'+sub_LL[i]+'_LL_'+str(x+1)+'_'+str(y+1)
+                                if ~ (np.isnan(dict_phot[subname]) or np.isnan(dict_spec[subname])):
+                                    pixel_gain[y,x] *= dict_phot[subname]/dict_spec[subname]
                     if correct_pixel[i]=='y':
                         calib_gain = pixel_gain
                         calib_off = 0.
@@ -1209,15 +1241,22 @@ for iph in range(Nphot):
                     else:
                         calib_gain = 1.0
                         calib_off = 0.
+                    sc = intercalib(f1nam+'_'+str(j))
                     sc.correct_spec(calib_gain, calib_off, filOUT=f1nam+'_'+str(j))
+
+    if phot[iph]=='MIPS1':
+        for i in range(Nsub_LL):
+            f1nam = path_tmp+'LL/'+src+'_'+sub_LL[i]+'_LL'
             if (write_LL=='y' and Nmc>1):
-                mcimage = []
-                for j in range(Nmc):
-                    ds = read_fits(f1nam+'_'+str(j+1))
-                    mcimage.append(ds.data)
-                mcimage = np.array(mcimage)
-                unc = np.nanstd(mcimage, axis=0)
-                write_fits(f1nam+'_unc', ds.header, unc, ds.wave)
+                fits_Nmc = pathlib.Path(f1nam+'_'+str(Nmc)+fitsext)
+                if fits_Nmc.exists():
+                    mcimage = []
+                    for j in range(Nmc):
+                        ds = read_fits(f1nam+'_'+str(j+1))
+                        mcimage.append(ds.data)
+                    mcimage = np.array(mcimage)
+                    unc = np.nanstd(mcimage, axis=0)
+                    write_fits(f1nam+'_unc', ds.header, unc, ds.wave)
 
         ##-----------------------
         ## Coadd all LL sub-maps
@@ -1258,7 +1297,8 @@ for iph in range(Nphot):
                                   filOUT=path_tmp+src+'_LL_'+str(j))
 
             ## Calculate unc
-            if Nmc>1:
+            fits_Nmc = pathlib.Path(path_tmp+src+'_LL_'+str(Nmc)+fitsext)
+            if Nmc>1 and fits_Nmc.exists():
                 mcimage = []
                 for j in range(Nmc):
                     ds = read_fits(path_tmp+src+'_LL_'+str(j+1))
@@ -1302,8 +1342,11 @@ for iph in range(Nphot):
                         mtg.coadd(fsub_LL, refheader=refheader,
                                   filOUT=f2nam+'_MC_'+str(j))
 
+            for iobs in range(Nobs):
+                f2nam = path_tmp+'LL/'+parobs[iobs][0]
                 ## Calculate unc
-                if Nmc>1:
+                fits_Nmc = pathlib.Path(f2nam+'_MC_'+str(Nmc)+fitsext)
+                if Nmc>1 and fits_Nmc.exists():
                     mcimage = []
                     for j in range(Nmc):
                         ds = read_fits(f2nam+'_MC_'+str(j+1))
@@ -1378,8 +1421,9 @@ for iph in range(Nphot):
             f2nam = path_tmp+'LL/'+parobs[iobs][0]
         p2nam0 = cal_phot+'_'+parobs[iobs][0]
         s2nam0 = cal_spec+'_'+parobs[iobs][0]
-        
-        if pre_calib0=='y':
+
+        fits_Nmc0 = pathlib.Path(f2nam+'_MC_0'+fitsext)
+        if pre_calib0=='y' and fits_Nmc0.exists():
             refheader = fixwcs(f2nam+'_MC_0'+fitsext).header
             
             for j in trange(Nmc+1, leave=False,
@@ -1423,7 +1467,8 @@ for iph in range(Nphot):
                                xscale=xscale, yscale=yscale,
                                filOUT=p2namj)
             ## Calculate unc
-            if Nmc>1:
+            fits_Nmc = pathlib.Path(tmp_phot+'_'+parobs[iobs][0]+'_'+str(Nmc)+fitsext)
+            if Nmc>1 and fits_Nmc.exists():
                 mcimage = []
                 for j in range(Nmc):
                     ds = read_fits(tmp_phot+'_'+parobs[iobs][0]+'_'+str(j+1))
@@ -1435,7 +1480,8 @@ for iph in range(Nphot):
         ##-----------------------------
         ## Synthetic photometry (spec)
         ##-----------------------------
-        if synt_phot0=='y':
+        if synt_phot0=='y':# and np.logical_or(phot[iph]=='IRAC4' and Nch_SL>1,
+                                             # phot[iph]=='MIPS1' and Nch_LL>1):
             for j in trange(Nmc+1, leave=False,
                             desc=' - '+parobs[iobs][0]+' (IRS sythetic photometry) [MC]'):
                 s2namj = tmp_spec+'_'+parobs[iobs][0]+'_'+str(j)
@@ -1448,7 +1494,8 @@ for iph in range(Nphot):
                     write_fits(s2namj, ic.hdr, sp.Fnu_filt)
         
             ## Calculate unc
-            if Nmc>1:
+            fits_Nmc = pathlib.Path(tmp_spec+'_'+parobs[iobs][0]+'_'+str(Nmc)+fitsext)
+            if Nmc>1 and fits_Nmc.exists():
                 mcimage = []
                 for j in range(Nmc):
                     ds = read_fits(tmp_spec+'_'+parobs[iobs][0]+'_'+str(j+1))
@@ -1464,16 +1511,28 @@ for iph in range(Nphot):
         mod = 'SL'
     elif phot[iph]=='MIPS1':
         mod = 'LL'
-        
-    print('\n Photometry: '+phot[iph])
+    else:
+        mod = None
 
+    write_irs = input("Write IRS "+mod+" spectra (y/n)? ")
+
+    # if phot[iph]=='IRAC4' and Nch_SL>1:
+    #     do_correct = True
+    # elif phot[iph]=='MIPS1' and Nch_LL>1:
+    #     do_correct = True
+    # else:
+    #     do_correct = False
+
+    # if do_correct:
+    print('\n Photometry: '+phot[iph])
+    
     if photcal=='d' and phot[iph]=='IRAC4':
         cal_phot = path_cal+src+'_'+phot[iph]+'_DP'
     else:
         cal_phot = path_cal+src+'_'+phot[iph]+'_SINGS'
     cal_spec = path_cal+src+'_'+phot[iph]+'_IRS'
     tmp_spec = path_tmp+'calib/'+src+'_'+phot[iph]+'_IRS'
-
+    
     for j in trange(Nmc+1, #leave=False,
                     desc='IRS spectral correction [MC]'):
         ## Data dictionary
@@ -1491,7 +1550,7 @@ for iph in range(Nphot):
             pix_phot_unc = []
             pix_mask_fit = []
             # xgrid = np.logspace(-2,4,10000)
-
+    
             xmin = []
             xmax = []
             ymin = []
@@ -1510,7 +1569,7 @@ for iph in range(Nphot):
             xscale, yscale = read_hdf5(filog+parobs[iobs][0], 'Super pixel size')
             # Nxs = math.ceil(Nx/xscale)
             Nys = math.ceil(Ny/yscale)
-
+    
             data_spec = {}
             unc_spec = {}
             mask0 = []
@@ -1558,18 +1617,18 @@ for iph in range(Nphot):
             mask_lim = np.logical_and( pix_spec[iobs]>1e-2, pix_phot[iobs]>1e-2 )
             mask = np.logical_and( mask_nan, mask_neg)#, mask_lim )
             maskfit = np.logical_and( mask, mask0)#, mask_lim )
-
+    
             ## Add calibration error
-            if phot[iph]=='IRAC4':
+            if phot[iph]=='IRAC4' and Nch_SL>1:
                 ylabel = r'$\rm IRAC_{8\mu m}\ (MJy/sr)$'
-                lab = '(c)' # for the use of Hu_thesis
+                # lab = '(c)' # for the use of Hu_thesis
                 pix_phot_unc[iobs]  = np.sqrt( pix_phot_unc[iobs]**2 + (pix_phot[iobs]*.03)**2 ) # IRAC 3% (Carey2010)
-            elif phot[iph]=='MIPS1':
+            elif phot[iph]=='MIPS1' and Nch_LL>1:
                 ylabel = r'$\rm MIPS_{24\mu m}\ (MJy/sr)$'
-                lab = '(d)' # for the use of Hu_thesis
+                # lab = '(d)' # for the use of Hu_thesis
                 pix_phot_unc[iobs] = np.sqrt( pix_phot_unc[iobs]**2 + (pix_phot[iobs]*.04)**2 ) # MIPS 4% (Carey2010)
             pix_spec_unc[iobs] = np.sqrt( pix_spec_unc[iobs]**2 + (pix_spec[iobs]*.05)**2 ) # IRS 5% (Carey2010)
-
+    
             if mask.any():
                 
                 if j==0:
@@ -1616,7 +1675,7 @@ for iph in range(Nphot):
                                    marker=markers[iobs], markersize=.1, capsize=2) # put errorbar on the front layer
                         
                         p.save(path_cal+'IC_'+phot[iph]+'.png', transparent=True, figtight=True)
-
+    
                         xmin.append(min(pix_spec[iobs][mask]))
                         xmax.append(max(pix_spec[iobs][mask]))
                         ymin.append(min(pix_phot[iobs][mask]))
@@ -1659,17 +1718,17 @@ for iph in range(Nphot):
                 # label = 'y={0:.4}x+{1:.4}'.format(atlas_gain, atlas_off)
                 p.add_plot(xgrid, f_lin0(xgrid, *popt),
                            c='k', ls='-', label=label)
-                p.ax.text(.9,.05,lab,size=30,c='grey',transform=p.ax.transAxes) # for the use of Hu_thesis
+                # p.ax.text(.9,.05,lab,size=30,c='grey',
+                #           transform=p.ax.transAxes) # for the use of Hu_thesis
                 p.ax.legend(loc='upper left', bbox_to_anchor=(1,1),
                             fontsize=20, framealpha=0,)
                 
                 p.save(path_cal+'IC_'+phot[iph]+'.png',
                        transparent=True, figtight=True)
-
+    
         ## Spectral correction
         ##=====================
         if j==0:
-            write_irs = input("Write IRS "+mod+" spectra (y/n)? ")
             if write_irs=='y':
                 # if np.logical_or(phot[iph]=='IRAC4' and build_SL=='y',
                 #                  phot[iph]=='MIPS' and build_LL=='y'):
@@ -1685,7 +1744,7 @@ for iph in range(Nphot):
             else:
                 correct_atlas = None
                 correct_pixel = None
-            
+        
         for iobs in range(Nobs):
             if phot[iph]=='IRAC4':
                 f2nam = path_tmp+'SL/'+parobs[iobs][0]
@@ -1716,14 +1775,22 @@ for iph in range(Nphot):
         
     if (write_irs=='y' and Nmc>1):
         for iobs in trange(Nobs, leave=False,
-                        desc='Calculating uncertainties for IRS slits'):
-            mcimage = []
-            for j in range(Nmc):
-                ds = read_fits(f2nam+'_'+str(j+1))
-                mcimage.append(ds.data)
-            mcimage = np.array(mcimage)
-            unc = np.nanstd(mcimage, axis=0)
-            write_fits(f2nam+'_unc', ds.header, unc, ds.wave)
+                           desc='Calculating uncertainties for IRS slits'):
+            if mod=='SL':
+                f2nam = path_tmp+'SL/'+parobs[iobs][0]
+            elif mod=='LL':
+                f2nam = path_tmp+'LL/'+parobs[iobs][0]
+            else:
+                f2nam = None
+            fits_Nmc = pathlib.Path(f2nam+'_'+str(Nmc)+fitsext)
+            if fits_Nmc.exists():
+                mcimage = []
+                for j in range(Nmc):
+                    ds = read_fits(f2nam+'_'+str(j+1))
+                    mcimage.append(ds.data)
+                mcimage = np.array(mcimage)
+                unc = np.nanstd(mcimage, axis=0)
+                write_fits(f2nam+'_unc', ds.header, unc, ds.wave)
 
 
 ##----------------------------------------------------------
@@ -1749,10 +1816,11 @@ if concat_irs=='y':
                         keepfrag=False, cropedge=False)
     
     ## Uncertainty cube
-    if Nmc>1:
+    fits_Nmc = pathlib.Path(path_tmp+src+'_IRS_'+str(Nmc)+fitsext)
+    if Nmc>1 and fits_Nmc.exists():
         mcimage = []
         for j in range(Nmc):
-            ds = read_fits(path_tmp+src+'_IRS'+str(j+1))
+            ds = read_fits(path_tmp+src+'_IRS_'+str(j+1))
             mcimage.append(ds.data)
         mcimage = np.array(mcimage)
         unc = np.nanstd(mcimage, axis=0)
@@ -1796,7 +1864,8 @@ if concat_irc=='y':
                            filOUT=path_tmp+src+'_'+parobs[iobs][0]+'_IRS_'+str(j))
         
         ## Uncertainty cube
-        if Nmc>1:
+        fits_Nmc = pathlib.Path(path_tmp+src+'_'+parobs[iobs][0]+'_IRS_'+str(Nmc)+fitsext)
+        if Nmc>1 and fits_Nmc.exists():
             mcimage = []
             for j in range(Nmc):
                 ds = read_fits(path_tmp+src+'_'+parobs[iobs][0]+'_IRS_'+str(j+1))
@@ -1850,7 +1919,8 @@ if concat_mir=='y':
                 write_fits(path_tmp+src+'_'+parobs[iobs][0]+'_'+str(j),
                            ds.header, data[:i2,:,:], wave[:i2])
         ## Uncertainty cube
-        if Nmc>1:
+        fits_Nmc = pathlib.Path(path_tmp+src+'_'+parobs[iobs][0]+'_'+str(Nmc)+fitsext)
+        if Nmc>1 and fits_Nmc.exists():
             mcimage = []
             for j in range(Nmc):
                 ds = read_fits(path_tmp+src+'_'+parobs[iobs][0]+'_'+str(j+1))
@@ -1868,6 +1938,8 @@ if concat_mir=='y':
 plot_mir = input("Plot MIR spectra (y/n)? ")
 if plot_mir=='y':
 
+    ## Individual spectra (IRS)
+    ##--------------------------
     for iobs in range(Nobs):
         ds = read_fits(path_out+src+'_'+parobs[iobs][0], path_out+src+'_'+parobs[iobs][0]+'_unc')
         Nw, Ny, Nx = ds.data.shape
@@ -1876,9 +1948,11 @@ if plot_mir=='y':
         iw20 = closest(ds.wave, 20.67, 'left') + 1
         # lolims = np.zeros((Nw,Ny,Nx))
         clib = ['c','m','y','r','orange','b','g']
-        xtic = [2, 3, 4, 5, 6, 7, 8, 10, 12, 15, 20, 30, 40]
-        xtic_min = [np.arange(2.5, 20, .1), np.arange(20, 40, 1)]
-        xtic_min = np.concatenate(xtic_min)
+        xtic = [2, 3, 4, 5, 6, 7, 8, 10, 12, 15, 20]
+        xtic_min = np.arange(2.5, 20, .1)
+        # xtic = [2, 3, 4, 5, 6, 7, 8, 10, 12, 15, 20, 30, 40]
+        # xtic_min = [np.arange(2.5, 20, .1), np.arange(20, 40, 1)]
+        # xtic_min = np.concatenate(xtic_min)
 
         for x in range(Nx):
             for y in range(Ny):
@@ -1921,31 +1995,85 @@ if plot_mir=='y':
                 maskspec[:] = False
 
             if (maskspec.any() and y%yscale==0):
-
-                ## Individual spectra (IRS)
-                ##--------------------------
                 p0 = pplot(ds.wave[iw5:], ds.data[iw5:,y,0], yerr=ds.unc[iw5:,y,0],
                            xlog=1, ylog=1, nonposx='clip', nonposy='clip',
                            c='k', lw=2, ec='r', label=subname,
-                           # xlim=(2.5,20.),
+                           xlim=(5,21.),
                            xlabel=r'$\rm Wavelengths\ \lambda\ (\mu m)$',
                            ylabel=r'$\rm F_{\nu}\ (MJy/sr)$',
-                           xtk=xtic, xtkmi=xtic_min, xtkform='mylog', ytkform='log_sci',
+                           # xtk=xtic, xtkmi=xtic_min,
+                           xtkform='mylog', ytkform='log_sci',
                            figsize=(12,9), loc='upper left', legendalpha=0,
                            # title=src+'_'+subname,
                            titlesize=20, xysize=20, tksize=20, legendsize=20)
 
-                p0.ax.text(21, ds.data[iw5,y,0]*1.2, 'LL1 fringe pattern',
-                           size=20, c='k',transform=p0.ax.transData)
-                p0.ax.annotate(xy=(20.67,ds.data[iw5,y,0]*.9), transform=p0.ax.transData,
-                               xytext=(38,ds.data[iw5,y,0]*.9),
-                               text='', c='k', arrowprops=dict(arrowstyle='<->'))
+                # p0.ax.text(21, ds.data[iw5,y,0]*1.2, 'LL1 fringe pattern',
+                #            size=20, c='k',transform=p0.ax.transData)
+                # p0.ax.annotate(xy=(20.67,ds.data[iw5,y,0]*.9), transform=p0.ax.transData,
+                #                xytext=(38,ds.data[iw5,y,0]*.9),
+                #                text='', c='k', arrowprops=dict(arrowstyle='<->'))
                 
                 p0.save(path_fig+'IRS_'+subname, transparent=True, figtight=True)
 
-                ## Overlapped in one figure
-                ##--------------------------
-                xlim = (2,40)
+    ## Overlapped in one figure
+    ##--------------------------
+    for iobs in range(Nobs):
+        ds = read_fits(path_out+src+'_'+parobs[iobs][0], path_out+src+'_'+parobs[iobs][0]+'_unc')
+        Nw, Ny, Nx = ds.data.shape
+        iw5 = closest(ds.wave, 5, 'left') + 1
+        iw14 = closest(ds.wave, 14.29, 'left') + 1
+        iw20 = closest(ds.wave, 20.67, 'left') + 1
+        # lolims = np.zeros((Nw,Ny,Nx))
+        clib = ['c','m','y','r','orange','b','g']
+        xtic = [2, 3, 4, 5, 6, 7, 8, 10, 12, 15, 20]
+        xtic_min = np.arange(2.5, 20, .1)
+        # xtic = [2, 3, 4, 5, 6, 7, 8, 10, 12, 15, 20, 30, 40]
+        # xtic_min = [np.arange(2.5, 20, .1), np.arange(20, 40, 1)]
+        # xtic_min = np.concatenate(xtic_min)
+
+        for x in range(Nx):
+            for y in range(Ny):
+                ## Add calibration error
+                ds.unc[:,y,x] = np.sqrt( ds.unc[:,y,x]**2 + (ds.data[:,y,x]*.05)**2 ) # IRS 5% (Carey2010)
+
+                for k in range (Nw):
+                    ## Exclude negtive flux
+                    if ds.data[k,y,x]<0:
+        #                 if iobs==10:
+                        ds.data[k,y,x] = -ds.data[k,y,x]
+        #                 else:
+        #                     ds.data[k,y,x] = np.nan
+        #                     ds.unc[k,y,x] = np.nan
+        #             ## Set lower limits of unc that are larger than data
+        #             if ds.data[k,y,x]<=ds.unc[k,y,x]:
+        #                 lolims[k,y,x] = True
+
+                ## Lower limit
+                # ds.data[:,y,x][ds.data[:,y,x]<1e-2] = np.nan
+                # ds.unc[:,y,x][ds.data[:,y,x]<1e-2] = 0
+
+        xscale, yscale = read_hdf5(filog+parobs[iobs][0], 'Super pixel size')
+        for y in range(Ny):
+            ys = pix2sup(y, yscale, origin=0)
+            subname = parobs[iobs][0][0]+str(ys+1)
+            
+            ## Remove artifacts (mainly in LL1)
+            maskspec = np.full(Nw, True)
+            if (subname[0]=='A' and int(subname[1])>2) \
+               or (subname[0]=='B' and int(subname[1])>0) \
+               or subname=='C2' or subname=='C3' or subname=='C4' \
+               or subname=='D3' or subname=='D4' \
+               or subname=='F1' \
+               or subname[0]=='G' \
+               or subname[0]=='H' \
+               or subname=='I1':
+                maskspec[iw20:] = False
+            elif subname[0]=='E' or subname[0]=='N':
+                maskspec[:] = False
+
+            if (maskspec.any() and y%yscale==0):
+                xlim = (2.5,21.)
+                # xlim = (2,40)
                 if subname[0]=='A':
                     ylim = (1e-1,5e6)
                 elif subname[0]=='B':
@@ -1969,9 +2097,11 @@ if plot_mir=='y':
                               titlesize=20, xysize=20, tksize=20, legendsize=20)
 
                     # if iobs==0:
-                    #     p.ax.text(.85,.05,'(a)',size=30,c='grey',transform=p.ax.transAxes) # for the use of Hu_thesis
+                    #     p.ax.text(.85,.05,'(a)',size=30,c='grey',
+                    #               transform=p.ax.transAxes) # for the use of Hu_thesis
                     # elif iobs==6:
-                    #     p.ax.text(.85,.05,'(b)',size=30,c='grey',transform=p.ax.transAxes) # for the use of Hu_thesis
+                    #     p.ax.text(.85,.05,'(b)',size=30,c='grey',
+                    #               transform=p.ax.transAxes) # for the use of Hu_thesis
                     
                 if subname[1]=='1' or subname[1]=='7' \
                    or subname=='B5' or subname=='C5' or subname=='C6' \
@@ -1997,26 +2127,36 @@ if plot_mir=='y':
                            c=clib[ys], lw=2, ec='grey', elw=1, label=subname)
 
         if (subname[0]!='E' and subname[0]!='N'):
-            p.ax.text(p.transData2Axes((3,1))[0], 0.07, 'IRC', size=20, c='k', transform=p.ax.transAxes)
-            p.ax.text(p.transData2Axes((6,1))[0], 0.07, 'SL2', size=20, c='k', transform=p.ax.transAxes)
-            p.ax.text(p.transData2Axes((9,1))[0], 0.07, 'SL1', size=20, c='k', transform=p.ax.transAxes)
-            p.ax.text(p.transData2Axes((16,1))[0], 0.07, 'LL2', size=20, c='k', transform=p.ax.transAxes)
-            p.ax.text(p.transData2Axes((25,1))[0], 0.07, 'LL1', size=20, c='k', transform=p.ax.transAxes)
-            p.ax.annotate(xy=(p.transData2Axes((2.5,1))[0],0.05), xycoords=p.ax.transAxes,
+            p.ax.text(p.transData2Axes((3,1))[0], 0.07, 'IRC',
+                      size=20, c='k', transform=p.ax.transAxes)
+            p.ax.text(p.transData2Axes((6,1))[0], 0.07, 'SL2',
+                      size=20, c='k', transform=p.ax.transAxes)
+            p.ax.text(p.transData2Axes((9,1))[0], 0.07, 'SL1',
+                      size=20, c='k', transform=p.ax.transAxes)
+            p.ax.text(p.transData2Axes((16,1))[0], 0.07, 'LL2',
+                      size=20, c='k', transform=p.ax.transAxes)
+            # p.ax.text(p.transData2Axes((25,1))[0], 0.07, 'LL1',
+            #           size=20, c='k', transform=p.ax.transAxes)
+            p.ax.annotate(xy=(p.transData2Axes((2.5,1))[0],0.05),
+                          xycoords=p.ax.transAxes,
                           xytext=(p.transData2Axes((5,1))[0],0.05),
                           text='', c='k', arrowprops=dict(arrowstyle='<->'))
-            p.ax.annotate(xy=(p.transData2Axes((5.21,1))[0],0.05), xycoords=p.ax.transAxes,
+            p.ax.annotate(xy=(p.transData2Axes((5.21,1))[0],0.05),
+                          xycoords=p.ax.transAxes,
                           xytext=(p.transData2Axes((7.56,1))[0],0.05),
                           text='', c='k', arrowprops=dict(arrowstyle='<->'))
-            p.ax.annotate(xy=(p.transData2Axes((7.57,1))[0],0.05), xycoords=p.ax.transAxes,
+            p.ax.annotate(xy=(p.transData2Axes((7.57,1))[0],0.05),
+                          xycoords=p.ax.transAxes,
                           xytext=(p.transData2Axes((14.28,1))[0],0.05),
                           text='', c='k', arrowprops=dict(arrowstyle='<->'))
-            p.ax.annotate(xy=(p.transData2Axes((14.29,1))[0],0.05), xycoords=p.ax.transAxes,
+            p.ax.annotate(xy=(p.transData2Axes((14.29,1))[0],0.05),
+                          xycoords=p.ax.transAxes,
                           xytext=(p.transData2Axes((20.66,1))[0],0.05),
                           text='', c='k', arrowprops=dict(arrowstyle='<->'))
-            p.ax.annotate(xy=(p.transData2Axes((20.67,1))[0],0.05), xycoords=p.ax.transAxes,
-                          xytext=(p.transData2Axes((38.0,1))[0],0.05),
-                          text='', c='k', arrowprops=dict(arrowstyle='<->'))
+            # p.ax.annotate(xy=(p.transData2Axes((20.67,1))[0],0.05),
+            #               xycoords=p.ax.transAxes,
+            #               xytext=(p.transData2Axes((38.0,1))[0],0.05),
+            #               text='', c='k', arrowprops=dict(arrowstyle='<->'))
         
             p.save(path_fig+src+'_'+subname[0], transparent=True, figtight=True)
 

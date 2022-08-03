@@ -16,7 +16,7 @@ import os
 
 ##----------------------------------------------------------
 src = 'M82'
-Nmc = 100
+Nmc = 20
 verbose = False
 
 ## Current dir
@@ -43,31 +43,25 @@ path_ker = path_work+'Kernels/' # idl/convolve_image.pro
 ## Tmp files
 ##-----------
 path_tmp = path_work+'PAHPedia/tmp/'
-if not os.path.exists(path_tmp):
-    os.makedirs(path_tmp)
+os.makedirs(path_tmp, exist_ok=True)
 path_build = path_tmp+'cubuild/' # IRC cube building
-if not os.path.exists(path_build):
-    os.makedirs(path_build)
+os.makedirs(path_build, exist_ok=True)
 path_conv = path_tmp+'conv/' # idl/convolve_image.pro
-if not os.path.exists(path_conv):
-    os.makedirs(path_conv)
+os.makedirs(path_conv, exist_ok=True)
 csv_ker = path_tmp+'kernelist' # idl/conv_prog.pro
 
 ## Outputs
 ##---------
 path_out = path_work+'PAHPedia/'+src+'/'
-if not os.path.exists(path_out):
-    os.makedirs(path_out)
+os.makedirs(path_out, exist_ok=True)
 
 ## Inter-calibrations
 path_cal = path_out+'calib/'
-if not os.path.exists(path_cal):
-    os.makedirs(path_cal)
+os.makedirs(path_cal, exist_ok=True)
 
 ## Plots
 path_fig = path_out+'figures/'
-if not os.path.exists(path_fig):
-    os.makedirs(path_fig)
+os.makedirs(path_fig, exist_ok=True)
 
 
 ##----------------------------------------------------------
@@ -81,7 +75,7 @@ parobs = [
     ['B1_7','3390003.1','NG','F011100379_N002','Nh',28,7,3,'orange','*'], # B1-7
     ['C1_7','3390002.1','NG','F011100795_N002','Nh',28,7,3,'y','*'], # C1-7
     ['D1_4','5125405.1','NG','F010116950_N002','Nh',24,4,3,'g','d'], # D1-4
-    ['E1_4','5125401.1','NG','F010117172_N002','Ns',24,4,5,'lime','d'], # E1-4
+    # ['E1_4','5125401.1','NG','F010117172_N002','Ns',24,4,5,'lime','d'], # E1-4
     ['F1_2','5125405.1','NG','F010116950_N002','Ns',24,2,5,'pink','v'], # F1-2
     ['G1_2','3390003.1','NG','F011100379_N002','Ns',24,2,5,'m','v'], # G1-2
     ['H1_2','3390001.2','NG','F011100338_N002','Ns',24,2,5,'c','v'], # H1-2
@@ -89,8 +83,8 @@ parobs = [
     ['J1_2','5125401.1','NG','F010117172_N002','Nh',24,2,3,'b','^'], # J1-2
     ['K1_2','5125403.1','NG','F010116924_N002','Ns',24,2,5,'m','^'], # K1-2
     ['L1_2','5125403.1','NG','F010116924_N002','Nh',24,2,3,'pink','^'], # L1-2
-    ['M1_2','5124077.1','NG','F007174142_N002','Ns',24,2,5,'c','^'], # M1-2
-    ['N1_2','5124077.1','NG','F007174142_N002','Nh',24,2,3,'c','s'], # N1-2
+    # ['M1_2','5124077.1','NG','F007174142_N002','Ns',24,2,5,'c','^'], # M1-2
+    # ['N1_2','5124077.1','NG','F007174142_N002','Nh',24,2,3,'c','s'], # N1-2
     # ['3390001.1','NG','F011100297_N002','Ns',24,2,5], #
     # ['3390001.1','NG','F011100297_N002','Nh',24,7,3], #
     # ['3390002.2','NG','F011176073_N002'], # Matching failed
@@ -122,12 +116,15 @@ filog = path_out+'build_history_'
 # out_irs = path_out+src+'_IRS'
 
 # chnl = ['SH', 'LH']
-chnl = ['SL2', 'SL1', 'LL2', 'LL1', 'SL3', 'LL3']
+chnl = ['SL2', 'SL1', 'SL3', 'LL2']#, 'LL1']
+# chnl = ['SL2', 'SL1', 'LL2', 'LL1', 'SL3', 'LL3']
 
 # sub_SL = ['04','06S','06N','08','08c','09N3','09N2']
 # sub_LL = ['04','05','06','08','09N3','09N5','09N2']
-sub_SL = ['04','06S','06N','08c','09N3']
-sub_LL = ['04','05','06','08','09N3']
+# sub_SL = ['04','06S','06N','08c','09N3']
+# sub_LL = ['04','05','06','08','09N3']
+sub_SL = ['04','06S','06N','09N3']
+sub_LL = ['06','09N3']
 sub_SH = []
 sub_LH = []
 
@@ -136,8 +133,8 @@ sub_LH = []
 ##                   Data homogenisation
 
 ##----------------------------------------------------------
-coadd_tool = 'swarp'
-# coadd_tool = 'reproject'
+# coadd_tool = 'swarp'
+coadd_tool = 'reproject'
 
 ## Convolution
 ##-------------

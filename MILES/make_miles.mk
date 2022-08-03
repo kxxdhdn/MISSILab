@@ -9,11 +9,11 @@
 ##----------------
 HOST = $(shell hostname)
 ifeq ($(HOST),dapmcw18)
-# 	MKSW = /Users/dhu/Github/MISSILE/MILES/swing/make_swing.mk # extracted SwING
-	MKSW = /Users/dhu/SwING/Fortran/make_common.mk
+	MKSW = /Users/dhu/Github/MISSILE/MILES/swing/make_swing.mk # extracted SwING
+# 	MKSW = /Users/dhu/SwING/Fortran/make_common.mk
 else
-# 	MKSW = /dsm/herschel1/nuages/dhu/MILES/swing/make_swing.mk # extracted SwING
-	MKSW = /dsm/herschel1/nuages/Codes/SwING/Fortran/make_common.mk
+	MKSW = /dsm/herschel1/nuages/Codes/MILES/swing/make_swing.mk # extracted SwING
+# 	MKSW = /dsm/herschel1/nuages/Codes/SwING/Fortran/make_common.mk
 endif
 $(info The current machine is $(HOST))
 
@@ -33,7 +33,7 @@ MILIBAR = lib$(MILIB).a
 ifeq ($(HOST),dapmcw18)
 	MILIBDIR = /Users/dhu/Github/MISSILE/MILES/
 else
-	MILIBDIR = /dsm/herschel1/nuages/dhu/MILES/
+	MILIBDIR = /dsm/herschel1/nuages/Codes/MILES/
 endif
 
 ## MILES banner

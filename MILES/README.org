@@ -2,7 +2,10 @@
 #+AUTHOR: Dangning HU
 
 Mid-Infrared Line Extraction Software
-* Mode d'emploi
+* Helpdesk (mode d'emploi)
+** External libraries
+- The Python package [[https://github.com/kxxdhdn/RAPYUTA][rapyuta]] is required by the MILES user interface (UI; ~simu/~ and ~work/~). You can install it in commandline: ~pip install rapyuta --upgrade~
+- ~SwING/Model_templates/Cross_sections/Data/~ (542.1 MB)
 ** Path
 Modify the following paths
 - ~make_miles.mk~
@@ -13,10 +16,8 @@ Modify the following paths
 - ~swing/Tools/utilities.f90~
   + ~LibF~
   + ~temproot~
-- ~simu/auxil.py~ and ~work/auxil.py~
+- ~tests/auxil.py~, ~simu/auxil.py~ and ~work/auxil.py~
   + ~mroot~
-** External libraries
-Download ~SwING/Model_templates/Cross_sections/Data/~ (542.1 MB) and put it in ~swing/~
 ** Make
 Use h5fc as Fortran compiler
 #+begin_src bash
@@ -98,8 +99,32 @@ python work/show_par.py
 ## Modify plotname(), plotcorr() and calcorr() in work/auxil.py
 python work/correlations.py
 #+END_SRC
-* Notices
-The Python package [[https://github.com/kxxdhdn/RAPYUTA][rapyuta]] is required by the MILES UI (work). You can install it in commandline: ~pip install rapyuta --upgrade~
+** User manual
+The user manual is in progress.
+For more details, we refer to Hu et al. in prep. (see Citation).
+** Contact
+dangning.hu@outlook.com
+* Attribution
+Open access with the 3-Clause BSD License (see ~./LICENSE~)
+* Citation
+#+begin_src latex
+@unpublished{hu2022miles,
+  title={Modeling mid-infrared spectra with hierarchical Bayesian inference. I. A case study of M82},
+  author={{Hu}, Dangning and {Galliano}, F. and {Lebouteiller}, V. and {Hony}, S. and {Onaka}, T. and {Wu}, R. and {Sakon}, I. and {Madden}, S.},
+  note={\textit{in prep.}},
+  year={2022}
+}
+
+@phdthesis{hu2022PhD,
+  author={{Hu}, Dangning}, 
+  title={Physical and statistical modeling of interstellar grains - Preparation for the JWST},
+  year={2022},
+  school={Universit{\'e} Paris Cit{\'e}, France},
+  publisher={},
+  url={},
+  urldate={}
+}
+#+end_src
 * Version log
 ** v1.x (2022xxxx, JWST beta)
 - Added robust/skewed RMS (student/split gaussian distribution) for likelihood
@@ -111,9 +136,10 @@ The Python package [[https://github.com/kxxdhdn/RAPYUTA][rapyuta]] is required b
 - Parallelization
 ** v1 (2022xxxx, HB release)
 ** v0.3.10 (2022xxxx, prelease)
-- Update tests/
+- Update ~tests/~
 - Add manuel documentation files
 - Final clean before the first complete release
+** ---------- WE ARE HERE ----------
 ** v0.3.9 (202207xx, paper)
 - Update simulation
   + Divide ~simulation.f90~ into ~simu_SovN.f90~ and ~simu_cont.f90~
@@ -123,7 +149,6 @@ The Python package [[https://github.com/kxxdhdn/RAPYUTA][rapyuta]] is required b
   + Distance-dependent plots
 - Add extinction curves of ices
 - Update ~tests/~
-** ---------- WE ARE HERE ----------
 ** v0.3.8 (20220616, thesis3)
 - Fix a vital bug in stellar continuum sampling
   + See the function ~specModel_gen()~ in ~aux/core.f90~

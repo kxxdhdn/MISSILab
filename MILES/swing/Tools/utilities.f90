@@ -140,7 +140,7 @@ CONTAINS
       CASE ("dapmcw18")
         LibF = "/Users/dhu/Github/MISSILE/MILES/swing/"
       CASE ("iclustgate")
-        LibF = "/dsm/herschel1/nuages/dhu/MILES/swing/"
+        LibF = "/dsm/herschel1/nuages/Codes/MILES/swing/"
     END SELECT
 
   END FUNCTION libF
@@ -157,7 +157,7 @@ CONTAINS
       CASE ("dapmcw18")
         temproot = "/Users/dhu/Github/MISSILE/MILES/swing/Model_templates/"
       CASE ("iclustgate")
-        temproot = "/dsm/herschel1/nuages/dhu/MILES/swing/Model_templates/"
+        temproot = "/dsm/herschel1/nuages/Codes/MILES/swing/Model_templates/"
     END SELECT
 
   END FUNCTION temproot

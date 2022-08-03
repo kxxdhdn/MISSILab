@@ -6,14 +6,36 @@ Mid-Infrared Sky Spectral Insight LibrariEs
 /MISSILE/ is a collection of several data processing/analyzing tools, which allow to explore galaxies through the mid-IR spectroscopy.
 ** [[https://github.com/kxxdhdn/MISSILE/tree/main/MIRAGE][MIRAGE]]
 Mid-InfraRed spectrocube Assembly enGinE
-[Python + IDL + Fortran]
+- Info: Python core + IDL (convolution) + Fortran (synthetic photometry)
+- Inputs
+  + AKARI/IRC spectra (ASCII)
+  + spectral cubes with corresponding uncertainty cubes (FITS)
+- Outputs
+  + combined spectral cubes with corresponding uncertainty cubes (FITS)
+  + synthetic photometry
 ** [[https://github.com/kxxdhdn/MISSILE/tree/main/MILES][MILES]]
 Mid-Infrared Line Extraction Software
-[Fortran + Python]
+- Info: Fortran core + Python interface
+- Inputs
+  + individual spectrum or spectral cube
+- Outputs
+  + fitted spectra
+  + distribution of parameters
+  + correlation diagrams of line/band ratios
+  + spatial maps of line/feature ratios
+** HerBIE ([[https://ui.adsabs.harvard.edu/abs/2018MNRAS.476.1445G/abstract][Galliano2018a]]) adapted for far-infrared (HerBIE-FIR; planned)
+HiERarchical Bayesian Inference for dust Emission
+- Info: Fortran + Python
+- FIR spectral energy distribution (SED) fitting
+- Outputs
+  + maps of L_{TIR}, M_{dust}, T_{dust}, /etc./
+  + lines
 ** Supported observations: 
 - AKARI/IRC (2.5 - 5 microns)
-- Spitzer/IRS (5 - 40 microns)
+- Spitzer/IRS (5 - 38 microns)
 - JWST (upcoming)
+- SOFIA (planned)
+- UKIRT (planned)
 * Helpdesk
 ** Prerequisite
 *** [[https://github.com/kxxdhdn/RAPYUTA][RAPYUTA]]

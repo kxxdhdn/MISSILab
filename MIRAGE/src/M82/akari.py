@@ -16,7 +16,7 @@ warnings.filterwarnings("ignore", message="Skipping SYSTEM_VARIABLE record")
 
 from tqdm import tqdm, trange
 
-import os
+import os, pathlib
 import math
 import numpy as np
 from scipy.optimize import curve_fit
@@ -58,7 +58,8 @@ Nobs = len(parobs)
 # Nmc = 2
 
 # exit()
-    
+
+
 ##----------------------------------------------------------
 
 ##                      Build slits
@@ -89,9 +90,11 @@ if do_build=='y':
             ##------------------------------------------
             ## (A,B,C,D,G,H,I,J,L,N) (E,F,K) (M) have slightly different wgrid...
             ismooth(fits_irc[i]+'_'+str(j), wgrid=wave0, filOUT=fits_irc[i]+'_'+str(j))
-            
+
+    for i in range(Nobs):
         ## MC unc
-        if Nmc>1:
+        fits_Nmc = pathlib.Path(fits_irc[i]+'_'+str(Nmc)+fitsext)
+        if Nmc>1 and fits_Nmc.exists():
             mcimage = []
             for j in range(Nmc):
                 ds = read_fits(fits_irc[i]+'_'+str(j+1))
@@ -280,14 +283,17 @@ if pre_calib1=='y':
                 igroupixel(tmp_phot1+'_'+parobs[i][0]+'_'+str(j),
                            xscale=xscale, yscale=yscale,
                            filOUT=tmp_phot1+'_'+parobs[i][0]+'_'+str(j))
-        if Nmc>1:
-            mcimage = []
-            for j in range(Nmc):
-                ds = read_fits(tmp_phot1+'_'+parobs[i][0]+'_'+str(j+1))
-                mcimage.append(ds.data)
-            mcimage = np.array(mcimage)
-            unc = np.nanstd(mcimage, axis=0)
-            write_fits(fits_phot1+'_'+parobs[i][0]+'_unc', ds.header, unc)
+
+for i in range(Nobs):
+    fits_Nmc = pathlib.Path(tmp_phot1+'_'+parobs[i][0]+'_'+str(Nmc)+fitsext)
+    if Nmc>1 and fits_Nmc.exists():
+        mcimage = []
+        for j in range(Nmc):
+            ds = read_fits(tmp_phot1+'_'+parobs[i][0]+'_'+str(j+1))
+            mcimage.append(ds.data)
+        mcimage = np.array(mcimage)
+        unc = np.nanstd(mcimage, axis=0)
+        write_fits(fits_phot1+'_'+parobs[i][0]+'_unc', ds.header, unc)
 
 ## SINGS (phot2)
 ##===============
@@ -369,14 +375,17 @@ if pre_calib2=='y':
                 igroupixel(tmp_phot2+'_'+parobs[i][0]+'_'+str(j),
                            xscale=xscale, yscale=yscale,
                            filOUT=tmp_phot2+'_'+parobs[i][0]+'_'+str(j))
-        if Nmc>1:
-            mcimage = []
-            for j in range(Nmc):
-                ds = read_fits(tmp_phot2+'_'+parobs[i][0]+'_'+str(j+1))
-                mcimage.append(ds.data)
-            mcimage = np.array(mcimage)
-            unc = np.nanstd(mcimage, axis=0)
-            write_fits(fits_phot2+'_'+parobs[i][0]+'_unc', ds.header, unc)
+
+for i in range(Nobs):
+    fits_Nmc = pathlib.Path(tmp_phot2+'_'+parobs[i][0]+'_'+str(Nmc)+fitsext)
+    if Nmc>1 and fits_Nmc.exists():
+        mcimage = []
+        for j in range(Nmc):
+            ds = read_fits(tmp_phot2+'_'+parobs[i][0]+'_'+str(j+1))
+            mcimage.append(ds.data)
+        mcimage = np.array(mcimage)
+        unc = np.nanstd(mcimage, axis=0)
+        write_fits(fits_phot2+'_'+parobs[i][0]+'_unc', ds.header, unc)
 
 ## Synthetic photometry (spec)
 ##=============================
@@ -394,14 +403,17 @@ if (synt_phot=='y'):# and do_build=='y'):
                 write_fits(fits_spec+'_'+parobs[i][0], ic.hdr, sp.Fnu_filt)
             else:
                 write_fits(tmp_spec+'_'+parobs[i][0]+'_'+str(j), ic.hdr, sp.Fnu_filt)
-        if Nmc>1:
-            mcimage = []
-            for j in range(Nmc):
-                ds = read_fits(tmp_spec+'_'+parobs[i][0]+'_'+str(j+1))
-                mcimage.append(ds.data)
-            mcimage = np.array(mcimage)
-            unc = np.nanstd(mcimage, axis=0)
-            write_fits(fits_spec+'_'+parobs[i][0]+'_unc', ds.header, unc)
+
+for i in range(Nobs):
+    fits_Nmc = pathlib.Path(tmp_spec+'_'+parobs[i][0]+'_'+str(Nmc)+fitsext)
+    if Nmc>1 and fits_Nmc.exists():
+        mcimage = []
+        for j in range(Nmc):
+            ds = read_fits(tmp_spec+'_'+parobs[i][0]+'_'+str(j+1))
+            mcimage.append(ds.data)
+        mcimage = np.array(mcimage)
+        unc = np.nanstd(mcimage, axis=0)
+        write_fits(fits_spec+'_'+parobs[i][0]+'_unc', ds.header, unc)
 
 ##-----------------
 ## Fit correlation
@@ -493,8 +505,9 @@ for i in range(Nobs):
                        xlabel='DustPedia (MJy/sr)', ylabel='SINGS (MJy/sr)',
                        # title=src+' '+phot+' calibration',
                        figsize=(8,8),# right=.8, left=.15, bottom=.15,
-                       loc='upper left', anchor=(0,1), legendalpha=0,
+                       loc='upper left', anchor=(1,1), legendalpha=0,
                        titlesize=20, xysize=20, tksize=20, legendsize=15)
+
         p0.add_plot(pix_phot1[i][mask], pix_phot2[i][mask],
                     yerr=pix_phot2_unc[i][mask], xerr=pix_phot1_unc[i][mask],
                     fmt='s', ec='grey', c=colors[i+1],
@@ -517,7 +530,7 @@ for i in range(Nobs):
                           xlabel=r'$\rm IRC-sIRAC_{3.6\mu m}\ (MJy/sr)$',
                           ylabel=r'$\rm IRAC_{3.6\mu m}\ (MJy/sr)$',
                           figsize=(8,8),# right=.78, left=.12, bottom=.1, top=.95,
-                          loc='upper left', anchor=(0,1), legendalpha=0,
+                          loc='upper left', anchor=(1,1), legendalpha=0,
                           titlesize=20, xysize=20, tksize=20, legendsize=15)
                                 
             p.add_plot(pix_spec[i][mask], pix_phot2[i][mask],
@@ -574,7 +587,7 @@ p0.add_plot(xgrid, f_lin0(xgrid, *popt),
             c='k', ls='-', label=label)
 p0.ax.legend(loc='upper left', bbox_to_anchor=(1,1),
              fontsize=20, framealpha=0,)
-p0.save(path_cal+'DP-SINGS_'+phot+'.png')
+p0.save(path_cal+'DP-SINGS_'+phot+'.png', transparent=True, figtight=True)
 
 ## Linear fit (IRC - SINGS, ATLAS)
 ##=================================
@@ -599,7 +612,7 @@ if do_intcal=='y':
     # label = 'y={0:.4}x+{1:.4}'.format(atlas_gain, atlas_off)
     p.add_plot(xgrid, f_lin0(xgrid, *popt),
                c='k', ls='-', label=label)
-    p.ax.text(.9,.05,'(b)',size=30,c='grey',transform=p.ax.transAxes) # for the use of Hu_thesis
+    # p.ax.text(.9,.05,'(b)',size=30,c='grey',transform=p.ax.transAxes) # for the use of Hu_thesis
     p.ax.legend(loc='upper left', bbox_to_anchor=(1,1),
                 fontsize=20, framealpha=0,)
     p.save(path_cal+'IC_'+phot+'.png', transparent=True, figtight=True)
@@ -742,13 +755,15 @@ for j in trange(Nmc, #leave=False,
 if (write_irc=='y' and Nmc>1):
     for i in trange(Nobs, leave=False,
                     desc='Calculating uncertainties for IRC slits'):
-        mcimage = []
-        for j in range(Nmc):
-            ds = read_fits(fits_irc[i]+'_'+str(j+1))
-            mcimage.append(ds.data)
-        mcimage = np.array(mcimage)
-        unc = np.nanstd(mcimage, axis=0)
-        write_fits(out_irc[i]+'_unc', ds.header, unc, ds.wave)
+        fits_Nmc = pathlib.Path(fits_irc[i]+'_'+str(Nmc)+fitsext)
+        if fits_Nmc.exists():
+            mcimage = []
+            for j in range(Nmc):
+                ds = read_fits(fits_irc[i]+'_'+str(j+1))
+                mcimage.append(ds.data)
+            mcimage = np.array(mcimage)
+            unc = np.nanstd(mcimage, axis=0)
+            write_fits(out_irc[i]+'_unc', ds.header, unc, ds.wave)
 
 
 ##----------------------------------------------------------

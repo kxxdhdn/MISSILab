@@ -1,0 +1,131 @@
+--------------------------------------------------------------------------------
+                        SUMMARY OF GRAIN CROSS-SECTIONS
+--------------------------------------------------------------------------------
+
+Sil_LD93                       3300.0000 kg/m3
+    Original astronomical silicate                                                  
+    (Laor & Draine 1993, ApJ, 402, 441)                                             
+
+Sil_WD01                       3500.0000 kg/m3
+    Smoothed UV astronomical silicate                                               
+    (Weingartner & Draine 2001, ApJ, 548, 296)                                      
+
+Sil_LD01                       3500.0000 kg/m3
+    Smoothed UV astronomical silicate & submm excess                                
+    (Li & Draine 2001, ApJ, 554, 778)                                               
+
+Sil_D03                        3500.0000 kg/m3
+    Astronomical silicate                                                           
+    (Draine 2003, ApJ, 598, 1017)                                                   
+
+SiC_LD93                       3220.0000 kg/m3
+    Silicon carbide                                                                 
+    (Laor & Draine 1993, ApJ, 402, 441)                                             
+
+Gra_D03                        2240.0000 kg/m3
+    Graphitic carbon (1/3-2/3)                                                      
+    (Draine 2003, ApJ, 598, 1017)                                                   
+
+Gra_LD93                       2240.0000 kg/m3
+    Original graphitic carbon (1/3-2/3)                                             
+    (Laor & Draine 1993, ApJ, 402, 441)                                             
+
+ACAR_Z96                       1850.0000 kg/m3
+    ACAR amorphous carbon                                                           
+    (Zubko et al. 1996, MNRAS, 282, 1321)                                           
+
+ACH2_Z96                       1850.0000 kg/m3
+    ACH2 amorphous carbon                                                           
+    (Zubko et al. 1996, MNRAS, 282, 1321)                                           
+
+BE_Z96                         1850.0000 kg/m3
+    BE amorphous carbon                                                             
+    (Zubko et al. 1996, MNRAS, 282, 1321)                                           
+
+PAHi_LD01                      2240.0000 kg/m3
+    Original ionized PAHs                                                           
+    (Li & Draine 2001, ApJ, 554, 778)                                               
+
+PAHn_LD01                      2240.0000 kg/m3
+    Original neutral PAHs                                                           
+    (Li & Draine 2001, ApJ, 554, 778)                                               
+
+PAHi_DL07                      2240.0000 kg/m3
+    Ionized PAHs                                                                    
+    (Draine & Li 2007, ApJ, 657, 810)                                               
+
+PAHn_DL07                      2240.0000 kg/m3
+    Neutral PAHs                                                                    
+    (Draine & Li 2007, ApJ, 657, 810)                                               
+
+PAHi_DL07_G11                  2240.0000 kg/m3
+    Ionized PAHs modified for the Z04 model                                         
+    (Galliano et al. 2011, A&A, 536, A88)                                           
+
+PAHn_DL07_G11                  2240.0000 kg/m3
+    Neutral PAHs modified for the Z04 model                                         
+    (Galliano et al. 2011, A&A, 536, A88)                                           
+
+PAHi_DL07_C11                  2240.0000 kg/m3
+    Ionized PAHs modified for the C11 model                                         
+    (Compiegne et al. 2011, A&A, 525, A103)                                         
+
+PAHn_DL07_C11                  2240.0000 kg/m3
+    Neutral PAHs modified for the C11 model                                         
+    (Compiegne et al. 2011, A&A, 525, A103)                                         
+
+a-C_man20nm_J13                1300.0000 kg/m3
+    a-C(:H) + 20 nm a-C                                                             
+    (Jones et al. 2013, A&A, 558, A62)                                              
+
+a-Forst_Fe_man5nm_J1           1600.0000 kg/m3
+    a-Forsterite + 10 % Fe/FeS + 5 nm a-C                                           
+    (Jones et al. 2013, A&A, 558, A62)                                              
+
+a-Enst_Fe_man5nm_J13           1600.0000 kg/m3
+    a-Enstatite + 10 % Fe/FeS + 5 nm a-C                                            
+    (Jones et al. 2013, A&A, 558, A62)                                              
+
+a-C_man20nm_small              1600.0000 kg/m3
+    Small a-C(:H) + 20 nm a-C                                                       
+    (Jones et al. 2017, A&A, 602, A46)                                              
+
+a-C_man20nm_big                1510.0000 kg/m3
+    Big a-C(:H) + 20 nm a-C                                                         
+    (Jones et al. 2017, A&A, 602, A46)                                              
+
+a-Forst_Fe_man5nm              2190.0000 kg/m3
+    a-Forsterite + 10 % Fe/FeS + 5 nm a-C                                           
+    (Jones et al. 2017, A&A, 602, A46)                                              
+
+a-Enst_Fe_man5nm               2190.0000 kg/m3
+    a-Enstatite + 10 % Fe/FeS + 5 nm a-C                                            
+    (Jones et al. 2017, A&A, 602, A46)                                              
+
+Sil_Mg07_J03                   3500.0000 kg/m3
+    Silicate Mg_0.7 Si O_2.7                                                        
+    (Jaeger et al. 2003, A&A, 408, 193)                                             
+
+Sil_Mg10_J03                   3500.0000 kg/m3
+    Silicate Mg_0.7 Si O_2.7                                                        
+    (Jaeger et al. 2003, A&A, 408, 193)                                             
+
+Sil_Mg15_J03                   3500.0000 kg/m3
+    Silicate Mg_0.7 Si O_2.7                                                        
+    (Jaeger et al. 2003, A&A, 408, 193)                                             
+
+Sil_Mg20_J03                   3500.0000 kg/m3
+    Silicate Mg_0.7 Si O_2.7                                                        
+    (Jaeger et al. 2003, A&A, 408, 193)                                             
+
+Sil_Mg24_J03                   3500.0000 kg/m3
+    Silicate Mg_0.7 Si O_2.7                                                        
+    (Jaeger et al. 2003, A&A, 408, 193)                                             
+
+FeO_H95                        5700.0000 kg/m3
+    Iron Oxide FeO                                                                  
+    (Henning et al. 1995, A&AS, 112, 143)                                           
+
+--------------------------------------------------------------------------------
+ Generated by F. Galliano, on February 11, 2019, at 21:31.
+

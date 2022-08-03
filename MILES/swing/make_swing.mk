@@ -42,7 +42,7 @@ HOST = $(shell hostname)
 ifeq ($(HOST),dapmcw18)
        LIBDIR = /Users/dhu/Github/MISSILE/MILES/swing/Programs/
 else
-       LIBDIR = /dsm/herschel1/nuages/dhu/MILES/swing/Programs/
+       LIBDIR = /dsm/herschel1/nuages/Codes/MILES/swing/Programs/
 endif
 
 ## SwING banner
