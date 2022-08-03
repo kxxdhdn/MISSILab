@@ -9,6 +9,10 @@ SOURCE: M82 (NGC 3034)
 
 import os
 
+## rapyuta
+from rapyuta.astrom import fixwcs
+from rapyuta.inout import fitsext
+from rapyuta.imaging import iswarp
 
 ##----------------------------------------------------------
 
@@ -16,7 +20,7 @@ import os
 
 ##----------------------------------------------------------
 src = 'M82'
-Nmc = 100
+Nmc = 20
 verbose = False
 
 ## Current dir
@@ -75,67 +79,98 @@ if not os.path.exists(path_fig):
 ##                         IRC data
 
 ##----------------------------------------------------------
-parobs = [
-    ## [Name,obsid,,,,,,spec,,imref,,,,,,,,,,,slit,Ny,Nsub,Nx,colors,markers]
-    ['A1_7','3390001.2','NG','F011100338_N002','Nh',28,7,3,'orange','*'], # A1-7
-    ['B1_7','3390003.1','NG','F011100379_N002','Nh',28,7,3,'gold','*'], # B1-7
-    ['C1_7','3390002.1','NG','F011100795_N002','Nh',28,7,3,'y','*'], # C1-7
-    ['D1_4','5125405.1','NG','F010116950_N002','Nh',24,4,3,'g','d'], # D1-4
-    ['E1_4','5125401.1','NG','F010117172_N002','Ns',24,4,5,'lime','d'], # E1-4
-    ['F1_2','5125405.1','NG','F010116950_N002','Ns',24,2,5,'pink','v'], # F1-2
-    ['G1_2','3390003.1','NG','F011100379_N002','Ns',24,2,5,'m','v'], # G1-2
-    ['H1_2','3390001.2','NG','F011100338_N002','Ns',24,2,5,'c','v'], # H1-2
-    ['I1_2','3390002.1','NG','F011100795_N002','Ns',24,2,5,'b','v'], # I1-2
-    ['J1_2','5125401.1','NG','F010117172_N002','Nh',24,2,3,'b','^'], # J1-2
-    ['K1_2','5125403.1','NG','F010116924_N002','Ns',24,2,5,'m','^'], # K1-2
-    ['L1_2','5125403.1','NG','F010116924_N002','Nh',24,2,3,'pink','^'], # L1-2
-    ['M1_2','5124077.1','NG','F007174142_N002','Ns',24,2,5,'grey','s'], # M1-2
-    ['N1_2','5124077.1','NG','F007174142_N002','Nh',24,2,3,'grey','s'], # N1-2
-    # ['3390001.1','NG','F011100297_N002','Ns',24,2,5], #
-    # ['3390001.1','NG','F011100297_N002','Nh',24,7,3], #
-    # ['3390002.2','NG','F011176073_N002'], # Matching failed
-    # ['5125402.1','NP','F010117172_N002'], # Matching failed
-    # ['5125404.1','NP','F010117338_N002'], # Matching failed
-    # ['5125406.1','NP','F010117086_N002'], # NP has 68 wvl instead of 259
+out_irc = path_out+src+'_IRC'
+
+slits = ['Ns', 'Nh']
+obsid = [
+    ['3390001.1','F011100297_N002','NG'], # A1-6, H1-2
+    ['3390001.2','F011100338_N002','NG'], # 
+    ['3390002.1','F011100795_N002','NG'], # C1-6, I1-2
+    # ['3390002.2','F011176073_N002','NG'], # Matching failed
+    ['3390003.1','F011100379_N002','NG'], # B1-6, G1-2
+    # ['5124077.1','F007174142_N002','NG'], # cap (bad spectra only)
+    ['5125401.1','F010117172_N002','NG'], # J1-2, E1-3
+    # ['5125402.1','F010117172_N002','NP'], # Matching failed
+    ['5125403.1','F010116924_N002','NG'], # 
+    # ['5125404.1','F010117338_N002','NP'], # Matching failed
+    ['5125405.1','F010116950_N002','NG'], # D1-3, F1-2
+    # ['5125406.1','F010117086_N002','NP'], # NP has 68 wvl instead of 259
 ]
 
 fits_irc = []
-out_irc = []
-out_irs = []
-colors = ['k']
-markers = []
-for obs in parobs:
-    fits_irc.append(path_build+obs[0])
-    out_irc.append(path_out+src+'_'+obs[0]+'_IRC')
-    out_irs.append(path_out+src+'_'+obs[0]+'_IRS')
-    colors.append(obs[8])
-    markers.append(obs[9])
+parobs = []
+for obs in obsid:
+    for s in slits:
+        fits_irc.append(path_build+obs[0]+'_'+s)
+        parobs.append([ obs[0], s, obs[1], obs[2] ])
 
+pixscale = 6
 
 ##----------------------------------------------------------
 
 ##                  IRS data (via CUBISM)
 
 ##----------------------------------------------------------
-# out_irs = path_out+src+'_IRS'
+out_irs = path_out+src+'_IRS'
 
 # chnl = ['SH', 'LH']
 chnl = ['SL2', 'SL1', 'LL2', 'LL1', 'SL3', 'LL3']
 
-sub_SL = ['04','06S','06N','08','08c','09N3','09N2']
-sub_LL = ['04','05','06','08','09N3','09N5','09N2']
-# sub_SL = ['08']
-# sub_LL = ['08']
-sub_SH = []
-sub_LH = []
+lab_sl2 = ['04','06S','06N','08','08c','09N3','09N2']
+lab_sl3 = ['04','06S','06N','08','08c','09N3','09N2']
+lab_sl1 = ['04','06S','06N','08','08c','09N3','09N2']
+lab_ll2 = ['03','04','05','06','08','09N3','09N5','09N2']
+lab_ll3 = ['03','04','05','06','08','09N3','09N5','09N2']
+lab_ll1 = ['03','04','05','06','08','09N3','09N5','09N2']
+lab_sh = []
+lab_lh = []
+
+fits_irs = []
+for ch in chnl:
+    if ch=='SL2':
+        lab_ch = lab_sl2
+    elif ch=='SL3':
+        lab_ch = lab_sl3
+    elif ch=='SL1':
+        lab_ch = lab_sl1
+    elif ch=='LL2':
+        lab_ch = lab_ll2
+    elif ch=='LL3':
+        lab_ch = lab_ll3
+    elif ch=='LL1':
+        lab_ch = lab_ll1
+    elif ch=='SH':
+        lab_ch = lab_sh
+    elif ch=='LH':
+        lab_ch = lab_lh
+        
+    fits_ch = []
+    if len(lab_ch)==0:
+        fits_ch.append(path_irs+src+'_'+ch)
+    else:
+        for t in lab_ch:
+            fits_ch.append(path_irs+src+'_'+t+'_'+ch)
+            
+    fits_irs.append(fits_ch)
+
 
 ##----------------------------------------------------------
 
 ##                   Data homogenisation
 
 ##----------------------------------------------------------
+## Reprojection
+##--------------
 coadd_tool = 'swarp'
 # coadd_tool = 'reproject'
+
+## IRC grid
+# coadd_fp = fixwcs(out_irc+fitsext).header
+## IRS grid
+# refheader = fixwcs(fits_irs[0][0]+fitsext).header
+# swp = iswarp(sum(fits_irs, []), refheader=refheader,
+#              tmpdir=path_tmp, verbose=verbose)
+# coadd_fp = swp.refheader
 
 ## Convolution
 ##-------------

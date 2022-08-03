@@ -11,19 +11,21 @@ Inter-calibrate AKARI/IRC spectra with Spitzer/IRAC1
 # import logging, sys
 # logging.disable(sys.maxsize)
 import warnings
-warnings.filterwarnings("ignore", category=RuntimeWarning) 
+warnings.filterwarnings("ignore", category=RuntimeWarning)
 warnings.filterwarnings("ignore", message="Skipping SYSTEM_VARIABLE record")
 
 from tqdm import tqdm, trange
 
 import os
+import math
 import numpy as np
 from scipy.optimize import curve_fit
 ## rapyuta
-from rapyuta.inout import fclean, fitsext, read_fits, write_fits
-from rapyuta.imaging import ( iconvolve, iswarp, sextract, irebin, iuncert,
+from rapyuta.inout import fclean, fitsext, read_fits, write_fits, read_hdf5
+from rapyuta.imaging import ( iconvolve, iswarp, cupid, iuncert, icrop, igroupixel,
                               imontage, improve, Jy_per_pix_to_MJy_per_sr )
 from rapyuta.astrom import fixwcs
+from rapyuta.arrays import closest, pix2sup, sup2pix
 from rapyuta.calib import intercalib
 from rapyuta.maths import f_lin, f_lin0, f_lin1
 from rapyuta.plots import pplot
@@ -36,9 +38,9 @@ from rapyuta.plots import pplot
 ##----------------------------------------------------------
 
 ## Local
-from buildinfo import ( src, Nmc, verbose, coadd_tool, pixscale,
+from buildinfo import ( src, Nmc, verbose, coadd_tool, colors, markers,
                         path_irc, path_build, parobs, # build
-                        fits_irc, out_irc,
+                        fits_irc, out_irc, path_out,
                         path_phot, path_ker, path_cal, # calib
                         path_idl, csv_ker, path_tmp, path_fig
 )
@@ -54,6 +56,10 @@ Nobs = len(parobs)
 
 # Nmc = 2
 
+filog = path_build+'build_history_'
+
+# exit()
+
 ##----------------------------------------------------------
 
 ##                      Build slits
@@ -62,42 +68,113 @@ Nobs = len(parobs)
 do_build = input("(Re)build IRC slits (y/n)? ")
 if do_build=='y':
 
-    slit_length = 24
-    slit_width = 1
-    Nsub = 6
-    
+    ## Interpolate Ns wvl to Nh wvl grid
+    ## None
+
     for i in trange(Nobs, #leave=False,
-                    desc='<sextract> IRC slit building'):
-    
-        ## Reproduce Y12 spectra
-        ##-----------------------
-        # if fits_irc[i][-1]=='s':
-        #     Nsub = 2 # Ns
-        # if fits_irc[i][-1]=='h':
-        #     Nsub = 6 # Nh
-        
-        ## MC add unc
+                    desc='<cupid> IRC slit building'):
+        ## Add unc for MC
+        # mcimage = []
         for j in trange(Nmc+1, leave=False,
-                        desc='IRC slit unc [MC]'):
-            sext = sextract(path_irc, parobs[i])
+                        desc=' - IRC slit unc [MC]'):
+            cup = cupid(path_irc, obsid=parobs[i][1], slit=parobs[i][4],
+                        spec=parobs[i][2], imref=parobs[i][3])
             if j==0:
-                sext.spec_build(fits_irc[i],
-                                Nx=slit_width, Ny=slit_length, Nsub=Nsub)
+                cup.spec_build(fits_irc[i]+'_0', tmpdir=path_build,
+                               filRAW=fits_irc[i], fiLOG=filog+parobs[i][0],
+                               Nx=parobs[i][7], Ny=parobs[i][5], Nsub=parobs[i][6],
+                               pixscale=1, wmin=2.55, wmax=4.25, supix=True)
             else:
-                imp = improve(fits_irc[i])
-                imp.rand_splitnorm([fits_irc[i]+'_unc_N',fits_irc[i]+'_unc_P'])
-                write_fits(fits_irc[i]+'_'+str(j),
-                           imp.hdr, imp.im, imp.wvl, imp.wmod)
+                cup.spec_build(fits_irc[i]+'_'+str(j), tmpdir=path_build,
+                               dist='splitnorm', sig_pt=3, fill_pt='med',
+                               Nx=parobs[i][7], Ny=parobs[i][5], Nsub=parobs[i][6],
+                               pixscale=1, wmin=2.55, wmax=4.25, supix=True)
+                # mcimage.append(cup.im)
+        # if Nmc>1:
+        #     mcimage = np.array(mcimage)
+        #     unc = np.nanstd(mcimage, axis=0)
+        #     write_fits(out_irc[i]+'_unc', cup.hdr, unc, cup.wvl)
+
 
 ##----------------------------------------------------------
 
-##                   Inter-Calibration
+##                       Coadd slits
 
 ##----------------------------------------------------------
-pre_calib1 = input("Run inter-calibration prepipeline (DustPedia) (y/n)? ")
-pre_calib2 = input("Run inter-calibration prepipeline (SINGS) (y/n)? ")
-int_calib = input("Run inter-calibration (y/n)? ")
-do_correct = input("Do IRC spectral correction for each slit (y/n)? ")
+irc_coadd = input("Coadd IRC slits (y/n)? ")
+if irc_coadd=='y':
+
+    ## Coadding
+    ##----------
+
+    ## IRC grid
+    refheader = fixwcs(fits_irc[0]+fitsext).header
+    swp = iswarp(fits_irc, refheader=refheader, 
+                 tmpdir=path_build, verbose=verbose)
+    footprint_irc = swp.refheader
+
+    if coadd_tool=='swarp':
+        
+        ## <iswarp> coadding
+        ##===================
+        swp = iswarp(refheader=footprint_irc,
+                     tmpdir=path_build, verbose=verbose)
+        swp.combine(fits_irc,# combtype='wgt_avg',
+                    keepedge=True, #cropedge=True,
+                    filOUT=path_tmp+src+'_IRC')
+
+    elif coadd_tool=='reproject':
+
+        ## <imontage> coadding
+        ##=====================
+        mtg = imontage('exact', tmpdir=path_tmp, verbose=verbose)
+        mtg.coadd(fits_irc, refheader=footprint_irc,
+                  filOUT=path_tmp+src+'_IRC')
+
+    ## Crop NaN edge
+    edge = 2 # leave an edge of some pixels
+    data = read_fits(path_tmp+src+'_IRC').data
+    Nw, Ny, Nx = data.shape
+    xlist = []
+    for x in range(Nx):
+        if not np.isnan(data[:,:,x]).all():
+            xlist.append(x)
+    ylist = []
+    for y in range(Ny):
+        if not np.isnan(data[:,y,:]).all():
+            ylist.append(y)
+    xmin = min(xlist) - edge
+    if xmin<0:
+        xmin = 0
+    xmax = max(xlist)+1 + edge
+    if xmax>Nx:
+        xmax = Nx
+    ymin = min(ylist) - edge
+    if ymin<0:
+        ymin = 0
+    ymax = max(ylist)+1 + edge
+    if ymax>Ny:
+        ymax = Ny
+    dx = xmax-xmin
+    dy = ymax-ymin
+    x0 = xmin+dx/2
+    y0 = ymin+dy/2
+    
+    icrop(path_tmp+src+'_IRC', filOUT=path_tmp+src+'_IRC',
+          sizpix=(dx,dy), cenpix=(x0,y0), verbose=verbose)
+    
+## Header of th atlas IRC map
+header_atlas = fixwcs(path_tmp+src+'_IRC'+fitsext).header
+
+
+##----------------------------------------------------------
+
+##                   Inter-calibration
+
+##----------------------------------------------------------
+pre_calib1 = input("Run inter-calibration prepipeline (DustPedia IRAC1) (y/n)? ")
+pre_calib2 = input("Run inter-calibration prepipeline (SINGS IRAC1) (y/n)? ")
+synt_phot = input("Run inter-calibration prepipeline (IRC synthetic photometry) (y/n)? ")
 
 if not os.path.exists(path_tmp+'calib/'):
     os.makedirs(path_tmp+'calib/')
@@ -131,40 +208,70 @@ if pre_calib1=='y':
     ## Create homogeneous uncertainty map
     bg = read_fits(tmp_phot1).data[1713:1753,3110:3150]
     iuncert(tmp_phot1, filOUT=tmp_phot1+'_unc', BG_image=bg)
-    
-    for f in fits_irc:
-        ## Reproject phot
-        fname = os.path.basename(f)
-        refheader = fixwcs(f+fitsext).header
+
+    ## Reproject phot (atlas)
+    if coadd_tool=='swarp':
+        swp = iswarp(refheader=header_atlas, tmpdir=path_tmp)
+        swp.combine_mc(tmp_phot1, keepedge=True, #cropedge=True,
+                       dist='norm', Nmc=Nmc, filOUT=tmp_phot1+'_MC')
+    elif coadd_tool=='reproject':
         mtg = imontage('exact', tmpdir=path_tmp)
-        mtg.reproject_mc(tmp_phot1, refheader=refheader,
-                         dist='norm', Nmc=Nmc, filOUT=tmp_phot1+'_'+fname)
+        mtg.reproject_mc(tmp_phot1, refheader=header_atlas,
+                         dist='norm', Nmc=Nmc, filOUT=tmp_phot1+'_MC')
+    
+    for i in trange(Nobs, #leave=False,
+                    desc=phot+' (DustPedia) processing'):
+        xscale, yscale = read_hdf5(filog+parobs[i][0], 'Super pixel size')
+        refheader = fixwcs(fits_irc[i]+'_0'+fitsext).header
 
-        ## Convolve phot
-        for j in trange(Nmc+1, leave=False,
-                        desc=fname+': DP conv [MC]'):
-            if j==0:
-                conv = iconvolve(tmp_phot1+'_'+fname,
-                                 kfile=phot_ker, klist=csv_ker,
-                                 filOUT=fits_phot1+'_'+fname)
-            else:
-                conv = iconvolve(tmp_phot1+'_'+fname+'_'+str(j),
-                                 kfile=phot_ker, klist=csv_ker,
-                                 # filUNC=tmp_phot1+'_unc', dist='norm',
-                                 filOUT=tmp_phot1+'_'+fname+'_'+str(j))
-            conv.do_conv(idldir=path_idl)
-
-        ## Calculate unc
         mcimage = []
-        for j in range(Nmc+1):
+        for j in trange(Nmc+1, leave=False,
+                        desc=' - '+parobs[i][0]+' [MC]'):
+            if i==0:
+                ## Convolve phot
+                if j==0:
+                    conv = iconvolve(tmp_phot1+'_MC',
+                                     kfile=phot_ker, klist=csv_ker,
+                                     filOUT=tmp_phot1+'_conv')
+                else:
+                    conv = iconvolve(tmp_phot1+'_MC',
+                                     kfile=phot_ker, klist=csv_ker,
+                                     # filUNC=tmp_phot1+'_unc', dist='norm',
+                                     filOUT=tmp_phot1+'_'+str(j)+'_conv')
+                conv.do_conv(idldir=path_idl)
+
+            ## Reproject phot (slit)
+            if coadd_tool=='swarp':
+                swp = iswarp(refheader=refheader, tmpdir=path_tmp)
+                if j==0:
+                    swp.combine(tmp_phot1+'_conv',
+                                filOUT=fits_phot1+'_'+parobs[i][0])
+                else:
+                    swp.combine(tmp_phot1+'_'+str(j)+'_conv',
+                                filOUT=tmp_phot1+'_'+parobs[i][0]+'_'+str(j))
+            elif coadd_tool=='reproject':
+                mtg = imontage('exact', tmpdir=path_tmp)
+                if j==0:
+                    mtg.reproject(tmp_phot1+'_conv', refheader=refheader,
+                                  filOUT=fits_phot1+'_'+parobs[i][0])
+                else:
+                    mtg.reproject(tmp_phot1+'_'+str(j)+'_conv', refheader=refheader,
+                                  filOUT=tmp_phot1+'_'+parobs[i][0]+'_'+str(j))
+            
+            ## Calculate unc
             if j==0:
-                hdr = read_fits(fits_phot1+'_'+fname).header
+                hdr = igroupixel(fits_phot1+'_'+parobs[i][0],
+                                 xscale=xscale, yscale=yscale,
+                                 filOUT=fits_phot1+'_'+parobs[i][0]).header()
             else:
-                mcimage.append(read_fits(tmp_phot1+'_'+fname+'_'+str(j)).data)
+                im = igroupixel(tmp_phot1+'_'+parobs[i][0]+'_'+str(j),
+                                xscale=xscale, yscale=yscale,
+                                filOUT=tmp_phot1+'_'+parobs[i][0]+'_'+str(j)).image()
+                mcimage.append(im)
         if Nmc>1:
             mcimage = np.array(mcimage)
             unc = np.nanstd(mcimage, axis=0)
-            write_fits(fits_phot1+'_'+fname+'_unc', hdr, unc)
+            write_fits(fits_phot1+'_'+parobs[i][0]+'_unc', hdr, unc)
 
 ## SINGS (phot2)
 ##===============
@@ -189,466 +296,452 @@ if pre_calib2=='y':
     #             filWGT=wgt_phot2, wfac=wfac,
     #             BG_image=bg, BG_weight=bg_wgt)
 
-    for f in fits_irc:
-        ## Reproject phot
-        fname = os.path.basename(f)
-        refheader = fixwcs(f+fitsext).header
+    ## Reproject phot (atlas)
+    if coadd_tool=='swarp':
+        swp = iswarp(refheader=header_atlas, tmpdir=path_tmp)
+        swp.combine_mc(raw_phot2, keepedge=True, #cropedge=True,
+                       dist='norm', Nmc=Nmc, filOUT=tmp_phot2+'_MC')
+    elif coadd_tool=='reproject':
         mtg = imontage('exact', tmpdir=path_tmp)
-        mtg.reproject_mc(raw_phot2, refheader=refheader,
-                         dist='norm', Nmc=Nmc, filOUT=tmp_phot2+'_'+fname)
+        mtg.reproject_mc(raw_phot2, refheader=header_atlas,
+                         dist='norm', Nmc=Nmc, filOUT=tmp_phot2+'_MC')
 
-        ## Convolve phot
-        for j in trange(Nmc+1, leave=False,
-                        desc=fname+': SINGS conv [MC]'):
-            if j==0:
-                conv = iconvolve(tmp_phot2+'_'+fname,
-                                 kfile=phot_ker, klist=csv_ker,
-                                 filOUT=fits_phot2+'_'+fname)
-            else:
-                conv = iconvolve(tmp_phot2+'_'+fname+'_'+str(j),
-                                 kfile=phot_ker, klist=csv_ker,
-                                 # filUNC=tmp_phot2+'_unc', dist='norm',
-                                 filOUT=tmp_phot2+'_'+fname+'_'+str(j))
-            conv.do_conv(idldir=path_idl)
-        
-        ## Calculate unc
+    for i in trange(Nobs, #leave=False,
+                    desc=phot+' (SINGS) processing'):
+        xscale, yscale = read_hdf5(filog+parobs[i][0], 'Super pixel size')
+        refheader = fixwcs(fits_irc[i]+'_0'+fitsext).header
+
         mcimage = []
-        for j in range(Nmc+1):
+        for j in trange(Nmc+1, leave=False,
+                        desc=' - '+parobs[i][0]+' [MC]'):
+            if i==0:
+                ## Convolve phot
+                if j==0:
+                    conv = iconvolve(tmp_phot2+'_MC',
+                                     kfile=phot_ker, klist=csv_ker,
+                                     filOUT=tmp_phot2+'_conv')
+                else:
+                    conv = iconvolve(tmp_phot2+'_MC',
+                                     kfile=phot_ker, klist=csv_ker,
+                                     # filUNC=tmp_phot2+'_unc', dist='norm',
+                                     filOUT=tmp_phot2+'_'+str(j)+'_conv')
+                conv.do_conv(idldir=path_idl)
+
+            ## Reproject phot (slit)
+            if coadd_tool=='swarp':
+                swp = iswarp(refheader=refheader, tmpdir=path_tmp)
+                if j==0:
+                    swp.combine(tmp_phot2+'_conv',
+                                filOUT=fits_phot2+'_'+parobs[i][0])
+                else:
+                    swp.combine(tmp_phot2+'_'+str(j)+'_conv',
+                                filOUT=tmp_phot2+'_'+parobs[i][0]+'_'+str(j))
+            elif coadd_tool=='reproject':
+                mtg = imontage('exact', tmpdir=path_tmp)
+                if j==0:
+                    mtg.reproject(tmp_phot2+'_conv', refheader=refheader,
+                                  filOUT=fits_phot2+'_'+parobs[i][0])
+                else:
+                    mtg.reproject(tmp_phot2+'_'+str(j)+'_conv', refheader=refheader,
+                                  filOUT=tmp_phot2+'_'+parobs[i][0]+'_'+str(j))
+            
+            ## Calculate unc
             if j==0:
-                hdr = read_fits(fits_phot2+'_'+fname).header
+                hdr = igroupixel(fits_phot2+'_'+parobs[i][0],
+                                 xscale=xscale, yscale=yscale,
+                                 filOUT=fits_phot2+'_'+parobs[i][0]).header()
             else:
-                mcimage.append(read_fits(tmp_phot2+'_'+fname+'_'+str(j)).data)
+                im = igroupixel(tmp_phot2+'_'+parobs[i][0]+'_'+str(j),
+                                xscale=xscale, yscale=yscale,
+                                filOUT=tmp_phot2+'_'+parobs[i][0]+'_'+str(j)).image()
+                mcimage.append(im)
         if Nmc>1:
             mcimage = np.array(mcimage)
             unc = np.nanstd(mcimage, axis=0)
-            write_fits(fits_phot2+'_'+fname+'_unc', hdr, unc)
-        
-        ## Synthetic photometry (spec)
-        ##=============================
+            write_fits(fits_phot2+'_'+parobs[i][0]+'_unc', hdr, unc)
+
+## Synthetic photometry (spec)
+##=============================
+if (synt_phot=='y' and do_build=='y'):
+    ## fits_irc[i] can be changed by inter-calib,
+    ## One need to rebuild before synthetic photometry
+    for i in trange(Nobs, #leave=False,
+                    desc=phot+' (IRC synt phot) slits'):
+        xscale, yscale = read_hdf5(filog+parobs[i][0], 'Super pixel size')
         mcimage = []
         for j in trange(Nmc+1, leave=False,
-                        desc=fname+': IRC sythetic photometry [MC]'):
+                        desc=' - '+parobs[i][0]+': IRC sythetic photometry [MC]'):
+            ic = intercalib(fits_irc[i]+'_'+str(j))
+            sp = ic.synthetic_photometry(phot, xscale=xscale, yscale=yscale)
             if j==0:
-                ic = intercalib(f)
-                sp = ic.synthetic_photometry(phot)
-                write_fits(fits_spec+'_'+fname, ic.hdr, sp.Fnu_filt)
+                write_fits(fits_spec+'_'+parobs[i][0], ic.hdr, sp.Fnu_filt)
             else:
-                ic = intercalib(f+'_'+str(j))
-                sp = ic.synthetic_photometry(phot)
-                ## Cal unc
+                write_fits(tmp_spec+'_'+parobs[i][0]+'_'+str(j), ic.hdr, sp.Fnu_filt)
                 mcimage.append(sp.Fnu_filt)
         if Nmc>1:
             # print('Calculating uncertainty cube...')
             mcimage = np.array(mcimage)
             unc = np.nanstd(mcimage, axis=0)
-            write_fits(fits_spec+'_'+fname+'_unc', ic.hdr, unc)
+            write_fits(fits_spec+'_'+parobs[i][0]+'_unc', ic.hdr, unc)
 
+##-----------------
 ## Fit correlation
 ##-----------------
-for f in fits_irc:
-    fname = os.path.basename(f)
+## Data dictionary
+## e.g. [{'A0': a0, 'A1': a1, ...}, {'B0': b0, 'B1': b1, ...}, ...]
+dict_phot1 = []
+dict_phot1_unc = []
+dict_phot2 = []
+dict_phot2_unc = []
+dict_spec = []
+dict_spec_unc = []
+## Data 1D array
+## e.g. [array([a1, a2, ...]), array([b1, b2, ...]), ...]
+pix_phot1 = []
+pix_phot1_unc = []
+pix_phot2 = []
+pix_phot2_unc = []
+pix_spec = []
+pix_spec_unc = []
 
-    ## Data
-    data_phot1 = read_fits(fits_phot1+'_'+fname).data
-    unc_phot1 = read_fits(fits_phot1+'_'+fname+'_unc').data
-    data_phot2 = read_fits(fits_phot2+'_'+fname).data
-    unc_phot2 = read_fits(fits_phot2+'_'+fname+'_unc').data
-    data_spec = read_fits(fits_spec+'_'+fname).data
-    unc_spec = read_fits(fits_spec+'_'+fname+'_unc').data
-            
-    if int_calib=='y':
+# xgrid = np.arange(0,1e3,1)
+xgrid = np.logspace(-2,3,1000)
+
+for i in range(Nobs):
+    # Nx = read_hdf5(filog+parobs[i][0], 'Slit width')
+    Ny = read_hdf5(filog+parobs[i][0], 'Slit length')[0]
+    xscale, yscale = read_hdf5(filog+parobs[i][0], 'Super pixel size')
+    # Nxs = math.ceil(Nx/xscale)
+    Nys = math.ceil(Ny/yscale)
+
+    ## Init dict
+    data1 = {}
+    unc1 = {}
+    data2 = {}
+    unc2 = {}
+    data3 = {}
+    unc3 = {}
+    for ys in range(Nys):
+        subname = parobs[i][0][0]+str(ys+1)
+        yarr = sup2pix(ys, yscale, Npix=Ny, origin=0)
+        ## Phot1
+        ds = read_fits(fits_phot1+'_'+parobs[i][0], fits_phot1+'_'+parobs[i][0]+'_unc')
+        data1[subname] = ds.data[yarr[0],0]
+        unc1[subname] = ds.unc[yarr[0],0]
+        ## Phot2
+        ds = read_fits(fits_phot2+'_'+parobs[i][0], fits_phot2+'_'+parobs[i][0]+'_unc')
+        data2[subname] = ds.data[yarr[0],0]
+        unc2[subname] = ds.unc[yarr[0],0]
+        ## spec
+        ds = read_fits(fits_spec+'_'+parobs[i][0], fits_spec+'_'+parobs[i][0]+'_unc')
+        data3[subname] = ds.data[yarr[0],0]
+        unc3[subname] = ds.unc[yarr[0],0]
+    dict_phot1.append(data1)
+    dict_phot1_unc.append(unc1)
+    dict_phot2.append(data2)
+    dict_phot2_unc.append(unc2)
+    dict_spec.append(data3)
+    dict_spec_unc.append(unc3)
+
+    ## Dictionary to 1D array
+    pix_phot1.append(np.array(list(dict_phot1[i].values())))
+    pix_phot1_unc.append(np.array(list(dict_phot1_unc[i].values())))
+    pix_phot2.append(np.array(list(dict_phot2[i].values())))
+    pix_phot2_unc.append(np.array(list(dict_phot2_unc[i].values())))
+    pix_spec.append(np.array(list(dict_spec[i].values())))
+    pix_spec_unc.append(np.array(list(dict_spec_unc[i].values())))
+
+    ## Mask NaNs and negtive values
+    mask_nan = ~np.logical_or( np.isnan(pix_spec[i]), np.isnan(pix_phot2[i]) )
+    mask_neg = np.logical_and( pix_spec[i]>0, pix_phot2[i]>0 )
+    mask = np.logical_and( mask_nan, mask_neg )
+    
+    ## S/N ratio
+    # print(parobs[i][0]+' S/N (IRC) = \n', pix_spec[i][mask]/pix_spec_unc[i][mask])
+    # print(parobs[i][0]+' S/N (SINGS) = \n', pix_phot2[i][mask]/pix_phot2_unc[i][mask])
+
+    if mask.any():
+        if (pre_calib1=='y' or pre_calib2=='y'):
+            ## DP - SINGS plot
+            if i==0:
+                p0 = pplot(fmt='s', ec='r', elw=1, clib=colors,
+                           xlog=1, ylog=1, nonposx='clip', nonposy='clip',
+                           # xlim=(1e-2,1e3), ylim=(1e-2,1e3),
+                           xlabel='DustPedia (MJy/sr)', ylabel='SINGS (MJy/sr)',
+                           figsize=(8,8), legend='upper left', title=src+'_'+phot,
+                           titlesize=20, labelsize=10, ticksize=10, legendsize=10)
+            p0.add_plot(pix_phot1[i][mask], pix_phot2[i][mask],
+                        yerr=pix_phot2_unc[i][mask], xerr=pix_phot1_unc[i][mask],
+                        fmt='s', ec='r', marker=markers[i], markersize=10,
+                        label=parobs[i][0])
+            p0.save(path_cal+'DP-SINGS_'+phot)
+    
+        if (synt_phot=='y' or pre_calib2=='y'):
+            ## IRC - SINGS plot
+            if i==0:
+                p = pplot(fmt='s', ec='r', elw=1, clib=colors,
+                          xlog=1, ylog=1, nonposx='clip', nonposy='clip',
+                          xlim=(1e-2,1e3), ylim=(1e-2,1e3),
+                          xlabel='IRC (MJy/sr)', ylabel='SINGS (MJy/sr)', 
+                          figsize=(8,8), legend='upper left', title=src+'_'+phot,
+                          titlesize=20, labelsize=10, ticksize=10, legendsize=10)
+            p.add_plot(pix_spec[i][mask], pix_phot2[i][mask],
+                       yerr=pix_phot2_unc[i][mask], xerr=pix_spec_unc[i][mask],
+                       fmt='s', ec='r', marker=markers[i], markersize=10,
+                       label=parobs[i][0])
+            p.save(path_cal+'IC_'+phot+'.png')
+    
+        ## Linear fit (IRC - SINGS, SLITS)
+        ##=================================
+        popt, pcov = curve_fit(f_lin0, pix_spec[i][mask], pix_phot2[i][mask],)
+                               # sigma=pix_phot2_unc[i][mask])
+        slit_gain = popt[0]
+        # slit_gain = 1.
+        # slit_off = popt[1]
+        slit_off = 0.
+        # slit_off = popt[0]
         
-        ## Plot
-        pix_phot1 = data_phot1[:,:].reshape((-1,))
-        pix_phot1_unc = unc_phot1[:,:].reshape((-1,))
-        pix_phot2 = data_phot2[:,:].reshape((-1,))
-        pix_phot2_unc = unc_phot2[:,:].reshape((-1,))
-        pix_spec = data_spec[:,:].reshape((-1,))
-        pix_spec_unc = unc_spec[:,:].reshape((-1,))
+        if (synt_phot=='y' or pre_calib2=='y'):
+            print(parobs[i][0]+' inter-calibration ('+phot+') gain = {:.4}'.format(slit_gain))
+            # print(parobs[i][0]+' inter-Calibration ('+phot+') offset = {:.4}'.format(slit_off))
+            # label = parobs[i][0]+': y={0:.4}x'.format(slit_gain)
+            # label = parobs[i][0]+': y={0:.4}x+{1:.4}'.format(slit_gain, slit_off)
+            # p.add_plot(xgrid, f_lin0(xgrid, *popt),
+            #            c='k', ls='-', label=label)
+            # p.save(path_cal+'IC_'+phot+'.png')
+
+## Linear fit (DP - SINGS)
+##=========================
+fitx = np.concatenate(pix_phot1, axis=0)
+uncx = np.concatenate(pix_phot1_unc, axis=0)
+fity = np.concatenate(pix_phot2, axis=0)
+uncy = np.concatenate(pix_phot2_unc, axis=0)
+maskfit = ~np.logical_or( np.isnan(fitx), np.isnan(fity) )
+
+popt, pcov = curve_fit(f_lin0, fitx[maskfit], fity[maskfit],)
+                       # sigma=uncy[maskfit])
+atlas_gain = popt[0]
+# atlas_gain = 1.
+# atlas_off = popt[1]
+atlas_off = 0.
+# atlas_off = popt[0]
+
+if (pre_calib1=='y' or pre_calib2=='y'):
+    print('DustPedia - SINGS calibration ('+phot+') gain = {:.4}'.format(atlas_gain))
+    # print('DustPedia - SINGS calibration ('+phot+') offset = {:.4}'.format(atlas_off))
+    label = 'y={0:.4}x'.format(atlas_gain)
+    # label = 'y={0:.4}x+{1:.4}'.format(atlas_gain, atlas_off)
+    p0.add_plot(xgrid, f_lin0(xgrid, *popt),
+                c='k', ls='-', label=label)
+    p0.save(path_cal+'DP-SINGS_'+phot+'.png')
+
+## Linear fit (IRC - SINGS, ATLAS)
+##=================================
+fitx = np.concatenate(pix_spec, axis=0)
+uncx = np.concatenate(pix_spec_unc, axis=0)
+fity = np.concatenate(pix_phot2, axis=0)
+uncy = np.concatenate(pix_phot2_unc, axis=0)
+maskfit = ~np.logical_or( np.isnan(fitx), np.isnan(fity) )
+
+popt, pcov = curve_fit(f_lin0, fitx[maskfit], fity[maskfit],)
+                       # sigma=uncy[maskfit])
+atlas_gain = popt[0]
+# atlas_gain = 1.
+# atlas_off = popt[1]
+atlas_off = 0.
+# atlas_off = popt[0]
+
+if (synt_phot=='y' or pre_calib2=='y'):
+    print('Atlas inter-calibration ('+phot+') gain = {:.4}'.format(atlas_gain))
+    # print('Atlas inter-Calibration ('+phot+') offset = {:.4}'.format(atlas_off))
+    label = 'y={0:.4}x'.format(atlas_gain)
+    # label = 'y={0:.4}x+{1:.4}'.format(atlas_gain, atlas_off)
+    p.add_plot(xgrid, f_lin0(xgrid, *popt),
+               c='k', ls='-', label=label)
+    p.save(path_cal+'IC_'+phot+'.png')
+
+## Spectral correction
+##---------------------
+write_irc = input("Write IRC spectra (y/n)? ")
+if write_irc=='y':
+    if do_build=='y':
+        correct_atlas = input(" - ATLAS level correction (y/n)? ")
+        if correct_atlas=='y':
+            correct_pixel = None
+        else:
+            correct_pixel = input(" - PIXEL level correction (y/n)? ")
+    else:
+        warnings.warn('Rebuild slits before spectral correction.')
+        correct_atlas = None
+        correct_pixel = None
+else:
+    correct_atlas = None
+    correct_pixel = None
+
+for i in range(Nobs):
+    xscale, yscale = read_hdf5(filog+parobs[i][0], 'Super pixel size')
+    mask_nan = ~np.logical_or( np.isnan(pix_spec[i]), np.isnan(pix_phot2[i]) )
+    mask_neg = np.logical_and( pix_spec[i]>0, pix_phot2[i]>0 )
+    mask = np.logical_and( mask_nan, mask_neg )
+    sc = intercalib(fits_irc[i]+'_0') # Attention: NOT fits_irc[i]
+    Nw, Ny, Nx = sc.im.shape
+    pixel_gain = np.ones((Ny,Nx))
+    if mask.any():
+        for y in range(Ny):
+            ys = pix2sup(y, yscale, origin=0)
+            if mask[ys]:
+                pixel_gain[y,:] *= pix_phot2[i][ys]/pix_spec[i][ys]
+            # if y%yscale==0:
+            #     print(parobs[i][0]+' inter-calibration gain: {}'.format(pixel_gain[y,0]))
+    if write_irc=='y':
+        if correct_pixel=='y':
+            calib_gain = pixel_gain
+        elif correct_atlas=='y':
+            calib_gain = atlas_gain
+        else:
+            calib_gain = 1.0
+        sc.correct_spec(calib_gain, filOUT=out_irc[i])
+
+
+##----------------------
+## Fit correlation (MC)
+##----------------------
+for j in trange(Nmc, #leave=False,
+                desc='IRC spectral correction [MC]'):
+    ## Data dictionary
+    ## e.g. [{'A0': a0, 'A1': a1, ...}, {'B0': b0, 'B1': b1, ...}, ...]
+    dict_spec = []
+    dict_spec_unc = []
+    ## Data 1D array
+    ## e.g. [array([a1, a2, ...]), array([b1, b2, ...]), ...]
+    pix_spec = []
+    pix_spec_unc = []
+    
+    for i in range(Nobs):
+        # Nx = read_hdf5(filog+parobs[i][0], 'Slit width')
+        Ny = read_hdf5(filog+parobs[i][0], 'Slit length')[0]
+        xscale, yscale = read_hdf5(filog+parobs[i][0], 'Super pixel size')
+        # Nxs = math.ceil(Nx/xscale)
+        Nys = math.ceil(Ny/yscale)
+    
+        ## Init dict
+        data3 = {}
+        unc3 = {}
+        for ys in range(Nys):
+            subname = parobs[i][0][0]+str(ys+1)
+            yarr = sup2pix(ys, yscale, Npix=Ny, origin=0)
+            ## spec
+            ds = read_fits(tmp_spec+'_'+parobs[i][0]+'_'+str(j+1),
+                           fits_spec+'_'+parobs[i][0]+'_unc') # intermediate unc
+            data3[subname] = ds.data[yarr[0],0]
+            unc3[subname] = ds.unc[yarr[0],0]
+        dict_spec.append(data3)
+        dict_spec_unc.append(unc3)
+    
+        ## Dictionary to 1D array
+        pix_spec.append(np.array(list(dict_spec[i].values())))
+        pix_spec_unc.append(np.array(list(dict_spec_unc[i].values())))
+    
+        ## Mask NaNs and negtive values
+        mask_nan = ~np.logical_or( np.isnan(pix_spec[i]), np.isnan(pix_phot2[i]) )
+        mask_neg = np.logical_and( pix_spec[i]>0, pix_phot2[i]>0 )
+        mask = np.logical_and( mask_nan, mask_neg )
         
-        # xgrid = np.arange(0,1e3,1)
-        xgrid = np.logspace(-6,4,10000)
-        
-        ## NaN mask
-        mask = ~np.logical_or( np.isnan(pix_spec), np.isnan(pix_phot2) )
-        
-        ## S/N ratio
-        # print('S/N (IRC) = \n', pix_spec[mask]/pix_spec_unc[mask])
-        # print('S/N (SINGS) = \n', pix_phot2[mask]/pix_phot2_unc[mask])
-        # exit()
-
-        if not '5124077' in fname:
-            calib_gain = data_phot2/data_spec
-            print(fname+' inter-calibration gain: {}'.format(calib_gain))
-            
-            ## Spectral correction
-            ##---------------------
-            if do_correct=='y':
-                for j in trange(Nmc+1, leave=False,
-                                desc=fname+': Spectral correction [MC]'):
-                    if j==0:
-                        imp = improve(f)
-                    else:
-                        imp = improve(f+'_'+str(j))
-                    im = imp.im * calib_gain
-                    ## Cover the original slits; Rebuild if need uncalibrated slits
-                    write_fits(f+'_'+str(j), imp.hdr, im, imp.wvl, imp.wmod)
-            else:
-                sc = intercalib(f)
-                sc.correct_spec(filOUT=f+'_0')
-        else:
-            sc = intercalib(f)
-            sc.correct_spec(filOUT=f+'_0')
-
-##----------------------------------------------------------
-
-##                       Coadd slits
-
-##----------------------------------------------------------
-irc_coadd = input("Coadd IRC slits (y/n)? ")
-if irc_coadd=='y':
-
-    ## Coadding
-    ##----------
-
-    ## IRC grid
-    refheader = fixwcs(fits_irc[0]+fitsext).header
-    swp = iswarp(fits_irc, refheader=refheader, 
-                 tmpdir=path_build, verbose=verbose)
-    coadd_fp = swp.refheader
-
-    if coadd_tool=='swarp':
-        
-        ## <iswarp> coadding
-        ##===================
-        swp = iswarp(refheader=coadd_fp,
-                     # center='9:55:52,69:40:45', pixscale=6,
-                     tmpdir=path_build, verbose=verbose)
+    ## Linear fit (IRC - SINGS, ATLAS)
+    ##=================================
+    fitx = np.concatenate(pix_spec, axis=0)
+    uncx = np.concatenate(pix_spec_unc, axis=0)
+    fity = np.concatenate(pix_phot2, axis=0)
+    uncy = np.concatenate(pix_phot2_unc, axis=0)
+    maskfit = ~np.logical_or( np.isnan(fitx), np.isnan(fity) )
     
-        for j in trange(Nmc+1, leave=False, 
-                        desc='<iswarp> IRC Coadding [MC]'):
-
-            fits_irc_mc = []
-            for f in fits_irc:
-                fits_irc_mc.append(f+'_'+str(j))
-            comb = swp.combine(fits_irc_mc,# combtype='wgt_avg',
-                               keepedge=True, cropedge=True,
-                               tmpdir=path_build+'MC_'+str(j)+'/',
-                               filOUT=out_irc+'_'+str(j))
-            ## Rescale pixel size
-            if j==Nmc:
-                rebinfo = True
-            else:
-                rebinfo = verbose
-            irebin(out_irc+'_'+str(j), filOUT=out_irc+'_'+str(j),
-                   pixscale=pixscale,
-                   total=False, extrapol=True, verbose=rebinfo)
-
-
-    elif coadd_tool=='reproject':
-
-        ## <imontage> coadding
-        ##=====================
-        mtg = imontage('exact', tmpdir=path_tmp, verbose=verbose)
-
-        for j in trange(Nmc+1, leave=False,
-                        desc='<imontage> IRC coadding [MC]'):
-            fits_irc_mc = []
-            for f in fits_irc:
-                fits_irc_mc.append(f+'_'+str(j))
-            mtg.coadd(fits_irc_mc, refheader=coadd_fp,
-                      filOUT=out_irc+'_'+str(j))
-            ## Rescale pixel size
-            if j==Nmc:
-                rebinfo = True
-            else:
-                rebinfo = verbose
-            irebin(out_irc+'_'+str(j), filOUT=out_irc+'_'+str(j),
-                   pixscale=pixscale,
-                   total=False, extrapol=True, verbose=rebinfo)
-        
-    ## Cal unc
-    ##---------
-    mcimage = []
-    for j in trange(Nmc+1, leave=False,
-                    desc='IRC Reading [MC]'):
-        hd = read_fits(out_irc+'_'+str(j))
-        if j==0:
-            header = hd.header
-            wvl = hd.wave
-        else:
-            mcimage.append(hd.data)
-    if Nmc>1:
-        print('Calculating uncertainty cube...')
-        mcimage = np.array(mcimage)
-        unc = np.nanstd(mcimage, axis=0)
-        write_fits(out_irc+'_unc', header, unc, wvl)
-        
-##----------------------------------------------------------
-
-##                 Atlas inter-Calibration
-
-##----------------------------------------------------------
-pre_calib1_all = input("Run atlas inter-calibration prepipeline (DustPedia) (y/n)? ")
-pre_calib2_all = input("Run atlas inter-calibration prepipeline (SINGS) (y/n)? ")
-int_calib_all = input("Run atlas inter-calibration (y/n)? ")
-
-## Prepare photometry
-##--------------------
-
-## DustPedia (phot1)
-##===================
-if pre_calib1_all=='y':
+    popt, pcov = curve_fit(f_lin0, fitx[maskfit], fity[maskfit],)
+                           # sigma=uncy[maskfit])
+    atlas_gain = popt[0]
+    # atlas_gain = 1.
+    # atlas_off = popt[1]
+    atlas_off = 0.
+    # atlas_off = popt[0]
     
-    ## Convert phot unit (Jy/pix -> MJy/sr)
-    ## This step should be before reprojection (pixscale may change)
-    Jy_per_pix_to_MJy_per_sr(raw_phot1, filOUT=path_tmp+src+'_'+phot+'_DP')
-
-    ## DustPedia IRAC1 of M82 has no uncertainty map
-    ## Create homogeneous uncertainty map
-    bg = read_fits(path_tmp+src+'_'+phot+'_DP').data[1713:1753,3110:3150]
-    iuncert(path_tmp+src+'_'+phot+'_DP',
-            filOUT=path_tmp+src+'_'+phot+'_DP_unc', BG_image=bg)
-    
-    ## Reproject phot
-    refheader = fixwcs(out_irc+'_0'+fitsext).header
-    mtg = imontage('exact', tmpdir=path_tmp)
-    mtg.reproject_mc(path_tmp+src+'_'+phot+'_DP', refheader=refheader,
-                     dist='norm', Nmc=Nmc, filOUT=tmp_phot1)
-
-    ## Convolve phot
-    for j in trange(Nmc+1, leave=False,
-                    desc=phot+': DP conv [MC]'):
-        if j==0:
-            conv = iconvolve(tmp_phot1,
-                             kfile=phot_ker, klist=csv_ker,
-                             filOUT=fits_phot1)
-        else:
-            conv = iconvolve(tmp_phot1+'_'+str(j),
-                             kfile=phot_ker, klist=csv_ker,
-                             filOUT=tmp_phot1+'_'+str(j))
-        conv.do_conv(idldir=path_idl)
-
-    ## Calculate unc
-    mcimage = []
-    for j in range(Nmc+1):
-        if j==0:
-            hdr = read_fits(fits_phot1).header
-        else:
-            mcimage.append(read_fits(tmp_phot1+'_'+str(j)).data)
-    if Nmc>1:
-        mcimage = np.array(mcimage)
-        unc = np.nanstd(mcimage, axis=0)
-        write_fits(fits_phot1+'_unc', hdr, unc)
-
-## SINGS (phot2)
-##===============
-if pre_calib2_all=='y':
-    
-    ## Create uncertainty via weight map (suppose uniform contribution)
-    
-    ## (Sect. 3.2) The weight maps contain the information on the number of frames 
-    ## that were used to create the science mosaics at each pixel (value= # frames x10); 
-    ## the pixel size of the weight maps is the same as the science mosaics.
-    ## -- SINGS v5 release doc
-    ## https://irsa.ipac.caltech.edu/data/SPITZER/SINGS/doc/sings_fifth_delivery_v2.pdf
-    
-    ## Only need to run ONCE for each photometry (comment after using)
-    # gen_unc2 = input("Create SINGS IRAC1 uncertainty map (y/n)? ")
-    # if gen_unc2=='y':
-    #     ds_wgt = read_fits(wgt_phot2)
-    #     bg = read_fits(raw_phot2).data[694:734,56:96]
-    #     bg_wgt = ds_wgt.data[694:734,56:96]
-    #     wfac = .1
-    #     iuncert(raw_phot2, filOUT=raw_phot2+'_unc',
-    #             filWGT=wgt_phot2, wfac=wfac,
-    #             BG_image=bg, BG_weight=bg_wgt)
-
-    ## Reproject phot
-    refheader = fixwcs(out_irc+'_0'+fitsext).header
-    mtg = imontage('exact', tmpdir=path_tmp)
-    mtg.reproject_mc(raw_phot2, refheader=refheader,
-                     dist='norm', Nmc=Nmc, filOUT=tmp_phot2)
-
-    ## Convolve phot
-    for j in trange(Nmc+1, leave=False,
-                    desc=phot+': SINGS conv [MC]'):
-        if j==0:
-            conv = iconvolve(tmp_phot2,
-                             kfile=phot_ker, klist=csv_ker,
-                             filOUT=fits_phot2)
-        else:
-            conv = iconvolve(tmp_phot2+'_'+str(j),
-                             kfile=phot_ker, klist=csv_ker,
-                             filOUT=tmp_phot2+'_'+str(j))
-        conv.do_conv(idldir=path_idl)
-    
-    ## Calculate unc
-    mcimage = []
-    for j in range(Nmc+1):
-        if j==0:
-            hdr = read_fits(fits_phot2).header
-        else:
-            mcimage.append(read_fits(tmp_phot2+'_'+str(j)).data)
-    if Nmc>1:
-        mcimage = np.array(mcimage)
-        unc = np.nanstd(mcimage, axis=0)
-        write_fits(fits_phot2+'_unc', hdr, unc)
-    
-    ## Synthetic photometry (spec)
-    ##=============================
-    mcimage = []
-    for j in trange(Nmc+1, leave=False,
-                    desc=phot+': IRC sythetic photometry [MC]'):
-        ic = intercalib(out_irc+'_'+str(j))
-        sp = ic.synthetic_photometry(phot)
-        if j==0:
-            write_fits(fits_spec, ic.hdr, sp.Fnu_filt)
-        else:
-            ## Cal unc
-            mcimage.append(sp.Fnu_filt)
-    if Nmc>1:
-        # print('Calculating uncertainty cube...')
-        mcimage = np.array(mcimage)
-        unc = np.nanstd(mcimage, axis=0)
-        write_fits(fits_spec+'_unc', ic.hdr, unc)
-
-## Fit correlation
-##-----------------
-## Data
-data_phot1 = read_fits(fits_phot1).data
-unc_phot1 = read_fits(fits_phot1+'_unc').data
-data_phot2 = read_fits(fits_phot2).data
-unc_phot2 = read_fits(fits_phot2+'_unc').data
-data_spec = read_fits(fits_spec).data
-unc_spec = read_fits(fits_spec+'_unc').data
-
-if int_calib_all=='y':
-    
-    ## Plot
-    pix_phot1 = data_phot1[:,:].reshape((-1,))
-    pix_phot1_unc = unc_phot1[:,:].reshape((-1,))
-    pix_phot2 = data_phot2[:,:].reshape((-1,))
-    pix_phot2_unc = unc_phot2[:,:].reshape((-1,))
-    pix_spec = data_spec[:,:].reshape((-1,))
-    pix_spec_unc = unc_spec[:,:].reshape((-1,))
-    
-    # xgrid = np.arange(0,1e3,1)
-    xgrid = np.logspace(-6,4,10000)
-    
-    ## NaNs mask
-    mask = ~np.logical_or( np.isnan(pix_spec), np.isnan(pix_phot2) )
-
-    ## SINGS - DP
-    p0 = pplot(pix_phot1, pix_phot2,
-               yerr=pix_phot2_unc, xerr=pix_phot1_unc,
-               fmt='.', c='k', ec='r', elw=1,
-               xlog=1, ylog=1, nonposx='clip', nonposy='clip',
-               xlim=(1e-3,1e3), ylim=(1e-3,1e3),
-               xlabel='DustPedia (MJy/sr)', ylabel='SINGS (MJy/sr)',
-               figsize=(8,8), legend='upper left', title=src+'_'+phot,
-               titlesize=20, labelsize=10, ticksize=10, legendsize=10)
-    p0.save(path_cal+'SINGS-DP_'+phot+'.png')
-            
-    ## IRC - SINGS
-    p = pplot(pix_phot2, pix_spec,
-              yerr=pix_spec_unc, xerr=pix_phot2_unc,
-              fmt='.', c='k', ec='r', 
-              xlog=1, ylog=1, nonposx='clip', nonposy='clip',
-              xlim=(1e-6,1e3), ylim=(1e-6,1e3),
-              xlabel='SINGS (MJy/sr)', ylabel='IRC (MJy/sr)', 
-              figsize=(8,8), legend='upper left', title=src+'_'+phot,
-              titlesize=20, labelsize=10, ticksize=10, legendsize=10)
-
-    ## Linear fit
-    popt, pcov = curve_fit(f_lin0, pix_spec[mask], pix_phot2[mask],
-                                   sigma=pix_phot2_unc[mask])
-    calib_gain = popt[0]
-    # calib_off = popt[1]
-    calib_off = 0.
-    # calib_gain = 1.
-    # calib_off = popt[0]
-    print('Inter-Calibration ('+phot+') gain = {:.4}'.format(calib_gain))
-    print('Inter-Calibration ('+phot+') offset = {:.4}'.format(calib_off))
-    label = phot+': y={0:.4}x+{1:.4}'.format(calib_gain, calib_off)
-    p.add_plot(f_lin0(xgrid, *popt), xgrid,
-               c='y', ls='-', label=label)
-    
-    # popt, pcov = curve_fit(f_lin0, pix_phot2[mask], pix_spec[mask],)
-    #                        # sigma=pix_spec_unc[mask])
-    # calib_gain = 1. / popt[0]
-    # # calib_off = -popt[1] / popt[0]
-    # calib_off = 0.
-    # print('Inter-Calibration ('+phot+') gain = {:.4}'.format(calib_gain))
-    # print('Inter-Calibration ('+phot+') offset = {:.4}'.format(calib_off))
-    # label = phot+': y={0:.4}x+{1:.4}'.format(calib_gain, calib_off)
-    # p.add_plot(xgrid, f_lin0(xgrid, *popt),
-    #            c='y', ls='-', label=label)
-    
-    p.save(path_cal+'intercalib_'+phot+'.png')
-            
     ## Spectral correction
-    ##---------------------    
-    sc = intercalib(out_irc+'_0')
-    sc.correct_spec(filOUT=out_irc) # Duplicate spectral cube
-    sc.read_filter(phot) # Convert calib_off to spec_off
-    spec_off = calib_off * sc.specoff_ov_bboff[0]
-    spec_gain = calib_gain
-        
-    do_correct_all = input(" - Do IRC spectral correction [{}] (y/n)? ".format(phot))
-    if do_correct_all=='y':
-        do_indiv = input("   - Do individual correction for each pixel (y/n)? ")
+    ##---------------------
+    for i in range(Nobs):
+        xscale, yscale = read_hdf5(filog+parobs[i][0], 'Super pixel size')
+        mask_nan = ~np.logical_or( np.isnan(pix_spec[i]), np.isnan(pix_phot2[i]) )
+        mask_neg = np.logical_and( pix_spec[i]>0, pix_phot2[i]>0 )
+        mask = np.logical_and( mask_nan, mask_neg )
+        sc = intercalib(fits_irc[i]+'_'+str(j+1))
+        Nw, Ny, Nx = sc.im.shape
+        pixel_gain = np.ones((Ny,Nx))
+        if mask.any():
+            for y in range(Ny):
+                ys = pix2sup(y, yscale, origin=0)
+                if mask[ys]:
+                    pixel_gain[y,:] *= pix_phot2[i][ys]/pix_spec[i][ys]
+                # if y%yscale==0:
+                #     print(parobs[i][0]+' inter-calibration gain: {}'.format(pixel_gain[y,0]))
+        if (write_irc=='y'):
+            ## fits_irc[i] can be changed by inter-calib,
+            ## One need to rebuild before synthetic photometry
+            if correct_pixel=='y':
+                calib_gain = pixel_gain
+            elif correct_atlas=='y':
+                calib_gain = atlas_gain
+            else:
+                calib_gain = 1.0
+            sc.correct_spec(calib_gain, filOUT=fits_irc[i]+'_'+str(j+1))
 
-        if do_indiv=='y':
-            ## Individual
-            ##============
-            spec_gain = (data_phot2-spec_off)/data_spec
-            mask2D = ~np.logical_or( np.isnan(data_spec), np.isnan(data_phot2) )
-            imp = improve(out_irc)
-            im = imp.im
-            for k, lam in enumerate(imp.wvl):
-                im[k][mask2D] = imp.im[k][mask2D] * spec_gain[mask2D] + spec_off
-                
-            write_fits(out_irc, imp.hdr, im, imp.wvl, imp.wmod)
-            
-        else:
-            ## Global
-            ##========
-            sc = intercalib(out_irc)
-            sc.correct_spec(filOUT=out_irc,
-                            gain=spec_gain, offset=spec_off)
-        
+if (write_irc=='y' and Nmc>1):
+    for i in trange(Nobs, leave=False,
+                    desc='Calculating uncertainties for IRC slits'):
+        mcimage = []
+        for j in range(Nmc):
+            ds = read_fits(fits_irc[i]+'_'+str(j+1))
+            mcimage.append(ds.data)
+        mcimage = np.array(mcimage)
+        unc = np.nanstd(mcimage, axis=0)
+        write_fits(out_irc[i]+'_unc', ds.header, unc, ds.wave)
+
+
 ##----------------------------------------------------------
 
 ##                      Plot spectra
 
 ##----------------------------------------------------------
-do_plot = input("Plot IRC spectra (y/n)? ")
-if do_plot=='y':
-    ds = read_fits(out_irc, out_irc+'_unc')
-    # ds.data = respect().smooth(out_irc+'_0', out_irc+'_0', lim_unc=1.e2, cmin=2)
-    ds0 = read_fits(out_irc+'_0')
-    pp = intercalib(out_irc)
-    pp.read_filter(phot)
-    wcen = pp.wcen
-    Nw, Ny, Nx = ds.data.shape
-    for x in range(Nx):
-        for y in range(Ny):
-            if ~np.isnan(ds.data[:,y,x]).any():
-                p = pplot(ds.wave, ds.data[:,y,x], yerr=ds.unc[:,y,x],
-                          # xlog=1, ylog=1, 
-                          c='k', lw=.7, ec='r', 
-                          figsize=(8,8), legend='upper left',
-                          title='IRC_('+str(x+1)+','+str(y+1)+')',
-                          titlesize=20, labelsize=10, ticksize=10, legendsize=10)
+plot_spec = input("Plot IRC spectra (y/n)? ")
+if plot_spec=='y':
 
-                p.add_plot(ds0.wave, ds0.data[:,y,x],
+    for i in range(Nobs):
+        ds = read_fits(out_irc[i], out_irc[i]+'_unc')
+        Nw, Ny, Nx = ds.data.shape
+        ds0 = read_fits(fits_irc[i]+'_0')
+        pp = intercalib(out_irc[i])
+        pp.read_filter(phot)
+        wcen = pp.wcen
+        
+        xscale, yscale = read_hdf5(filog+parobs[i][0], 'Super pixel size')
+        for y in range(Ny):
+            ys = pix2sup(y, yscale, origin=0)
+            subname = parobs[i][0][0]+str(ys+1)
+            maskspec = ~np.isnan(ds.data[:,y,0]).any()
+            if (maskspec and y%yscale==0):
+                p = pplot(ds.wave, ds.data[:,y,0], yerr=ds.unc[:,y,0],
+                          # xlog=1, ylog=1, 
+                          c='k', lw=.7, ec='r', label=subname,
+                          xlabel=r'${\rm Wavelengths}\ \lambda\ (\mu m)$',
+                          ylabel=r'${\rm Surface\ brightness}\ F_{\nu}\ (MJy/sr)$',
+                          figsize=(8,8), legend='upper left',
+                          title=src+'_'+subname+'_IRC',
+                          titlesize=20, labelsize=10, ticksize=10, legendsize=10)
+                ## Non-intercalib
+                p.add_plot(ds.wave, ds0.data[:,y,0],
                            c='y', lw=.7, ls='--', zorder=-1)
-                
-                p.add_plot(wcen[0], data_phot2[y,x], yerr=unc_phot2[y,x],
+                ## Photometry
+                p.add_plot(wcen[0], dict_phot2[i][subname], yerr=dict_phot2_unc[i][subname],
                            c='m', marker='o', ms=10, zorder=100, label=phot)
-                p.add_plot(wcen[0], data_spec[y,x], yerr=unc_spec[y,x],
+                ## Synthetic photometry
+                p.add_plot(wcen[0], dict_spec[i][subname], yerr=dict_spec_unc[i][subname],
                            c='g', marker='^', ms=10, zorder=101, label='IRC-'+phot)
                 
-                p.save(path_fig+'IRC_('+str(x+1)+','+str(y+1)+')')
+                p.save(path_fig+src+'_'+subname+'_IRC')
 
