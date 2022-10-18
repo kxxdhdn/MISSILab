@@ -1,10 +1,36 @@
 #+TITLE: MIRAGE
+#+SUBTITLE: Mid-InfraRed spectrocube Assembly enGinE
 #+AUTHOR: Dangning HU
+#+OPTIONS: toc:1
 
-Mid-InfraRed spectrocube Assembly enGinE
+
+
+* Introduction
+:PROPERTIES:
+:UNNUMBERED:
+:END:
+#+TOC: headlines 2 local
+The ~MIRAGE~ libraries
 * Helpdesk
-The Python package [[https://github.com/kxxdhdn/RAPYUTA][rapyuta]] is required by ~MIRAGE/~. You can install it in commandline: ~pip install rapyuta --upgrade~
+:PROPERTIES:
+:UNNUMBERED:
+:END:
+#+TOC: headlines 2 local
+** Dependencies
+The Python package [[https://github.com/kxxdhdn/RAPYUTA][rapyuta]] is required by ~MIRAGE~. 
+You can install it within commandline: ~pip install rapyuta --upgrade~
+** User guides
+** Contact
+dangning.hu@outlook.com
+* Attribution
+:PROPERTIES:
+:UNNUMBERED:
+:END:
+Open access with the 3-Clause BSD License (see ~./LICENSE~)
 * Version log
+:PROPERTIES:
+:UNNUMBERED:
+:END:
 ** v0.5.5 (20220722)
 - ~akari.py~ and ~spitzer.py~
   + Separated uncertainty calculations from the MC loop

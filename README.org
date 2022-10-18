@@ -1,9 +1,18 @@
 #+TITLE: MISSILE
+#+SUBTITLE: Mid-Infrared Sky Spectral Insight LibrariEs
 #+AUTHOR: Dangning HU
+#+OPTIONS: toc:1
 
-Mid-Infrared Sky Spectral Insight LibrariEs
+[[https://img.shields.io/github/downloads/kxxdhdn/missile/total.png]] 
+[[https://img.shields.io/github/license/kxxdhdn/missile.png]]
+
+
 * Introduction
-/MISSILE/ is a collection of several data processing/analyzing tools, which allow to explore galaxies through the mid-IR spectroscopy.
+:PROPERTIES:
+:UNNUMBERED:
+:END:
+#+TOC: headlines 2 local
+The ~MISSILE~ libraries is a collection of data processing/analyzing tools, which allow to explore galaxies with the mid-IR spectroscopy.
 ** [[https://github.com/kxxdhdn/MISSILE/tree/main/MIRAGE][MIRAGE]]
 Mid-InfraRed spectrocube Assembly enGinE
 - Info: Python core + IDL (convolution) + Fortran (synthetic photometry)
@@ -23,24 +32,33 @@ Mid-Infrared Line Extraction Software
   + distribution of parameters
   + correlation diagrams of line/band ratios
   + spatial maps of line/feature ratios
-** HerBIE ([[https://ui.adsabs.harvard.edu/abs/2018MNRAS.476.1445G/abstract][Galliano2018a]]) adapted for far-infrared (HerBIE-FIR; planned)
-HiERarchical Bayesian Inference for dust Emission
-- Info: Fortran + Python
-- FIR spectral energy distribution (SED) fitting
-- Outputs
-  + maps of L_{TIR}, M_{dust}, T_{dust}, /etc./
-  + lines
 ** Supported observations: 
-- AKARI/IRC (2.5 - 5 microns)
-- Spitzer/IRS (5 - 38 microns)
-- JWST (upcoming)
+- AKARI/IRC (2.5 - 5.0 \mu{}m)
+- Spitzer/IRS (5.0 - 38.0 \mu{}m)
+- JWST/NIRspec (0.6 - 5.3 \mu{}m)
+- JWST/MIRI (5.0 - 28.5 \mu{}m)
 - SOFIA (planned)
 - UKIRT (planned)
 * Helpdesk
+:PROPERTIES:
+:UNNUMBERED:
+:END:
+#+TOC: headlines 2 local
 ** Prerequisite
 *** [[https://github.com/kxxdhdn/RAPYUTA][RAPYUTA]]
-libraRy of Astronomical PYthon UTilities for Astrophysics nerds
+Python library offering access to various astro tools.
 #+begin_src bash
 pip install rapyuta --upgrade
 #+end_src
-** Contact: dangning.hu@outlook.com
+** Installation
+#+begin_src bash
+git clone https://github.com/kxxdhdn/MISSILE.git
+#+end_src
+Then follow installation guides in both ~MIRAGE~ and ~MILES~.
+** Contact
+dangning.hu@outlook.com
+* Attribution
+:PROPERTIES:
+:UNNUMBERED:
+:END:
+Open access with the 3-Clause BSD License

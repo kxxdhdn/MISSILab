@@ -1,8 +1,21 @@
 #+TITLE: MILES
+#+SUBTITLE: Mid-Infrared Line Extraction Software
 #+AUTHOR: Dangning HU
+#+OPTIONS: toc:1
 
-Mid-Infrared Line Extraction Software
+
+
+* Introduction
+:PROPERTIES:
+:UNNUMBERED:
+:END:
+#+TOC: headlines 2 local
+The ~MILES~ software
 * Helpdesk (mode d'emploi)
+:PROPERTIES:
+:UNNUMBERED:
+:END:
+#+TOC: headlines 2 local
 ** External libraries
 - The Python package [[https://github.com/kxxdhdn/RAPYUTA][rapyuta]] is required by the MILES user interface (UI; ~simu/~ and ~work/~). You can install it in commandline: ~pip install rapyuta --upgrade~
 - ~SwING/Model_templates/Cross_sections/Data/~ (542.1 MB)
@@ -99,14 +112,18 @@ python work/show_par.py
 ## Modify plotname(), plotcorr() and calcorr() in work/auxil.py
 python work/correlations.py
 #+END_SRC
-** User manual
-The user manual is in progress.
-For more details, we refer to Hu et al. in prep. (see Citation).
+** User guides
 ** Contact
 dangning.hu@outlook.com
 * Attribution
+:PROPERTIES:
+:UNNUMBERED:
+:END:
 Open access with the 3-Clause BSD License (see ~./LICENSE~)
 * Citation
+:PROPERTIES:
+:UNNUMBERED:
+:END:
 #+begin_src latex
 @unpublished{hu2022miles,
   title={Modeling mid-infrared spectra with hierarchical Bayesian inference. I. A case study of M82},
@@ -126,6 +143,9 @@ Open access with the 3-Clause BSD License (see ~./LICENSE~)
 }
 #+end_src
 * Version log
+:PROPERTIES:
+:UNNUMBERED:
+:END:
 ** v1.x (2022xxxx, JWST beta)
 - Added robust/skewed RMS (student/split gaussian distribution) for likelihood
 - Attenuation (extinction with different geometries) in ~specModel~
